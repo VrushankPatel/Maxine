@@ -1,0 +1,16 @@
+{
+  "name": "maxine-discovery",
+  "version": "1.0.0",
+  "description": "Maxine is a discovery and a naming server for all the running nodes with gargantua client dependency.",
+  "main": "index.js",
+  "scripts": {
+    "start" : "node index.js"
+  },
+  "keywords": [
+    "maxine",
+    "discovery-server",
+    "naming-server"
+  ],
+  "author": "Vrushank Patel",
+  "license": "MIT"
+}
