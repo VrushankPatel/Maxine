@@ -4,7 +4,8 @@
   "description": "Maxine is a discovery and a naming server for all the running nodes with gargantua client dependency.",
   "main": "index.js",
   "scripts": {
-    "start" : "node index.js"
+    "start": "node index.js",
+    "dev": "set profile=dev & node index.js"
   },
   "keywords": [
     "maxine",
@@ -12,5 +13,10 @@
     "naming-server"
   ],
   "author": "Vrushank Patel",
-  "license": "MIT"
+  "license": "MIT",
+  "dependencies": {
+    "express": "^4.17.2",
+    "morgan": "^1.10.0",
+    "rotating-file-stream": "^3.0.2"
+  }
 }
