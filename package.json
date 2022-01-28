@@ -5,7 +5,7 @@
   "main": "index.js",
   "scripts": {
     "start": "node index.js",
-    "dev": "set profile=dev & node index.js"
+    "dev": "set profile=dev & nodemon index.js"
   },
   "keywords": [
     "maxine",
@@ -16,6 +16,11 @@
   "license": "MIT",
   "dependencies": {
     "express": "^4.17.2",
+    "express-actuator": "^1.8.0",
+    "lowdb": "^3.0.0",
     "morgan": "^1.10.0"
+  },
+  "devDependencies": {
+    "nodemon": "^2.0.15"
   }
 }
