@@ -1,4 +1,5 @@
 const envVars = process.env;
+const PORT = parseInt(envVars.PORT) || 8080;
 const PROFILE = (envVars.profile || "prod").trim();
 const BANNERPATH = 'src/resources/Banner.txt';
 const LOGDIR = './logs/';
@@ -15,6 +16,7 @@ const STATUS_SUCCESS = 200;
 const MSG_SUCCESS_SHUTDOWN = "Initiated shutdown.";
 
 const constants = {
+    PORT,
     PROFILE,
     BANNERPATH,
     LOGDIR,

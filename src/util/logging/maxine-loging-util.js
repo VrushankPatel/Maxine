@@ -1,7 +1,6 @@
 const fs = require('fs');
 const winston = require('winston');
 const { format } = require('winston');
-const config = require('../config/config');
 const {constants} = require('../constants/constants');
 const banner = fs.readFileSync(constants.BANNERPATH, 'utf8');
 const date = require('date-and-time');
@@ -10,7 +9,7 @@ const logFileTransports = [new winston.transports.Console()].concat(
     constants.LOGLEVELS.map(logLevel => new winston.transports.File({
         level: logLevel,
         filename: `logs/${logLevel}.log`,
-        handleExceptions: true,        
+        handleExceptions: true,
         // maxsize: 5242880,
         // maxFiles: 5
     }))
@@ -50,9 +49,8 @@ async function logRequestAsync (req, res) {
 }
 const loggingUtil = {
     getLogger: (logName) => buildLogger(logName),
-    initApp : (port) => {        
-        config.port = port;
-        logger.info(`\n${banner} 〉 ${constants.PROFILE} started on port : ${port}\n`);
+    initApp : () => {        
+        logger.info(`\n${banner} 〉 ${constants.PROFILE} started on port : ${constants.PORT}\n`);
     },
     logRequest: (req, res, next) => {
         logRequestAsync(req, res);
