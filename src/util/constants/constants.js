@@ -1,20 +1,37 @@
 const envVars = process.env;
 const PROFILE = (envVars.profile || "prod").trim();
-const PORT = envVars.PORT || 8080;
 const BANNERPATH = 'src/resources/Banner.txt';
 const LOGDIR = './logs/';
-const ACTUATORCONFIG = {
-    basePath: '/actuator',
-    infoGitMode: 'simple', // the amount of git information you want to expose, 'simple' or 'full',
-    infoBuildOptions: null, // extra information you want to expose in the build object. Requires an object.
-    infoDateFormat: null, // by default, git.commit.time will show as is defined in git.properties. If infoDateFormat is defined, moment will format git.commit.time. See https://momentjs.com/docs/#/displaying/format/.
-    customEndpoints: [] // array of custom endpoints
+const LOGLEVELS = ['error', 'warn', 'info', 'debug', 'silly']; // verbose
+const LOGTIMESTAMPFORMAT = 'DD-MMM-YYYY HH:mm:ss';
+const ACTUATORPATH = '/actuator';
+const STATUSMONITORTITLE = 'Status : Maxine';
+
+// Http Status Code and Messages
+const STATUS_NOT_FOUND = 404;
+const MSG_NOT_FOUND = "Not found";
+
+const STATUS_SUCCESS = 200;
+const MSG_SUCCESS_SHUTDOWN = "Initiated shutdown.";
+
+const constants = {
+    PROFILE,
+    BANNERPATH,
+    LOGDIR,
+    LOGLEVELS,
+    LOGTIMESTAMPFORMAT,
+    ACTUATORPATH,
+    STATUSMONITORTITLE
+};
+
+const httpStatus = {
+    STATUS_NOT_FOUND,
+    MSG_NOT_FOUND,
+    STATUS_SUCCESS,
+    MSG_SUCCESS_SHUTDOWN
 }
 
 module.exports = {
-    PROFILE,
-    PORT,
-    BANNERPATH,
-    LOGDIR,
-    ACTUATORCONFIG
+    constants,
+    httpStatus
 };
