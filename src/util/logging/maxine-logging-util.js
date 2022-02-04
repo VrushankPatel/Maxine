@@ -1,39 +1,18 @@
 const fs = require('fs');
 const winston = require('winston');
-const { format } = require('winston');
+const { logConfiguration } = require('../config/configs/logging-config');
 const {constants, httpStatus} = require('../constants/constants');
 const { getLoggerDate } = require('../util');
 
 const banner = fs.readFileSync(constants.BANNERPATH, 'utf8');
 
-const logFileTransports = [new winston.transports.Console()].concat(
-    constants.LOGLEVELS.map(logLevel => new winston.transports.File({
-        level: logLevel,
-        filename: `logs/${logLevel}.log`,
-        handleExceptions: true,
-    }))
-);
+const logger = winston.createLogger(logConfiguration);
 
-const buildLogger = (logName) => {
-    const logConfiguration = {
-        transports: logFileTransports,
-        format: format.combine(
-            format.label({label: `〉 ${logName} 〉`}),
-            format.timestamp({format: constants.LOGTIMESTAMPFORMAT}),
-            format.align(),            
-            format.printf(log => `\n【 ${log.level.toUpperCase()} 】 : ${[log.timestamp]} ${log.label} ${log.message}`),
-        )
-    };
-    return winston.createLogger(logConfiguration);
-}
-
-const logger = buildLogger("Maxine Discovery");
-
-function logRequestAsync (req, res) {
+logRequestAsync = (req, res) => {
     setTimeout(() => {
         const timeStamp = getLoggerDate();
         const logLevel = res.statusCode >= 400 ? "error" : "info";        
-        logger.log(logLevel, `\n【 WEBREQUEST 】: [ ${req.ip} ] "${req.method.toUpperCase()} ${req.url} HTTP/${req.httpVersion}" [${timeStamp}:IST] ${res.statusCode}`);        
+        logger.log(logLevel, `\n【 WEBREQUEST 】: [ ${req.ip} ] "${req.method.toUpperCase()} ${req.url} HTTP/${req.httpVersion}" [${timeStamp}] ${res.statusCode}`);        
     }, 0 );
 }
 

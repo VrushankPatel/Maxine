@@ -1,5 +1,6 @@
 const envVars = process.env;
 const PORT = parseInt(envVars.PORT) || 8080;
+const APP_NAME = "Maxine Discovery";
 const PROFILE = (envVars.profile || "prod").trim();
 const BANNERPATH = 'src/resources/Banner.txt';
 const LOGDIR = './logs/';
@@ -20,6 +21,7 @@ const STATUS_SERVER_ERROR = 500;
 const MSG_MAXINE_SERVER_ERROR = "Unknown error occured, Please try again later";
 const constants = {
     PORT,
+    APP_NAME,
     PROFILE,
     BANNERPATH,
     LOGDIR,

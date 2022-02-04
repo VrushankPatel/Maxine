@@ -28,7 +28,7 @@ class AppBuilder{
 
     enableActuator = () => this.use(actuator(actuatorConfig));    
 
-    handleExceptions = () =>  this.use(logGenericExceptions);
+    handleExceptions = () => this.use(logGenericExceptions);
 
     mapUrlPatterns = () => this.use('/',maxineRoutes);
 
