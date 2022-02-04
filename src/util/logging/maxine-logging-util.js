@@ -34,7 +34,7 @@ function logRequestAsync (req, res) {
         const timeStamp = getLoggerDate();
         const logLevel = res.statusCode >= 400 ? "error" : "info";        
         logger.log(logLevel, `\n【 WEBREQUEST 】: [ ${req.ip} ] "${req.method.toUpperCase()} ${req.url} HTTP/${req.httpVersion}" [${timeStamp}:IST] ${res.statusCode}`);        
-    }, 0 );    
+    }, 0 );
 }
 
 const loggingUtil = {

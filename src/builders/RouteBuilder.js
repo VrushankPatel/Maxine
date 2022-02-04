@@ -1,6 +1,7 @@
 var express = require('express');
 const controlRoute = require('../routes/control-route/control-route');
 const malformedRoute = require('../routes/malformed-routes/malformed-routes');
+const { logger } = require('../util/logging/maxine-logging-util');
 
 /*
 * Builder pattern to build routes of maxine beautifully.
@@ -15,7 +16,7 @@ class RouteBuilder{
 
     static createNewRoute = () => new RouteBuilder(express.Router());
 
-    static loadApp = (route) => new RouteBuilder(route);
+    static loadRoute = (route) => new RouteBuilder(route);
 
     // remove below in production because this is for exception testing
     mapTestRoute = () => {
@@ -31,7 +32,7 @@ class RouteBuilder{
 
     getRoute = () => this.route;
 
-    use(...args){    
+    use(...args){
         this.route.use(...args)
         return this;
     }
