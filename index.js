@@ -1,15 +1,13 @@
-const loggingUtil = require('./src/util/logging/maxine-loging-util');
+const loggingUtil = require('./src/util/logging/maxine-logging-util');
 const { constants } = require('./src/util/constants/constants');
-const AppBuilder = require('./src/builder/AppBuilder');
+const AppBuilder = require('./src/builders/AppBuilder');
 
-var app = AppBuilder.createNewApp()
+const app = AppBuilder.createNewApp()
                 .registerExpressStatusMonitorEndpoint()
                 .registerRequestLogger()
-                .registerActuatorEndpoint()
-                .registerControlRoute()
+                .enableActuator()                
                 .mapUrlPatterns()
-                .handleGenericExceptions()
-                .handleMalformedUrls()
+                .handleExceptions()                
                 .getApp();
 
 app.listen(constants.PORT, loggingUtil.initApp);

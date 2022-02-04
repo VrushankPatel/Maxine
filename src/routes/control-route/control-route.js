@@ -1,9 +1,9 @@
 const express = require('express');
-const { reset } = require('nodemon');
-const { httpStatus } = require('../util/constants/constants');
+const { httpStatus } = require('../../util/constants/constants');
+
 const controlRoute = express.Router();
 
-controlRoute.get('/shutdown', (req, res) => {
+controlRoute.get('/shutdown', (req, res) => {    
     res.status(httpStatus.STATUS_SUCCESS).json({"message" : httpStatus.MSG_SUCCESS_SHUTDOWN});
     process.exit();
 });

@@ -8,6 +8,7 @@ const LOGTIMESTAMPFORMAT = 'DD-MMM-YYYY HH:mm:ss';
 const ACTUATORPATH = '/actuator';
 const STATUSMONITORTITLE = 'Status : Maxine';
 const REQUEST_LOG_TIMESTAMP_FORMAT = 'YYYY/MM/DD HH:mm:ss';
+
 // Http Status Code and Messages
 const STATUS_NOT_FOUND = 404;
 const MSG_NOT_FOUND = "Not found";

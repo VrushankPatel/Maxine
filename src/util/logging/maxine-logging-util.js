@@ -27,11 +27,10 @@ const buildLogger = (logName) => {
     return winston.createLogger(logConfiguration);
 }
 
-
 const logger = buildLogger("Maxine Discovery");
 
 function logRequestAsync (req, res) {
-    setTimeout(() => {              
+    setTimeout(() => {
         const timeStamp = getLoggerDate();
         const logLevel = res.statusCode >= 400 ? "error" : "info";        
         logger.log(logLevel, `\n【 WEBREQUEST 】: [ ${req.ip} ] "${req.method.toUpperCase()} ${req.url} HTTP/${req.httpVersion}" [${timeStamp}:IST] ${res.statusCode}`);        
@@ -45,7 +44,7 @@ const loggingUtil = {
         logRequestAsync(req, res);
         next();
     },
-    logGenericExceptions: (err, req, res, next) => {            
+    logGenericExceptions: (err, req, res, next) => {
         const timeStamp = getLoggerDate();
         logger.error(`\n【 WEBREQUEST 】: [ ${req.ip} ] "${req.method.toUpperCase()} ${req.url} HTTP/${req.httpVersion}" [${timeStamp}]:IST ${httpStatus.STATUS_SERVER_ERROR} [Error] : "${err.toString()}"`);
         res.status(httpStatus.STATUS_SERVER_ERROR).json({"message" : httpStatus.MSG_MAXINE_SERVER_ERROR});

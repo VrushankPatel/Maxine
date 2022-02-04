@@ -6,5 +6,5 @@ const getLoggerDate = () => {
 }
 
 module.exports = {
-    getLoggerDate
+    getLoggerDate,
 }
