@@ -5,9 +5,9 @@ const AppBuilder = require('./src/builders/AppBuilder');
 const app = AppBuilder.createNewApp()
                 .registerExpressStatusMonitorEndpoint()
                 .registerRequestLogger()
-                .enableActuator()                
+                .enableActuator()
                 .mapUrlPatterns()
-                .handleExceptions()                
+                .handleExceptions()
                 .getApp();
 
 app.listen(constants.PORT, loggingUtil.initApp);

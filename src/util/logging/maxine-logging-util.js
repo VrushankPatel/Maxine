@@ -8,26 +8,31 @@ const banner = fs.readFileSync(constants.BANNERPATH, 'utf8');
 
 const logger = winston.createLogger(logConfiguration);
 
-logRequestAsync = (req, res) => {
-    setTimeout(() => {
-        const timeStamp = getLoggerDate();
-        const logLevel = res.statusCode >= 400 ? "error" : "info";        
-        logger.log(logLevel, `\n【 WEBREQUEST 】: [ ${req.ip} ] "${req.method.toUpperCase()} ${req.url} HTTP/${req.httpVersion}" [${timeStamp}] ${res.statusCode}`);        
-    }, 0 );
+logAsync = (logFunction) => {
+    setTimeout(logFunction, 0);
+    // logFunction(); // synchronous manner
+}
+
+logRequestAsync = (req, res, next) => {    
+    logAsync(() => {        
+        logger.log("info",`\n【 WEBREQUEST 】: [ ${req.ip} ] "${req.method.toUpperCase()} ${req.url} HTTP/${req.httpVersion}" [${getLoggerDate()}] `);
+        //satus code can not be logged since we're using async logging : ${res.statusCode}
+    });
+    next();
+}
+
+logExceptions = (err, req, res, next) => {
+    logAsync(() => {            
+        logger.error(`\n【 WEBREQUEST-Exception 】: [ ${req.ip} ] "${req.method.toUpperCase()} ${req.url} HTTP/${req.httpVersion}" [${getLoggerDate()}] ${httpStatus.STATUS_SERVER_ERROR} [Error] : "${err.toString()}"`);
+    });
+    res.status(httpStatus.STATUS_SERVER_ERROR).json({"message" : httpStatus.MSG_MAXINE_SERVER_ERROR});
 }
 
 const loggingUtil = {
     logger: logger,    
     initApp : () => logger.info(`\n${banner} 〉 ${constants.PROFILE} started on port : ${constants.PORT}\n`),
-    logRequest: (req, res, next) => {
-        logRequestAsync(req, res);
-        next();
-    },
-    logGenericExceptions: (err, req, res, next) => {
-        const timeStamp = getLoggerDate();
-        logger.error(`\n【 WEBREQUEST 】: [ ${req.ip} ] "${req.method.toUpperCase()} ${req.url} HTTP/${req.httpVersion}" [${timeStamp}]:IST ${httpStatus.STATUS_SERVER_ERROR} [Error] : "${err.toString()}"`);
-        res.status(httpStatus.STATUS_SERVER_ERROR).json({"message" : httpStatus.MSG_MAXINE_SERVER_ERROR});
-    }
+    logRequest: logRequestAsync,
+    logGenericExceptions: logExceptions
 }
 
 module.exports = loggingUtil;

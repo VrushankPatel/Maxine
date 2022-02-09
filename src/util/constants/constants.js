@@ -4,7 +4,7 @@ const APP_NAME = "Maxine Discovery";
 const PROFILE = (envVars.profile || "prod").trim();
 const BANNERPATH = 'src/resources/Banner.txt';
 const LOGDIR = './logs/';
-const LOGLEVELS = ['error', 'warn', 'info', 'debug', 'silly']; // verbose
+const LOGLEVELS = ['error', 'warn', 'info', 'debug']; // verbose, silly
 const LOGTIMESTAMPFORMAT = 'DD-MMM-YYYY HH:mm:ss';
 const ACTUATORPATH = '/actuator';
 const STATUSMONITORTITLE = 'Status : Maxine';
@@ -19,6 +19,7 @@ const MSG_SUCCESS_SHUTDOWN = "Initiated shutdown.";
 
 const STATUS_SERVER_ERROR = 500;
 const MSG_MAXINE_SERVER_ERROR = "Unknown error occured, Please try again later";
+const MSG_FILE_NOT_FOUND = "File not found";
 const constants = {
     PORT,
     APP_NAME,
@@ -33,12 +34,13 @@ const constants = {
 };
 
 const httpStatus = {
-    STATUS_NOT_FOUND,
-    MSG_NOT_FOUND,
+    STATUS_NOT_FOUND,    
     STATUS_SUCCESS,
-    MSG_SUCCESS_SHUTDOWN,
     STATUS_SERVER_ERROR,
-    MSG_MAXINE_SERVER_ERROR 
+    MSG_SUCCESS_SHUTDOWN,    
+    MSG_MAXINE_SERVER_ERROR,
+    MSG_FILE_NOT_FOUND,
+    MSG_NOT_FOUND
 }
 
 module.exports = {
