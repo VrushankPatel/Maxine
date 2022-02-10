@@ -4,12 +4,14 @@ const APP_NAME = "Maxine Discovery";
 const PROFILE = (envVars.profile || "prod").trim();
 const BANNERPATH = 'src/resources/Banner.txt';
 const LOGDIR = './logs/';
-const LOGLEVELS = ['error', 'warn', 'info', 'debug']; // verbose, silly
+const LOGLEVELS = ['info', 'debug']; // verbose, silly, error, warn
 const LOGTIMESTAMPFORMAT = 'DD-MMM-YYYY HH:mm:ss';
 const ACTUATORPATH = '/actuator';
 const STATUSMONITORTITLE = 'Status : Maxine';
 const REQUEST_LOG_TIMESTAMP_FORMAT = 'YYYY/MM/DD HH:mm:ss';
-
+const LOG_EXCLUDED_URLS_CHUNKS = [
+    'console'
+]
 // Http Status Code and Messages
 const STATUS_NOT_FOUND = 404;
 const MSG_NOT_FOUND = "Not found";
@@ -30,7 +32,8 @@ const constants = {
     LOGTIMESTAMPFORMAT,
     ACTUATORPATH,
     STATUSMONITORTITLE,
-    REQUEST_LOG_TIMESTAMP_FORMAT
+    REQUEST_LOG_TIMESTAMP_FORMAT,
+    LOG_EXCLUDED_URLS_CHUNKS
 };
 
 const httpStatus = {
