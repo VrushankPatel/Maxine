@@ -15,17 +15,36 @@ logAsync = (logFunction) => {
 
 logRequestAsync = (req, res, next) => {    
     logAsync(() => {        
-        if(containsExcludedLoggingUrls(req.url)) return;
-        
-        logger.log("info",`\n【 WEBREQUEST 】: [ ${req.ip} ] "${req.method.toUpperCase()} ${req.url} HTTP/${req.httpVersion}" [${getCurrentDate()}] `);
-        //satus code can not be logged since we're using async logging : ${res.statusCode}
+        if(containsExcludedLoggingUrls(req.url)) return;        
+        const logObject = {
+            "LogLevel" : "INFO",
+            "LogType" : "WEBREQUEST",
+            "Method" : req.method.toUpperCase(),
+            "ClientIp" : req.ip,
+            "Endpoint" : req.url,
+            "HTTPVersion" : `HTTP/${req.httpVersion}`,
+            "Timestamp" : getCurrentDate(),
+            "Status" : res.statusCode
+        };
+        logger.info(JSON.stringify(logObject, null, "  "));
     });
     next();
 }
 
 logExceptions = (err, req, res, next) => {
     logAsync(() => {
-        logger.error(`\n【 WEBREQUEST-Exception 】: [ ${req.ip} ] "${req.method.toUpperCase()} ${req.url} HTTP/${req.httpVersion}" [${getCurrentDate()}] ${httpStatus.STATUS_SERVER_ERROR} [Error] : "${err.toString()}"`);
+        const logObject = {
+            "LogLevel" : "ERROR",
+            "LogType" : "WEBREQUEST-Exception",
+            "Method" : req.method.toUpperCase(),
+            "ClientIp" : req.ip,
+            "Endpoint" : req.url,
+            "HTTPVersion" : `HTTP/${req.httpVersion}`,
+            "Timestamp" : getCurrentDate(),
+            "Status" : httpStatus.STATUS_SERVER_ERROR,
+            "Error" : err.toString()
+        };        
+        logger.error(JSON.stringify(logObject, null, "  "));
     });
     res.status(httpStatus.STATUS_SERVER_ERROR).json({"message" : httpStatus.MSG_MAXINE_SERVER_ERROR});
 }

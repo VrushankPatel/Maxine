@@ -10,7 +10,8 @@ const ACTUATORPATH = '/actuator';
 const STATUSMONITORTITLE = 'Status : Maxine';
 const REQUEST_LOG_TIMESTAMP_FORMAT = 'YYYY/MM/DD HH:mm:ss';
 const LOG_EXCLUDED_URLS_CHUNKS = [
-    'console'
+    'console',
+    'download'
 ]
 // Http Status Code and Messages
 const STATUS_NOT_FOUND = 404;

@@ -12,14 +12,12 @@ const logFileTransports = [new winston.transports.Console()].concat(
 
 const logConfiguration = {
     transports: logFileTransports,
-    format: format.combine(
-        format.label({label: `〉 ${constants.APP_NAME} 〉`}),
-        format.timestamp({format: constants.LOGTIMESTAMPFORMAT}),
-        format.align(),            
-        format.printf(log => `\n【 ${log.level.toUpperCase()} 】 : ${[log.timestamp]} ${log.label} ${log.message}`),
+    format: format.combine(        
+        format.printf(log => `${log.message}`),
     )
 };
 
 module.exports = {    
-    logConfiguration
+    logConfiguration,
+    logFileTransports
 }
