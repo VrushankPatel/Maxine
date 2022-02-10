@@ -1,7 +1,6 @@
 const express = require('express');
 const fs = require('fs');
 const { constants, httpStatus } = require('../../util/constants/constants');
-const { logger } = require('../../util/logging/maxine-logging-util');
 const logsRoute = express.Router();
 
 logsRoute.get('/download/:level', (req, res) => {
@@ -12,9 +11,7 @@ logsRoute.get('/download/:level', (req, res) => {
         .then(() => {
             const logFileName = `Maxine - ${logLevel.toUpperCase()} 【 ${new Date().toUTCString()} 】.log`;
             res.download(logFilePath, logFileName);
-        }).catch(() => {
-            const errMsg = `Requested log file (to download) could not be found : ${logLevel}.log`;
-            logger.error(errMsg);
+        }).catch(() => {            
             res.status(httpStatus.STATUS_NOT_FOUND).json({"message": errMsg});
         });        
 });
