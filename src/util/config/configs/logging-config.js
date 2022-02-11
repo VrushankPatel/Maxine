@@ -13,7 +13,7 @@ const logFileTransports = [new winston.transports.Console()].concat(
 const logConfiguration = {
     transports: logFileTransports,
     format: format.combine(        
-        format.printf(log => `${log.message}`),
+        format.printf(log => log.message),
     )
 };
 

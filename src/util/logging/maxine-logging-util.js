@@ -13,15 +13,16 @@ logAsync = (logFunction) => {
     // logFunction(); // synchronous manner
 }
 
-logRequestAsync = (req, res, next) => {    
-    logAsync(() => {        
-        if(containsExcludedLoggingUrls(req.url)) return;        
-        logger.info(logJsonBuilder("INFO", "WEBREQUEST", res.statusCode, "", req));
+logRequestAsync = (req, res, next) => {
+    logAsync(() => {
+        if(containsExcludedLoggingUrls(req.url)) return;
+        const logLevel = res.statusCode >= 400 ? "ERROR" : "INFO";
+        logger.info(logJsonBuilder(logLevel, "WEBREQUEST", res.statusCode, "", req));
     });
     next();
 }
 
-logExceptions = (err, req, res, next) => {
+logExceptions = (err, req, res, next) => {    
     logAsync(() => {                
         logger.error(logJsonBuilder("ERROR", "WEBREQUEST-Exception", httpStatus.STATUS_SERVER_ERROR, err.toString(), req));
     });
@@ -30,8 +31,8 @@ logExceptions = (err, req, res, next) => {
 
 const loggingUtil = {
     logger: logger,
-    info: (status, msg) => logAsync(() => logger.info(logJsonBuilder("INFO", "GENERIC", status, msg, null))),
-    error: (status, msg) => logAsync(() => logger.error(logJsonBuilder("ERROR", "GENERIC", status, msg, null))),
+    info: (msg) => logAsync(() => logger.info(logJsonBuilder("INFO", "GENERIC", null, msg, null))),
+    error: (msg) => logAsync(() => logger.error(logJsonBuilder("ERROR", "GENERIC", null, msg, null))),
     initApp : () => logger.info(`\n${banner} 〉 ${constants.PROFILE} started on port : ${constants.PORT}\n`),
     logRequest: logRequestAsync,
     logGenericExceptions: logExceptions
