@@ -4,7 +4,7 @@ const envVars = process.env;
 const PORT = parseInt(envVars.PORT) || getProperty("server.port");
 const APP_NAME = getProperty("app.name");
 const MASTER_NODE = getProperty("master.node.address");
-
+const HEARTBEAT_TIMEOUT = getProperty("heartBeat.timeOut");
 const PROFILE = (envVars.profile || "prod").trim();
 const BANNERPATH = 'src/resources/Banner.txt';
 const LOGDIR = './logs/';
@@ -33,6 +33,7 @@ const constants = {
     PORT,
     APP_NAME,
     MASTER_NODE,
+    HEARTBEAT_TIMEOUT,
     PROFILE,
     BANNERPATH,
     LOGDIR,

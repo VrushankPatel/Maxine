@@ -30,8 +30,8 @@ const logJsonBuilder = (logLevel, logType, httpStatus, msg = "", req) => {
     if(msg){
         logObject["Message"] = msg;
     }
-    return JSON.stringify(JSON.parse(JSON.stringify(logObject))); // minified JSON
-    // return JSON.stringify(logObject, null, "  ");    // prettified JSON
+    // return JSON.stringify(JSON.parse(JSON.stringify(logObject))); // minified JSON
+    return JSON.stringify(logObject, null, "  ");    // prettified JSON
 }
 
 module.exports = {

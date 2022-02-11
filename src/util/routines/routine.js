@@ -4,10 +4,13 @@ const { constants } = require("../constants/constants");
 
 var heartBeat = JSON.stringify({
     "hostName": ip.address().toString(),
+    "nodeName" : "node-1",
     "port": constants.PORT,
-    "serviceName": constants.APP_NAME
+    "serviceName": constants.APP_NAME,
+    "timeOut" : parseInt(constants.HEARTBEAT_TIMEOUT)
 });
 
+console.log(heartBeat);
 var config = {
     method: 'post',
     url: `${constants.MASTER_NODE}/discover/register`,
@@ -16,7 +19,7 @@ var config = {
 };
 
 const sendHeartBeat = () => {                
-      axios(config);
+    //   axios(config);
     //   .then(function (response) {
     //     console.log(JSON.stringify(response.data));
     //   })
