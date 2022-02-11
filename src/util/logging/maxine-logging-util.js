@@ -2,19 +2,26 @@ const fs = require('fs');
 const winston = require('winston');
 const { logConfiguration } = require('../config/configs/logging-config');
 const {constants, httpStatus} = require('../constants/constants');
+const { getProperty } = require('../propertyReader/propertyReader');
 const { getCurrentDate, containsExcludedLoggingUrls, logJsonBuilder } = require('../util');
 
 const banner = fs.readFileSync(constants.BANNERPATH, 'utf8');
-
+const loggingType = getProperty("logging.type");
 const logger = winston.createLogger(logConfiguration);
 
-logAsync = (logFunction) => {
-    setTimeout(logFunction, 0);
-    // logFunction(); // synchronous manner
+
+const logSync = (logFunction) => {    
+    logFunction(); 
 }
 
-logRequestAsync = (req, res, next) => {
-    logAsync(() => {
+const logAsync = (logFunction) => {    
+    setTimeout(logFunction, 0);
+}
+
+const log = loggingType === "async" ? logAsync : logSync;
+
+const logRequestAsync = (req, res, next) => {
+    log(() => {
         if(containsExcludedLoggingUrls(req.url)) return;
         const logLevel = res.statusCode >= 400 ? "ERROR" : "INFO";
         logger.info(logJsonBuilder(logLevel, "WEBREQUEST", res.statusCode, "", req));
@@ -22,8 +29,8 @@ logRequestAsync = (req, res, next) => {
     next();
 }
 
-logExceptions = (err, req, res, next) => {    
-    logAsync(() => {                
+const logExceptions = (err, req, res, next) => {    
+    log(() => {                
         logger.error(logJsonBuilder("ERROR", "WEBREQUEST-Exception", httpStatus.STATUS_SERVER_ERROR, err.toString(), req));
     });
     res.status(httpStatus.STATUS_SERVER_ERROR).json({"message" : httpStatus.MSG_MAXINE_SERVER_ERROR});
@@ -31,8 +38,8 @@ logExceptions = (err, req, res, next) => {
 
 const loggingUtil = {
     logger: logger,
-    info: (msg) => logAsync(() => logger.info(logJsonBuilder("INFO", "GENERIC", null, msg, null))),
-    error: (msg) => logAsync(() => logger.error(logJsonBuilder("ERROR", "GENERIC", null, msg, null))),
+    info: (msg) => log(() => logger.info(logJsonBuilder("INFO", "GENERIC", null, msg, null))),
+    error: (msg) => log(() => logger.error(logJsonBuilder("ERROR", "GENERIC", null, msg, null))),
     initApp : () => logger.info(`\n${banner} 〉 ${constants.PROFILE} started on port : ${constants.PORT}\n`),
     logRequest: logRequestAsync,
     logGenericExceptions: logExceptions

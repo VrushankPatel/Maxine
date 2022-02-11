@@ -8,7 +8,7 @@ const containsExcludedLoggingUrls = (url) => {
         if(url.includes(excChunk)){
             return true
         }
-    }    
+    }
     return false;
 }
 

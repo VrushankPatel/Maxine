@@ -1,6 +1,10 @@
+const { getProperty } = require("../propertyReader/propertyReader");
+
 const envVars = process.env;
-const PORT = parseInt(envVars.PORT) || 8080;
-const APP_NAME = "Maxine Discovery";
+const PORT = parseInt(envVars.PORT) || getProperty("server.port");
+const APP_NAME = getProperty("app.name");
+const MASTER_NODE = getProperty("master.node.address");
+
 const PROFILE = (envVars.profile || "prod").trim();
 const BANNERPATH = 'src/resources/Banner.txt';
 const LOGDIR = './logs/';
@@ -28,6 +32,7 @@ const MSG_MISSING_DATA = "Please provide all three hostName, port and serviceNam
 const constants = {
     PORT,
     APP_NAME,
+    MASTER_NODE,
     PROFILE,
     BANNERPATH,
     LOGDIR,
@@ -36,7 +41,7 @@ const constants = {
     ACTUATORPATH,
     STATUSMONITORTITLE,
     REQUEST_LOG_TIMESTAMP_FORMAT,
-    LOG_EXCLUDED_URLS_CHUNKS    
+    LOG_EXCLUDED_URLS_CHUNKS
 };
 
 const httpStatus = {
