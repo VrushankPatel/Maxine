@@ -3,6 +3,7 @@ const { getProperty } = require("../propertyReader/propertyReader");
 const envVars = process.env;
 const PORT = parseInt(envVars.PORT) || getProperty("server.port");
 const APP_NAME = getProperty("app.name");
+const APP_NODE_NAME = getProperty("app.node.name");
 const MASTER_NODE = getProperty("master.node.address");
 const HEARTBEAT_TIMEOUT = getProperty("heartBeat.timeOut");
 const PROFILE = (envVars.profile || "prod").trim();
@@ -32,6 +33,7 @@ const MSG_MISSING_DATA = "Please provide all three hostName, port and serviceNam
 const constants = {
     PORT,
     APP_NAME,
+    APP_NODE_NAME,
     MASTER_NODE,
     HEARTBEAT_TIMEOUT,
     PROFILE,

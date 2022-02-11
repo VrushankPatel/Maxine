@@ -18,7 +18,7 @@ module.exports = {
         const timeResetter = setTimeout(() => {
             info(`Service Removed Successfully [service : ${serviceName} | node : ${nodeName} | address : ${address} | timeOut : ${timeOut} Second(s)`);
             delete serviceRegistry[serviceName][nodeName];
-        }, timeOut*1000);
+        }, (timeOut+1)*1000);
 
         serviceRegistry[serviceName][nodeName]["timeResetter"] = timeResetter;
     }
