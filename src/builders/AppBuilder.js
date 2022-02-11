@@ -2,7 +2,7 @@ var express = require('express');
 const actuator = require('express-actuator');
 const expressStatusMonitor = require('express-status-monitor');
 const maxineRoutes = require('../routes/routes');
-const { statusMonitorConfig, actuatorConfig } = require('../util/config/config');
+const { statusMonitorConfig, actuatorConfig } = require('../config/config');
 const loggingUtil = require('../util/logging/maxine-logging-util');
 const { logGenericExceptions } = require('../util/logging/maxine-logging-util');
 

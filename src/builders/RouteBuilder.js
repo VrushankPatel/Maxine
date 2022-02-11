@@ -1,14 +1,14 @@
 var express = require('express');
 const malformedRoute = require('../routes/malformed-routes/malformed-routes');
 const { logger } = require('../util/logging/maxine-logging-util');
+const { getProperty } = require('../util/propertyReader/propertyReader');
 
 /*
 * Builder pattern to build routes of maxine beautifully.
 */
 
 class RouteBuilder{
-    route;    
-
+    route;
     constructor(route){
         this.route = route;
     }

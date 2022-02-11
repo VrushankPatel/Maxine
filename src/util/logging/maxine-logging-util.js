@@ -1,9 +1,9 @@
 const fs = require('fs');
 const winston = require('winston');
-const { logConfiguration } = require('../config/configs/logging-config');
+const { logConfiguration } = require('../../config/configs/logging-config');
 const {constants, httpStatus} = require('../constants/constants');
 const { getProperty } = require('../propertyReader/propertyReader');
-const { getCurrentDate, containsExcludedLoggingUrls, logJsonBuilder } = require('../util');
+const { containsExcludedLoggingUrls, logJsonBuilder } = require('../util');
 
 const banner = fs.readFileSync(constants.BANNERPATH, 'utf8');
 const loggingType = getProperty("logging.type");
