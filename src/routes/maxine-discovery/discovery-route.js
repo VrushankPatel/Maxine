@@ -1,16 +1,19 @@
 const express = require('express');
-const { httpStatus } = require('../../util/constants/constants');
+const { httpStatus, constants } = require('../../util/constants/constants');
 const bodyParser = require('body-parser');
 const { info, error } = require('../../util/logging/maxine-logging-util');
+const { register } = require('../../serviceRegistry/registry');
 
 const discoveryRoute = express.Router();
 var jsonParser = bodyParser.json()
 
 discoveryRoute.post('/register', jsonParser, (req, res) => {    
-    let {hostName, port, serviceName} = req.body;
-    port = parseInt(port);
-    if(hostName && port && serviceName){
-        const msg = `${httpStatus.MSG_SUCCESS_REGISTERED} [${serviceName} to ${hostName}:${port}]`;
+    let {hostName, nodeName, port, serviceName, timeOut} = req.body;    
+    port = parseInt(port);    
+    timeOut = parseInt(timeOut) || constants.HEARTBEAT_TIMEOUT;
+    if(hostName && nodeName && port && serviceName){
+        register(serviceName, nodeName, `${hostName}:${port}`, timeOut);        
+        const msg = `${httpStatus.MSG_SUCCESS_REGISTERED} [service : ${serviceName} | node : ${nodeName} | address : ${hostName}:${port} | ${timeOut ? "timeOut : " + timeOut + " second(s)" : "]"}`;
         info(msg);
         res.status(httpStatus.STATUS_SUCCESS).json({"message" : msg});
         return;
