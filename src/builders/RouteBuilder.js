@@ -9,6 +9,7 @@ const { getProperty } = require('../util/propertyReader/propertyReader');
 
 class RouteBuilder{
     route;
+    
     constructor(route){
         this.route = route;
     }
