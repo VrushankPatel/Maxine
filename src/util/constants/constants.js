@@ -30,7 +30,7 @@ const MSG_SUCCESS_SHUTDOWN = "Initiated shutdown.";
 const MSG_SUCCESS_REGISTERED = "Service Registered Successfully";
 const MSG_MAXINE_SERVER_ERROR = "Unknown error occured, Please try again later";
 const MSG_FILE_NOT_FOUND = "File not found";
-const MSG_MISSING_DATA = "Please provide all three hostName, port and serviceName";
+const MSG_MISSING_DATA = "Please provide all of these -> hostName, nodeName, port and serviceName";
 const constants = {
     PORT,
     APP_NAME,
