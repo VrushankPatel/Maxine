@@ -19,7 +19,7 @@ const returnJsonMinified = (jsonObj) => JSON.stringify(JSON.parse(JSON.stringify
 
 const returnJsonPrettyfied = (jsonObj) => JSON.stringify(jsonObj, null, "  ");
 
-const formatJson = properties["log.json.prettify"] === true ? returnJsonPrettyfied : returnJsonMinified;
+const formatJson = properties["log.json.prettify"] === 'true' ? returnJsonPrettyfied : returnJsonMinified;
 
 const logJsonBuilder = (logLevel, logType, httpStatus, msg = "", req) => {    
     // const logObject = {
@@ -60,7 +60,7 @@ const logJsonBuilder = (logLevel, logType, httpStatus, msg = "", req) => {
                 .getJson();
         }
 
-    return formatJson(logObject);
+    return formatJson(logObj2);
 }
 
 module.exports = {
