@@ -2,22 +2,19 @@ class JsonBuilder{
     jsonObj;
     checkCondition;
     flag;
+    registeredObj;
 
     constructor(jsonObj){
-        this.jsonObj = jsonObj;
-        this.checkCondition = false;
-        this.flag = false;
+        this.jsonObj = jsonObj;        
     }
 
-    static createNewApp = () => new JsonBuilder({});
+    static createNewJson = () => new JsonBuilder({});
 
     static loadJson = (jsonObj) => new JsonBuilder(jsonObj);
 
-    checkif = (condition) => {
-        this.checkCondition = true;
-        if(condition){            
-            this.flag = true;
-        }
+    checkIf = (condition) => {
+        this.checkCondition = true;        
+        this.flag = condition;
         return this;
     }
 
@@ -27,7 +24,7 @@ class JsonBuilder{
         return this;
     }
 
-    map = (key, value) => {
+    put = (key, value) => {
         if(this.checkCondition){
             if(this.flag){
                 this.jsonObj[key] = value;            
@@ -38,6 +35,26 @@ class JsonBuilder{
         return this;
     };
 
+    registerObj = (obj) => {
+        this.registeredObj = obj;
+        return this;
+    }
+
+    putFromRegObj = (key, refObj) => {
+        if(this.checkCondition){
+            if(this.flag){
+                this.jsonObj[key] = this.registeredObj[refObj];            
+            }
+            return this;
+        }
+        this.jsonObj[key] = this.registeredObj[refObj];
+        return this;
+    };
+
+    deregisterObj = () => {
+        this.registeredObj = null;
+        return this;
+    }
     getJson = () => this.jsonObj;
 
 }

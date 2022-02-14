@@ -21,29 +21,26 @@ const returnJsonPrettyfied = (jsonObj) => JSON.stringify(jsonObj, null, "  ");
 
 const formatJson = properties["log.json.prettify"] === 'true' ? returnJsonPrettyfied : returnJsonMinified;
 
-const logJsonBuilder = (logLevel, logType, httpStatus, msg = "", req) => {    
-    
-    let logObj2 = JsonBuilder.createNewApp()
-            .map("LogLevel", logLevel)
-            .map("LogType", logType)
-            .map("Timestamp", getCurrentDate())
-            .checkif(httpStatus)
-                .map("Status", httpStatus)
-            .endCondition()
-            .checkif(msg)
-                .map("Message", msg)
-            .endCondition()
-            .getJson();
-        if(req){
-            logObj2 = JsonBuilder.loadJson(logObj2)
-                .map("Method", req.method.toUpperCase())
-                .map("ClientIp", req.ip)
-                .map("Endpoint", req.originalUrl)
-                .map("HTTPVersion", `HTTP/${req.httpVersion}`)
-                .getJson();
-        }
-        
-    return formatJson(logObj2);
+const logJsonBuilder = (logLevel, logType, httpStatus, msg = "", req) => {        
+    let logObj = JsonBuilder.createNewJson()
+                    .put("LogLevel", logLevel)
+                    .put("LogType", logType)
+                    .put("Timestamp", getCurrentDate())
+                    .checkIf(httpStatus)
+                        .put("Status", httpStatus)
+                    .endCondition()
+                    .checkIf(msg)
+                        .put("Message", msg)
+                    .endCondition()
+                    .checkIf(req)
+                    .registerObj(req)
+                        .putFromRegObj("Method", "method")
+                        .putFromRegObj("ClientIp", "ip")
+                        .putFromRegObj("Endpoint", "originalUrl")
+                        .putFromRegObj("HTTPVersion", "httpVersion")
+                    .deregisterObj()
+                    .getJson();        
+    return formatJson(logObj);
 }
 
 module.exports = {
