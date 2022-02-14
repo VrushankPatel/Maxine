@@ -2,11 +2,11 @@ const fs = require('fs');
 const winston = require('winston');
 const { logConfiguration } = require('../../config/configs/logging-config');
 const {constants, httpStatus} = require('../constants/constants');
-const { getProperty } = require('../propertyReader/propertyReader');
+const { properties } = require('../propertyReader/propertyReader');
 const { containsExcludedLoggingUrls, logJsonBuilder } = require('../util');
-
 const banner = fs.readFileSync(constants.BANNERPATH, 'utf8');
-const loggingType = getProperty("logging.type");
+
+const loggingType = properties["logging.type"];
 const logger = winston.createLogger(logConfiguration);
 
 
@@ -20,7 +20,7 @@ const logAsync = (logFunction) => {
 
 const log = loggingType === "async" ? logAsync : logSync;
 
-const logRequestAsync = (req, res, next) => {
+const logRequest = (req, res, next) => {
     log(() => {
         if(containsExcludedLoggingUrls(req.url)) return;
         const logLevel = res.statusCode >= 400 ? "ERROR" : "INFO";
@@ -41,8 +41,8 @@ const loggingUtil = {
     info: (msg) => log(() => logger.info(logJsonBuilder("INFO", "GENERIC", null, msg, null))),
     error: (msg) => log(() => logger.error(logJsonBuilder("ERROR", "GENERIC", null, msg, null))),
     initApp : () => logger.info(`\n${banner} 〉 ${constants.PROFILE} started on port : ${constants.PORT}\n`),
-    logRequest: logRequestAsync,
-    logGenericExceptions: logExceptions
+    logRequest,
+    logExceptions
 }
 
 module.exports = loggingUtil;

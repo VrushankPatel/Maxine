@@ -1,6 +1,7 @@
 const date = require('date-and-time');
 const { constants } = require('./constants/constants');
-const { getProperty } = require('./propertyReader/propertyReader');
+const { properties } = require('./propertyReader/propertyReader');
+
 
 const getCurrentDate = () => date.format(new Date(), constants.REQUEST_LOG_TIMESTAMP_FORMAT);
 
@@ -17,7 +18,7 @@ const returnJsonMinified = (jsonObj) => JSON.stringify(JSON.parse(JSON.stringify
 
 const returnJsonPrettyfied = (jsonObj) => JSON.stringify(jsonObj, null, "  ");
 
-const formatJson = getProperty("log.json.prettify") === true ? returnJsonPrettyfied : returnJsonMinified;
+const formatJson = properties["log.json.prettify"] === true ? returnJsonPrettyfied : returnJsonMinified;
 
 const logJsonBuilder = (logLevel, logType, httpStatus, msg = "", req) => {    
     const logObject = {
@@ -38,12 +39,10 @@ const logJsonBuilder = (logLevel, logType, httpStatus, msg = "", req) => {
         logObject["Message"] = msg;
     }
     return formatJson(logObject);
-    // return JSON.stringify(JSON.parse(JSON.stringify(logObject))); // minified JSON
-    // return JSON.stringify(logObject, null, "  ");    // prettified JSON
 }
 
 module.exports = {
     getCurrentDate,    
     containsExcludedLoggingUrls,
-    logJsonBuilder
+    logJsonBuilder    
 }

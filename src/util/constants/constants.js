@@ -1,11 +1,12 @@
-const { getProperty } = require("../propertyReader/propertyReader");
+const { properties } = require("../propertyReader/propertyReader");
+
 
 const envVars = process.env;
-const PORT = parseInt(envVars.PORT) || getProperty("server.port");
-const APP_NAME = getProperty("app.name");
-const APP_NODE_NAME = getProperty("app.node.name");
-const MASTER_NODE = getProperty("master.node.address");
-const HEARTBEAT_TIMEOUT = getProperty("heartBeat.timeOut");
+const PORT = parseInt(envVars.PORT) || properties["server.port"];
+const APP_NAME = properties["app.name"];
+const APP_NODE_NAME = properties["app.node.name"];
+const MASTER_NODE = properties["master.node.address"];
+const HEARTBEAT_TIMEOUT = properties["heartBeat.timeOut"];
 const PROFILE = (envVars.profile || "prod").trim();
 const BANNERPATH = 'src/resources/Banner.txt';
 const LOGDIR = './logs/';

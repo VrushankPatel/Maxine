@@ -10,7 +10,7 @@ var heartBeat = JSON.stringify({
     "timeOut" : parseInt(constants.HEARTBEAT_TIMEOUT)
 });
 
-console.log(heartBeat);
+
 var config = {
     method: 'post',
     url: `${constants.MASTER_NODE}/discover/register`,

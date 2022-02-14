@@ -1,10 +1,15 @@
 const PropertiesReader = require('properties-reader');
-const prop = PropertiesReader('./application.properties');
+const properties = PropertiesReader('./application.properties');
 
 const getProperty = (property) => {
-    return prop.get(property);
+    return properties.get(property);
+}
+
+const getAllProperties = () => {
+    return properties.getAllProperties();
 }
 
 module.exports = {
-    getProperty
+    // getProperty,
+    properties: getAllProperties()
 }
