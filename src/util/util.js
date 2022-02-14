@@ -22,24 +22,7 @@ const returnJsonPrettyfied = (jsonObj) => JSON.stringify(jsonObj, null, "  ");
 const formatJson = properties["log.json.prettify"] === 'true' ? returnJsonPrettyfied : returnJsonMinified;
 
 const logJsonBuilder = (logLevel, logType, httpStatus, msg = "", req) => {    
-    // const logObject = {
-    //     "LogLevel" : logLevel,
-    //     "LogType" : logType,
-    //     "Timestamp" : getCurrentDate()
-    // };
-    // if(httpStatus){
-    //     logObject["Status"] = httpStatus;
-    // }
-    // if(req){
-    //     logObject["Method"] = req.method.toUpperCase();
-    //     logObject["ClientIp"] = req.ip;
-    //     logObject["Endpoint"] = req.originalUrl;
-    //     logObject["HTTPVersion"] = `HTTP/${req.httpVersion}`;
-    // }
-    // if(msg){
-    //     logObject["Message"] = msg;
-    // }
-
+    
     let logObj2 = JsonBuilder.createNewApp()
             .map("LogLevel", logLevel)
             .map("LogType", logType)
@@ -59,7 +42,7 @@ const logJsonBuilder = (logLevel, logType, httpStatus, msg = "", req) => {
                 .map("HTTPVersion", `HTTP/${req.httpVersion}`)
                 .getJson();
         }
-
+        
     return formatJson(logObj2);
 }
 
