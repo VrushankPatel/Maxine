@@ -1,6 +1,6 @@
 const { info } = require("../util/logging/maxine-logging-util");
 
-var serviceRegistry = {
+let serviceRegistry = {
    
 }
 
@@ -18,7 +18,7 @@ module.exports = {
         const timeResetter = setTimeout(() => {
             info(`Service Removed Successfully [service : ${serviceName} | node : ${nodeName} | address : ${address} | timeOut : ${timeOut} Second(s)`);
             delete serviceRegistry[serviceName][nodeName];
-        }, (timeOut+1)*1000);
+        }, ((timeOut)*1000)+500);
 
         serviceRegistry[serviceName][nodeName]["timeResetter"] = timeResetter;
     }

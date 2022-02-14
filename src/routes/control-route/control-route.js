@@ -1,11 +1,8 @@
 const express = require('express');
-const { httpStatus } = require('../../util/constants/constants');
+const controlController = require('../../controllers/control-controller/control-controller');
 
 const controlRoute = express.Router();
 
-controlRoute.get('/shutdown', (req, res) => {    
-    res.status(httpStatus.STATUS_SUCCESS).json({"message" : httpStatus.MSG_SUCCESS_SHUTDOWN});
-    process.exit();
-});
+controlRoute.get('/shutdown', controlController);
 
 module.exports = controlRoute;
