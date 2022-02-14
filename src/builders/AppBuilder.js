@@ -3,8 +3,7 @@ const actuator = require('express-actuator');
 const expressStatusMonitor = require('express-status-monitor');
 const maxineRoutes = require('../routes/routes');
 const { statusMonitorConfig, actuatorConfig } = require('../config/config');
-const loggingUtil = require('../util/logging/maxine-logging-util');
-const { logExceptions } = require('../util/logging/maxine-logging-util');
+const { logExceptions, logRequest } = require('../util/logging/maxine-logging-util');
 
 /*
 * Builder pattern to creat express in a beautiful manner rather than individual statements.
@@ -24,7 +23,7 @@ class AppBuilder{
 
     registerExpressStatusMonitorEndpoint = () => this.use(expressStatusMonitor(statusMonitorConfig));    
     
-    registerRequestLogger = () => this.use(loggingUtil.logRequest);    
+    registerRequestLogger = () => this.use(logRequest);    
 
     enableActuator = () => this.use(actuator(actuatorConfig));    
 
