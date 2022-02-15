@@ -21,6 +21,7 @@
     "express": "^4.17.2",
     "express-actuator": "^1.8.0",
     "express-status-monitor": "^1.3.3",
+    "ip": "^1.1.5",
     "properties-reader": "^2.2.0",
     "read-last-lines": "^1.8.0",
     "winston": "^3.5.1"
