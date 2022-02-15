@@ -8,7 +8,7 @@ var maxineRoutes = RouteBuilder.createNewRoute()
                         .mapRoute("/sd", () => SVGDefsElement.sd()) // to test exceptions logging
                         .mapRoute('/control',controlRoute)
                         .mapRoute("/logs", logsRoute)
-                        .mapRoute("/discover", discoveryRoute)
+                        .mapRoute("/maxine", discoveryRoute)
                         .mapRoute('*',malformedRoutes)                        
                         .getRoute();
 

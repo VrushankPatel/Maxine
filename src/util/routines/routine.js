@@ -13,7 +13,7 @@ var heartBeat = JSON.stringify({
 
 var config = {
     method: 'post',
-    url: `${constants.MASTER_NODE}/discover/register`,
+    url: `${constants.MASTER_NODE}/maxine/register`,
     headers: { 'Content-Type': 'application/json' },
     data : heartBeat
 };

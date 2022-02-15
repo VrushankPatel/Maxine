@@ -4,7 +4,7 @@ const { httpStatus, constants } = require('../../util/constants/constants');
 
 const discoveryController = (req, res) => {
     let {hostName, nodeName, port, serviceName, timeOut} = req.body;    
-    port = parseInt(port);    
+    port = parseInt(port);
     timeOut = parseInt(timeOut) || constants.HEARTBEAT_TIMEOUT;
     if(!(hostName && nodeName && port && serviceName)){
         error(httpStatus.MSG_MISSING_DATA);
