@@ -9,7 +9,7 @@ const app = AppBuilder.createNewApp()
                 .registerRequestLogger()
                 .enableActuator()
                 .mapUrlPatterns()
-                .handleExceptions()
+                .logWebRequestExceptions()
                 .getApp();
 
 app.listen(constants.PORT, loggingUtil.initApp);

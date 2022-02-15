@@ -6,7 +6,7 @@ const logFileTransports = (constants.PROFILE === "prod" ? [] : [new winston.tran
     .concat(constants.LOGLEVELS.map(logLevel => new winston.transports.File({
         level: logLevel,
         filename: `logs/${logLevel}.log`,
-        handleExceptions: true,
+        // handleExceptions: true,
     }))
 );
 

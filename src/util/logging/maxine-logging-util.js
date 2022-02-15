@@ -4,21 +4,30 @@ const { logConfiguration } = require('../../config/configs/logging-config');
 const {constants, httpStatus} = require('../constants/constants');
 const { properties } = require('../propertyReader/propertyReader');
 const { containsExcludedLoggingUrls, logJsonBuilder } = require('../util');
-const banner = fs.readFileSync(constants.BANNERPATH, 'utf8');
 
+const banner = fs.readFileSync(constants.BANNERPATH, 'utf8');
 const loggingType = properties["logging.type"];
 const logger = winston.createLogger(logConfiguration);
 
 
-const logSync = (logFunction) => {    
-    logFunction(); 
-}
+const log = (logFunction) => loggingType === "async" ? setTimeout(logFunction, 0) : logFunction();
 
-const logAsync = (logFunction) => {    
-    setTimeout(logFunction, 0);
-}
+const info = (msg) => log(() => logger.info(logJsonBuilder("INFO", "GENERIC", null, msg, null)));
 
-const log = loggingType === "async" ? logAsync : logSync;
+const error = (msg) => log(() => logger.error(logJsonBuilder("ERROR", "GENERIC", null, msg, null)));
+
+const logGenericExceptions = () => {
+    const handleUncaughts = (err) => {    
+        const msg = err.message + err.stack.replace(/(\r\n|\n|\r)/gm, "");        
+        log(() => {
+            logger.info(logJsonBuilder("ERROR", "GENERIC", null, msg, null));
+            logger.on('finish', () => process.exit(1));    
+        })
+    };
+    process.on('uncaughtException', handleUncaughts);
+};
+
+logGenericExceptions();
 
 const logRequest = (req, res, next) => {
     log(() => {
@@ -29,20 +38,19 @@ const logRequest = (req, res, next) => {
     next();
 }
 
-const logExceptions = (err, req, res, next) => {    
+const logWebExceptions = (err, req, res, next) => {    
     log(() => {                
         logger.error(logJsonBuilder("ERROR", "WEBREQUEST-Exception", httpStatus.STATUS_SERVER_ERROR, err.toString(), req));
     });
     res.status(httpStatus.STATUS_SERVER_ERROR).json({"message" : httpStatus.MSG_MAXINE_SERVER_ERROR});
 }
 
-const loggingUtil = {
-    logger: logger,
-    info: (msg) => log(() => logger.info(logJsonBuilder("INFO", "GENERIC", null, msg, null))),
-    error: (msg) => log(() => logger.error(logJsonBuilder("ERROR", "GENERIC", null, msg, null))),
+const loggingUtil = {    
+    info,
+    error,
     initApp : () => logger.info(`\n${banner} 〉 ${constants.PROFILE} started on port : ${constants.PORT}\n`),
     logRequest,
-    logExceptions
+    logWebExceptions    
 }
 
 module.exports = loggingUtil;

@@ -3,7 +3,7 @@ const actuator = require('express-actuator');
 const expressStatusMonitor = require('express-status-monitor');
 const maxineRoutes = require('../routes/routes');
 const { statusMonitorConfig, actuatorConfig } = require('../config/config');
-const { logExceptions, logRequest } = require('../util/logging/maxine-logging-util');
+const { logWebExceptions, logRequest } = require('../util/logging/maxine-logging-util');
 
 /*
 * Builder pattern to creat express in a beautiful manner rather than individual statements.
@@ -19,7 +19,7 @@ class AppBuilder{
 
     static createNewApp = () => new AppBuilder(new express());
 
-    static loadApp = (app) => new AppBuilder(app);
+    static loadApp = (app) => new AppBuilder(app);    
 
     registerExpressStatusMonitorEndpoint = () => this.use(expressStatusMonitor(statusMonitorConfig));    
     
@@ -27,7 +27,7 @@ class AppBuilder{
 
     enableActuator = () => this.use(actuator(actuatorConfig));    
 
-    handleExceptions = () => this.use(logExceptions);
+    logWebRequestExceptions = () => this.use(logWebExceptions);
 
     mapUrlPatterns = () => this.use('/',maxineRoutes);
 
