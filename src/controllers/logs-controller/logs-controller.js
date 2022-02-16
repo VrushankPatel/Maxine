@@ -20,15 +20,17 @@ const logsLinkGenController = (req, res) => {
     let links = "";
     fs.readdirSync("./logs/").forEach(file => {
         links = links + `
+        <center>
         <div style="padding: 20px">
             <a 
             href="/logs/download/${file}"
             target="_blank"
-            style="border-radius: 10px; padding: 15px; border-color: black;background-color: gray
-            ; font-size: 20; color: lightgrey;font-family: Arial, Helvetica, sans-serif;"> 
+            style="border-radius: 10px; padding: 15px; border-color: black;background-color: brown
+            ; font-size: 20; color: lightgrey;font-family: Arial, Helvetica, sans-serif;text-decoration:none"> 
                 ${file} 
             </a>
-        </div>`;
+        </div>
+        </center>`;
         console.log(typeof file);
 
     });

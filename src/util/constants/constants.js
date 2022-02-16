@@ -1,10 +1,11 @@
 const { properties } = require("../propertyReader/propertyReader");
 
-
+const envArgs = process.argv; // first paramerer : port and second parameter : node name
 const envVars = process.env;
-const PORT = parseInt(envVars.PORT) || properties["server.port"];
+
+const PORT = parseInt(envArgs[2]) || parseInt(envVars.PORT) || properties["server.port"];
 const APP_NAME = properties["app.name"];
-const APP_NODE_NAME = properties["app.node.name"];
+const APP_NODE_NAME = envArgs[3] || properties["app.node.name"];
 const MASTER_NODE = properties["master.node.address"];
 const HEARTBEAT_TIMEOUT = properties["heartBeat.timeOut"];
 const PROFILE = (envVars.profile || "prod").trim();
