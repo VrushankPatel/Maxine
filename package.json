@@ -26,6 +26,9 @@
     "read-last-lines": "^1.8.0",
     "winston": "^3.5.1"
   },
+  "nodemonConfig": {
+    "ext": "js,properties"
+  },
   "devDependencies": {
     "nodemon": "^2.0.15"
   },

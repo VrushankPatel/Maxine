@@ -1,5 +1,4 @@
 var express = require('express');
-const malformedRoute = require('../routes/malformed-routes/malformed-routes');
 const { logger } = require('../util/logging/maxine-logging-util');
 const { getProperty } = require('../util/propertyReader/propertyReader');
 
@@ -9,6 +8,7 @@ const { getProperty } = require('../util/propertyReader/propertyReader');
 
 class RouteBuilder{
     route;
+    routeStack = [];
     
     constructor(route){
         this.route = route;
@@ -17,6 +17,33 @@ class RouteBuilder{
     static createNewRoute = () => new RouteBuilder(express.Router());
 
     static loadRoute = (route) => new RouteBuilder(route);    
+
+    from = (route) => {
+        this.routeStack.push(route);
+        return this;
+    }    
+
+    get = (endPoint, ...args) => {
+        const routeString = this.routeStack.join('') + endPoint;
+        this.route.get(routeString, ...args);
+        return this;
+    }
+
+    post = (endPoint, ...args) => {
+        const routeString = this.routeStack.join('') + endPoint;
+        this.route.post(routeString, ...args);        
+        return this;
+    }
+
+    stepBack = () => {
+        this.routeStack.pop();
+        return this;
+    }
+
+    stepToRoot = () => {
+        this.routeStack = [];
+        return this;
+    }
 
     getRoute = () => this.route;
 

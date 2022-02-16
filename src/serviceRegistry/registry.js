@@ -3,7 +3,7 @@ const { info } = require("../util/logging/maxine-logging-util");
 let serviceRegistry = {};
 let timeResetters = {};
 
-const register = (serviceName, nodeName, address, timeOut) => {
+const registerService = (serviceName, nodeName, address, timeOut) => {
 
     if (!serviceRegistry[serviceName]){
         serviceRegistry[serviceName] = {};
@@ -12,13 +12,14 @@ const register = (serviceName, nodeName, address, timeOut) => {
     if(serviceRegistry[serviceName][nodeName]){
         clearTimeout(timeResetters[serviceRegistry[serviceName][nodeName]["id"]]);
     }
-    
+
     const id = Date.now().toString(36);
     
     serviceRegistry[serviceName][nodeName] = {
         "address" : address,
         "id" : id,
-        "timeOut" : timeOut
+        "timeOut" : timeOut,
+        "regiteredAt" : new Date().toLocaleString()
     }
 
     const timeResetter = setTimeout(() => {
@@ -35,6 +36,6 @@ const register = (serviceName, nodeName, address, timeOut) => {
 const getCurrentlyRegisteredServers = () => serviceRegistry;
 
 module.exports = {
-    register,
+    registerService,
     getCurrentlyRegisteredServers
 }

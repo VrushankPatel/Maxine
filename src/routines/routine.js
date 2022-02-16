@@ -1,6 +1,6 @@
 const { default: axios } = require("axios");
 var ip = require("ip");
-const { constants } = require("../constants/constants");
+const { constants } = require("../util/constants/constants");
 
 var heartBeat = JSON.stringify({
     "hostName": ip.address().toString(),

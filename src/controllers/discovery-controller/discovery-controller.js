@@ -1,5 +1,5 @@
 const { info, error } = require('../../util/logging/maxine-logging-util');
-const { register } = require('../../serviceRegistry/registry');
+const { registerService, getCurrentlyRegisteredServers } = require('../../serviceRegistry/registry');
 const { httpStatus, constants } = require('../../util/constants/constants');
 
 const discoveryController = (req, res) => {
@@ -11,10 +11,18 @@ const discoveryController = (req, res) => {
         res.status(httpStatus.STATUS_GENERIC_ERROR).json({"message" : httpStatus.MSG_MISSING_DATA});
         return;
     }
-    register(serviceName, nodeName, `${hostName}:${port}`, timeOut);        
+    registerService(serviceName, nodeName, `${hostName}:${port}`, timeOut);        
     const msg = `${httpStatus.MSG_SUCCESS_REGISTERED} [service : ${serviceName} | node : ${nodeName} | address : ${hostName}:${port} | ${timeOut ? "timeOut : " + timeOut + " second(s)" : "]"}`;
     info(msg);
     res.status(httpStatus.STATUS_SUCCESS).json({"message" : msg});    
 }
 
-module.exports = discoveryController;
+
+const serverListController = (req, res) => {    
+    res.send(JSON.stringify(getCurrentlyRegisteredServers()));
+}
+
+module.exports = {
+    discoveryController,
+    serverListController
+};

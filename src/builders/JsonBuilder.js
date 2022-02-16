@@ -1,8 +1,8 @@
 class JsonBuilder{
     jsonObj;
-    checkCondition;
-    flag;
+    checkCondition;    
     registeredObj;
+    conditionStack = [];
 
     constructor(jsonObj){
         this.jsonObj = jsonObj;        
@@ -12,22 +12,30 @@ class JsonBuilder{
 
     static loadJson = (jsonObj) => new JsonBuilder(jsonObj);
 
-    checkIf = (condition) => {
-        this.checkCondition = true;        
-        this.flag = condition;
+    checkNull = (element) => {
+        this.conditionStack.push(element !== null);
+        this.checkCondition = true;
         return this;
     }
 
     endCondition = () => {
-        this.checkCondition = null;
-        this.flag = null;
+        this.conditionStack.pop();
+        if(this.conditionStack.length === 0){
+            this.checkCondition = null;
+        }
         return this;
     }
 
-    put = (key, value) => {
+    endAllConditions = () => {
+        this.conditionStack = [];
+        this.checkCondition = null;
+        return this
+    }
+    
+    put = (key, value) => {                
         if(this.checkCondition){
-            if(this.flag){
-                this.jsonObj[key] = value;            
+            if(this.conditionStack.every(e => e === true)){
+                this.jsonObj[key] = value;
             }
             return this;
         }
@@ -40,9 +48,9 @@ class JsonBuilder{
         return this;
     }
 
-    putFromRegObj = (key, refObj) => {
+    putFromRegObj = (key, refObj) => {        
         if(this.checkCondition){
-            if(this.flag){
+            if(this.conditionStack.slice(-1)[0]){
                 this.jsonObj[key] = this.registeredObj[refObj];            
             }
             return this;
@@ -55,6 +63,7 @@ class JsonBuilder{
         this.registeredObj = null;
         return this;
     }
+
     getJson = () => this.jsonObj;
 
 }

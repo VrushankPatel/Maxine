@@ -14,7 +14,7 @@ const logsController = (req, res) => {
             const errMsg = `Requested log file (to download) could not be found : ${logLevel}.log`;            
             error(errMsg);
             res.status(httpStatus.STATUS_NOT_FOUND).json({"message": errMsg});
-        });        
+        });
 }
 
 module.exports = logsController;

@@ -1,15 +1,24 @@
 const RouteBuilder = require('../builders/RouteBuilder');
-const controlRoute = require('./control-route/control-route');
-const malformedRoutes = require('./malformed-routes/malformed-routes');
-const logsRoute = require('./logs-route/logs-route');
-const discoveryRoute = require('./maxine-discovery/discovery-route');
+const logsController = require('../controllers/logs-controller/logs-controller');
+const bodyParser = require('body-parser');
+const { serverListController, discoveryController } = require('../controllers/discovery-controller/discovery-controller');
+const { shutdownController, malformedUrlsController } = require('../controllers/micro-controllers/other-controllers');
+
 
 var maxineRoutes = RouteBuilder.createNewRoute()
                         .mapRoute("/sd", () => SVGDefsElement.sd()) // to test exceptions logging
-                        .mapRoute('/control',controlRoute)
-                        .mapRoute("/logs", logsRoute)
-                        .mapRoute("/maxine", discoveryRoute)
-                        .mapRoute('*',malformedRoutes)                        
+                        .from('/control')
+                            .get('/shutdown', shutdownController)
+                        .stepToRoot()
+                        .from("/logs")
+                            .from("/download")
+                                .get("/:level", logsController)
+                        .stepToRoot()
+                        .from("/maxine")
+                            .post("/register", bodyParser.json(), discoveryController)
+                            .get("/servers", serverListController)
+                        .stepToRoot()
+                        .mapRoute('*',malformedUrlsController)                        
                         .getRoute();
 
 module.exports = maxineRoutes;
