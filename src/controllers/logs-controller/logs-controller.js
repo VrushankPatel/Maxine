@@ -2,14 +2,13 @@ const fs = require('fs');
 const { constants, httpStatus } = require('../../util/constants/constants');
 const { error } = require('../../util/logging/maxine-logging-util');
 
-const logsController = (req, res) => {
+const logsDownloadController = (req, res) => {
     global.logLevel = req.params.level;
-    const logFilePath = `${constants.LOGDIR}\\${logLevel}.log`;
+    const logFilePath = `${constants.LOGDIR}\\${logLevel}`;
     fs.promises
         .access(logFilePath)
-        .then(() => {
-            const logFileName = `Maxine - ${logLevel.toUpperCase()} 【 ${new Date().toUTCString()} 】.log`;
-            res.download(logFilePath, logFileName);
+        .then(() => {            
+            res.download(logFilePath);
         }).catch(() => {
             const errMsg = `Requested log file (to download) could not be found : ${logLevel}.log`;            
             error(errMsg);
@@ -17,4 +16,26 @@ const logsController = (req, res) => {
         });
 }
 
-module.exports = logsController;
+const logsLinkGenController = (req, res) => {
+    let links = "";
+    fs.readdirSync("./logs/").forEach(file => {
+        links = links + `
+        <div style="padding: 20px">
+            <a 
+            href="/logs/download/${file}"
+            target="_blank"
+            style="border-radius: 10px; padding: 15px; border-color: black;background-color: gray
+            ; font-size: 20; color: lightgrey;font-family: Arial, Helvetica, sans-serif;"> 
+                ${file} 
+            </a>
+        </div>`;
+        console.log(typeof file);
+
+    });
+    res.send(links);
+}
+
+module.exports = {
+    logsDownloadController,
+    logsLinkGenController
+};
