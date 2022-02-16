@@ -6,7 +6,9 @@ const { statusMonitorConfig, actuatorConfig } = require('./src/config/config');
 const { logRequest, logWebExceptions } = require('./src/util/logging/maxine-logging-util');
 const maxineRoutes = require('./src/routes/routes');
 const expressStatusMonitor = require('express-status-monitor');
-require('./src/routines/routine').startRoutines();
+
+// below starts to send requests to it self
+// require('./src/routines/routine').startRoutines();
 
 
 const app = AppBuilder.createNewApp()

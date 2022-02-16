@@ -15,7 +15,7 @@ const logFileTransports = (constants.PROFILE === "prod" ? [] : [new winston.tran
 
 const logConfiguration = {
     transports: logFileTransports,
-    format: format.combine(        
+    format: format.combine(
         format.printf(log => log.message),
     )
 };

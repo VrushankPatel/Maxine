@@ -4,7 +4,7 @@ const { constants } = require("../util/constants/constants");
 
 var heartBeat = JSON.stringify({
     "hostName": ip.address().toString(),
-    "nodeName" : constants.APP_NODE_NAME,
+    "nodeName": constants.APP_NODE_NAME,
     "port": constants.PORT,
     "serviceName": constants.APP_NAME,
     "timeOut" : parseInt(constants.HEARTBEAT_TIMEOUT)
