@@ -18,20 +18,9 @@ class RouteBuilder{
 
     static loadRoute = (route) => new RouteBuilder(route);    
 
-    from = (route) => {
-        this.routeStack.push(route);
-        return this;
-    }    
-
-    get = (endPoint, ...args) => {
-        const routeString = this.routeStack.join('') + endPoint;
-        this.route.get(routeString, ...args);
-        return this;
-    }
-
-    post = (endPoint, ...args) => {
-        const routeString = this.routeStack.join('') + endPoint;
-        this.route.post(routeString, ...args);        
+    from = (routeEndPt) => {
+        routeEndPt = this.formatEndpoint(routeEndPt);
+        this.routeStack.push(routeEndPt);
         return this;
     }
 
@@ -43,13 +32,33 @@ class RouteBuilder{
     stepToRoot = () => {
         this.routeStack = [];
         return this;
+    } 
+
+    get = (endPoint, ...args) => {        
+        this.route.get(this.createRouteString(endPoint), ...args);
+        return this;
     }
+
+    post = (endPoint, ...args) => {
+        this.route.post(this.createRouteString(endPoint), ...args);        
+        return this;
+    }
+
+    all = (endPoint, ...args) => {
+        this.route.all(this.createRouteString(endPoint), ...args);        
+        return this;
+    }    
 
     getRoute = () => this.route;
 
-    mapRoute(...args){
-        this.route.use(...args)
-        return this;
+    createRouteString = (endPt) => {        
+        const routeString = this.routeStack.join('') + this.formatEndpoint(endPt);
+        return routeString;
+    }
+
+    formatEndpoint = (endPt) => {        
+        endPt = endPt[0] === "/" ? endPt : `/${endPt}`;        
+        return endPt;
     }
 }
 

@@ -6,19 +6,19 @@ const { shutdownController, malformedUrlsController } = require('../controllers/
 
 
 var maxineRoutes = RouteBuilder.createNewRoute()
-                        .mapRoute("/sd", () => SVGDefsElement.sd()) // to test exceptions logging
-                        .from('/control')
-                            .get('/shutdown', shutdownController)
+                        .get("sd", () => SVGDefsElement.sd()) // to test exceptions logging
+                        .from("control")
+                            .get("shutdown", shutdownController)
                         .stepToRoot()
-                        .from("/logs")
-                            .from("/download")
-                                .get("/:level", logsController)
+                        .from("logs")
+                            .from("download")
+                                .get(":level", logsController)
                         .stepToRoot()
-                        .from("/maxine")
-                            .post("/register", bodyParser.json(), discoveryController)
-                            .get("/servers", serverListController)
+                        .from("maxine")
+                            .post("register", bodyParser.json(), discoveryController)
+                            .get("servers", serverListController)
                         .stepToRoot()
-                        .mapRoute('*',malformedUrlsController)                        
+                        .all('*',malformedUrlsController)                        
                         .getRoute();
 
 module.exports = maxineRoutes;

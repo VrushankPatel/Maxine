@@ -17,7 +17,7 @@ const info = (msg) => log(() => logger.info(logJsonBuilder("INFO", "GENERIC", nu
 const error = (msg) => log(() => logger.error(logJsonBuilder("ERROR", "GENERIC", null, msg, null)));
 
 const logGenericExceptions = () => {
-    const handleUncaughts = (err) => {    
+    const handleUncaughts = (err) => {
         const msg = err.message + err.stack.replace(/(\r\n|\n|\r)/gm, "");        
         log(() => {
             logger.info(logJsonBuilder("ERROR", "GENERIC", null, msg, null));
@@ -27,7 +27,7 @@ const logGenericExceptions = () => {
     process.on('uncaughtException', handleUncaughts);
 };
 
-logGenericExceptions();
+// logGenericExceptions();
 
 const logRequest = (req, res, next) => {
     log(() => {
