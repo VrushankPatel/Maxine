@@ -1,5 +1,5 @@
 const RouteBuilder = require('../builders/RouteBuilder');
-const logsController = require('../controllers/logs-controller/logs-controller');
+const {logsDownloadController: logsController, logsDownloadController, logsLinkGenController} = require('../controllers/logs-controller/logs-controller');
 const bodyParser = require('body-parser');
 const { serverListController, discoveryController } = require('../controllers/discovery-controller/discovery-controller');
 const { shutdownController, malformedUrlsController } = require('../controllers/micro-controllers/other-controllers');
@@ -12,7 +12,8 @@ var maxineRoutes = RouteBuilder.createNewRoute()
                         .stepToRoot()
                         .from("logs")
                             .from("download")
-                                .get(":level", logsController)
+                                .get("/",logsLinkGenController)
+                                .get(":level", logsDownloadController)                                
                         .stepToRoot()
                         .from("maxine")
                             .post("register", bodyParser.json(), discoveryController)
