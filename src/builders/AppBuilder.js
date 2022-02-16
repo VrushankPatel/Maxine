@@ -4,6 +4,7 @@ const expressStatusMonitor = require('express-status-monitor');
 const maxineRoutes = require('../routes/routes');
 const { statusMonitorConfig, actuatorConfig } = require('../config/config');
 const { logWebExceptions, logRequest } = require('../util/logging/maxine-logging-util');
+const { properties } = require('../util/propertyReader/propertyReader');
 
 /*
 * Builder pattern to creat express in a beautiful manner rather than individual statements.
@@ -12,28 +13,41 @@ const { logWebExceptions, logRequest } = require('../util/logging/maxine-logging
 
 class AppBuilder{
     app;    
-
+    conditionStack = [];
+    
     constructor(app){
         this.app = app;
     }
 
     static createNewApp = () => new AppBuilder(new express());
 
-    static loadApp = (app) => new AppBuilder(app);    
+    static loadApp = (app) => new AppBuilder(app);
 
-    registerExpressStatusMonitorEndpoint = () => this.use(expressStatusMonitor(statusMonitorConfig));    
-    
-    registerRequestLogger = () => this.use(logRequest);    
+    checkProperty = (property) => {
+        this.conditionStack.push(properties[property] === 'true');
+        return this;
+    }
 
-    enableActuator = () => this.use(actuator(actuatorConfig));    
+    endCheck = () => {
+        this.conditionStack.pop();
+        return this;
+    };
 
-    logWebRequestExceptions = () => this.use(logWebExceptions);
-
-    mapUrlPatterns = () => this.use('/',maxineRoutes);
+    endAllCheck = () => {
+        this.conditionStack = [];
+        return this;
+    }
 
     getApp = () => this.app;
 
-    use(...args){    
+    use(...args){
+        if(this.conditionStack.length > 0){
+            if(this.conditionStack.every(e => e === true)){
+                this.app.use(...args);
+                return this;        
+            }            
+            return this;
+        }
         this.app.use(...args)
         return this;
     }

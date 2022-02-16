@@ -1,6 +1,4 @@
 var express = require('express');
-const { logger } = require('../util/logging/maxine-logging-util');
-const { getProperty } = require('../util/propertyReader/propertyReader');
 
 /*
 * Builder pattern to build routes of maxine beautifully.
