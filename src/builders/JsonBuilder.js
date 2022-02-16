@@ -1,3 +1,4 @@
+const { properties } = require('../util/propertyReader/propertyReader');
 class JsonBuilder{
     jsonObj;
     checkCondition;    
@@ -65,6 +66,20 @@ class JsonBuilder{
     }
 
     getJson = () => this.jsonObj;
+
+    formatJson = () => {
+      return properties["log.json.prettify"] === 'true' ? this.returnJsonPrettyfied() : this.returnJsonMinified();
+    }
+
+    returnJsonPrettyfied = () => {
+        this.jsonObj = JSON.stringify(this.jsonObj, null, "  ");
+        return this;
+    }
+    
+    returnJsonMinified = () => {
+        this.jsonObj = JSON.stringify(JSON.parse(JSON.stringify(this.jsonObj)));
+        return this;
+    }
 
 }
 
