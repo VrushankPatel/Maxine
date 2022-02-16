@@ -68,15 +68,15 @@ class JsonBuilder{
     getJson = () => this.jsonObj;
 
     formatJson = () => {
-      return properties["log.json.prettify"] === 'true' ? this.returnJsonPrettyfied() : this.returnJsonMinified();
+      return properties["log.json.prettify"] === 'true' ? this.prettifyJSON() : this.minifyJSON();
     }
 
-    returnJsonPrettyfied = () => {
+    prettifyJSON = () => {
         this.jsonObj = JSON.stringify(this.jsonObj, null, "  ");
         return this;
     }
     
-    returnJsonMinified = () => {
+    minifyJSON = () => {
         this.jsonObj = JSON.stringify(JSON.parse(JSON.stringify(this.jsonObj)));
         return this;
     }

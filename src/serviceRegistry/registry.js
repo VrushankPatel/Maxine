@@ -14,7 +14,7 @@ const registerService = (serviceName, nodeName, address, timeOut) => {
     }
 
     const id = Date.now().toString(36);
-    
+
     serviceRegistry[serviceName][nodeName] = {
         "address" : address,
         "id" : id,

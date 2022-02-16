@@ -5,8 +5,12 @@ const { constants } = require('../../util/constants/constants');
 const logFileTransports = (constants.PROFILE === "prod" ? [] : [new winston.transports.Console()])
     .concat(constants.LOGLEVELS.map(logLevel => new winston.transports.File({
         level: logLevel,
+        // filename: `logs/${logLevel}.log`,
         filename: `logs/${logLevel}.log`,
         // handleExceptions: true,
+        size: '100m',
+        keep: 5,
+        compress: true
     }))
 );
 

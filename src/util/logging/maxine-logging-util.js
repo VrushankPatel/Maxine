@@ -27,7 +27,7 @@ const logGenericExceptions = () => {
     process.on('uncaughtException', handleUncaughts);
 };
 
-// logGenericExceptions();
+logGenericExceptions();
 
 const logRequest = (req, res, next) => {
     log(() => {
