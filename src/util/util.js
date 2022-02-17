@@ -13,7 +13,7 @@ const containsExcludedLoggingUrls = (url) => {
     }
     return false;
 }
-const logJsonBuilder = (logLevel, logType, httpStatus, msg = "", req) => {        
+const logJsonBuilder = (logLevel, logType, httpStatus, req, msg = "") => {
     return JsonBuilder.createNewJson()
                     .put("LogLevel", logLevel)                    
                     .put("LogType", logType)                    

@@ -12,15 +12,15 @@ const logger = winston.createLogger(logConfiguration);
 
 const log = (logFunction) => loggingType === "async" ? setTimeout(logFunction, 0) : logFunction();
 
-const info = (msg) => log(() => logger.info(logJsonBuilder("INFO", "GENERIC", null, msg, null)));
+const info = (msg) => log(() => logger.info(logJsonBuilder("INFO", "GENERIC", null, null, msg)));
 
-const error = (msg) => log(() => logger.error(logJsonBuilder("ERROR", "GENERIC", null, msg, null)));
+const error = (msg) => log(() => logger.error(logJsonBuilder("ERROR", "GENERIC", null, null, msg)));
 
 const logGenericExceptions = () => {
     const handleUncaughts = (err) => {
         const msg = err.message + err.stack.replace(/(\r\n|\n|\r)/gm, "");        
         log(() => {
-            logger.info(logJsonBuilder("ERROR", "GENERIC", null, msg, null));
+            logger.info(logJsonBuilder("ERROR", "GENERIC", null, null, msg));
             logger.on('finish', () => process.exit(1));    
         })
     };
@@ -33,14 +33,14 @@ const logRequest = (req, res, next) => {
     log(() => {
         if(containsExcludedLoggingUrls(req.url)) return;
         const logLevel = res.statusCode >= 400 ? "ERROR" : "INFO";
-        logger.info(logJsonBuilder(logLevel, "WEBREQUEST", res.statusCode, "", req));
+        logger.info(logJsonBuilder(logLevel, "WEBREQUEST", res.statusCode, req));
     });
     next();
 }
 
 const logWebExceptions = (err, req, res, next) => {    
     log(() => {                
-        logger.error(logJsonBuilder("ERROR", "WEBREQUEST-Exception", httpStatus.STATUS_SERVER_ERROR, err.toString(), req));
+        logger.error(logJsonBuilder("ERROR", "WEBREQUEST-Exception", httpStatus.STATUS_SERVER_ERROR, req, err.toString()));
     });
     res.status(httpStatus.STATUS_SERVER_ERROR).json({"message" : httpStatus.MSG_MAXINE_SERVER_ERROR});
 }
