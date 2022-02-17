@@ -3,8 +3,6 @@ const { registerService, getCurrentlyRegisteredServers } = require('../../servic
 const { httpStatus, constants } = require('../../util/constants/constants');
 
 const discoveryController = (req, res) => {
-    // const hostName = (req.headers['x-forwarded-for'] || req.connection.remoteAddress).replace("::ffff:","");
-    
     let {hostName, nodeName, port, serviceName, timeOut} = req.body;    
     port = parseInt(port);
     timeOut = parseInt(timeOut) || constants.HEARTBEAT_TIMEOUT;
