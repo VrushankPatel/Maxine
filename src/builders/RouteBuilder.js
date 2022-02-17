@@ -49,9 +49,8 @@ class RouteBuilder{
 
     getRoute = () => this.route;
 
-    createRouteString = (endPt) => {        
-        const routeString = this.routeStack.join('') + this.formatEndpoint(endPt);
-        return routeString;
+    createRouteString = (endPt) => {
+        return this.routeStack.join('') + this.formatEndpoint(endPt);
     }
 
     formatEndpoint = (endPt) => {        
