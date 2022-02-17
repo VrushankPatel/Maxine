@@ -8,15 +8,14 @@ const maxineRoutes = require('./src/routes/routes');
 const expressStatusMonitor = require('express-status-monitor');
 
 // below starts to send requests to it self
-// require('./src/routines/routine').startRoutines();
-
+require('./src/routines/routine').startRoutines();
 
 const app = AppBuilder.createNewApp()
-                .use(expressStatusMonitor(statusMonitorConfig))
+                .ifPropertyOnce("statusMonitor.enabled")
+                        .use(expressStatusMonitor(statusMonitorConfig))
                 .use(logRequest)
-                .checkProperty("actuator.enabled")                    
-                        .use(actuator(actuatorConfig))
-                .endAllCheck()
+                .ifPropertyOnce("actuator.enabled")
+                        .use(actuator(actuatorConfig))                
                 .use('/',maxineRoutes)
                 .use(logWebExceptions)
                 .getApp();

@@ -14,7 +14,8 @@ const { properties } = require('../util/propertyReader/propertyReader');
 class AppBuilder{
     app;    
     conditionStack = [];
-    
+    checkOnceOnly = false;
+
     constructor(app){
         this.app = app;
     }
@@ -23,17 +24,23 @@ class AppBuilder{
 
     static loadApp = (app) => new AppBuilder(app);
 
-    checkProperty = (property) => {
+    ifPropertyOnce = (property) => {
+        this.conditionStack.push(properties[property] === 'true');
+        this.checkOnceOnly = true;
+        return this;
+    }
+
+    ifProperty = (property) => {
         this.conditionStack.push(properties[property] === 'true');
         return this;
     }
 
-    endCheck = () => {
+    endIfProperty = () => {
         this.conditionStack.pop();
         return this;
     };
 
-    endAllCheck = () => {
+    endAllIf = () => {
         this.conditionStack = [];
         return this;
     }
@@ -41,11 +48,14 @@ class AppBuilder{
     getApp = () => this.app;
 
     use(...args){
-        if(this.conditionStack.length > 0){
+        if(this.conditionStack.length > 0){            
             if(this.conditionStack.every(e => e === true)){
                 this.app.use(...args);
-                return this;        
-            }            
+            }
+            if(this.checkOnceOnly){
+                this.checkOnceOnly = false;
+                this.conditionStack = [];
+            }
             return this;
         }
         this.app.use(...args)
