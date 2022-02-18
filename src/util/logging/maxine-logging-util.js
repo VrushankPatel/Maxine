@@ -39,9 +39,7 @@ const logRequest = (req, res, next) => {
 }
 
 const logWebExceptions = (err, req, res, next) => {    
-    log(() => {                
-        logger.error(logJsonBuilder("ERROR", "WEBREQUEST-Exception", httpStatus.STATUS_SERVER_ERROR, req, err.toString()));
-    });
+    log(() => logger.error(logJsonBuilder("ERROR", "WEBREQUEST-Exception", httpStatus.STATUS_SERVER_ERROR, req, err.toString())));
     res.status(httpStatus.STATUS_SERVER_ERROR).json({"message" : httpStatus.MSG_MAXINE_SERVER_ERROR});
 }
 
