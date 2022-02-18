@@ -49,12 +49,10 @@ class RouteBuilder{
 
     getRoute = () => this.route;
 
-    createRouteString = (endPt) => {
-        return this.routeStack.join('') + this.formatEndpoint(endPt);
-    }
+    createRouteString = (endPt) => this.routeStack.join('') + this.formatEndpoint(endPt);
 
-    formatEndpoint = (endPt) => {        
-        endPt = endPt[0] === "/" ? endPt : `/${endPt}`;        
+    formatEndpoint = (endPt) => {
+        endPt = endPt[0] === "/" ? endPt : `/${endPt}`;
         return endPt;
     }
 }
