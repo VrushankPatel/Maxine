@@ -1,4 +1,4 @@
-staticTestData = [
+const staticTestData = [
     {
         description : "API /actuator/health",
         tests: [
