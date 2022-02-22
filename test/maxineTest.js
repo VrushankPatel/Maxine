@@ -54,7 +54,7 @@ describe('API /any_malformed_url', () => {
 describe('API /maxine', () => {
     it('/register -> 200', (done) => {
         const testData = {
-            "hostName" : "192.168.221.128",
+            "hostName" : "xxx.xxx.xx.xxx",
             "port" : 8080,
             "serviceName" : "Maxine-Discovery",
             "nodeName" : "node-4",
