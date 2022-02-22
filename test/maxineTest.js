@@ -49,4 +49,29 @@ describe('API /any_malformed_url', () => {
                 done();
             });
     });
+});
+
+describe('API /maxine', () => {
+    it('/register -> 200', (done) => {
+        const testData = {
+            "hostName" : "192.168.221.128",
+            "port" : 8080,
+            "serviceName" : "Maxine-Discovery",
+            "nodeName" : "node-4",
+            "timeOut" : 4
+        };
+        chai.request(app)
+            .post('/maxine/register')
+            .send(testData)
+            .end((err, res) => {
+                res.should.have.status(200);
+                res.should.be.json;
+                res.body.should.be.a('object');
+                res.body.should.be.eql(
+                    {
+                        "message": `Service Registered Successfully [service : ${testData.serviceName} | node : ${testData.nodeName} | address : ${testData.hostName}:${testData.port} | timeOut : ${testData.timeOut} second(s)`
+                    });
+                done();
+            });
+    });
 })
