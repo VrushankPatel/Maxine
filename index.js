@@ -21,3 +21,5 @@ const app = AppBuilder.createNewApp()
                 .getApp();
 
 app.listen(constants.PORT, loggingUtil.initApp);
+
+module.exports = app;
