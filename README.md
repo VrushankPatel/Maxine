@@ -1,6 +1,6 @@
-<img src="logo/maxine-logo.png"/>
+<img src="logo/logo.png"/>
 
-### Maxine : Discovery abd Naming server for Microservices
+### Maxine : Discovery and Naming server for Microservices
 <p align=center>
 <a href="https://sonarcloud.io/summary/new_code?id=VrushankPatel_Gargantua-Maxine-Server"><img src="https://sonarcloud.io/images/project_badges/sonarcloud-black.svg"/></a>
 <a href="https://sonarcloud.io/summary/new_code?id=VrushankPatel_Gargantua-Maxine-Server"><img src="https://sonarcloud.io/api/project_badges/quality_gate?project=VrushankPatel_Gargantua-Maxine-Server"/></a><br/>
