@@ -1,5 +1,4 @@
-# Maxine discovery and naming server
-
+<img src="logo/maxine-logo.png"/>
 
 <center>
 <a href="https://sonarcloud.io/summary/new_code?id=VrushankPatel_Gargantua-Maxine-Server"><img src="https://sonarcloud.io/images/project_badges/sonarcloud-black.svg"/></a>
