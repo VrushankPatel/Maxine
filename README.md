@@ -1,17 +1,22 @@
 # Maxine discovery and naming server
 
-|[![SonarCloud](https://sonarcloud.io/images/project_badges/sonarcloud-black.svg)](https://sonarcloud.io/summary/new_code?id=VrushankPatel_Gargantua-Maxine-Server)|
-|------------ |
-|[![Quality gate](https://sonarcloud.io/api/project_badges/quality_gate?project=VrushankPatel_Gargantua-Maxine-Server)](https://sonarcloud.io/summary/new_code?id=VrushankPatel_Gargantua-Maxine-Server)|
-|[![Quality Gate Status](https://sonarcloud.io/api/project_badges/measure?project=VrushankPatel_Gargantua-Maxine-Server&metric=alert_status)](https://sonarcloud.io/summary/new_code?id=VrushankPatel_Gargantua-Maxine-Server)|
-|[![Bugs](https://sonarcloud.io/api/project_badges/measure?project=VrushankPatel_Gargantua-Maxine-Server&metric=bugs)](https://sonarcloud.io/summary/new_code?id=VrushankPatel_Gargantua-Maxine-Server)|
-|[![Code Smells](https://sonarcloud.io/api/project_badges/measure?project=VrushankPatel_Gargantua-Maxine-Server&metric=code_smells)](https://sonarcloud.io/summary/new_code?id=VrushankPatel_Gargantua-Maxine-Server)|
-|[![Duplicated Lines (%)](https://sonarcloud.io/api/project_badges/measure?project=VrushankPatel_Gargantua-Maxine-Server&metric=duplicated_lines_density)](https://sonarcloud.io/summary/new_code?id=VrushankPatel_Gargantua-Maxine-Server)|
-|[![Maintainability Rating](https://sonarcloud.io/api/project_badges/measure?project=VrushankPatel_Gargantua-Maxine-Server&metric=sqale_rating)](https://sonarcloud.io/summary/new_code?id=VrushankPatel_Gargantua-Maxine-Server)|
-|[![Reliability Rating](https://sonarcloud.io/api/project_badges/measure?project=VrushankPatel_Gargantua-Maxine-Server&metric=reliability_rating)](https://sonarcloud.io/summary/new_code?id=VrushankPatel_Gargantua-Maxine-Server)|
-|[![Security Rating](https://sonarcloud.io/api/project_badges/measure?project=VrushankPatel_Gargantua-Maxine-Server&metric=security_rating)](https://sonarcloud.io/summary/new_code?id=VrushankPatel_Gargantua-Maxine-Server)|
-|[![Technical Debt](https://sonarcloud.io/api/project_badges/measure?project=VrushankPatel_Gargantua-Maxine-Server&metric=sqale_index)](https://sonarcloud.io/summary/new_code?id=VrushankPatel_Gargantua-Maxine-Server)|
-|[![Vulnerabilities](https://sonarcloud.io/api/project_badges/measure?project=VrushankPatel_Gargantua-Maxine-Server&metric=vulnerabilities)](https://sonarcloud.io/summary/new_code?id=VrushankPatel_Gargantua-Maxine-Server)|
+
+<center>
+<a href="https://sonarcloud.io/summary/new_code?id=VrushankPatel_Gargantua-Maxine-Server"><img src="https://sonarcloud.io/images/project_badges/sonarcloud-black.svg"/></a>
+<a href="https://sonarcloud.io/summary/new_code?id=VrushankPatel_Gargantua-Maxine-Server"><img src="https://sonarcloud.io/api/project_badges/quality_gate?project=VrushankPatel_Gargantua-Maxine-Server"/></a><br/>
+<a href="https://sonarcloud.io/summary/new_code?id=VrushankPatel_Gargantua-Maxine-Server"><img src="https://sonarcloud.io/api/project_badges/measure?project=VrushankPatel_Gargantua-Maxine-Server&metric=bugs"/></a>
+<a href="https://sonarcloud.io/summary/new_code?id=VrushankPatel_Gargantua-Maxine-Server"><img src="https://sonarcloud.io/api/project_badges/measure?project=VrushankPatel_Gargantua-Maxine-Server&metric=code_smells"/></a>
+<a href="https://sonarcloud.io/summary/new_code?id=VrushankPatel_Gargantua-Maxine-Server"><img src="https://sonarcloud.io/api/project_badges/measure?project=VrushankPatel_Gargantua-Maxine-Server&metric=sqale_rating"/></a>
+<a href="https://sonarcloud.io/summary/new_code?id=VrushankPatel_Gargantua-Maxine-Server"><img src="https://sonarcloud.io/api/project_badges/measure?project=VrushankPatel_Gargantua-Maxine-Server&metric=reliability_rating"/></a>
+<a href="https://sonarcloud.io/summary/new_code?id=VrushankPatel_Gargantua-Maxine-Server"><img src="https://sonarcloud.io/api/project_badges/measure?project=VrushankPatel_Gargantua-Maxine-Server&metric=security_rating"/></a>
+<a href="https://sonarcloud.io/summary/new_code?id=VrushankPatel_Gargantua-Maxine-Server"><img src="https://sonarcloud.io/api/project_badges/measure?project=VrushankPatel_Gargantua-Maxine-Server&metric=vulnerabilities"/></a>
+<a href="https://github.com/VrushankPatel/Gargantua-Maxine-Server/actions/workflows/codeql.yml"><img src="https://github.com/VrushankPatel/Gargantua-Maxine-Server/actions/workflows/codeql.yml/badge.svg"/></a>
+<a href="https://opensource.org/licenses/MIT"><img src="https://img.shields.io/badge/License-MIT-yellow.svg"/></a>
+<a href="https://www.javascript.com"><img src="https://img.shields.io/badge/Made%20with-JavaScript-1f425f.svg"/></a>
+<a><img src="https://img.shields.io/badge/maintainer-VrushankPatel-blue"/></a>
+</center>
+
+<!-- ALL-CONTRIBUTORS-BADGE:END -->
 
 ### Getting Started
 
