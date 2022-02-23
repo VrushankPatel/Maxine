@@ -19,7 +19,7 @@ const registerService = (serviceName, nodeName, address, timeOut) => {
         "address" : address,
         "id" : id,
         "timeOut" : timeOut,
-        "regiteredAt" : new Date().toLocaleString()
+        "registeredAt" : new Date().toLocaleString()
     }
 
     const timeResetter = setTimeout(() => {
@@ -31,6 +31,7 @@ const registerService = (serviceName, nodeName, address, timeOut) => {
     }, ((timeOut)*1000)+500);
 
     timeResetters[id] = timeResetter;
+    return serviceRegistry[serviceName][nodeName];
 }
 
 const getCurrentlyRegisteredServers = () => serviceRegistry;

@@ -11,15 +11,18 @@ const discoveryController = (req, res) => {
         res.status(httpStatus.STATUS_GENERIC_ERROR).json({"message" : httpStatus.MSG_MISSING_DATA});
         return;
     }
-    registerService(serviceName, nodeName, `${hostName}:${port}`, timeOut);        
+    const serviceResponse = registerService(serviceName, nodeName, `${hostName}:${port}`, timeOut);
+
     const msg = `${httpStatus.MSG_SUCCESS_REGISTERED} [service : ${serviceName} | node : ${nodeName} | address : ${hostName}:${port} | ${timeOut ? "timeOut : " + timeOut + " second(s)" : "]"}`;
     info(msg);
-    res.status(httpStatus.STATUS_SUCCESS).json({"message" : msg});    
+    
+    res.status(httpStatus.STATUS_SUCCESS).json(serviceResponse);
 }
 
 
 const serverListController = (req, res) => {    
-    res.send(JSON.stringify(getCurrentlyRegisteredServers()));
+    res.type('application/json');
+    res.send(JSON.stringify(getCurrentlyRegisteredServers()));    
 }
 
 module.exports = {
