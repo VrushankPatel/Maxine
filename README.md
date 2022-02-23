@@ -1,6 +1,7 @@
 <img src="logo/maxine-logo.png"/>
 
-<center>
+### Maxine : Discovery abd Naming server for Microservices
+<p align=center>
 <a href="https://sonarcloud.io/summary/new_code?id=VrushankPatel_Gargantua-Maxine-Server"><img src="https://sonarcloud.io/images/project_badges/sonarcloud-black.svg"/></a>
 <a href="https://sonarcloud.io/summary/new_code?id=VrushankPatel_Gargantua-Maxine-Server"><img src="https://sonarcloud.io/api/project_badges/quality_gate?project=VrushankPatel_Gargantua-Maxine-Server"/></a><br/>
 <a href="https://sonarcloud.io/summary/new_code?id=VrushankPatel_Gargantua-Maxine-Server"><img src="https://sonarcloud.io/api/project_badges/measure?project=VrushankPatel_Gargantua-Maxine-Server&metric=bugs"/></a>
@@ -13,9 +14,7 @@
 <a href="https://opensource.org/licenses/MIT"><img src="https://img.shields.io/badge/License-MIT-yellow.svg"/></a>
 <a href="https://www.javascript.com"><img src="https://img.shields.io/badge/Made%20with-JavaScript-1f425f.svg"/></a>
 <a><img src="https://img.shields.io/badge/maintainer-VrushankPatel-blue"/></a>
-</center>
-
-<!-- ALL-CONTRIBUTORS-BADGE:END -->
+</p>
 
 ### Getting Started
 
