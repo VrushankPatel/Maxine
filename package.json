@@ -7,7 +7,7 @@
     "start": "npm run test && node index.js",
     "dev": "set profile=dev & nodemon index.js",
     "test": "mocha --timeout 10000 --exit",
-    "coverage": " nyc --reporter=html --reporter=text npm test"
+    "coverage": "nyc --reporter=html npm test"
   },
   "keywords": [
     "maxine",
