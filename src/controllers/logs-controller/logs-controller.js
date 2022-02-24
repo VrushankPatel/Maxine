@@ -31,8 +31,6 @@ const logsLinkGenController = (req, res) => {
             </a>
         </div>
         </center>`;
-        console.log(typeof file);
-
     });
     res.send(links);
 }
