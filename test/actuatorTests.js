@@ -36,5 +36,18 @@ describe(`${fileName} : API /actuator`, () => {
                     });
                 done();
             });
-    });    
+    }); 
+    
+    it('/metrics -> 200 & should return memory occupied and uptime', (done) => {
+        chai.request(app)
+            .get('/actuator/metrics')
+            .end((err, res) => {
+                res.should.have.status(200);
+                res.should.be.json;
+                res.body.should.be.a('object');
+                res.body.should.have.own.property("mem");
+                const res.body["mem"]
+                done();
+            });
+    }); 
 });
