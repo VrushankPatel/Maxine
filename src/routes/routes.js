@@ -5,15 +5,14 @@ const { serverListController, discoveryController } = require('../controllers/di
 const { shutdownController, malformedUrlsController } = require('../controllers/otherControllers');
 
 
-var maxineRoutes = RouteBuilder.createNewRoute()
-                        .get("sd", () => SVGDefsElement.sd()) // to test exceptions logging
+var maxineRoutes = RouteBuilder.createNewRoute()                        
                         .from("control")
                             .get("shutdown", shutdownController)
                         .stepToRoot()
                         .from("logs")
                             .from("download")
                                 .get("/",logsLinkGenController)
-                                .get(":level", logsDownloadController)                                
+                                .get(":level", logsDownloadController)
                         .stepToRoot()
                         .from("maxine")
                             .post("register", bodyParser.json(), discoveryController)
