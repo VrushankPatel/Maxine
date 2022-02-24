@@ -2,8 +2,7 @@ const fs = require('fs');
 const { constants, httpStatus } = require('../util/constants/constants');
 
 class LogFilesService{
-    getLogLinks = () => {
-        let links = "";
+    getLogLinks = () => {        
         let linksResponse = {}
         fs.readdirSync(constants.LOGDIR).forEach(file => {
             linksResponse[file] = `/logs/download/${file}`;
