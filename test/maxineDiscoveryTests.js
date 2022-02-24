@@ -27,6 +27,7 @@ describe(`${fileName} : API /maxine`, () => {
     // second test will retrieve the registered server info and will verify it by below two params.
     let retrievedId;
     let registeredAt;
+    let expectedServiceObj;
 
     it('/register -> 200 & should register the server', (done) => {        
         chai.request(app)
@@ -35,8 +36,28 @@ describe(`${fileName} : API /maxine`, () => {
             .send(testServiceData)            
             .end((err, res) => {
                 res.should.have.status(200);
-                res.should.be.json;                
-                assertSameResponseServiceObject(res.body);
+                res.should.be.json;
+                
+                const body = res.body;
+                body.should.be.a('object');
+                body.should.have.own.property(serviceName);
+
+                const service = body[serviceName];
+                service.should.be.a('object');
+                service.should.have.own.property(nodeName);
+
+                const node = service[nodeName];
+                node.should.be.a('object');
+                node.should.have.own.property("address", `${hostName}:${port}`);
+                node.should.have.own.property("timeOut", timeOut);
+
+                node.should.have.own.property("id");
+                node.should.have.own.property("registeredAt");                
+
+                registeredAt = node.registeredAt;
+                retrievedId = node.id;
+
+                expectedServiceObj = body[serviceName];
                 done();
             });
     });
@@ -47,41 +68,12 @@ describe(`${fileName} : API /maxine`, () => {
             .end((err, res) => {
                 res.should.have.status(200);
                 res.should.be.json;
-                assertSameResponseServiceObject(res.body);
+
+                const body = res.body;
+                body.should.be.a('object');
+                body.should.have.own.property(serviceName);
+                body[serviceName].should.be.eql(expectedServiceObj)                
                 done();
             });
     });
 });
-
-assertSameResponseServiceObject = (body) => {
-    /**
-     * here, we'll check the format of body is given json and assert values with test data described at the top.
-        {
-            "Maxine-Discovery": {
-                "Node-1": {
-                    "address": "192.168.1.3:8080",
-                    "id": "l00j83qc",
-                    "timeOut": 5,
-                    "registeredAt": "24/2/2022, 10:45:36 am"
-                }
-            }
-        }
-     */
-    body.should.be.a('object');
-    body.should.have.own.property(serviceName);
-
-    const service = body[serviceName];
-    service.should.be.a('object');
-    service.should.have.own.property(nodeName);
-
-    const node = service[nodeName];
-    node.should.be.a('object');
-    node.should.have.own.property("address", `${hostName}:${port}`);
-    node.should.have.own.property("timeOut", timeOut);
-
-    node.should.have.own.property("id");
-    node.should.have.own.property("registeredAt");                
-
-    registeredAt = node.registeredAt;
-    retrievedId = node.id;
-}
