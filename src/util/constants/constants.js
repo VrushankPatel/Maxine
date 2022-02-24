@@ -23,7 +23,6 @@ const LOG_EXCLUDED_URLS_CHUNKS = [
 // Http Status Code and Messages
 const STATUS_NOT_FOUND = 404;
 const MSG_NOT_FOUND = "Not found";
-
 const STATUS_SUCCESS = 200;
 const STATUS_GENERIC_ERROR = 400;
 const STATUS_SERVER_ERROR = 500;

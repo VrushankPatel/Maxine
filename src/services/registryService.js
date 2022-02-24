@@ -1,6 +1,6 @@
 const JsonBuilder = require("../builders/JsonBuilder");
 const { httpStatus } = require("../util/constants/constants");
-const { info } = require("../util/logging/maxine-logging-util");
+const { info } = require("../util/logging/loggingUtil");
 
 class RegistryService{
     serviceRegistry = {};
