@@ -8,7 +8,6 @@ class LogFilesService{
         fs.readdirSync(constants.LOGDIR).forEach(file => {
             linksResponse[file] = `/logs/download/${file}`;
         });
-        console.log(linksResponse)
         return linksResponse;
     }
 }
