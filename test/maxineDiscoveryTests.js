@@ -35,14 +35,25 @@ describe(`${fileName} : API /maxine`, () => {
             .end((err, res) => {
                 res.should.have.status(200);
                 res.should.be.json;
-                res.body.should.be.a('object');                
-                res.body.should.have.own.property("address", `${hostName}:${port}`);
-                res.body.should.have.own.property("timeOut", timeOut);
-                res.body.should.have.own.property("id");
-                res.body.should.have.own.property("registeredAt");
+                
+                const body = res.body;
+                body.should.be.a('object');
+                body.should.have.own.property(serviceName);
 
-                registeredAt = res.body.registeredAt;
-                retrievedId = res.body.id;
+                const service = body[serviceName];
+                service.should.be.a('object');
+                service.should.have.own.property(nodeName);
+
+                const node = service[nodeName];
+                node.should.be.a('object');
+                node.should.have.own.property("address", `${hostName}:${port}`);
+                node.should.have.own.property("timeOut", timeOut);
+
+                node.should.have.own.property("id");
+                node.should.have.own.property("registeredAt");                
+
+                registeredAt = node.registeredAt;
+                retrievedId = node.id;
 
                 done();
             });
@@ -64,11 +75,11 @@ describe(`${fileName} : API /maxine`, () => {
                 service.should.have.own.property(nodeName);
 
                 const node = service[nodeName];
-                node.should.be.a('object');                
+                node.should.be.a('object');
                 node.should.have.own.property("address", `${hostName}:${port}`);
                 node.should.have.own.property("timeOut", timeOut);
                 node.should.have.own.property("id", retrievedId);
-                node.should.have.own.property("registeredAt", registeredAt);                
+                node.should.have.own.property("registeredAt", registeredAt);
                 done();
             });
     });
