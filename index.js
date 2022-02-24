@@ -1,3 +1,4 @@
+require('./src/util/logging/logGenericExceptions')();
 const loggingUtil = require('./src/util/logging/loggingUtil');
 const { constants } = require('./src/util/constants/constants');
 const actuator = require('express-actuator');
