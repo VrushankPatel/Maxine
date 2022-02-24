@@ -6,7 +6,8 @@
   "scripts": {
     "start": "npm run test && node index.js",
     "dev": "set profile=dev & nodemon index.js",
-    "test": "mocha --timeout 10000 --exit"
+    "test": "mocha --timeout 10000 --exit",
+    "coverage": " nyc --reporter=html --reporter=text npm test"
   },
   "keywords": [
     "maxine",
@@ -34,8 +35,10 @@
     "chai": "^4.3.6",
     "chai-http": "^4.3.0",
     "chai-json": "^1.0.0",
+    "istanbul": "^0.4.5",
     "mocha": "^9.2.1",
-    "nodemon": "^2.0.15"
+    "nodemon": "^2.0.15",
+    "nyc": "^15.1.0"
   },
   "repository": {
     "type": "git",
