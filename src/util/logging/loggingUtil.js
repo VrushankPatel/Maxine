@@ -3,7 +3,7 @@ const winston = require('winston');
 const { logConfiguration } = require('../../config/configs/loggingConfig');
 const {constants, httpStatus} = require('../constants/constants');
 const { properties } = require('../propertyReader/propertyReader');
-const { containsExcludedLoggingUrls, logJsonBuilder } = require('../util');
+const { containsExcludedLoggingUrls, logJsonBuilder, closeApp } = require('../util');
 
 const banner = fs.readFileSync(constants.BANNERPATH, 'utf8');
 const loggingType = properties["logging.type"];
@@ -16,20 +16,12 @@ const info = (msg) => log(() => logger.info(logJsonBuilder("INFO", "GENERIC", nu
 
 const error = (msg) => log(() => logger.error(logJsonBuilder("ERROR", "GENERIC", null, null, msg)));
 
-const logExceptions = (req, msg) => log(() => logger.error(logJsonBuilder("ERROR", "WEBREQUEST-Exception", httpStatus.STATUS_SERVER_ERROR, req, msg)));
-
-const logGenericExceptions = () => {
-    const handleUncaughts = (err) => {
-        const msg = err.message + err.stack.replace(/(\r\n|\n|\r)/gm, "");        
-        log(() => {
-            logger.info(logJsonBuilder("ERROR", "GENERIC", null, null, msg));
-            logger.on('finish', () => process.exit(1));    
-        })
-    };
-    process.on('uncaughtException', handleUncaughts);
+const errorAndClose = (msg) => {
+    error(msg);
+    logger.on('finish', closeApp);
 };
 
-logGenericExceptions();
+const logExceptions = (type ,req, msg) => log(() => logger.error(logJsonBuilder("ERROR", "WEBREQUEST-Exception", httpStatus.STATUS_SERVER_ERROR, req, msg)));
 
 const logRequest = (req, res, next) => {
     log(() => {
@@ -45,7 +37,8 @@ const loggingUtil = {
     error,
     initApp : () => logger.info(`\n${banner} 〉 ${constants.PROFILE} started on port : ${constants.PORT}\n`),
     logRequest,
-    logExceptions    
+    logExceptions,
+    errorAndClose
 }
 
 module.exports = loggingUtil;
