@@ -3,7 +3,7 @@ const actuator = require('express-actuator');
 const expressStatusMonitor = require('express-status-monitor');
 const maxineRoutes = require('../routes/routes');
 const { statusMonitorConfig, actuatorConfig } = require('../config/config');
-const { logWebExceptions, logRequest } = require('../util/logging/maxine-logging-util');
+const { logWebExceptions, logRequest } = require('../util/logging/loggingUtil');
 const { properties } = require('../util/propertyReader/propertyReader');
 
 /*

@@ -1,6 +1,6 @@
 const fs = require('fs');
 const winston = require('winston');
-const { logConfiguration } = require('../../config/configs/logging-config');
+const { logConfiguration } = require('../../config/configs/loggingConfig');
 const {constants, httpStatus} = require('../constants/constants');
 const { properties } = require('../propertyReader/propertyReader');
 const { containsExcludedLoggingUrls, logJsonBuilder } = require('../util');
@@ -15,6 +15,8 @@ const log = (logFunction) => loggingType === "async" ? setTimeout(logFunction, 0
 const info = (msg) => log(() => logger.info(logJsonBuilder("INFO", "GENERIC", null, null, msg)));
 
 const error = (msg) => log(() => logger.error(logJsonBuilder("ERROR", "GENERIC", null, null, msg)));
+
+const logExceptions = (req, msg) => log(() => logger.error(logJsonBuilder("ERROR", "WEBREQUEST-Exception", httpStatus.STATUS_SERVER_ERROR, req, msg)));
 
 const logGenericExceptions = () => {
     const handleUncaughts = (err) => {
@@ -32,15 +34,10 @@ logGenericExceptions();
 const logRequest = (req, res, next) => {
     log(() => {
         if(containsExcludedLoggingUrls(req.url)) return;
-        const logLevel = res.statusCode >= 400 ? "ERROR" : "INFO";
+        const logLevel = res.statusCode >= httpStatus.STATUS_NOT_FOUND ? "ERROR" : "INFO";
         logger.info(logJsonBuilder(logLevel, "WEBREQUEST", res.statusCode, req));
     });
     next();
-}
-
-const logWebExceptions = (err, req, res, next) => {    
-    log(() => logger.error(logJsonBuilder("ERROR", "WEBREQUEST-Exception", httpStatus.STATUS_SERVER_ERROR, req, err.toString())));
-    res.status(httpStatus.STATUS_SERVER_ERROR).json({"message" : httpStatus.MSG_MAXINE_SERVER_ERROR});
 }
 
 const loggingUtil = {    
@@ -48,7 +45,7 @@ const loggingUtil = {
     error,
     initApp : () => logger.info(`\n${banner} 〉 ${constants.PROFILE} started on port : ${constants.PORT}\n`),
     logRequest,
-    logWebExceptions    
+    logExceptions    
 }
 
 module.exports = loggingUtil;

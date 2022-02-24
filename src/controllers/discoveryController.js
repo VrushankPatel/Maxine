@@ -1,6 +1,6 @@
-const { info, error } = require('../../util/logging/maxine-logging-util');
-const { httpStatus, constants } = require('../../util/constants/constants');
-const { RegistryService } = require('../../services/registryService');
+const { info, error } = require('../util/logging/loggingUtil');
+const { httpStatus, constants } = require('../util/constants/constants');
+const { RegistryService } = require('../services/registryService');
 
 const registryService = new RegistryService();
 
