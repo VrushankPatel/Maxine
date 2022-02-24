@@ -24,9 +24,21 @@
 
 ### Getting Started
 
+#### Starting the development server
+
 1. Clone the project in your local dir.
 2. Install all the dependencies by npm i.
 3. Start dev server by npm run dev (nodemon).
+
+#### Test the maxine and generate the coverage.
+
+1. run `npm test` to test the app and generate the coverage reports by nyc(istanbul).
+2. To upload the coverage report to codecov.io, the codecov token is required, set the parameter `>>> CODECOV_TOKEN = {token}` in environment and run `npm run coverage` to upload the coverage to codecov.
+
+#### Run maxine on production.
+
+1. Run command `npm start` to start the application with all the pretests.
+
 
 Licence
 -------
