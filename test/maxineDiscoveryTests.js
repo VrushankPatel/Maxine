@@ -24,9 +24,7 @@ const testServiceData = {
 describe(`${fileName} : API /maxine`, () => {    
     
     // first test will retrieve below two params after registering service and assign the values.
-    // second test will retrieve the registered server info and will verify it by below two params.
-    let retrievedId;
-    let registeredAt;
+    // second test will retrieve the registered server info and will verify it by below two params.    
     let expectedServiceObj;
 
     it('/register -> 200 & should register the server', (done) => {        
@@ -49,13 +47,7 @@ describe(`${fileName} : API /maxine`, () => {
                 const node = service[nodeName];
                 node.should.be.a('object');
                 node.should.have.own.property("address", `${hostName}:${port}`);
-                node.should.have.own.property("timeOut", timeOut);
-
-                node.should.have.own.property("id");
-                node.should.have.own.property("registeredAt");                
-
-                registeredAt = node.registeredAt;
-                retrievedId = node.id;
+                node.should.have.own.property("timeOut", timeOut);                
 
                 expectedServiceObj = body[serviceName];
                 done();

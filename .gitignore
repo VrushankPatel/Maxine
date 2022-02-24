@@ -28,3 +28,5 @@ logs/
 endpoints.*
 package-lock.json
 .nyc_output/
+
+setEnv.bat
