@@ -46,7 +46,14 @@ describe(`${fileName} : API /actuator`, () => {
                 res.should.be.json;
                 res.body.should.be.a('object');
                 res.body.should.have.own.property("mem");
-                const res.body["mem"]
+                res.body.should.have.own.property("uptime");
+                const mem = res.body["mem"];
+                mem.should.have.own.property("rss");
+                mem.should.have.own.property("heapTotal");
+                mem.should.have.own.property("heapUsed");                
+                mem.should.have.own.property("external");
+                mem.should.have.own.property("arrayBuffers");
+
                 done();
             });
     }); 
