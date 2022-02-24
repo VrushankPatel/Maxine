@@ -7,54 +7,36 @@ chai.use(chaiHttp);
 
 const fileName = require('path').basename(__filename).replace(".js","");
 
-describe(`${fileName} : API /maxine`, () => {
-    const hostName = "xxx.xxx.xx.xxx";
-    const port = 8080;
-    const serviceName = "Sample-Service";
-    const nodeName = "node-4";
-    const timeOut = 4;    
+const hostName = "xxx.xxx.xx.xxx";
+const port = 8080;
+const serviceName = "Sample-Service";
+const nodeName = "node-4";
+const timeOut = 4;    
 
+const testServiceData = {
+    "hostName" : hostName,
+    "port" : port,
+    "serviceName" : serviceName,
+    "nodeName" : nodeName,
+    "timeOut" : timeOut
+};
+
+describe(`${fileName} : API /maxine`, () => {    
     
     // first test will retrieve below two params after registering service and assign the values.
     // second test will retrieve the registered server info and will verify it by below two params.
     let retrievedId;
     let registeredAt;
 
-    it('/register -> 200 & should register the server', (done) => {
-        const testServiceData = {
-            "hostName" : hostName,
-            "port" : port,
-            "serviceName" : serviceName,
-            "nodeName" : nodeName,
-            "timeOut" : timeOut
-        };
+    it('/register -> 200 & should register the server', (done) => {        
         chai.request(app)
             .post('/maxine/register')
             .set('Content-Type', 'application/json')
             .send(testServiceData)            
             .end((err, res) => {
                 res.should.have.status(200);
-                res.should.be.json;
-                
-                const body = res.body;
-                body.should.be.a('object');
-                body.should.have.own.property(serviceName);
-
-                const service = body[serviceName];
-                service.should.be.a('object');
-                service.should.have.own.property(nodeName);
-
-                const node = service[nodeName];
-                node.should.be.a('object');
-                node.should.have.own.property("address", `${hostName}:${port}`);
-                node.should.have.own.property("timeOut", timeOut);
-
-                node.should.have.own.property("id");
-                node.should.have.own.property("registeredAt");                
-
-                registeredAt = node.registeredAt;
-                retrievedId = node.id;
-
+                res.should.be.json;                
+                assertSameResponseServiceObject(res.body);
                 done();
             });
     });
@@ -65,22 +47,41 @@ describe(`${fileName} : API /maxine`, () => {
             .end((err, res) => {
                 res.should.have.status(200);
                 res.should.be.json;
-
-                const body = res.body;
-                body.should.be.a('object');
-                body.should.have.own.property(serviceName);
-
-                const service = body[serviceName];
-                service.should.be.a('object');
-                service.should.have.own.property(nodeName);
-
-                const node = service[nodeName];
-                node.should.be.a('object');
-                node.should.have.own.property("address", `${hostName}:${port}`);
-                node.should.have.own.property("timeOut", timeOut);
-                node.should.have.own.property("id", retrievedId);
-                node.should.have.own.property("registeredAt", registeredAt);
+                assertSameResponseServiceObject(res.body);
                 done();
             });
     });
 });
+
+assertSameResponseServiceObject = (body) => {
+    /**
+     * here, we'll check the format of body is given json and assert values with test data described at the top.
+        {
+            "Maxine-Discovery": {
+                "Node-1": {
+                    "address": "192.168.1.3:8080",
+                    "id": "l00j83qc",
+                    "timeOut": 5,
+                    "registeredAt": "24/2/2022, 10:45:36 am"
+                }
+            }
+        }
+     */
+    body.should.be.a('object');
+    body.should.have.own.property(serviceName);
+
+    const service = body[serviceName];
+    service.should.be.a('object');
+    service.should.have.own.property(nodeName);
+
+    const node = service[nodeName];
+    node.should.be.a('object');
+    node.should.have.own.property("address", `${hostName}:${port}`);
+    node.should.have.own.property("timeOut", timeOut);
+
+    node.should.have.own.property("id");
+    node.should.have.own.property("registeredAt");                
+
+    registeredAt = node.registeredAt;
+    retrievedId = node.id;
+}
