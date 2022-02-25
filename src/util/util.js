@@ -1,5 +1,5 @@
 const date = require('date-and-time');
-const JsonBuilder = require('../builders/JsonBuilder');
+const JsonBuilder = require('../builders/json-builder');
 const { constants } = require('./constants/constants');
 
 
