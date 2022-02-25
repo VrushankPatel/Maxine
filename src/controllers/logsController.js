@@ -1,6 +1,6 @@
 const fs = require('fs');
 const LogFilesService = require('../services/logFilesService');
-const { constants, httpStatus } = require('../util/constants/constants');
+const { constants } = require('../util/constants/constants');
 
 const logFilesService = new LogFilesService();
 
