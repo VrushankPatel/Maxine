@@ -7,15 +7,15 @@ jobs:
     steps:
       - checkout
       - persist_to_workspace:
-          root: .
+          root: /maxine
           paths:
-            - .
+            - /maxine
   install_dependencies:
     docker:
       - image: circleci/node:14.17.1
     steps:
       - attach_workspace:
-          at: .
+          at: /maxine
       - restore_cache:
           keys:
             - dependencies-{{ checksum "package-lock.json" }}
@@ -27,7 +27,7 @@ jobs:
           paths:
             - node_modules
       - persist_to_workspace:
-          root: .
+          root: /maxine
           paths:
             - node_modules/*
   test:
@@ -36,7 +36,7 @@ jobs:
     parallelism: 8
     steps:
       - attach_workspace:
-          at: .
+          at: /maxine
       - run:
           name: Run tests
           command: |
