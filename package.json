@@ -6,9 +6,8 @@
   "scripts": {
     "start": "npm run test && node index.js",
     "dev": "set profile=dev & nodemon index.js",
-    "test": "nyc --reporter=html --reporter=lcov npm run testrun",
-    "coverage" : "npm test && npx codecov -t %CODECOV_TOKEN%",
-    "testrun": "mocha --timeout 10000 --exit"
+    "test": "nyc --reporter=html --reporter=lcov npx mocha --timeout 10000 --exit",
+    "coverage" : "npm test && npx codecov -t %CODECOV_TOKEN%"
   },
   "keywords": [
     "maxine",
