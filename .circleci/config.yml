@@ -1,10 +1,10 @@
 version: 2.1
-filters:
-  branches:
-    only:
-      - master      
 
 jobs:
+  filters:
+    branches:
+      only:
+        - master
   checkout_source:
     docker:
       - image: circleci/node:14.15.1-stretch
