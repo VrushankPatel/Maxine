@@ -1,7 +1,9 @@
 version: 2.1
+
 branches:
   only:
     - master
+
 jobs:
   checkout_source:
     docker:
