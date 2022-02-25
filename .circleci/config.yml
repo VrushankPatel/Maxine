@@ -39,9 +39,7 @@ jobs:
           at: .
       - run:
           name: Run tests
-          command: |
-            circleci tests glob 'test/**/*.test.js' |
-            circleci tests split |
+          command: |            
             npm run coverage
 workflows:
   build_workflow:
