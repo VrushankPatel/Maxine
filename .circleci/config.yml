@@ -46,6 +46,9 @@ jobs:
 workflows:
   build_maxine:
     jobs:
+      branches:
+        only:
+          - master
       - checkout_source
       - install_dependencies:
           requires:
