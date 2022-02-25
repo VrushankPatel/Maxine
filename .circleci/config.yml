@@ -1,8 +1,8 @@
 version: 2.1
-
-branches:
-  only:
-    - master
+filters:
+  branches:
+    only:
+      - master      
 
 jobs:
   checkout_source:
