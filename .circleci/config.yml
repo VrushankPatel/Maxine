@@ -1,10 +1,6 @@
 version: 2.1
 
 jobs:
-  filters:
-    branches:
-      only:
-        - master
   checkout_source:
     docker:
       - image: circleci/node:14.15.1-stretch
@@ -49,7 +45,7 @@ jobs:
             npm run coverage
 workflows:
   build_maxine:    
-    jobs:      
+    jobs:
       - checkout_source
       - install_dependencies:
           requires:
