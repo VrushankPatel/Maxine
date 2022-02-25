@@ -1,5 +1,5 @@
-const { actuatorConfig, statusMonitorConfig } = require("./configs/actuatorConfig");
-const { logFileTransports } = require("./configs/loggingConfig");
+const { actuatorConfig, statusMonitorConfig } = require("./configs/actuator-config");
+const { logFileTransports } = require("./configs/logging-config");
 
 module.exports = {
     actuatorConfig,

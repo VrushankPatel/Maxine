@@ -3,8 +3,8 @@ const actuator = require('express-actuator');
 const expressStatusMonitor = require('express-status-monitor');
 const maxineRoutes = require('../routes/routes');
 const { statusMonitorConfig, actuatorConfig } = require('../config/config');
-const { logWebExceptions, logRequest } = require('../util/logging/loggingUtil');
-const { properties } = require('../util/propertyReader/propertyReader');
+const { logWebExceptions, logRequest } = require('../util/logging/logging-util');
+const { properties } = require('../util/propertyReader/property-reader');
 
 /*
 * Builder pattern to creat express in a beautiful manner rather than individual statements.

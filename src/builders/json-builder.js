@@ -1,4 +1,4 @@
-const { properties } = require('../util/propertyReader/propertyReader');
+const { properties } = require('../util/propertyReader/property-reader');
 class JsonBuilder{
     jsonObj;
     checkCondition;    

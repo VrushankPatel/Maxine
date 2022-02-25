@@ -1,5 +1,4 @@
-const fs = require('fs');
-const LogFilesService = require('../services/logFilesService');
+const LogFilesService = require('../services/logfiles-service');
 const { constants } = require('../util/constants/constants');
 
 const logFilesService = new LogFilesService();

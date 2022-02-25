@@ -1,5 +1,5 @@
 const { httpStatus } = require("../constants/constants");
-const { logExceptions } = require("./loggingUtil");
+const { logExceptions } = require("./logging-util");
 
 const logWebExceptions = (err, req, res, next) => {
     if(err.code === 'ENOENT'){
