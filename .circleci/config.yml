@@ -3,7 +3,7 @@ version: 2.1
 jobs:
   checkout_source:
     docker:
-      - image: circleci/node:14.15.1-stretch
+      - image: circleci/node:14.17.1
     steps:
       - checkout
       - persist_to_workspace:
@@ -12,7 +12,7 @@ jobs:
             - .
   install_dependencies:
     docker:
-      - image: circleci/node:14.15.1-stretch
+      - image: circleci/node:14.17.1
     steps:
       - attach_workspace:
           at: .
@@ -39,7 +39,9 @@ jobs:
           at: .
       - run:
           name: Run tests
-          command: |            
+          command: |
+            circleci tests glob 'test/**/*.test.js' |
+            circleci tests split |
             npm run coverage
 workflows:
   build_workflow:
