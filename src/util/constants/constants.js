@@ -1,4 +1,4 @@
-const { properties } = require("../propertyReader/propertyReader");
+const { properties } = require("../propertyReader/property-reader");
 
 const envArgs = process.argv; // first paramerer : port and second parameter : node name
 const envVars = process.env;

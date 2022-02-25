@@ -1,8 +1,8 @@
-const RouteBuilder = require('../builders/RouteBuilder');
-const {logsDownloadController: logsController, logsDownloadController, logsLinkGenController} = require('../controllers/logsController');
+const RouteBuilder = require('../builders/route-builder');
+const {logsDownloadController: logsController, logsDownloadController, logsLinkGenController} = require('../controllers/logs-controller');
 const bodyParser = require('body-parser');
-const { serverListController, discoveryController } = require('../controllers/discoveryController');
-const { shutdownController, malformedUrlsController } = require('../controllers/otherControllers');
+const { serverListController, discoveryController } = require('../controllers/discovery-controller');
+const { shutdownController, malformedUrlsController } = require('../controllers/other-controllers');
 
 
 var maxineRoutes = RouteBuilder.createNewRoute()                        
