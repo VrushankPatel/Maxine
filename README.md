@@ -26,6 +26,7 @@
 </div>
 <br/>
 <a target="_blank" href="https://app.fossa.com/projects/git%2Bgithub.com%2FVrushankPatel%2FGargantua-Maxine-Server?ref=badge_large"><img src="https://app.fossa.com/api/projects/git%2Bgithub.com%2FVrushankPatel%2FGargantua-Maxine-Server.svg?type=large"/></a>
+
 ### Getting Started
 
 #### Starting the development server
