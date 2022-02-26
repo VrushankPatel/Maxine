@@ -13,4 +13,4 @@
 |                                                                                          |
 +------------------------------------------------------------------------------------------+
 
-Maxine Discovery Server
+Maxine Service Discovery & Registry

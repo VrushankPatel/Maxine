@@ -9,8 +9,6 @@ const maxineRoutes = require('./src/routes/routes');
 const expressStatusMonitor = require('express-status-monitor');
 const logWebExceptions = require('./src/util/logging/log-web-exceptins');
 
-// below starts to send requests to it self
-require('./src/routines/routine').startRoutines();
 
 const app = AppBuilder.createNewApp()
                 .ifPropertyOnce("statusMonitor.enabled")
