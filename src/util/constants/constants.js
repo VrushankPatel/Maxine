@@ -1,11 +1,12 @@
 const { properties } = require("../propertyReader/property-reader");
 const envArgs = require('minimist')(process.argv.slice(2));
+const ip = require("ip");
 
 const PORT = parseInt(envArgs['p']) || parseInt(envArgs['port']) || 8080;
 
 const APP_NAME = "Maxine-Discovery";
-const APP_NODE_NAME = envArgs['n'] || envArgs['node'] || "Node-1";
-const MASTER_NODE = properties["master.node.address"];
+const APP_NODE_NAME = envArgs['n'] || envArgs['node'] || "MASTER";
+const MASTER_NODE = `http://${ip.address()}:${PORT}`;
 const HEARTBEAT_TIMEOUT = properties["heartBeat.timeOut"];
 const PROFILE = (envArgs['env'] || envArgs['profile'] || "prod").trim();
 const BANNERPATH = 'src/resources/Banner.txt';

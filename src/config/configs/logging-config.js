@@ -5,7 +5,7 @@ const { constants } = require('../../util/constants/constants');
 const logFileTransports = (constants.PROFILE === "prod" ? [] : [new winston.transports.Console()])
     .concat(constants.LOGLEVELS.map(logLevel => new winston.transports.File({
         level: logLevel,        
-        filename: `logs/Maxine-${logLevel} [${constants.PROFILE}].log`,
+        filename: `logs/Maxine-${logLevel}.log`,
         maxsize:10000000,
         keep: 5,
         compress: true
