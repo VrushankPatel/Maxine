@@ -1,14 +1,13 @@
 const { properties } = require("../propertyReader/property-reader");
+const envArgs = require('minimist')(process.argv.slice(2));
 
-const envArgs = process.argv; // first paramerer : port and second parameter : node name
-const envVars = process.env;
+const PORT = parseInt(envArgs['p']) || parseInt(envArgs['port']) || 8080;
 
-const PORT = parseInt(envArgs[2]) || parseInt(envVars.PORT) || properties["server.port"];
-const APP_NAME = properties["app.name"];
-const APP_NODE_NAME = envArgs[3] || properties["app.node.name"];
+const APP_NAME = "Maxine-Discovery";
+const APP_NODE_NAME = envArgs['n'] || envArgs['node'] || "Node-1";
 const MASTER_NODE = properties["master.node.address"];
 const HEARTBEAT_TIMEOUT = properties["heartBeat.timeOut"];
-const PROFILE = (envVars.profile || "prod").trim();
+const PROFILE = (envArgs['env'] || envArgs['profile'] || "prod").trim();
 const BANNERPATH = 'src/resources/Banner.txt';
 const LOGDIR = './logs/';
 const LOGLEVELS = ['info']; // verbose, silly, error, warn
