@@ -1,12 +1,9 @@
 const { properties } = require("../propertyReader/property-reader");
 const envArgs = require('minimist')(process.argv.slice(2));
-const ip = require("ip");
 
 const PORT = parseInt(envArgs['p']) || parseInt(envArgs['port']) || 8080;
 
 const APP_NAME = "Maxine-Discovery";
-const APP_NODE_NAME = envArgs['n'] || envArgs['node'] || "MASTER";
-const MASTER_NODE = `http://${ip.address()}:${PORT}`;
 const HEARTBEAT_TIMEOUT = properties["heartBeat.timeOut"];
 const PROFILE = (envArgs['env'] || envArgs['profile'] || "prod").trim();
 const BANNERPATH = 'src/resources/Banner.txt';
@@ -16,9 +13,7 @@ const LOGTIMESTAMPFORMAT = 'DD-MMM-YYYY HH:mm:ss';
 const ACTUATORPATH = '/actuator';
 const STATUSMONITORTITLE = 'Status : Maxine';
 const REQUEST_LOG_TIMESTAMP_FORMAT = 'YYYY/MM/DD HH:mm:ss';
-const LOG_EXCLUDED_URLS_CHUNKS = [    
-    
-]
+const LOG_EXCLUDED_URLS_CHUNKS = []
 
 // Http Status Code and Messages
 const STATUS_NOT_FOUND = 404;
@@ -32,11 +27,10 @@ const MSG_FILE_NOT_FOUND = "File not found";
 const MSG_MISSING_DATA = "Please provide all of these -> hostName, nodeName, port and serviceName";
 const MSG_SERVICE_REMOVED = "Removed from registry";
 const MSG_SERVICE_REGISTERED = "Successfully Registered";
+
 const constants = {
     PORT,
     APP_NAME,
-    APP_NODE_NAME,
-    MASTER_NODE,
     HEARTBEAT_TIMEOUT,
     PROFILE,
     BANNERPATH,
