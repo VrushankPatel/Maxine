@@ -42,6 +42,7 @@ jobs:
           command: |
             circleci tests glob 'test/**/*.test.js' |
             circleci tests split |
+            npm test |
             npm run coverage
 workflows:
   build_maxine:    
