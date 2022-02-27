@@ -28,5 +28,4 @@ jobs:
         cache: 'npm'
       env:
         CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
-    - run: npm test        
     - run: npm run coverage

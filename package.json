@@ -7,7 +7,7 @@
     "start": "npm run test && node index.js",
     "dev": "nodemon index.js --env dev",
     "test": "nyc --reporter=html --reporter=lcov npx mocha --timeout 10000 --exit",
-    "coverage": "npx codecov -t $CODECOV_TOKEN"
+    "coverage": "npm test && npx codecov -t $CODECOV_TOKEN"
   },
   "keywords": [
     "maxine",
