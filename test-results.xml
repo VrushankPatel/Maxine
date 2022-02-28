@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuites name="Mocha Tests" time="0.3550" tests="11" failures="0">
+  <testsuite name="Root Suite" timestamp="2022-02-28T14:49:32" tests="0" time="0.0000" failures="0">
+  </testsuite>
+  <testsuite name="actuator.test : API /actuator" timestamp="2022-02-28T14:49:32" tests="3" file="C:\Users\Vrushank.Patel\Documents\GitHub\Maxine-Server\test\actuator.test.js" time="0.1900" failures="0">
+    <testcase name="actuator.test : API /actuator /health -&gt; 200" time="0.1680" classname="/health -&gt; 200">
+    </testcase>
+    <testcase name="actuator.test : API /actuator /info -&gt; 200" time="0.0120" classname="/info -&gt; 200">
+    </testcase>
+    <testcase name="actuator.test : API /actuator /metrics -&gt; 200 &amp; should return memory occupied and uptime" time="0.0100" classname="/metrics -&gt; 200 &amp; should return memory occupied and uptime">
+    </testcase>
+  </testsuite>
+  <testsuite name="invalid-data.test : API /any_malformed_url" timestamp="2022-02-28T14:49:33" tests="1" file="C:\Users\Vrushank.Patel\Documents\GitHub\Maxine-Server\test\invalid-data.test.js" time="0.0090" failures="0">
+    <testcase name="invalid-data.test : API /any_malformed_url /8989 -&gt; 404 (invalid url)" time="0.0090" classname="/8989 -&gt; 404 (invalid url)">
+    </testcase>
+  </testsuite>
+  <testsuite name="json-builder.test : JSON Builder Test" timestamp="2022-02-28T14:49:33" tests="2" file="C:\Users\Vrushank.Patel\Documents\GitHub\Maxine-Server\test\json-builder.test.js" time="0.0030" failures="0">
+    <testcase name="json-builder.test : JSON Builder Test Building JSON Object by JSONBuilder and checking if it works with all the conditions" time="0.0010" classname="Building JSON Object by JSONBuilder and checking if it works with all the conditions">
+    </testcase>
+    <testcase name="json-builder.test : JSON Builder Test Building JSON Object by JSONBuilder&apos;s reference from another Object." time="0.0020" classname="Building JSON Object by JSONBuilder&apos;s reference from another Object.">
+    </testcase>
+  </testsuite>
+  <testsuite name="logs-download.test : API /logs" timestamp="2022-02-28T14:49:33" tests="2" file="C:\Users\Vrushank.Patel\Documents\GitHub\Maxine-Server\test\logs-download.test.js" time="0.0110" failures="0">
+    <testcase name="logs-download.test : API /logs /download -&gt; 200 &amp;&amp; it should return all the log files available in logs dir in JSON format" time="0.0090" classname="/download -&gt; 200 &amp;&amp; it should return all the log files available in logs dir in JSON format">
+    </testcase>
+    <testcase name="logs-download.test : API /logs /download/{log_filename.log} -&gt; (Testing with all the log file names retrieved in above test) 200 &amp;&amp; it should return attachment with response type text/plain" time="0.0020" classname="/download/{log_filename.log} -&gt; (Testing with all the log file names retrieved in above test) 200 &amp;&amp; it should return attachment with response type text/plain">
+    </testcase>
+  </testsuite>
+  <testsuite name="maxine-discovery.test : API /maxine" timestamp="2022-02-28T14:49:33" tests="3" file="C:\Users\Vrushank.Patel\Documents\GitHub\Maxine-Server\test\maxine-discovery.test.js" time="0.1420" failures="0">
+    <testcase name="maxine-discovery.test : API /maxine /register (without passing necessary parameters) -&gt; 400 &amp; should return error" time="0.0110" classname="/register (without passing necessary parameters) -&gt; 400 &amp; should return error">
+    </testcase>
+    <testcase name="maxine-discovery.test : API /maxine /register (With all necessary parameters) -&gt; 200 &amp; should register the server" time="0.1150" classname="/register (With all necessary parameters) -&gt; 200 &amp; should register the server">
+    </testcase>
+    <testcase name="maxine-discovery.test : API /maxine /servers -&gt; 200 &amp; should show the registered server (we just registered one above)" time="0.0160" classname="/servers -&gt; 200 &amp; should show the registered server (we just registered one above)">
+    </testcase>
+  </testsuite>
+</testsuites>
