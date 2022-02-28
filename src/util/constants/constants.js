@@ -24,7 +24,7 @@ const STATUS_SERVER_ERROR = 500;
 const MSG_SUCCESS_SHUTDOWN = "Initiated shutdown.";
 const MSG_MAXINE_SERVER_ERROR = "Unknown error occured, Please try again later";
 const MSG_FILE_NOT_FOUND = "File not found";
-const MSG_MISSING_DATA = "Please provide all of these -> hostName, nodeName, port and serviceName";
+const MSG_REGISTER_MISSING_DATA = "Please provide all of these -> hostName, nodeName, port and serviceName";
 const MSG_SERVICE_REMOVED = "Removed from registry";
 const MSG_SERVICE_REGISTERED = "Successfully Registered";
 
@@ -52,7 +52,7 @@ const httpStatus = {
     MSG_MAXINE_SERVER_ERROR,
     MSG_FILE_NOT_FOUND,
     MSG_NOT_FOUND,    
-    MSG_MISSING_DATA,
+    MSG_REGISTER_MISSING_DATA,
     MSG_SERVICE_REMOVED,
     MSG_SERVICE_REGISTERED
 }
