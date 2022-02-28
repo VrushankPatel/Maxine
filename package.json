@@ -6,7 +6,7 @@
   "scripts": {
     "start": "npm run test && node index.js",
     "dev": "nodemon index.js --env dev",
-    "test": "nyc --reporter=html --reporter=lcov npx mocha --timeout 10000 --exit",
+    "test": "nyc --reporter=html --reporter=lcov npx mocha --reporter mocha-circleci-reporter --timeout 10000 --exit",
     "coverage": "npm test && npx codecov -t $CODECOV_TOKEN"
   },
   "keywords": [
@@ -38,6 +38,7 @@
     "codecov": "^3.8.3",
     "istanbul": "^0.4.5",
     "mocha": "^9.2.1",
+    "mocha-circleci-reporter": "0.0.3",
     "nodemon": "^2.0.15",
     "nyc": "^15.1.0"
   },
