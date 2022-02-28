@@ -43,9 +43,8 @@ jobs:
             circleci tests glob 'test/**/*.test.js' |
             circleci tests split |
             npm run coverage
-
-orbs:
-  node: circleci/node@14.15.1-stretch
+      - store_test_results:
+          path: test-results
 
 workflows:
   build_maxine:
@@ -57,5 +56,3 @@ workflows:
       - test:
           requires:
             - install_dependencies
-          - store_test_results:
-              path: test-results
