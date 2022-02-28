@@ -43,6 +43,14 @@ jobs:
             circleci tests glob 'test/**/*.test.js' |
             circleci tests split |
             npm run coverage
+      - store_artifacts:
+          path: test-results.xml
+          destination: deliverable.xml
+
+      - store_artifacts:
+          path: coverage
+          destination: coverage
+
       - store_test_results:
           path: test-results
 
