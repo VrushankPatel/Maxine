@@ -45,10 +45,10 @@ jobs:
             npm run coverage
 
 orbs:
-  node: circleci/node@5.0.0
+  node: circleci/node@14.15.1-stretch
 
 workflows:
-  build_maxine:    
+  build_maxine:
     jobs:
       - checkout_source
       - install_dependencies:
@@ -57,5 +57,5 @@ workflows:
       - test:
           requires:
             - install_dependencies
-      - node/test:
-          test-results-for: mocha
+          - store_test_results:
+              path: test-results
