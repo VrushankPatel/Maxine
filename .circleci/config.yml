@@ -43,6 +43,10 @@ jobs:
             circleci tests glob 'test/**/*.test.js' |
             circleci tests split |
             npm run coverage
+
+orbs:
+  node: circleci/node@5.0.0
+
 workflows:
   build_maxine:    
     jobs:
@@ -53,3 +57,5 @@ workflows:
       - test:
           requires:
             - install_dependencies
+      - node/test:
+          test-results-for: mocha
