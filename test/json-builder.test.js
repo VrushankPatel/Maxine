@@ -30,9 +30,7 @@ describe(`${fileName} : JSON Builder Test`, () => {
                                 .getJson();
 
         jsonSample.should.have.own.property("sampleKey", "sampleValue");
-
         jsonSample.should.have.own.property("sampleKeyShouldBeHere", "sampleValueShouldBeHere");
-
         jsonSample.should.not.have.own.property("sampleKeyShouldNotBeHere", "sampleValueShouldNotBeHere");
         jsonSample.should.not.have.own.property("keyUnderFalseCondition", "valueUnderFalseCondition");
         jsonSample.should.have.own.property("keyUnderTrueCondition", "valueUnderTrueCondition");
@@ -61,11 +59,9 @@ describe(`${fileName} : JSON Builder Test`, () => {
         jsonSample.should.have.own.property("key1", "value1");
         jsonSample.should.have.own.property("key2", "value2");
         jsonSample.should.have.own.property("key3", "value3");
-
         jsonSample.should.have.own.property("custSampleKey1", "sampleValue1");
         jsonSample.should.have.own.property("custSampleKey2", "sampleValue2");
         jsonSample.should.have.own.property("custSampleKey3", "sampleValue3");
-
         done()
     });
 });
