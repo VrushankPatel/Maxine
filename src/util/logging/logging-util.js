@@ -3,7 +3,7 @@ const winston = require('winston');
 const { logConfiguration } = require('../../config/configs/logging-config');
 const {constants, httpStatus} = require('../constants/constants');
 const { properties } = require('../propertyReader/property-reader');
-const { containsExcludedLoggingUrls, logJsonBuilder, closeApp } = require('../util');
+const { logJsonBuilder, closeApp } = require('../util');
 
 const banner = fs.readFileSync(constants.BANNERPATH, 'utf8');
 const loggingType = properties["logging.type"];
@@ -25,7 +25,6 @@ const logExceptions = (type ,req, msg) => log(() => logger.error(logJsonBuilder(
 
 const logRequest = (req, res, next) => {
     log(() => {
-        if(containsExcludedLoggingUrls(req.url)) return;
         const logLevel = res.statusCode >= httpStatus.STATUS_NOT_FOUND ? "ERROR" : "INFO";
         logger.info(logJsonBuilder(logLevel, "WEBREQUEST", res.statusCode, req));
     });
