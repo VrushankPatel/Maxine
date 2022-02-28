@@ -9,8 +9,8 @@ const discoveryController = (req, res) => {
     port = parseInt(port);
     timeOut = parseInt(timeOut) || constants.HEARTBEAT_TIMEOUT;
     if(!(hostName && nodeName && port && serviceName)){
-        error(httpStatus.MSG_MISSING_DATA);
-        res.status(httpStatus.STATUS_GENERIC_ERROR).json({"message" : httpStatus.MSG_MISSING_DATA});
+        error(httpStatus.MSG_REGISTER_MISSING_DATA);
+        res.status(httpStatus.STATUS_GENERIC_ERROR).json({"message" : httpStatus.MSG_REGISTER_MISSING_DATA});
         return;
     }
 
