@@ -44,7 +44,7 @@ jobs:
             circleci tests split |
             npm run coverage
       - store_test_results:
-          path: test-results
+          path: .
 
 workflows:
   build_maxine:
