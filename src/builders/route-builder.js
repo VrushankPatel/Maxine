@@ -7,14 +7,14 @@ var express = require('express');
 class RouteBuilder{
     route;
     routeStack = [];
-    
+
     constructor(route){
         this.route = route;
     }
 
     static createNewRoute = () => new RouteBuilder(express.Router());
 
-    static loadRoute = (route) => new RouteBuilder(route);    
+    static loadRoute = (route) => new RouteBuilder(route);
 
     from = (routeEndPt) => {
         routeEndPt = this.formatEndpoint(routeEndPt);
@@ -30,22 +30,22 @@ class RouteBuilder{
     stepToRoot = () => {
         this.routeStack = [];
         return this;
-    } 
+    }
 
-    get = (endPoint, ...args) => {        
+    get = (endPoint, ...args) => {
         this.route.get(this.createRouteString(endPoint), ...args);
         return this;
     }
 
     post = (endPoint, ...args) => {
-        this.route.post(this.createRouteString(endPoint), ...args);        
+        this.route.post(this.createRouteString(endPoint), ...args);
         return this;
     }
 
     all = (endPoint, ...args) => {
-        this.route.all(this.createRouteString(endPoint), ...args);        
+        this.route.all(this.createRouteString(endPoint), ...args);
         return this;
-    }    
+    }
 
     getRoute = () => this.route;
 

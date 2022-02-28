@@ -5,7 +5,7 @@ const logFilesService = new LogFilesService();
 
 const logsDownloadController = (req, res) => {
     global.logLevel = req.params.level;
-    const logFilePath = `${constants.LOGDIR}${logLevel}`;    
+    const logFilePath = `${constants.LOGDIR}${logLevel}`;
     res.download(logFilePath);
 }
 

@@ -1,7 +1,7 @@
 const { httpStatus } = require("../util/constants/constants");
 const { closeApp } = require("../util/util");
 
-const shutdownController = (req, res) => {    
+const shutdownController = (req, res) => {
     res.status(httpStatus.STATUS_SUCCESS).json({"message" : httpStatus.MSG_SUCCESS_SHUTDOWN});
     closeApp();
 }

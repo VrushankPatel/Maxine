@@ -8,11 +8,11 @@ const { properties } = require('../util/propertyReader/property-reader');
 
 /*
 * Builder pattern to creat express in a beautiful manner rather than individual statements.
-* It is highly suggested to use methods of this Builder in sequence as they've created 
+* It is highly suggested to use methods of this Builder in sequence as they've created
 */
 
 class AppBuilder{
-    app;    
+    app;
     conditionStack = [];
     checkOnceOnly = false;
 
@@ -48,7 +48,7 @@ class AppBuilder{
     getApp = () => this.app;
 
     use(...args){
-        if(this.conditionStack.length > 0){            
+        if(this.conditionStack.length > 0){
             if(this.conditionStack.every(e => e === true)){
                 this.app.use(...args);
             }

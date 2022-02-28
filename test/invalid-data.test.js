@@ -12,7 +12,7 @@ describe(`${fileName} : API /any_malformed_url`, () => {
         chai.request(app)
             .get('/8989')
             .end((err, res) => {
-                res.should.have.status(404);                
+                res.should.have.status(404);
                 res.should.be.json;
                 res.body.should.be.a('object');
                 res.body.should.be.eql({"message":"Not found"});

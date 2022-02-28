@@ -5,7 +5,7 @@ const { serverListController, discoveryController } = require('../controllers/di
 const { shutdownController, malformedUrlsController } = require('../controllers/other-controllers');
 
 
-var maxineRoutes = RouteBuilder.createNewRoute()                        
+var maxineRoutes = RouteBuilder.createNewRoute()
                         .from("control")
                             .get("shutdown", shutdownController)
                         .stepToRoot()
@@ -18,7 +18,7 @@ var maxineRoutes = RouteBuilder.createNewRoute()
                             .post("register", bodyParser.json(), discoveryController)
                             .get("servers", serverListController)
                         .stepToRoot()
-                        .all('*',malformedUrlsController)                        
+                        .all('*',malformedUrlsController)
                         .getRoute();
 
 module.exports = maxineRoutes;

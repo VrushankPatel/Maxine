@@ -7,7 +7,7 @@ const staticTestData = [
                 url : "/actuator/health",
                 expectedStatus : 200,
                 responseBodyType : 'object',
-                expectedBody : {"status": "UP"}                
+                expectedBody : {"status": "UP"}
             },
             {
                 description : "Actuator-Info should return 200",

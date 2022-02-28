@@ -11,7 +11,7 @@ describe(`${fileName} : API /actuator`, () => {
     it('/health -> 200', (done) => {
         chai.request(app)
             .get('/actuator/health')
-            .end((err, res) => {                
+            .end((err, res) => {
                 res.should.have.status(200);
                 res.should.be.json;
                 res.body.should.be.a('object');
@@ -36,8 +36,8 @@ describe(`${fileName} : API /actuator`, () => {
                     });
                 done();
             });
-    }); 
-    
+    });
+
     it('/metrics -> 200 & should return memory occupied and uptime', (done) => {
         chai.request(app)
             .get('/actuator/metrics')
@@ -50,11 +50,11 @@ describe(`${fileName} : API /actuator`, () => {
                 const mem = res.body["mem"];
                 mem.should.have.own.property("rss");
                 mem.should.have.own.property("heapTotal");
-                mem.should.have.own.property("heapUsed");                
+                mem.should.have.own.property("heapUsed");
                 mem.should.have.own.property("external");
                 mem.should.have.own.property("arrayBuffers");
 
                 done();
             });
-    }); 
+    });
 });
