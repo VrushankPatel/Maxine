@@ -35,11 +35,8 @@ const logJsonBuilder = (logLevel, logType, httpStatus, req, msg = "") => {
                     .getJson();
 }
 
-const closeApp = () => process.exit();
-
 module.exports = {
     getCurrentDate,
     containsExcludedLoggingUrls,
-    logJsonBuilder,
-    closeApp
+    logJsonBuilder
 }
