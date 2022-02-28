@@ -5,7 +5,7 @@ const { RegistryService } = require('../services/registry-service');
 const registryService = new RegistryService();
 
 const discoveryController = (req, res) => {
-    let {hostName, nodeName, port, serviceName, timeOut} = req.body;    
+    let {hostName, nodeName, port, serviceName, timeOut} = req.body;
     port = parseInt(port);
     timeOut = parseInt(timeOut) || constants.HEARTBEAT_TIMEOUT;
     if(!(hostName && nodeName && port && serviceName)){
@@ -20,9 +20,9 @@ const discoveryController = (req, res) => {
 }
 
 
-const serverListController = (req, res) => {    
+const serverListController = (req, res) => {
     res.type('application/json');
-    res.send(JSON.stringify(registryService.getCurrentlyRegisteredServers()));    
+    res.send(JSON.stringify(registryService.getCurrentlyRegisteredServers()));
 }
 
 module.exports = {

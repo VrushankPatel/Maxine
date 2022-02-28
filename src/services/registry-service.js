@@ -10,20 +10,20 @@ class RegistryService{
         if (!this.serviceRegistry[serviceName]){
             this.serviceRegistry[serviceName] = {};
         }
-    
+
         if(this.serviceRegistry[serviceName][nodeName]){
             clearTimeout(this.timeResetters[this.serviceRegistry[serviceName][nodeName]["id"]]);
         }
-    
+
         const id = Date.now().toString(36);
-    
+
         this.serviceRegistry[serviceName][nodeName] = {
             "address" : address,
             "id" : id,
             "timeOut" : timeOut,
             "registeredAt" : new Date().toLocaleString()
         }
-    
+
         const timeResetter = setTimeout(() => {
             info(this.getServiceInfoIson(serviceName, nodeName, httpStatus.MSG_SERVICE_REMOVED));
             delete this.serviceRegistry[serviceName][nodeName];
@@ -31,9 +31,9 @@ class RegistryService{
                 delete this.serviceRegistry[serviceName];
             }
         }, ((timeOut)*1000)+500);
-    
+
         this.timeResetters[id] = timeResetter;
-          
+
         return this.getServiceInfoIson(serviceName, nodeName, httpStatus.MSG_SERVICE_REGISTERED);
     }
 
@@ -45,7 +45,7 @@ class RegistryService{
                                 .put(serviceName, JsonBuilder.createNewJson()
                                                              .put(nodeName, this.serviceRegistry[serviceName][nodeName])
                                                              .getJson())
-                                .getJson(); 
+                                .getJson();
     }
 }
 

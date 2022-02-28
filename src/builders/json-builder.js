@@ -1,12 +1,12 @@
 const { properties } = require('../util/propertyReader/property-reader');
 class JsonBuilder{
     jsonObj;
-    checkCondition;    
+    checkCondition;
     registeredObj;
     conditionStack = [];
 
     constructor(jsonObj){
-        this.jsonObj = jsonObj;        
+        this.jsonObj = jsonObj;
     }
 
     static createNewJson = () => new JsonBuilder({});
@@ -32,8 +32,8 @@ class JsonBuilder{
         this.checkCondition = null;
         return this
     }
-    
-    put = (key, value) => {                
+
+    put = (key, value) => {
         if(this.checkCondition){
             if(this.conditionStack.every(e => e === true)){
                 this.jsonObj[key] = value;
@@ -49,10 +49,10 @@ class JsonBuilder{
         return this;
     }
 
-    putFromRegObj = (key, refObj) => {        
+    putFromRegObj = (key, refObj) => {
         if(this.checkCondition){
             if(this.conditionStack.slice(-1)[0]){
-                this.jsonObj[key] = this.registeredObj[refObj];            
+                this.jsonObj[key] = this.registeredObj[refObj];
             }
             return this;
         }
@@ -75,7 +75,7 @@ class JsonBuilder{
         this.jsonObj = JSON.stringify(this.jsonObj, null, "  ");
         return this;
     }
-    
+
     minifyJSON = () => {
         this.jsonObj = JSON.stringify(JSON.parse(JSON.stringify(this.jsonObj)));
         return this;

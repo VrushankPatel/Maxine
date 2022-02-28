@@ -32,7 +32,7 @@ const logRequest = (req, res, next) => {
     next();
 }
 
-const loggingUtil = {    
+const loggingUtil = {
     info,
     error,
     initApp : () => logger.info(`\n${banner} 〉 ${constants.PROFILE} started on port : ${constants.PORT}\n`),
