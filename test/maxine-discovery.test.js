@@ -23,11 +23,25 @@ const testServiceData = {
 
 describe(`${fileName} : API /maxine`, () => {    
     
+    it('/register (without passing necessary parameters) -> 400 & should return error', (done) => {        
+        chai.request(app)
+            .post('/maxine/register')            
+            .end((err, res) => {
+                res.should.have.status(400);
+                res.should.be.json;
+                
+                const body = res.body;
+                body.should.be.a('object');
+                body.should.have.own.property("message");
+                done();
+            });
+    });
+
     // first test will retrieve below two params after registering service and assign the values.
     // second test will retrieve the registered server info and will verify it by below two params.    
     let expectedServiceObj;
 
-    it('/register -> 200 & should register the server', (done) => {        
+    it('/register (With all necessary parameters) -> 200 & should register the server', (done) => {        
         chai.request(app)
             .post('/maxine/register')
             .set('Content-Type', 'application/json')
@@ -67,5 +81,5 @@ describe(`${fileName} : API /maxine`, () => {
                 body[serviceName].should.be.eql(expectedServiceObj)                
                 done();
             });
-    });
+    });    
 });
