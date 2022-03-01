@@ -46,6 +46,10 @@ jobs:
       - store_test_results:
           path: .
 
+      - store_artifacts:
+          path: /coverage
+          destination: index.html
+
 workflows:
   build_maxine:
     jobs:
