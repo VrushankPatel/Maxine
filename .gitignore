@@ -29,3 +29,4 @@ endpoints.*
 .nyc_output/
 
 setEnv.bat
+test-results.xml

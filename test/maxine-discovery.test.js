@@ -25,7 +25,7 @@ describe(`${fileName} : API /maxine`, () => {
 
     it('/register (without passing necessary parameters) -> 400 & should return error', (done) => {
         chai.request(app)
-            .post('/maxine/register')
+            .post('/api/maxine/register')
             .end((err, res) => {
                 res.should.have.status(400);
                 res.should.be.json;
@@ -43,7 +43,7 @@ describe(`${fileName} : API /maxine`, () => {
 
     it('/register (With all necessary parameters) -> 200 & should register the server', (done) => {
         chai.request(app)
-            .post('/maxine/register')
+            .post('/api/maxine/register')
             .set('Content-Type', 'application/json')
             .send(testServiceData)
             .end((err, res) => {
@@ -70,7 +70,7 @@ describe(`${fileName} : API /maxine`, () => {
 
     it('/servers -> 200 & should show the registered server (we just registered one above)', (done) => {
         chai.request(app)
-            .get('/maxine/servers')
+            .get('/api/maxine/servers')
             .end((err, res) => {
                 res.should.have.status(200);
                 res.should.be.json;
