@@ -5,6 +5,7 @@ const maxineRoutes = require('../routes/routes');
 const { statusMonitorConfig, actuatorConfig } = require('../config/config');
 const { logWebExceptions, logRequest } = require('../util/logging/logging-util');
 const { properties } = require('../util/propertyReader/property-reader');
+const { httpStatus } = require('../util/constants/constants');
 
 /*
 * Builder pattern to creat express in a beautiful manner rather than individual statements.
@@ -42,6 +43,11 @@ class AppBuilder{
 
     endAllIf = () => {
         this.conditionStack = [];
+        return this;
+    }
+
+    blockUnknownUrls = () => {
+        this.app.all('*',(req, res) => res.status(httpStatus.STATUS_NOT_FOUND).json({"message": httpStatus.MSG_NOT_FOUND}));
         return this;
     }
 
