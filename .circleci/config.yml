@@ -47,8 +47,7 @@ jobs:
           path: .
 
       - store_artifacts:
-          path: coverage
-          destination: index.html
+          path: coverage/index.html
 
 workflows:
   build_maxine:
