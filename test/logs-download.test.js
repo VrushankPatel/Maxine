@@ -12,7 +12,7 @@ describe(`${fileName} : API /logs`, () => {
 
     it('/download -> 200 && it should return all the log files available in logs dir in JSON format', (done) => {
         chai.request(app)
-            .get('/logs/download')
+            .get('/api/logs/download')
             .end((err, res) => {
                 res.should.have.status(200);
                 res.should.be.json;

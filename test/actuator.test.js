@@ -10,7 +10,7 @@ const fileName = require('path').basename(__filename).replace(".js","");
 describe(`${fileName} : API /actuator`, () => {
     it('/health -> 200', (done) => {
         chai.request(app)
-            .get('/actuator/health')
+            .get('/api/actuator/health')
             .end((err, res) => {
                 res.should.have.status(200);
                 res.should.be.json;
@@ -22,7 +22,7 @@ describe(`${fileName} : API /actuator`, () => {
 
     it('/info -> 200', (done) => {
         chai.request(app)
-            .get('/actuator/info')
+            .get('/api/actuator/info')
             .end((err, res) => {
                 res.should.have.status(200);
                 res.should.be.json;
@@ -40,7 +40,7 @@ describe(`${fileName} : API /actuator`, () => {
 
     it('/metrics -> 200 & should return memory occupied and uptime', (done) => {
         chai.request(app)
-            .get('/actuator/metrics')
+            .get('/api/actuator/metrics')
             .end((err, res) => {
                 res.should.have.status(200);
                 res.should.be.json;

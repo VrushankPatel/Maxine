@@ -1,5 +1,5 @@
 const RouteBuilder = require('../builders/route-builder');
-const {logsDownloadController: logsController, logsDownloadController, logsLinkGenController} = require('../controllers/logs-controller');
+const {logsDownloadController, logsLinkGenController} = require('../controllers/logs-controller');
 const bodyParser = require('body-parser');
 const { serverListController, discoveryController } = require('../controllers/maxine/discovery-controller');
 

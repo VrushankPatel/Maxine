@@ -5,7 +5,7 @@ class LogFilesService{
     getLogLinks = () => {
         let linksResponse = {}
         fs.readdirSync(constants.LOGDIR).forEach(file => {
-            linksResponse[file] = `/logs/download/${file}`;
+            linksResponse[file] = `/api/logs/download/${file}`;
         });
         return linksResponse;
     }
