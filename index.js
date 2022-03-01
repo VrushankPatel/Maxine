@@ -5,7 +5,7 @@ const actuator = require('express-actuator');
 const AppBuilder = require('./src/builders/app-builder');
 const { statusMonitorConfig, actuatorConfig } = require('./src/config/config');
 const { logRequest } = require('./src/util/logging/logging-util');
-const maxineRoutes = require('./src/routes/routes');
+const maxineApiRoutes = require('./src/routes/routes');
 const expressStatusMonitor = require('express-status-monitor');
 const logWebExceptions = require('./src/util/logging/log-web-exceptins');
 
@@ -15,8 +15,9 @@ const app = AppBuilder.createNewApp()
                         .use(expressStatusMonitor(statusMonitorConfig))
                 .use(logRequest)
                 .ifPropertyOnce("actuator.enabled")
-                        .use(actuator(actuatorConfig))                
-                .use('/',maxineRoutes)
+                        .use(actuator(actuatorConfig))
+                .use('/api',maxineApiRoutes)
+                .blockUnknownUrls()
                 .use(logWebExceptions)
                 .getApp();
 

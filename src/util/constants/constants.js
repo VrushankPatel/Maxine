@@ -10,7 +10,7 @@ const BANNERPATH = 'src/resources/Banner.txt';
 const LOGDIR = './logs/';
 const LOGLEVELS = ['info']; // verbose, silly, error, warn
 const LOGTIMESTAMPFORMAT = 'DD-MMM-YYYY HH:mm:ss';
-const ACTUATORPATH = '/actuator';
+const ACTUATORPATH = '/api/actuator';
 const STATUSMONITORTITLE = 'Status : Maxine';
 const REQUEST_LOG_TIMESTAMP_FORMAT = 'YYYY/MM/DD HH:mm:ss';
 
