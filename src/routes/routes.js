@@ -1,7 +1,7 @@
 const RouteBuilder = require('../builders/route-builder');
 const {logsDownloadController, logsLinkGenController} = require('../controllers/logs-controller');
 const bodyParser = require('body-parser');
-const { serverListController, discoveryController } = require('../controllers/maxine/discovery-controller');
+const { serverListController, registryController } = require('../controllers/maxine/registry-controller');
 
 var maxineApiRoutes = RouteBuilder.createNewRoute()
                         .from("logs")
@@ -10,7 +10,7 @@ var maxineApiRoutes = RouteBuilder.createNewRoute()
                                 .get(":level", logsDownloadController)
                         .stepToRoot()
                         .from("maxine")
-                            .post("register", bodyParser.json(), discoveryController)
+                            .post("register", bodyParser.json(), registryController)
                             .get("servers", serverListController)
                         .stepToRoot()
                         .getRoute();

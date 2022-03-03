@@ -3,7 +3,7 @@ const envArgs = require('minimist')(process.argv.slice(2));
 
 const PORT = parseInt(envArgs['p']) || parseInt(envArgs['port']) || 8080;
 
-const APP_NAME = "Maxine-Discovery";
+const APP_NAME = "Maxine-Service-Discovery";
 const HEARTBEAT_TIMEOUT = properties["heartBeat.timeOut"];
 const PROFILE = (envArgs['env'] || envArgs['profile'] || "prod").trim();
 const BANNERPATH = 'src/resources/Banner.txt';

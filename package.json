@@ -1,7 +1,7 @@
 {
   "name": "maxine-discovery",
   "version": "1.0.0",
-  "description": "Maxine is a discovery and a naming server for all the running nodes with gargantua client dependency.",
+  "description": "Maxine is a service discovery and a naming server for all the running nodes with gargantua client dependency.",
   "main": "index.js",
   "scripts": {
     "start": "npm run test && node index.js",

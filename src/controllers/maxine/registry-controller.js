@@ -4,7 +4,7 @@ const { RegistryService } = require('../../services/registry-service');
 
 const registryService = new RegistryService();
 
-const discoveryController = (req, res) => {
+const registryController = (req, res) => {
     let {hostName, nodeName, port, serviceName, timeOut} = req.body;
     port = parseInt(port);
     timeOut = parseInt(timeOut) || constants.HEARTBEAT_TIMEOUT;
@@ -26,6 +26,6 @@ const serverListController = (req, res) => {
 }
 
 module.exports = {
-    discoveryController,
+    registryController,
     serverListController
 };
