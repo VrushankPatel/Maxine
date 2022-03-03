@@ -11,16 +11,16 @@ class RegistryService{
         nodeName = nodeName.toUpperCase();
 
         if (!this.serviceRegistry[serviceName]){
-            this.serviceRegistry[serviceName] = {offset: 0, servers: {}};
+            this.serviceRegistry[serviceName] = {offset: 0, nodes: {}};
         }
 
-        if(this.serviceRegistry[serviceName]["servers"][nodeName]){
-            clearTimeout(this.timeResetters[this.serviceRegistry[serviceName]["servers"][nodeName]["id"]]);
+        if(this.serviceRegistry[serviceName]["nodes"][nodeName]){
+            clearTimeout(this.timeResetters[this.serviceRegistry[serviceName]["nodes"][nodeName]["id"]]);
         }
 
         const id = Date.now().toString(36);
 
-        this.serviceRegistry[serviceName]["servers"][nodeName] = {
+        this.serviceRegistry[serviceName]["nodes"][nodeName] = {
             "nodeName" : nodeName,
             "address" : address,
             "id" : id,
@@ -30,8 +30,8 @@ class RegistryService{
 
         const timeResetter = setTimeout(() => {
             info(this.getServiceInfoIson(serviceName, nodeName, httpStatus.MSG_SERVICE_REMOVED));
-            delete this.serviceRegistry[serviceName]["servers"][nodeName];
-            if(Object.keys(this.serviceRegistry[serviceName]).length === 0){
+            delete this.serviceRegistry[serviceName]["nodes"][nodeName];
+            if(Object.keys(this.serviceRegistry[serviceName]["nodes"]).length === 0){
                 delete this.serviceRegistry[serviceName];
             }
         }, ((timeOut)*1000)+500);
@@ -43,17 +43,23 @@ class RegistryService{
 
     getCurrentlyRegisteredServers = () => this.serviceRegistry;
 
+    getServers = (serviceName) => {
+        return this.serviceRegistry[serviceName];
+    }
+
     getNodes = (serviceName) => {
-        return this.serviceRegistry[serviceName.toUpperCase()].servers;
+        const servers = this.getServers(serviceName) || {};
+        return servers["nodes"];
     }
 
     getOffsetAndIncrement = (serviceName) => {
-        return this.serviceRegistry[serviceName.toUpperCase()]["offset"]++;
+        const servers = this.getServers(serviceName) || {};
+        return servers["offset"]++;
     }
 
     getNode = (serviceName) => {
-        const nodes = this.getNodes(serviceName);
-        const offset = this.getOffsetAndIncrement(serviceName);
+        const nodes = this.getNodes(serviceName) || {};
+        const offset = this.getOffsetAndIncrement(serviceName) || 0;
         const keys = Object.keys(nodes);
         const key = keys[offset % keys.length];
         return nodes[key];
@@ -63,7 +69,7 @@ class RegistryService{
         return JsonBuilder.createNewJson()
                                 .put("Status", status)
                                 .put(serviceName, JsonBuilder.createNewJson()
-                                                             .put(nodeName, this.serviceRegistry[serviceName]["servers"][nodeName])
+                                                             .put(nodeName, this.serviceRegistry[serviceName]["nodes"][nodeName])
                                                              .getJson())
                                 .getJson();
     }

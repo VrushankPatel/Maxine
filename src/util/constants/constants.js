@@ -20,12 +20,14 @@ const MSG_NOT_FOUND = "Not found";
 const STATUS_SUCCESS = 200;
 const STATUS_GENERIC_ERROR = 400;
 const STATUS_SERVER_ERROR = 500;
+const SERVICE_UNAVAILABLE = 503;
 const MSG_MAXINE_SERVER_ERROR = "Unknown error occured, Please try again later";
 const MSG_FILE_NOT_FOUND = "File not found";
 const MSG_REGISTER_MISSING_DATA = "Please provide all of these -> hostName, nodeName, port and serviceName";
+const MSG_DISCOVER_MISSING_DATA = "Please provide the serviceName.";
 const MSG_SERVICE_REMOVED = "Removed from registry";
 const MSG_SERVICE_REGISTERED = "Successfully Registered";
-
+const MSG_SERVICE_UNAVAILABLE = "Service Unavailable";
 const constants = {
     PORT,
     APP_NAME,
@@ -45,12 +47,15 @@ const httpStatus = {
     STATUS_SUCCESS,
     STATUS_SERVER_ERROR,
     STATUS_GENERIC_ERROR,
+    SERVICE_UNAVAILABLE,
     MSG_MAXINE_SERVER_ERROR,
     MSG_FILE_NOT_FOUND,
     MSG_NOT_FOUND,
     MSG_REGISTER_MISSING_DATA,
+    MSG_DISCOVER_MISSING_DATA,
     MSG_SERVICE_REMOVED,
-    MSG_SERVICE_REGISTERED
+    MSG_SERVICE_REGISTERED,
+    MSG_SERVICE_UNAVAILABLE
 }
 
 module.exports = {
