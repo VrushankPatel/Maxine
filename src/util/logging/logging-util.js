@@ -3,7 +3,7 @@ const winston = require('winston');
 const { logConfiguration } = require('../../config/configs/logging-config');
 const {constants, httpStatus} = require('../constants/constants');
 const { properties } = require('../propertyReader/property-reader');
-const { logJsonBuilder, closeApp } = require('../util');
+const { logJsonBuilder } = require('../util');
 
 const banner = fs.readFileSync(constants.BANNERPATH, 'utf8');
 const loggingType = properties["logging.type"];
@@ -17,8 +17,10 @@ const info = (msg) => log(() => logger.info(logJsonBuilder("INFO", "GENERIC", nu
 const error = (msg) => log(() => logger.error(logJsonBuilder("ERROR", "GENERIC", null, null, msg)));
 
 const errorAndClose = (msg) => {
-    error(msg);
-    logger.on('finish', closeApp);
+    logger.error(msg);
+    logger.on('finish', () => {
+        process.exit();
+    });
 };
 
 const logExceptions = (type ,req, msg) => log(() => logger.error(logJsonBuilder("ERROR", "WEBREQUEST-Exception", httpStatus.STATUS_SERVER_ERROR, req, msg)));
