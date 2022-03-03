@@ -27,13 +27,9 @@ describe(`${fileName} : API /actuator`, () => {
                 res.should.have.status(200);
                 res.should.be.json;
                 res.body.should.be.a('object');
-                res.body.should.be.eql(
-                    {
-                        "build": {
-                            "name" : "maxine-discovery",
-                            "description" : "Maxine is a discovery and a naming server for all the running nodes with gargantua client dependency.","version":"1.0.0"
-                        }
-                    });
+                res.body.should.have.own.property("build");
+                res.body["build"].should.have.own.property("description");
+                res.body["build"].should.have.own.property("name", "maxine-discovery");
                 done();
             });
     });
