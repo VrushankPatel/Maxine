@@ -7,6 +7,9 @@ class RegistryService{
     timeResetters = {};
     registryService = (serviceName, nodeName, address, timeOut) => {
 
+        serviceName = serviceName.toUpperCase();
+        nodeName = nodeName.toUpperCase();
+
         if (!this.serviceRegistry[serviceName]){
             this.serviceRegistry[serviceName] = {};
         }
@@ -39,6 +42,8 @@ class RegistryService{
 
     getCurrentlyRegisteredServers = () => this.serviceRegistry;
 
+    getNodes = (serviceName) => this.serviceRegistry[serviceName.toUpperCase()];
+
     getServiceInfoIson = (serviceName, nodeName, status) => {
         return JsonBuilder.createNewJson()
                                 .put("Status", status)
@@ -49,6 +54,7 @@ class RegistryService{
     }
 }
 
+const registryService = new RegistryService();
 module.exports = {
-    RegistryService
+    registryService
 }

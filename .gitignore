@@ -30,3 +30,5 @@ endpoints.*
 
 setEnv.bat
 test-results.xml
+
+web/

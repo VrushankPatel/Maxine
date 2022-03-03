@@ -1,8 +1,7 @@
 const { info, error } = require('../../util/logging/logging-util');
 const { httpStatus, constants } = require('../../util/constants/constants');
-const { RegistryService } = require('../../services/registry-service');
+const { registryService } = require('../../services/registry-service');
 
-const registryService = new RegistryService();
 
 const registryController = (req, res) => {
     let {hostName, nodeName, port, serviceName, timeOut} = req.body;

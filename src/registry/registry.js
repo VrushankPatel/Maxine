@@ -1,0 +1,3 @@
+registry = {}
+
+module.exports = registry;
