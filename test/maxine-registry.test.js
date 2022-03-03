@@ -79,7 +79,9 @@ describe(`${fileName} : API /maxine`, () => {
                 const body = res.body;
                 body.should.be.a('object');
                 body.should.have.own.property(serviceName);
-                body[serviceName].should.be.eql(expectedServiceObj)
+                body[serviceName].should.have.own.property("nodes");
+                body[serviceName]["nodes"].should.have.own.property(nodeName);
+                body[serviceName]["nodes"][nodeName].should.be.eql(expectedServiceObj[nodeName]);
                 done();
             });
     });
