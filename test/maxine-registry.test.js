@@ -9,8 +9,8 @@ const fileName = require('path').basename(__filename).replace(".js","");
 
 const hostName = "xxx.xxx.xx.xxx";
 const port = 8080;
-const serviceName = "Sample-Service";
-const nodeName = "node-4";
+const serviceName = "Sample-Service".toUpperCase();
+const nodeName = "node-4".toUpperCase();
 const timeOut = 4;
 
 const testServiceData = {
@@ -52,6 +52,7 @@ describe(`${fileName} : API /maxine`, () => {
 
                 const body = res.body;
                 body.should.be.a('object');
+
                 body.should.have.own.property(serviceName);
 
                 const service = body[serviceName];
