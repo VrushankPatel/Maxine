@@ -5,10 +5,11 @@ const { info } = require("../util/logging/logging-util");
 class RegistryService{
     serviceRegistry = {};
     timeResetters = {};
-    registryService = (serviceName, nodeName, address, timeOut) => {
+    registryService = (serviceName, nodeName, address, timeOut, weight) => {
 
         serviceName = serviceName.toUpperCase();
         nodeName = nodeName.toUpperCase();
+        const id = Date.now().toString(36);
 
         if (!this.serviceRegistry[serviceName]){
             this.serviceRegistry[serviceName] = {offset: 0, nodes: {}};
@@ -18,27 +19,27 @@ class RegistryService{
             clearTimeout(this.timeResetters[this.serviceRegistry[serviceName]["nodes"][nodeName]["id"]]);
         }
 
-        const id = Date.now().toString(36);
-
-        this.serviceRegistry[serviceName]["nodes"][nodeName] = {
-            "nodeName" : nodeName,
-            "address" : address,
-            "id" : id,
-            "timeOut" : timeOut,
-            "registeredAt" : new Date().toLocaleString()
-        }
-
-        const timeResetter = setTimeout(() => {
-            info(this.getServiceInfoIson(serviceName, nodeName, httpStatus.MSG_SERVICE_REMOVED));
-            delete this.serviceRegistry[serviceName]["nodes"][nodeName];
-            if(Object.keys(this.serviceRegistry[serviceName]["nodes"]).length === 0){
-                delete this.serviceRegistry[serviceName];
+        [...Array(weight).keys()].forEach(index => {
+            const tempNodeName = `${nodeName}-${index}`;
+            this.serviceRegistry[serviceName]["nodes"][tempNodeName] = {
+                "nodeName" : tempNodeName,
+                "address" : address,
+                "id" : id,
+                "timeOut" : timeOut,
+                "registeredAt" : new Date().toLocaleString()
             }
-        }, ((timeOut)*1000)+500);
+            const timeResetter = setTimeout(() => {
+                info(this.getServiceInfoIson(serviceName, tempNodeName, httpStatus.MSG_SERVICE_REMOVED));
+                delete this.serviceRegistry[serviceName]["nodes"][tempNodeName];
+                if(Object.keys(this.serviceRegistry[serviceName]["nodes"]).length === 0){
+                    delete this.serviceRegistry[serviceName];
+                }
+            }, ((timeOut)*1000)+500);
 
-        this.timeResetters[id] = timeResetter;
+            this.timeResetters[id] = timeResetter;
+        });
 
-        return this.getServiceInfoIson(serviceName, nodeName, httpStatus.MSG_SERVICE_REGISTERED);
+        return this.serviceRegistry[serviceName]["nodes"];
     }
 
     getCurrentlyRegisteredServers = () => this.serviceRegistry;

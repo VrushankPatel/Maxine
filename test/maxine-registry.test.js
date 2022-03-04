@@ -50,21 +50,17 @@ describe(`${fileName} : API /maxine`, () => {
                 res.should.have.status(200);
                 res.should.be.json;
 
+                const tempNodeName = nodeName + "-0"; // no weight means 1 server, no replication
                 const body = res.body;
                 body.should.be.a('object');
+                body.should.have.own.property(tempNodeName);
 
-                body.should.have.own.property(serviceName);
-
-                const service = body[serviceName];
-                service.should.be.a('object');
-                service.should.have.own.property(nodeName);
-
-                const node = service[nodeName];
-                node.should.be.a('object');
+                const node = body[tempNodeName];
+                node.should.have.own.property("nodeName", tempNodeName);
                 node.should.have.own.property("address", `${hostName}:${port}`);
                 node.should.have.own.property("timeOut", timeOut);
 
-                expectedServiceObj = body[serviceName];
+                expectedServiceObj = body;
                 done();
             });
     });
@@ -76,12 +72,14 @@ describe(`${fileName} : API /maxine`, () => {
                 res.should.have.status(200);
                 res.should.be.json;
 
+                const tempNodeName = nodeName + "-0"; // no weight means 1 server, no replication
+
                 const body = res.body;
                 body.should.be.a('object');
                 body.should.have.own.property(serviceName);
                 body[serviceName].should.have.own.property("nodes");
-                body[serviceName]["nodes"].should.have.own.property(nodeName);
-                body[serviceName]["nodes"][nodeName].should.be.eql(expectedServiceObj[nodeName]);
+                body[serviceName]["nodes"].should.have.own.property(tempNodeName);
+                body[serviceName]["nodes"][tempNodeName].should.be.eql(expectedServiceObj[tempNodeName]);
                 done();
             });
     });
