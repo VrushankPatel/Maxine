@@ -18,26 +18,17 @@ const error = (msg) => log(() => logger.error(logJsonBuilder("ERROR", "GENERIC",
 
 const errorAndClose = (msg) => {
     logger.error(msg);
-    logger.on('finish', () => {
-        process.exit();
-    });
+    logger.on('finish', process.exit);
 };
 
 const logExceptions = (req, msg) => log(() => logger.error(logJsonBuilder("ERROR", "WEBREQUEST-Exception", httpStatus.STATUS_SERVER_ERROR, req, msg)));
 
-const logRequest = (req, res, next) => {
-    log(() => {
-        const logLevel = res.statusCode >= httpStatus.STATUS_NOT_FOUND ? "ERROR" : "INFO";
-        logger.info(logJsonBuilder(logLevel, "WEBREQUEST", res.statusCode, req));
-    });
-    next();
-}
-
 const loggingUtil = {
     info,
+    logger,
+    log,
     error,
     initApp : () => logger.info(`\n${banner} 〉 ${constants.PROFILE} started on port : ${constants.PORT}\n`),
-    logRequest,
     logExceptions,
     errorAndClose
 }
