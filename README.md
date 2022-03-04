@@ -14,14 +14,14 @@
 <a target="_blank" href="https://github.com/VrushankPatel/Gargantua-Maxine-Server/actions/workflows/codeql.yml"><img src="https://github.com/VrushankPatel/Gargantua-Maxine-Server/actions/workflows/codeql.yml/badge.svg"/></a>
 <a target="_blank" href="https://github.com/VrushankPatel/Maxine-Server/actions/workflows/node.js.yml"><img src="https://github.com/VrushankPatel/Maxine-Server/actions/workflows/node.js.yml/badge.svg?branch=master"/></a>
 <a target="_blank" href="https://codecov.io/gh/VrushankPatel/Maxine-Server"><img src="https://codecov.io/gh/VrushankPatel/Maxine-Server/branch/master/graph/badge.svg?token=SONYL0TJKT"/></a>
-<a target="_blank" href="https://circleci.com/gh/VrushankPatel/Maxine-Server/tree/master"><img src="https://circleci.com/gh/VrushankPatel/Maxine-Server/tree/master.svg?style=shield"></a>    
-<a target="_blank" href="https://circleci.com/gh/VrushankPatel/Maxine-Server/tree/master"><img src="https://circleci.com/gh/VrushankPatel/Maxine-Server/tree/master.svg?style=svg"></a>    
+<a target="_blank" href="https://circleci.com/gh/VrushankPatel/Maxine-Server/tree/master"><img src="https://circleci.com/gh/VrushankPatel/Maxine-Server/tree/master.svg?style=shield"></a>
+<a target="_blank" href="https://circleci.com/gh/VrushankPatel/Maxine-Server/tree/master"><img src="https://circleci.com/gh/VrushankPatel/Maxine-Server/tree/master.svg?style=svg"></a>
 
-    
+
 <br/>
 <a target="_blank" href="https://opensource.org/licenses/MIT"><img src="https://img.shields.io/badge/License-MIT-teal.svg"/></a>
 <a target="_blank" href="https://www.javascript.com"><img src="https://img.shields.io/badge/Made%20with-JavaScript-1f425f.svg"/></a>
-<a target="_blank"><img src="https://img.shields.io/badge/maintainer-VrushankPatel-blue"/></a>
+<a target="_blank" href="https://github.com/VrushankPatel"><img src="https://img.shields.io/badge/maintainer-VrushankPatel-blue"/></a>
 <a target="_blank" href="https://app.fossa.com/reports/a83419a2-657c-400c-b3b6-f04c8a032a56"><img src="https://img.shields.io/badge/Fossa-Report-blue"/></a>
 <a targget="_blank" href="https://app.fossa.com/projects/git%2Bgithub.com%2FVrushankPatel%2FGargantua-Maxine-Server?ref=badge_shield" alt="FOSSA Status"><img src="https://app.fossa.com/api/projects/git%2Bgithub.com%2FVrushankPatel%2FGargantua-Maxine-Server.svg?type=shield"/></a>
 </div>

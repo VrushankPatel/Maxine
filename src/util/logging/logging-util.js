@@ -23,7 +23,7 @@ const errorAndClose = (msg) => {
     });
 };
 
-const logExceptions = (type ,req, msg) => log(() => logger.error(logJsonBuilder("ERROR", "WEBREQUEST-Exception", httpStatus.STATUS_SERVER_ERROR, req, msg)));
+const logExceptions = (req, msg) => log(() => logger.error(logJsonBuilder("ERROR", "WEBREQUEST-Exception", httpStatus.STATUS_SERVER_ERROR, req, msg)));
 
 const logRequest = (req, res, next) => {
     log(() => {
