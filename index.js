@@ -7,7 +7,7 @@ const { statusMonitorConfig, actuatorConfig } = require('./src/config/config');
 const { logRequest } = require('./src/util/logging/logging-util');
 const maxineApiRoutes = require('./src/routes/routes');
 const expressStatusMonitor = require('express-status-monitor');
-const logWebExceptions = require('./src/util/logging/log-web-exceptins');
+const logWebExceptions = require('./src/util/logging/log-web-exceptions');
 
 
 const app = AppBuilder.createNewApp()
