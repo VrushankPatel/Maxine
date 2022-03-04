@@ -1,3 +1,0 @@
-registry = {}
-
-module.exports = registry;
