@@ -1,9 +1,4 @@
 var express = require('express');
-const actuator = require('express-actuator');
-const expressStatusMonitor = require('express-status-monitor');
-const maxineRoutes = require('../routes/routes');
-const { statusMonitorConfig, actuatorConfig } = require('../config/config');
-const { logWebExceptions, logRequest } = require('../util/logging/logging-util');
 const { properties } = require('../util/propertyReader/property-reader');
 const { httpStatus } = require('../util/constants/constants');
 
