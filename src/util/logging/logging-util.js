@@ -1,6 +1,7 @@
 const fs = require('fs');
 const winston = require('winston');
-const { logConfiguration } = require('../../config/configs/logging-config');
+const { logConfiguration } = require('../../config/logging/logging-config');
+
 const {constants, httpStatus} = require('../constants/constants');
 const { properties } = require('../propertyReader/property-reader');
 const { logJsonBuilder } = require('../util');
