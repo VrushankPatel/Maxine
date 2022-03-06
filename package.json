@@ -28,6 +28,8 @@
     "minimist": "^1.2.5",
     "properties-reader": "^2.2.0",
     "read-last-lines": "^1.8.0",
+    "sequelize": "^6.17.0",
+    "sqlite3": "^5.0.2",
     "winston": "^3.5.1"
   },
   "nodemonConfig": {
