@@ -8,11 +8,15 @@ const maxineApiRoutes = require('./src/routes/routes');
 const expressStatusMonitor = require('express-status-monitor');
 const logWebExceptions = require('./src/util/logging/log-web-exceptions');
 const logRequest = require('./src/util/logging/log-request');
+const authenticationFilter = require('./src/security/authentication-filter');
+const { temp } = require('./src/model/user');
+temp;
 
 const app = AppBuilder.createNewApp()
                 .ifPropertyOnce("statusMonitor.enabled")
                         .use(expressStatusMonitor(statusMonitorConfig))
                 .use(logRequest)
+                .use(authenticationFilter)
                 .ifPropertyOnce("actuator.enabled")
                         .use(actuator(actuatorConfig))
                 .use('/api',maxineApiRoutes)
