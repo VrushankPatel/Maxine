@@ -1,5 +1,5 @@
 const { registryService } = require("../../services/registry-service");
-const { httpStatus } = require("../../util/constants/constants");
+const { statusAndMsgs: httpStatus } = require("../../util/constants/constants");
 
 const discoveryController = (req, res) => {
     // Retrieving the serviceName from query params

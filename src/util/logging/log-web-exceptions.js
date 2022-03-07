@@ -1,4 +1,4 @@
-const { httpStatus } = require("../constants/constants");
+const { statusAndMsgs: httpStatus } = require("../constants/constants");
 const { logExceptions } = require("./logging-util");
 
 const logWebExceptions = (err, req, res, next) => {

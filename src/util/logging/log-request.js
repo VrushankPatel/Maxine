@@ -1,4 +1,4 @@
-const { httpStatus } = require("../constants/constants");
+const { statusAndMsgs: httpStatus } = require("../constants/constants");
 const { logJsonBuilder } = require("../util");
 const { log, logger } = require("./logging-util");
 

@@ -1,6 +1,6 @@
 var express = require('express');
 const { properties } = require('../util/propertyReader/property-reader');
-const { httpStatus } = require('../util/constants/constants');
+const { statusAndMsgs: httpStatus } = require('../util/constants/constants');
 
 /*
 * Builder pattern to creat express in a beautiful manner rather than individual statements.
@@ -60,6 +60,18 @@ class AppBuilder{
             return this;
         }
         this.app.use(...args)
+        return this;
+    }
+
+    useIfPropertyOnce(...args){
+        this.ifPropertyOnce(args[args.length - 1]);
+        args.pop();
+        this.use(args);
+        return this;
+    }
+
+    invoke = (method) => {
+        method();
         return this;
     }
 }

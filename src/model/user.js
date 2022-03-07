@@ -1,5 +1,7 @@
-const { DataTypes, Model } = require("sequelize");
-const { sequelize } = require("../db/db-instance");
+const { DataTypes } = require("sequelize");
+const { sequelize } = require("../config/db/db-config");
+const { constants } = require("../util/constants/constants");
+const { info } = require("../util/logging/logging-util");
 
 const User = sequelize.define('User', {
     userName: {
@@ -10,17 +12,23 @@ const User = sequelize.define('User', {
     password: {
         type: DataTypes.STRING,
         allowNull: false
+    },
+    role: {
+        type: DataTypes.ENUM({
+            values: constants.ROLES
+        }),
+        defaultValue: "USER",
+        allowNull: false
     }
 },{
     freezeTableName: true,
     timestamps: false
 });
 
-console.log(User === sequelize.models.User); // true
-
+const userModelCreationStatus = User === sequelize.models.User;
 User.sync();
-console.log("The table for the User model was just (re)created!");
+info(`User DB model creation status : ${userModelCreationStatus}`);
 
 module.exports = {
-    temp : "vrushank"
+    User,
 }

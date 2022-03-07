@@ -28,6 +28,12 @@ const MSG_DISCOVER_MISSING_DATA = "Please provide the serviceName.";
 const MSG_SERVICE_REMOVED = "Removed from registry";
 const MSG_SERVICE_REGISTERED = "Successfully Registered";
 const MSG_SERVICE_UNAVAILABLE = "Service Unavailable";
+
+const MSG_DB_CON_SUCCESS = "DB Connection Successful";
+const MSG_DB_CON_FAILURE = "Unable to connect to DB, closing App..";
+const ADMIN = "ADMIN";
+const ROLES = [ADMIN, "USER"];
+
 const constants = {
     PORT,
     APP_NAME,
@@ -39,10 +45,12 @@ const constants = {
     LOGTIMESTAMPFORMAT,
     ACTUATORPATH,
     STATUSMONITORTITLE,
-    REQUEST_LOG_TIMESTAMP_FORMAT
+    REQUEST_LOG_TIMESTAMP_FORMAT,
+    ADMIN,
+    ROLES
 };
 
-const httpStatus = {
+const statusAndMsgs = {
     STATUS_NOT_FOUND,
     STATUS_SUCCESS,
     STATUS_SERVER_ERROR,
@@ -55,10 +63,12 @@ const httpStatus = {
     MSG_DISCOVER_MISSING_DATA,
     MSG_SERVICE_REMOVED,
     MSG_SERVICE_REGISTERED,
-    MSG_SERVICE_UNAVAILABLE
+    MSG_SERVICE_UNAVAILABLE,
+    MSG_DB_CON_SUCCESS,
+    MSG_DB_CON_FAILURE
 }
 
 module.exports = {
     constants,
-    httpStatus
+    statusAndMsgs
 };

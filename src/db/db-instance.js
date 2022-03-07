@@ -1,24 +1,42 @@
-const { Sequelize } = require('sequelize');
-const { dbConfig } = require('../config/db/db-config');
+const { sequelize } = require('../config/db/db-config');
+const { User } = require('../model/user');
+const { statusAndMsgs, constants } = require('../util/constants/constants');
 const { info, errorAndClose } = require('../util/logging/logging-util');
 
-const sequelize = new Sequelize(dbConfig);
 
 function invokeDbConnection(){
     try {
         sequelize.authenticate();
-        info("DB Connection Successful");
+        info(statusAndMsgs.MSG_DB_CON_SUCCESS);
     } catch (error) {
-        errorAndClose("Unable to connect to DB, closing App..");
+        console.log(error);
+        errorAndClose(statusAndMsgs.MSG_DB_CON_FAILURE);
     }
 }
 
 async function closeConnection(){
+    info("Closing DB Connection..");
     await sequelize.close();
 }
 
+async function createAdmin(){
+    const [user, created] = await User.findOrCreate({
+        where: { userName: constants.ADMIN, role: constants.ADMIN },
+        defaults: {
+            userName: constants.ADMIN,
+            password: constants.ADMIN
+        }
+      });
+      info(`Admin user ${!created ? "found" : "not found, created one with default id-pwd as admin:admin"}`);
+}
+
+function initDb() {
+    invokeDbConnection();
+    createAdmin();
+}
+
 module.exports = {
-    sequelize,
-    invokeDbConnection,
-    closeConnection
+    initDb,
+    closeConnection,
+    createAdmin
 };

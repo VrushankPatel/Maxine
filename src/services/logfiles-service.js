@@ -1,5 +1,5 @@
 const fs = require('fs');
-const { constants, httpStatus } = require('../util/constants/constants');
+const { constants, statusAndMsgs: httpStatus } = require('../util/constants/constants');
 
 class LogFilesService{
     getLogLinks = () => {
