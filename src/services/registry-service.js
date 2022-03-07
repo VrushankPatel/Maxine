@@ -1,5 +1,5 @@
 const JsonBuilder = require("../builders/json-builder");
-const { statusAndMsgs: httpStatus } = require("../util/constants/constants");
+const { statusAndMsgs } = require("../util/constants/constants");
 const { info } = require("../util/logging/logging-util");
 
 class RegistryService{
@@ -29,7 +29,7 @@ class RegistryService{
                 "registeredAt" : new Date().toLocaleString()
             }
             const timeResetter = setTimeout(() => {
-                info(this.getServiceInfoIson(serviceName, tempNodeName, httpStatus.MSG_SERVICE_REMOVED));
+                info(this.getServiceInfoIson(serviceName, tempNodeName, statusAndMsgs.MSG_SERVICE_REMOVED));
                 delete this.serviceRegistry[serviceName]["nodes"][tempNodeName];
                 if(Object.keys(this.serviceRegistry[serviceName]["nodes"]).length === 0){
                     delete this.serviceRegistry[serviceName];

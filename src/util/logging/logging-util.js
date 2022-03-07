@@ -2,7 +2,7 @@ const fs = require('fs');
 const winston = require('winston');
 const { logConfiguration } = require('../../config/logging/logging-config');
 
-const {constants, statusAndMsgs: httpStatus} = require('../constants/constants');
+const {constants, statusAndMsgs} = require('../constants/constants');
 const { properties } = require('../propertyReader/property-reader');
 const { logJsonBuilder } = require('../util');
 
@@ -22,7 +22,7 @@ const errorAndClose = (msg) => {
     logger.on('finish', process.exit);
 };
 
-const logExceptions = (req, msg) => log(() => logger.error(logJsonBuilder("ERROR", "WEBREQUEST-Exception", httpStatus.STATUS_SERVER_ERROR, req, msg)));
+const logExceptions = (req, msg) => log(() => logger.error(logJsonBuilder("ERROR", "WEBREQUEST-Exception", statusAndMsgs.STATUS_SERVER_ERROR, req, msg)));
 
 const loggingUtil = {
     info,

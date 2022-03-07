@@ -1,12 +1,12 @@
 const { registryService } = require("../../services/registry-service");
-const { statusAndMsgs: httpStatus } = require("../../util/constants/constants");
+const { statusAndMsgs } = require("../../util/constants/constants");
 
 const discoveryController = (req, res) => {
     // Retrieving the serviceName from query params
     const serviceName = req.query.serviceName;
     // if serviceName is not there, responding with error
     if(!serviceName) {
-        res.status(httpStatus.STATUS_GENERIC_ERROR).json({"message" : httpStatus.MSG_DISCOVER_MISSING_DATA});
+        res.status(statusAndMsgs.STATUS_GENERIC_ERROR).json({"message" : statusAndMsgs.MSG_DISCOVER_MISSING_DATA});
         return;
     }
 
@@ -18,8 +18,8 @@ const discoveryController = (req, res) => {
         return;
     }
     // no service node is there so, service unavailable is our error response.
-    res.status(httpStatus.SERVICE_UNAVAILABLE).json({
-        "message" : httpStatus.MSG_SERVICE_UNAVAILABLE
+    res.status(statusAndMsgs.SERVICE_UNAVAILABLE).json({
+        "message" : statusAndMsgs.MSG_SERVICE_UNAVAILABLE
     });
 }
 

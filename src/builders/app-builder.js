@@ -1,6 +1,6 @@
 var express = require('express');
 const { properties } = require('../util/propertyReader/property-reader');
-const { statusAndMsgs: httpStatus } = require('../util/constants/constants');
+const { statusAndMsgs } = require('../util/constants/constants');
 
 /*
 * Builder pattern to creat express in a beautiful manner rather than individual statements.
@@ -42,7 +42,7 @@ class AppBuilder{
     }
 
     blockUnknownUrls = () => {
-        this.app.all('*',(req, res) => res.status(httpStatus.STATUS_NOT_FOUND).json({"message": httpStatus.MSG_NOT_FOUND}));
+        this.app.all('*',(req, res) => res.status(statusAndMsgs.STATUS_NOT_FOUND).json({"message": statusAndMsgs.MSG_NOT_FOUND}));
         return this;
     }
 

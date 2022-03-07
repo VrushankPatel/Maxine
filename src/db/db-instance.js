@@ -21,7 +21,7 @@ async function closeConnection(){
 
 async function createAdmin(){
     const [user, created] = await User.findOrCreate({
-        where: { userName: constants.ADMIN, role: constants.ADMIN },
+        where: { role: constants.ADMIN.toUpperCase() },
         defaults: {
             userName: constants.ADMIN,
             password: constants.ADMIN
