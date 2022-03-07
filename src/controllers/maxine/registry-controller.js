@@ -1,5 +1,5 @@
 const { info, error } = require('../../util/logging/logging-util');
-const { httpStatus, constants } = require('../../util/constants/constants');
+const { statusAndMsgs: httpStatus, constants } = require('../../util/constants/constants');
 const { registryService } = require('../../services/registry-service');
 
 

@@ -32,3 +32,4 @@ setEnv.bat
 test-results.xml
 
 web/
+maxinedb.db
