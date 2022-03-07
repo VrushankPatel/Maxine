@@ -17,7 +17,7 @@ const staticTestData = [
                 expectedBody : {
                     "build": {
                         "name" : "maxine-discovery",
-                        "description" : "Maxine is a discovery and a naming server for all the running nodes with gargantua client dependency.","version":"1.0.0"
+                        "description" : "Maxine is a discovery and a registry server for all the running nodes with gargantua client dependency.","version":"1.0.0"
                     }
                 }
             },

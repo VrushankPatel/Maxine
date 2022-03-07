@@ -1,6 +1,6 @@
 <img src="logo/logo.png"/>
 
-## Maxine : Service Discovery and Naming server for Microservices
+## Maxine : Service Discovery and Registry server for Microservices
 
 <div align=center>
 <a target="_blank" href="https://sonarcloud.io/summary/new_code?id=VrushankPatel_Gargantua-Maxine-Server"><img src="https://sonarcloud.io/images/project_badges/sonarcloud-black.svg"/></a>
