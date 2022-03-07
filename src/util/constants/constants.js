@@ -31,8 +31,8 @@ const MSG_SERVICE_UNAVAILABLE = "Service Unavailable";
 
 const MSG_DB_CON_SUCCESS = "DB Connection Successful";
 const MSG_DB_CON_FAILURE = "Unable to connect to DB, closing App..";
-const ADMIN = "ADMIN";
-const ROLES = [ADMIN, "USER"];
+const ADMIN = "admin";
+const ROLES = [ADMIN.toUpperCase(), "USER"];
 
 const constants = {
     PORT,

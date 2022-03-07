@@ -1,5 +1,5 @@
 const { info, error } = require('../../util/logging/logging-util');
-const { statusAndMsgs: httpStatus, constants } = require('../../util/constants/constants');
+const { statusAndMsgs, constants } = require('../../util/constants/constants');
 const { registryService } = require('../../services/registry-service');
 
 
@@ -11,14 +11,14 @@ const registryController = (req, res) => {
     weight = Math.abs(parseInt(weight)) || 1;
 
     if(!(hostName && nodeName && port && serviceName)){
-        error(httpStatus.MSG_REGISTER_MISSING_DATA);
-        res.status(httpStatus.STATUS_GENERIC_ERROR).json({"message" : httpStatus.MSG_REGISTER_MISSING_DATA});
+        error(statusAndMsgs.MSG_REGISTER_MISSING_DATA);
+        res.status(statusAndMsgs.STATUS_GENERIC_ERROR).json({"message" : statusAndMsgs.MSG_REGISTER_MISSING_DATA});
         return;
     }
 
     const serviceResponse = registryService.registryService(serviceName, nodeName, `${hostName}:${port}`, timeOut, weight);
     info(serviceResponse);
-    res.status(httpStatus.STATUS_SUCCESS).json(serviceResponse);
+    res.status(statusAndMsgs.STATUS_SUCCESS).json(serviceResponse);
 }
 
 
