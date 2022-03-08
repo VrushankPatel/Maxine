@@ -18,8 +18,8 @@ const info = (msg) => log(() => logger.info(logJsonBuilder("INFO", "GENERIC", nu
 const error = (msg) => log(() => logger.error(logJsonBuilder("ERROR", "GENERIC", null, null, msg)));
 
 const errorAndClose = (msg) => {
-    logger.error(msg);
-    logger.on('finish', process.exit);
+    logger.error(logJsonBuilder("ERROR", "GENERIC", null, null, msg));
+    process.exit();
 };
 
 const logExceptions = (req, msg) => log(() => logger.error(logJsonBuilder("ERROR", "WEBREQUEST-Exception", statusAndMsgs.STATUS_SERVER_ERROR, req, msg)));
@@ -29,7 +29,7 @@ const loggingUtil = {
     logger,
     log,
     error,
-    initApp : () => logger.info(`\n${banner} 〉 ${constants.PROFILE} started on port : ${constants.PORT}\n`),
+    initApp : () => logger.info(`\n${banner} 〉 ${constants.PROFILE} server started on port : ${constants.PORT}\n`),
     logExceptions,
     errorAndClose
 }

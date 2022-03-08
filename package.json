@@ -14,7 +14,8 @@
     "maxine",
     "discovery-server",
     "naming-server",
-    "registry-server"
+    "registry-server",
+    "service-registry"
   ],
   "author": "Vrushank Patel",
   "license": "MIT",
