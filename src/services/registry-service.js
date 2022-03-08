@@ -5,10 +5,9 @@ const { info } = require("../util/logging/logging-util");
 class RegistryService{
     serviceRegistry = {};
     timeResetters = {};
-    registryService = (serviceName, nodeName, address, timeOut, weight) => {
+    registryService = (serviceObj) => {
+        const {serviceName, nodeName, address, timeOut, weight} = serviceObj;
 
-        serviceName = serviceName.toUpperCase();
-        nodeName = nodeName.toUpperCase();
         const id = Date.now().toString(36);
 
         if (!this.serviceRegistry[serviceName]){
@@ -39,7 +38,9 @@ class RegistryService{
             this.timeResetters[id] = timeResetter;
         });
 
-        return this.serviceRegistry[serviceName]["nodes"];
+        serviceObj.id = id;
+        serviceObj.registeredAt = new Date().toLocaleString();
+        return serviceObj;
     }
 
     getCurrentlyRegisteredServers = () => this.serviceRegistry;
@@ -66,9 +67,9 @@ class RegistryService{
         return nodes[key];
     }
 
-    getServiceInfoIson = (serviceName, nodeName, status) => {
+    getServiceInfoIson = (serviceName, nodeName, statusMsg) => {
         return JsonBuilder.createNewJson()
-                                .put("Status", status)
+                                .put("Status", statusMsg)
                                 .put(serviceName, JsonBuilder.createNewJson()
                                                              .put(nodeName, this.serviceRegistry[serviceName]["nodes"][nodeName])
                                                              .getJson())

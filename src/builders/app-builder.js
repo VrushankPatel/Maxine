@@ -2,7 +2,7 @@ var express = require('express');
 const { properties } = require('../util/propertyReader/property-reader');
 const { statusAndMsgs } = require('../util/constants/constants');
 
-class AppBuilder{
+class ExpressAppBuilder{
     app;
     conditionStack = [];
     checkOnceOnly = false;
@@ -12,11 +12,11 @@ class AppBuilder{
     }
 
     static createNewApp(){
-        return new AppBuilder(new express());
+        return new ExpressAppBuilder(new express());
     }
 
     static loadApp(app){
-        return new AppBuilder(app);
+        return new ExpressAppBuilder(app);
     }
 
     ifPropertyOnce(property){
@@ -77,4 +77,4 @@ class AppBuilder{
     }
 }
 
-module.exports = AppBuilder;
+module.exports = ExpressAppBuilder;

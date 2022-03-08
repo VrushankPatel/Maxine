@@ -6,6 +6,8 @@ const { registryService } = require('../../services/registry-service');
 const registryController = (req, res) => {
     let {hostName, nodeName, port, serviceName, timeOut, weight} = req.body;
 
+    serviceName = serviceName.toUpperCase();
+    nodeName = nodeName.toUpperCase();
     port = Math.abs(parseInt(port));
     timeOut = Math.abs(parseInt(timeOut)) || constants.HEARTBEAT_TIMEOUT;
     weight = Math.abs(parseInt(weight)) || 1;
@@ -16,7 +18,15 @@ const registryController = (req, res) => {
         return;
     }
 
-    const serviceResponse = registryService.registryService(serviceName, nodeName, `${hostName}:${port}`, timeOut, weight);
+    const serviceObj = {
+        "serviceName" : serviceName,
+        "nodeName" : nodeName,
+        "address": `${hostName}:${port}`,
+        "timeOut": timeOut,
+        "weight" : weight
+    }
+
+    const serviceResponse = registryService.registryService(serviceObj);
     info(serviceResponse);
     res.status(statusAndMsgs.STATUS_SUCCESS).json(serviceResponse);
 }
