@@ -1,4 +1,4 @@
-const { actuatorConfig, statusMonitorConfig } = require("./actuator/actuator-config");
+var { actuatorConfig, statusMonitorConfig } = require("./actuator/actuator-config");
 const { logFileTransports } = require("./logging/logging-config");
 
 module.exports = {

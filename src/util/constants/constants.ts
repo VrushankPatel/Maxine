@@ -1,4 +1,4 @@
-const { properties } = require("../propertyReader/property-reader");
+var properties = require("../propertyReader/property-reader");
 const envArgs = require('minimist')(process.argv.slice(2));
 
 const PORT = parseInt(envArgs['p']) || parseInt(envArgs['port']) || 8080;
@@ -34,7 +34,7 @@ const MSG_DB_CON_FAILURE = "Unable to connect to DB, closing App..";
 const ADMIN = "admin";
 const ROLES = [ADMIN.toUpperCase(), "USER"];
 
-const constants = {
+const consts = {
     PORT,
     APP_NAME,
     HEARTBEAT_TIMEOUT,
@@ -50,7 +50,7 @@ const constants = {
     ROLES
 };
 
-const statusAndMsgs = {
+const statusAndMessages = {
     STATUS_NOT_FOUND,
     STATUS_SUCCESS,
     STATUS_SERVER_ERROR,
@@ -69,6 +69,6 @@ const statusAndMsgs = {
 }
 
 module.exports = {
-    constants,
-    statusAndMsgs
+    constants: consts,
+    statusAndMsgs: statusAndMessages
 };

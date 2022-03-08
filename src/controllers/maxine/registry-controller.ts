@@ -1,7 +1,7 @@
-const { info, error } = require('../../util/logging/logging-util');
-const { statusAndMsgs, constants } = require('../../util/constants/constants');
-const { registryService } = require('../../services/registry-service');
-
+var { logUtil } = require('../../util/logging/logging-util');
+var { statusAndMsgs, constants } = require('../../util/constants/constants');
+var { registryService } = require('../../services/registry-service');
+const { info, error } = logUtil;
 
 const registryController = (req, res) => {
     let {hostName, nodeName, port, serviceName, timeOut, weight} = req.body;

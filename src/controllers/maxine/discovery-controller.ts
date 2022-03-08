@@ -1,7 +1,7 @@
-const { registryService } = require("../../services/registry-service");
-const { statusAndMsgs } = require("../../util/constants/constants");
+var { registryService } = require("../../services/registry-service");
+var { statusAndMsgs } = require("../../util/constants/constants");
 
-const discoveryController = (req, res) => {
+export const discoveryController = (req, res) => {
     // Retrieving the serviceName from query params
     const serviceName = req.query.serviceName;
     // if serviceName is not there, responding with error
@@ -22,5 +22,3 @@ const discoveryController = (req, res) => {
         "message" : statusAndMsgs.MSG_SERVICE_UNAVAILABLE
     });
 }
-
-module.exports = discoveryController

@@ -1,5 +1,5 @@
 const fs = require('fs');
-const { constants, statusAndMsgs } = require('../util/constants/constants');
+var { constants, statusAndMsgs } = require('../util/constants/constants');
 
 class LogFilesService{
     getLogLinks = () => {
@@ -11,4 +11,4 @@ class LogFilesService{
     }
 }
 
-module.exports = LogFilesService;
+export const logFilesService = new LogFilesService();

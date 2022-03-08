@@ -1,6 +1,6 @@
-const { constants } = require("../../util/constants/constants")
+var { constants } = require('../../util/constants/constants');
 
-const statusMonitorConfig = {
+const maxineStatusMonitorConfig = {
     title: constants.STATUSMONITORTITLE,
     path: constants.ACTUATORPATH + '/status',
     socketPath: '/socket.io',
@@ -16,12 +16,12 @@ const statusMonitorConfig = {
       }]
 }
 
-const actuatorConfig = {
+const maxineSctuatorConfig = {
     basePath: constants.ACTUATORPATH,
     customEndpoints: []
 }
 
 module.exports = {
-    statusMonitorConfig,
-    actuatorConfig
+    statusMonitorConfig: maxineStatusMonitorConfig,
+    actuatorConfig: maxineSctuatorConfig
 }

@@ -1,11 +1,11 @@
 const date = require('date-and-time');
-const JsonBuilder = require('../builders/json-builder');
+var JsonBuilder = require('../builders/json-builder');
 const { constants } = require('./constants/constants');
 
 
-const getCurrentDate = () => date.format(new Date(), constants.REQUEST_LOG_TIMESTAMP_FORMAT);
+export const getCurrentDate = () => date.format(new Date(), constants.REQUEST_LOG_TIMESTAMP_FORMAT);
 
-const logJsonBuilder = (logLevel, logType, statusAndMsgs, req, msg = "") => {
+export const logJsonBuilder = (logLevel, logType, statusAndMsgs, req, msg = "") => {
     return JsonBuilder.createNewJson()
                     .put("LogLevel", logLevel)
                     .put("LogType", logType)
@@ -25,9 +25,4 @@ const logJsonBuilder = (logLevel, logType, statusAndMsgs, req, msg = "") => {
                     .deregisterObj()
                     .formatJson()
                     .getJson();
-}
-
-module.exports = {
-    getCurrentDate,
-    logJsonBuilder
 }
