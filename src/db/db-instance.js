@@ -1,5 +1,5 @@
 const { sequelize } = require('../config/db/db-config');
-const { User } = require('../model/user');
+const { User, createUserTable } = require('../model/user');
 const { statusAndMsgs, constants } = require('../util/constants/constants');
 const { info, errorAndClose } = require('../util/logging/logging-util');
 
@@ -9,7 +9,6 @@ function invokeDbConnection(){
         sequelize.authenticate();
         info(statusAndMsgs.MSG_DB_CON_SUCCESS);
     } catch (error) {
-        console.log(error);
         errorAndClose(statusAndMsgs.MSG_DB_CON_FAILURE);
     }
 }
@@ -32,11 +31,11 @@ async function createAdmin(){
 
 function initDb() {
     invokeDbConnection();
+    createUserTable();
     createAdmin();
 }
 
 module.exports = {
     initDb,
     closeConnection,
-    createAdmin
 };

@@ -1,7 +1,6 @@
 const { DataTypes } = require("sequelize");
 const { sequelize } = require("../config/db/db-config");
 const { constants } = require("../util/constants/constants");
-const { info } = require("../util/logging/logging-util");
 
 const User = sequelize.define('User', {
     userName: {
@@ -25,10 +24,11 @@ const User = sequelize.define('User', {
     timestamps: false
 });
 
-const userModelCreationStatus = User === sequelize.models.User;
-User.sync();
-info(`User DB model creation status : ${userModelCreationStatus}`);
+function createUserTable(){
+    return User.sync();
+}
 
 module.exports = {
     User,
+    createUserTable
 }
