@@ -16,37 +16,43 @@ class AppBuilder{
         this.app = app;
     }
 
-    static createNewApp = () => new AppBuilder(new express());
+    static createNewApp(){
+        return new AppBuilder(new express());
+    }
 
-    static loadApp = (app) => new AppBuilder(app);
+    static loadApp(app){
+        return new AppBuilder(app);
+    }
 
-    ifPropertyOnce = (property) => {
+    ifPropertyOnce(property){
         this.conditionStack.push(properties[property] === 'true');
         this.checkOnceOnly = true;
         return this;
     }
 
-    ifProperty = (property) => {
+    ifProperty(property){
         this.conditionStack.push(properties[property] === 'true');
         return this;
     }
 
-    endIfProperty = () => {
+    endIfProperty(){
         this.conditionStack.pop();
         return this;
     };
 
-    endAllIf = () => {
+    endAllIf(){
         this.conditionStack = [];
         return this;
     }
 
-    blockUnknownUrls = () => {
+    blockUnknownUrls(){
         this.app.all('*',(req, res) => res.status(statusAndMsgs.STATUS_NOT_FOUND).json({"message": statusAndMsgs.MSG_NOT_FOUND}));
         return this;
     }
 
-    getApp = () => this.app;
+    getApp(){
+        return this.app;
+    }
 
     use(...args){
         if(this.conditionStack.length > 0){

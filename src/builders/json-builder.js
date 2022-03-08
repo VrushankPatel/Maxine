@@ -9,21 +9,25 @@ class JsonBuilder{
         this.jsonObj = jsonObj;
     }
 
-    static createNewJson = () => new JsonBuilder({});
+    static createNewJson(){
+        return new JsonBuilder({});
+    }
 
-    static loadJson = (jsonObj) => new JsonBuilder(jsonObj);
+    static loadJson(jsonObj){
+        return new JsonBuilder(jsonObj);
+    }
 
-    checkCondition = (condition) => {
+    checkCondition(condition){
         this.conditionStack.push(condition);
         this.doCheckCondition = true;
         return this;
     }
 
-    checkNull = (element) => {
+    checkNull(element){
         return this.checkCondition(element !== null);
     }
 
-    endCondition = () => {
+    endCondition(){
         this.conditionStack.pop();
         if(this.conditionStack.length === 0){
             this.doCheckCondition = null;
@@ -31,13 +35,13 @@ class JsonBuilder{
         return this;
     }
 
-    endAllConditions = () => {
+    endAllConditions(){
         this.conditionStack = [];
         this.doCheckCondition = null;
         return this
     }
 
-    put = (key, value) => {
+    put(key, value){
         if(this.doCheckCondition){
             if(this.conditionStack.every(e => e === true)){
                 this.jsonObj[key] = value;
@@ -48,12 +52,12 @@ class JsonBuilder{
         return this;
     };
 
-    registerObj = (obj) => {
+    registerObj(obj){
         this.registeredObj = obj;
         return this;
     }
 
-    putFromRegObj = (refObj, key = refObj) => {
+    putFromRegObj(refObj, key = refObj){
         if(this.doCheckCondition){
             if(this.conditionStack.slice(-1)[0]){
                 this.jsonObj[key] = this.registeredObj[refObj];
@@ -64,23 +68,25 @@ class JsonBuilder{
         return this;
     };
 
-    deregisterObj = () => {
+    deregisterObj(){
         this.registeredObj = null;
         return this;
     }
 
-    getJson = () => this.jsonObj;
+    getJson(){
+        return this.jsonObj;
+    }
 
-    formatJson = () => {
+    formatJson(){
       return properties["log.json.prettify"] === 'true' ? this.prettifyJSON() : this.minifyJSON();
     }
 
-    prettifyJSON = () => {
+    prettifyJSON(){
         this.jsonObj = JSON.stringify(this.jsonObj, null, "  ");
         return this;
     }
 
-    minifyJSON = () => {
+    minifyJSON(){
         this.jsonObj = JSON.stringify(JSON.parse(JSON.stringify(this.jsonObj)));
         return this;
     }
