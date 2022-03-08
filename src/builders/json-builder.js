@@ -23,7 +23,7 @@ class JsonBuilder{
         return this;
     }
 
-    checkNull(element){
+    checkIfNull(element){
         return this.checkCondition(element !== null);
     }
 
@@ -51,6 +51,13 @@ class JsonBuilder{
         this.jsonObj[key] = value;
         return this;
     };
+
+    putIfNotNull(key, value){
+        this.checkIfNull(value);
+        this.put(key, value);
+        this.endCondition();
+        return this;
+    }
 
     registerObj(obj){
         this.registeredObj = obj;
