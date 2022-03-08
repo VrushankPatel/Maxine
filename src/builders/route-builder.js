@@ -1,9 +1,5 @@
 var express = require('express');
 
-/*
-* Builder pattern to build routes of maxine beautifully.
-*/
-
 class RouteBuilder{
     route;
     routeStack = [];

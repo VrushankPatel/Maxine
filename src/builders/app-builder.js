@@ -2,11 +2,6 @@ var express = require('express');
 const { properties } = require('../util/propertyReader/property-reader');
 const { statusAndMsgs } = require('../util/constants/constants');
 
-/*
-* Builder pattern to creat express in a beautiful manner rather than individual statements.
-* It is highly suggested to use methods of this Builder in sequence as they've created
-*/
-
 class AppBuilder{
     app;
     conditionStack = [];
