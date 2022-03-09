@@ -17,6 +17,7 @@ const discoveryController = (req, res) => {
         res.json(serviceNode);
         return;
     }
+
     // no service node is there so, service unavailable is our error response.
     res.status(statusAndMsgs.SERVICE_UNAVAILABLE).json({
         "message" : statusAndMsgs.MSG_SERVICE_UNAVAILABLE

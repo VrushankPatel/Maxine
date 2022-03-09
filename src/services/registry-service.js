@@ -8,25 +8,24 @@ class RegistryService{
     registryService = (serviceObj) => {
         const {serviceName, nodeName, address, timeOut, weight} = serviceObj;
 
-        const id = Date.now().toString(36);
-
         if (!this.serviceRegistry[serviceName]){
             this.serviceRegistry[serviceName] = {offset: 0, nodes: {}};
         }
 
-        if(this.serviceRegistry[serviceName]["nodes"][nodeName]){
-            clearTimeout(this.timeResetters[this.serviceRegistry[serviceName]["nodes"][nodeName]["id"]]);
-        }
-
         [...Array(weight).keys()].forEach(index => {
             const tempNodeName = `${nodeName}-${index}`;
+
+            if(this.serviceRegistry[serviceName]["nodes"][tempNodeName]){
+                clearTimeout(this.timeResetters[this.serviceRegistry[serviceName]["nodes"][tempNodeName]["nodeName"]]);
+            }
+
             this.serviceRegistry[serviceName]["nodes"][tempNodeName] = {
                 "nodeName" : tempNodeName,
                 "address" : address,
-                "id" : id,
                 "timeOut" : timeOut,
                 "registeredAt" : new Date().toLocaleString()
             }
+
             const timeResetter = setTimeout(() => {
                 info(this.getServiceInfoIson(serviceName, tempNodeName, statusAndMsgs.MSG_SERVICE_REMOVED));
                 delete this.serviceRegistry[serviceName]["nodes"][tempNodeName];
@@ -35,10 +34,9 @@ class RegistryService{
                 }
             }, ((timeOut)*1000)+500);
 
-            this.timeResetters[id] = timeResetter;
+            this.timeResetters[tempNodeName] = timeResetter;
         });
 
-        serviceObj.id = id;
         serviceObj.registeredAt = new Date().toLocaleString();
         return serviceObj;
     }
