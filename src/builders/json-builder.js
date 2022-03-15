@@ -27,6 +27,10 @@ class JsonBuilder{
         return this.checkCondition(element !== null);
     }
 
+    checkIfNullOrEmpty(element){
+        return this.checkCondition(element !== null && element.length !== 0);
+    }
+
     endCondition(){
         this.conditionStack.pop();
         if(this.conditionStack.length === 0){
@@ -54,6 +58,13 @@ class JsonBuilder{
 
     putIfNotNull(key, value){
         this.checkIfNull(value);
+        this.put(key, value);
+        this.endCondition();
+        return this;
+    }
+
+    putIfNotNullOrEmpty(key, value){
+        this.checkIfNullOrEmpty(value);
         this.put(key, value);
         this.endCondition();
         return this;

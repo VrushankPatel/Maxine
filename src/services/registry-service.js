@@ -43,9 +43,7 @@ class RegistryService{
 
     getCurrentlyRegisteredServers = () => this.serviceRegistry;
 
-    getServers = (serviceName) => {
-        return this.serviceRegistry[serviceName];
-    }
+    getServers = (serviceName) => this.serviceRegistry[serviceName];
 
     getNodes = (serviceName) => {
         const servers = this.getServers(serviceName) || {};
@@ -76,6 +74,7 @@ class RegistryService{
 }
 
 const registryService = new RegistryService();
+
 module.exports = {
     registryService
 }

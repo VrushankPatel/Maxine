@@ -11,7 +11,7 @@ const logJsonBuilder = (logLevel, logType, statusAndMsgs, req, msg = "") => {
                     .put("LogType", logType)
                     .put("Timestamp", getCurrentDate())
                     .putIfNotNull("Status", statusAndMsgs)
-                    .putIfNotNull("Message", msg)
+                    .putIfNotNullOrEmpty("Message", msg)
                     .checkIfNull(req)
                         .registerObj(req)
                             .putFromRegObj("method", "Method")
