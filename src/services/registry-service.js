@@ -5,7 +5,8 @@ const { info } = require("../util/logging/logging-util");
 class RegistryService{
     serviceRegistry = {};
     timeResetters = {};
-    registryService = (serviceObj) => {
+
+    registerService = (serviceObj) => {
         const {serviceName, nodeName, address, timeOut, weight} = serviceObj;
 
         if (!this.serviceRegistry[serviceName]){
@@ -13,30 +14,34 @@ class RegistryService{
         }
 
         [...Array(weight).keys()].forEach(index => {
-            const tempNodeName = `${nodeName}-${index}`;
+            const subNodeName = `${nodeName}-${index}`;
 
-            if(this.serviceRegistry[serviceName]["nodes"][tempNodeName]){
-                clearTimeout(this.timeResetters[this.serviceRegistry[serviceName]["nodes"][tempNodeName]["nodeName"]]);
+            if(this.serviceRegistry[serviceName]["nodes"][subNodeName]){
+                clearTimeout(this.timeResetters[this.serviceRegistry[serviceName]["nodes"][subNodeName]["nodeName"]]);
             }
 
-            this.serviceRegistry[serviceName]["nodes"][tempNodeName] = {
-                "nodeName" : tempNodeName,
+            this.serviceRegistry[serviceName]["nodes"][subNodeName] = {
+                "nodeName" : subNodeName,
+                "parentNode" : nodeName,
                 "address" : address,
                 "timeOut" : timeOut,
                 "registeredAt" : new Date().toLocaleString()
             }
 
             const timeResetter = setTimeout(() => {
-                info(this.getServiceInfoIson(serviceName, tempNodeName, statusAndMsgs.MSG_SERVICE_REMOVED));
-                delete this.serviceRegistry[serviceName]["nodes"][tempNodeName];
+                // info(this.getServiceInfoIson(serviceName, tempNodeName, statusAndMsgs.MSG_SERVICE_REMOVED));
+                delete this.serviceRegistry[serviceName]["nodes"][subNodeName];
                 if(Object.keys(this.serviceRegistry[serviceName]["nodes"]).length === 0){
                     delete this.serviceRegistry[serviceName];
                 }
             }, ((timeOut)*1000)+500);
 
-            this.timeResetters[tempNodeName] = timeResetter;
+            this.timeResetters[subNodeName] = timeResetter;
         });
+    }
 
+    registryService = (serviceObj) => {
+        setTimeout(this.registerService, 0, serviceObj);
         serviceObj.registeredAt = new Date().toLocaleString();
         return serviceObj;
     }
