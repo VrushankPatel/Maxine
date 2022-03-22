@@ -1,6 +1,4 @@
 const JsonBuilder = require("../builders/json-builder");
-const { statusAndMsgs } = require("../util/constants/constants");
-const { info } = require("../util/logging/logging-util");
 
 class RegistryService{
     serviceRegistry = {};
@@ -29,7 +27,6 @@ class RegistryService{
             }
 
             const timeResetter = setTimeout(() => {
-                // info(this.getServiceInfoIson(serviceName, tempNodeName, statusAndMsgs.MSG_SERVICE_REMOVED));
                 delete this.serviceRegistry[serviceName]["nodes"][subNodeName];
                 if(Object.keys(this.serviceRegistry[serviceName]["nodes"]).length === 0){
                     delete this.serviceRegistry[serviceName];

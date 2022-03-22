@@ -4,13 +4,15 @@ const { registryService } = require('../../services/registry-service');
 
 
 const registryController = (req, res) => {
-    let {hostName, nodeName, port, serviceName, timeOut, weight} = req.body;
+    let {hostName, nodeName, port, serviceName, timeOut, weight, ssl} = req.body;
 
     serviceName = serviceName.toUpperCase();
     nodeName = nodeName.toUpperCase();
     port = Math.abs(parseInt(port));
     timeOut = Math.abs(parseInt(timeOut)) || constants.HEARTBEAT_TIMEOUT;
     weight = Math.abs(parseInt(weight)) || 1;
+    ssl = ssl || false;
+    address = `${ssl ? "https" : "http"}://${hostName}:${port}`;
 
     if(!(hostName && nodeName && port && serviceName)){
         error(statusAndMsgs.MSG_REGISTER_MISSING_DATA);
@@ -21,7 +23,7 @@ const registryController = (req, res) => {
     const serviceObj = {
         "serviceName" : serviceName,
         "nodeName" : nodeName,
-        "address": `${hostName}:${port}`,
+        "address": address,
         "timeOut": timeOut,
         "weight" : weight
     }
