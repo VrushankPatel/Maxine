@@ -14,7 +14,8 @@ const discoveryController = (req, res) => {
     const serviceNode = registryService.getNode(serviceName.toUpperCase());
     // if ServiceNode is there, we'll respond.
     if(serviceNode){
-        res.json(serviceNode);
+        // res.json(serviceNode);
+        res.redirect(serviceNode.address);
         return;
     }
 
