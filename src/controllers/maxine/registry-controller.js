@@ -1,24 +1,36 @@
 const { info, error } = require('../../util/logging/logging-util');
-const { httpStatus, constants } = require('../../util/constants/constants');
+const { statusAndMsgs, constants } = require('../../util/constants/constants');
 const { registryService } = require('../../services/registry-service');
 
 
 const registryController = (req, res) => {
-    let {hostName, nodeName, port, serviceName, timeOut, weight} = req.body;
+    let {hostName, nodeName, port, serviceName, timeOut, weight, ssl} = req.body;
 
+    serviceName = serviceName.toUpperCase();
+    nodeName = nodeName.toUpperCase();
     port = Math.abs(parseInt(port));
     timeOut = Math.abs(parseInt(timeOut)) || constants.HEARTBEAT_TIMEOUT;
     weight = Math.abs(parseInt(weight)) || 1;
+    ssl = ssl || false;
+    address = `${ssl ? "https" : "http"}://${hostName}:${port}`;
 
     if(!(hostName && nodeName && port && serviceName)){
-        error(httpStatus.MSG_REGISTER_MISSING_DATA);
-        res.status(httpStatus.STATUS_GENERIC_ERROR).json({"message" : httpStatus.MSG_REGISTER_MISSING_DATA});
+        error(statusAndMsgs.MSG_REGISTER_MISSING_DATA);
+        res.status(statusAndMsgs.STATUS_GENERIC_ERROR).json({"message" : statusAndMsgs.MSG_REGISTER_MISSING_DATA});
         return;
     }
 
-    const serviceResponse = registryService.registryService(serviceName, nodeName, `${hostName}:${port}`, timeOut, weight);
+    const serviceObj = {
+        "serviceName" : serviceName,
+        "nodeName" : nodeName,
+        "address": address,
+        "timeOut": timeOut,
+        "weight" : weight
+    }
+
+    const serviceResponse = registryService.registryService(serviceObj);
     info(serviceResponse);
-    res.status(httpStatus.STATUS_SUCCESS).json(serviceResponse);
+    res.status(statusAndMsgs.STATUS_SUCCESS).json(serviceResponse);
 }
 
 

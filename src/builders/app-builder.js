@@ -1,18 +1,8 @@
 var express = require('express');
-const actuator = require('express-actuator');
-const expressStatusMonitor = require('express-status-monitor');
-const maxineRoutes = require('../routes/routes');
-const { statusMonitorConfig, actuatorConfig } = require('../config/config');
-const { logWebExceptions, logRequest } = require('../util/logging/logging-util');
 const { properties } = require('../util/propertyReader/property-reader');
-const { httpStatus } = require('../util/constants/constants');
+const { statusAndMsgs } = require('../util/constants/constants');
 
-/*
-* Builder pattern to creat express in a beautiful manner rather than individual statements.
-* It is highly suggested to use methods of this Builder in sequence as they've created
-*/
-
-class AppBuilder{
+class ExpressAppBuilder{
     app;
     conditionStack = [];
     checkOnceOnly = false;
@@ -21,37 +11,43 @@ class AppBuilder{
         this.app = app;
     }
 
-    static createNewApp = () => new AppBuilder(new express());
+    static createNewApp(){
+        return new ExpressAppBuilder(new express());
+    }
 
-    static loadApp = (app) => new AppBuilder(app);
+    static loadApp(app){
+        return new ExpressAppBuilder(app);
+    }
 
-    ifPropertyOnce = (property) => {
+    ifPropertyOnce(property){
         this.conditionStack.push(properties[property] === 'true');
         this.checkOnceOnly = true;
         return this;
     }
 
-    ifProperty = (property) => {
+    ifProperty(property){
         this.conditionStack.push(properties[property] === 'true');
         return this;
     }
 
-    endIfProperty = () => {
+    endIfProperty(){
         this.conditionStack.pop();
         return this;
     };
 
-    endAllIf = () => {
+    endAllIf(){
         this.conditionStack = [];
         return this;
     }
 
-    blockUnknownUrls = () => {
-        this.app.all('*',(req, res) => res.status(httpStatus.STATUS_NOT_FOUND).json({"message": httpStatus.MSG_NOT_FOUND}));
+    blockUnknownUrls(){
+        this.app.all('*',(req, res) => res.status(statusAndMsgs.STATUS_NOT_FOUND).json({"message": statusAndMsgs.MSG_NOT_FOUND}));
         return this;
     }
 
-    getApp = () => this.app;
+    getApp(){
+        return this.app;
+    }
 
     use(...args){
         if(this.conditionStack.length > 0){
@@ -67,6 +63,18 @@ class AppBuilder{
         this.app.use(...args)
         return this;
     }
+
+    useIfPropertyOnce(...args){
+        this.ifPropertyOnce(args[args.length - 1]);
+        args.pop();
+        this.use(args);
+        return this;
+    }
+
+    invoke = (method) => {
+        method();
+        return this;
+    }
 }
 
-module.exports = AppBuilder;
+module.exports = ExpressAppBuilder;

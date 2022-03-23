@@ -1,52 +1,51 @@
 const JsonBuilder = require("../builders/json-builder");
-const { httpStatus } = require("../util/constants/constants");
-const { info } = require("../util/logging/logging-util");
 
 class RegistryService{
     serviceRegistry = {};
     timeResetters = {};
-    registryService = (serviceName, nodeName, address, timeOut, weight) => {
 
-        serviceName = serviceName.toUpperCase();
-        nodeName = nodeName.toUpperCase();
-        const id = Date.now().toString(36);
+    registerService = (serviceObj) => {
+        const {serviceName, nodeName, address, timeOut, weight} = serviceObj;
 
         if (!this.serviceRegistry[serviceName]){
             this.serviceRegistry[serviceName] = {offset: 0, nodes: {}};
         }
 
-        if(this.serviceRegistry[serviceName]["nodes"][nodeName]){
-            clearTimeout(this.timeResetters[this.serviceRegistry[serviceName]["nodes"][nodeName]["id"]]);
-        }
-
         [...Array(weight).keys()].forEach(index => {
-            const tempNodeName = `${nodeName}-${index}`;
-            this.serviceRegistry[serviceName]["nodes"][tempNodeName] = {
-                "nodeName" : tempNodeName,
+            const subNodeName = `${nodeName}-${index}`;
+
+            if(this.serviceRegistry[serviceName]["nodes"][subNodeName]){
+                clearTimeout(this.timeResetters[this.serviceRegistry[serviceName]["nodes"][subNodeName]["nodeName"]]);
+            }
+
+            this.serviceRegistry[serviceName]["nodes"][subNodeName] = {
+                "nodeName" : subNodeName,
+                "parentNode" : nodeName,
                 "address" : address,
-                "id" : id,
                 "timeOut" : timeOut,
                 "registeredAt" : new Date().toLocaleString()
             }
+
             const timeResetter = setTimeout(() => {
-                info(this.getServiceInfoIson(serviceName, tempNodeName, httpStatus.MSG_SERVICE_REMOVED));
-                delete this.serviceRegistry[serviceName]["nodes"][tempNodeName];
+                delete this.serviceRegistry[serviceName]["nodes"][subNodeName];
                 if(Object.keys(this.serviceRegistry[serviceName]["nodes"]).length === 0){
                     delete this.serviceRegistry[serviceName];
                 }
             }, ((timeOut)*1000)+500);
 
-            this.timeResetters[id] = timeResetter;
+            this.timeResetters[subNodeName] = timeResetter;
         });
+    }
 
-        return this.serviceRegistry[serviceName]["nodes"];
+    registryService = (serviceObj) => {
+        setTimeout(this.registerService, 0, serviceObj);
+        serviceObj.registeredAt = new Date().toLocaleString();
+        return serviceObj;
     }
 
     getCurrentlyRegisteredServers = () => this.serviceRegistry;
 
-    getServers = (serviceName) => {
-        return this.serviceRegistry[serviceName];
-    }
+    getServers = (serviceName) => this.serviceRegistry[serviceName];
 
     getNodes = (serviceName) => {
         const servers = this.getServers(serviceName) || {};
@@ -66,9 +65,9 @@ class RegistryService{
         return nodes[key];
     }
 
-    getServiceInfoIson = (serviceName, nodeName, status) => {
+    getServiceInfoIson = (serviceName, nodeName, statusMsg) => {
         return JsonBuilder.createNewJson()
-                                .put("Status", status)
+                                .put("Status", statusMsg)
                                 .put(serviceName, JsonBuilder.createNewJson()
                                                              .put(nodeName, this.serviceRegistry[serviceName]["nodes"][nodeName])
                                                              .getJson())
@@ -77,6 +76,7 @@ class RegistryService{
 }
 
 const registryService = new RegistryService();
+
 module.exports = {
     registryService
 }

@@ -1,7 +1,7 @@
 {
   "name": "maxine-discovery",
   "version": "1.0.0",
-  "description": "Maxine is a service discovery and a naming server for all the running nodes with gargantua client dependency.",
+  "description": "Maxine is a service discovery and a registry server for all the running nodes with gargantua client dependency.",
   "main": "index.js",
   "scripts": {
     "start": "npm run test && node index.js",
@@ -13,7 +13,9 @@
   "keywords": [
     "maxine",
     "discovery-server",
-    "naming-server"
+    "naming-server",
+    "registry-server",
+    "service-registry"
   ],
   "author": "Vrushank Patel",
   "license": "MIT",
@@ -24,9 +26,12 @@
     "express": "^4.17.2",
     "express-actuator": "^1.8.0",
     "express-status-monitor": "^1.3.3",
+    "jsonwebtoken": "^8.5.1",
     "minimist": "^1.2.5",
     "properties-reader": "^2.2.0",
     "read-last-lines": "^1.8.0",
+    "sequelize": "^6.17.0",
+    "sqlite3": "^5.0.2",
     "winston": "^3.5.1"
   },
   "nodemonConfig": {
