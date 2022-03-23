@@ -12,7 +12,7 @@ const registryController = (req, res) => {
     timeOut = Math.abs(parseInt(timeOut)) || constants.HEARTBEAT_TIMEOUT;
     weight = Math.abs(parseInt(weight)) || 1;
     ssl = ssl || false;
-    address = `${ssl ? "https" : "http"}://${hostName}:${port}`;
+    const address = `${ssl ? "https" : "http"}://${hostName}:${port}`;
 
     if(!(hostName && nodeName && port && serviceName)){
         error(statusAndMsgs.MSG_REGISTER_MISSING_DATA);

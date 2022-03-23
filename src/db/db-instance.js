@@ -26,7 +26,7 @@ async function createAdmin(){
             password: constants.ADMIN
         }
       });
-      info(`Admin user ${!created ? "found" : "not found, created one with default id-pwd as admin:admin"}`);
+      info(`${user.role} user ${!created ? "found" : "not found, created one with default id-pwd as admin:admin"}`);
 }
 
 function initDb() {
