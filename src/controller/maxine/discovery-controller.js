@@ -1,4 +1,4 @@
-const { registryService } = require("../../services/registry-service");
+const { registryService } = require("../../service/registry-service");
 const { statusAndMsgs } = require("../../util/constants/constants");
 
 const discoveryController = (req, res) => {

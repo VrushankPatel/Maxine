@@ -1,4 +1,4 @@
-const LogFilesService = require('../services/logfiles-service');
+const LogFilesService = require('../service/logfiles-service');
 const { constants } = require('../util/constants/constants');
 
 const logFilesService = new LogFilesService();
