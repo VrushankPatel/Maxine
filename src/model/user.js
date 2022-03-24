@@ -24,11 +24,8 @@ const User = sequelize.define('User', {
     timestamps: false
 });
 
-function createUserTable(){
-    return User.sync();
-}
+User.sync();
 
 module.exports = {
-    User,
-    createUserTable
+    User
 }
