@@ -1,6 +1,6 @@
 const { info, error } = require('../../util/logging/logging-util');
 const { statusAndMsgs, constants } = require('../../util/constants/constants');
-const { registryService } = require('../../services/registry-service');
+const { registryService } = require('../../service/registry-service');
 
 
 const registryController = (req, res) => {

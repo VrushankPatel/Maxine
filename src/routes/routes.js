@@ -1,8 +1,8 @@
 const RouteBuilder = require('../builders/route-builder');
-const {logsDownloadController, logsLinkGenController} = require('../controllers/logs-controller');
+const {logsDownloadController, logsLinkGenController} = require('../controller/logs-controller');
 const bodyParser = require('body-parser');
-const { serverListController, registryController } = require('../controllers/maxine/registry-controller');
-const discoveryController = require('../controllers/maxine/discovery-controller');
+const { serverListController, registryController } = require('../controller/maxine/registry-controller');
+const discoveryController = require('../controller/maxine/discovery-controller');
 
 
 var maxineApiRoutes = RouteBuilder.createNewRoute()
