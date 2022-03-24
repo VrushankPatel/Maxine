@@ -1,4 +1,4 @@
-const { errorAndClose } = require("./logging-util");
+const { errorAndClose, error } = require("./logging-util");
 
 const logGenericExceptions = () => {
     process.on('uncaughtException', (err) => {
@@ -7,6 +7,10 @@ const logGenericExceptions = () => {
     });
 
     process.on('unhandledRejection', (err) => {
+        if(err.name === "SequelizeUniqueConstraintError"){
+            error(err.name + " | " + err.message + " | " + JSON.stringify(err.original));
+            return;
+        }
         const msg = err.message + err.stack.replace(/(\r\n|\n|\r)/gm, "");
         errorAndClose(msg);
     });
