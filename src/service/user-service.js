@@ -2,7 +2,7 @@ const { User } = require("../model/user");
 const { constants } = require("../util/constants/constants");
 const { info } = require("../util/logging/logging-util");
 
-class UserRepository {
+class UserService{
     async createAdmin(){
         const [user, created] = await User.findOrCreate({
             where: { userName: constants.ADMIN },
@@ -27,9 +27,8 @@ class UserRepository {
     }
 }
 
-const userRepository = new UserRepository();
-
+const userService = new UserService();
 
 module.exports = {
-    userRepository
+    userService
 }

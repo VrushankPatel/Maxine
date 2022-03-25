@@ -1,7 +1,7 @@
 const { UUIDs } = require("../model/uuid");
 const { info } = require("../util/logging/logging-util");
 
-class UuidRepository {
+class UuidService {
     async generateUUID(){
         const result = await UUIDs.build().save();
         const uuid = result.dataValues.uuid;
@@ -15,13 +15,14 @@ class UuidRepository {
         }).then(rowCount => rowCount)
         if(rowCount > 0){
             info(`Removed access UUID ${uuid}`);
+            return true;
         }
-        return rowCount;
+        return false;
     }
 }
 
-const uuidRepository = new UuidRepository();
+const uuidService = new UuidService();
 
 module.exports = {
-    uuidRepository
+    uuidService
 }

@@ -1,5 +1,5 @@
 const { sequelize } = require('../../config/db/db-config');
-const { userRepository } = require('../../repository/user-repository');
+const { userService } = require('../../service/user-service');
 const { statusAndMsgs } = require('../constants/constants');
 const { info, errorAndClose } = require('../logging/logging-util');
 
@@ -20,7 +20,7 @@ async function closeConnection(){
 
 function initDb() {
     invokeDbConnection();
-    userRepository.createAdmin();
+    userService.createAdmin();
 }
 
 module.exports = {
