@@ -1,23 +1,21 @@
+const { UUIDV4 } = require("sequelize");
 const { DataTypes } = require("sequelize");
 const { sequelize } = require("../config/db/db-config");
 
-const User = sequelize.define('User', {
-    userName: {
+const UUIDs = sequelize.define('UUIDs', {
+    uuid: {
         type: DataTypes.STRING,
         allowNull: false,
+        defaultValue: UUIDV4,
         primaryKey: true
-    },
-    password: {
-        type: DataTypes.STRING,
-        allowNull: false
     }
 },{
     freezeTableName: true,
     timestamps: false
 });
 
-User.sync();
+UUIDs.sync();
 
 module.exports = {
-    User
+    UUIDs
 }
