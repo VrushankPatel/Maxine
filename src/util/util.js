@@ -5,7 +5,7 @@ const { constants } = require('./constants/constants');
 
 const getCurrentDate = () => date.format(new Date(), constants.REQUEST_LOG_TIMESTAMP_FORMAT);
 
-const logJsonBuilder = (logLevel, logType, statusAndMsgs, req, msg = "") => {
+function logJsonBuilder(logLevel, logType, statusAndMsgs, req, msg = ""){
     return JsonBuilder.createNewJson()
                     .put("LogLevel", logLevel)
                     .put("LogType", logType)
