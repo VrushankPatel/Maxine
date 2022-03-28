@@ -20,13 +20,13 @@ class ExpressAppBuilder{
     }
 
     ifPropertyOnce(property){
-        this.conditionStack.push(config[property] === 'true');
+        this.conditionStack.push(config[property] === true);
         this.checkOnceOnly = true;
         return this;
     }
 
     ifProperty(property){
-        this.conditionStack.push(config[property] === 'true');
+        this.conditionStack.push(config[property] === true);
         return this;
     }
 

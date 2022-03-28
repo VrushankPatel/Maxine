@@ -96,7 +96,7 @@ class JsonBuilder{
     }
 
     formatJson(){
-      return config.logJsonPrettify === 'true' ? this.prettifyJSON() : this.minifyJSON();
+      return config.logJsonPrettify === true ? this.prettifyJSON() : this.minifyJSON();
     }
 
     prettifyJSON(){
