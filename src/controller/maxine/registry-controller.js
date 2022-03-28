@@ -1,6 +1,7 @@
 const { info, error } = require('../../util/logging/logging-util');
 const { statusAndMsgs, constants } = require('../../util/constants/constants');
 const { registryService } = require('../../service/registry-service');
+const config = require('../../config/config');
 
 const registryController = (req, res) => {
     let {hostName, nodeName, port, serviceName, timeOut, weight, ssl} = req.body;
@@ -8,7 +9,7 @@ const registryController = (req, res) => {
     serviceName = serviceName.toUpperCase();
     nodeName = nodeName.toUpperCase();
     port = Math.abs(parseInt(port));
-    timeOut = Math.abs(parseInt(timeOut)) || constants.HEARTBEAT_TIMEOUT;
+    timeOut = Math.abs(parseInt(timeOut)) || config.heartBeatTimeOut;
     weight = Math.abs(parseInt(weight)) || 1;
     ssl = ssl || false;
     const address = `${ssl ? "https" : "http"}://${hostName}:${port}`;

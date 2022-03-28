@@ -1,6 +1,6 @@
 var express = require('express');
-const { properties } = require('../util/propertyReader/property-reader');
 const { statusAndMsgs } = require('../util/constants/constants');
+const config = require('../config/config');
 
 class ExpressAppBuilder{
     app;
@@ -20,13 +20,13 @@ class ExpressAppBuilder{
     }
 
     ifPropertyOnce(property){
-        this.conditionStack.push(properties[property] === 'true');
+        this.conditionStack.push(config[property] === 'true');
         this.checkOnceOnly = true;
         return this;
     }
 
     ifProperty(property){
-        this.conditionStack.push(properties[property] === 'true');
+        this.conditionStack.push(config[property] === 'true');
         return this;
     }
 

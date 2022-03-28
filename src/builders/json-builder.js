@@ -1,4 +1,4 @@
-const { properties } = require('../util/propertyReader/property-reader');
+const config = require('../config/config');
 class JsonBuilder{
     jsonObj;
     doCheckCondition;
@@ -96,7 +96,7 @@ class JsonBuilder{
     }
 
     formatJson(){
-      return properties["log.json.prettify"] === 'true' ? this.prettifyJSON() : this.minifyJSON();
+      return config.logJsonPrettify === 'true' ? this.prettifyJSON() : this.minifyJSON();
     }
 
     prettifyJSON(){
