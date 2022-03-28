@@ -9,7 +9,6 @@ const expressStatusMonitor = require('express-status-monitor');
 const logWebExceptions = require('./src/util/logging/log-web-exceptions');
 const logRequest = require('./src/util/logging/log-request');
 const authenticationFilter = require('./src/security/authentication-filter');
-const { initDb } = require('./src/util/db/db-util');
 
 const app = ExpressAppBuilder.createNewApp()
                 .useIfPropertyOnce(expressStatusMonitor(statusMonitorConfig), "statusMonitor.enabled")
@@ -19,7 +18,6 @@ const app = ExpressAppBuilder.createNewApp()
                 .use('/api',maxineApiRoutes)
                 .blockUnknownUrls()
                 .use(logWebExceptions)
-                .invoke(initDb)
                 .getApp();
 
 app.listen(constants.PORT, loggingUtil.initApp);

@@ -1,4 +1,3 @@
-const { User } = require("../model/user");
 const { constants } = require("../util/constants/constants");
 const { info } = require("../util/logging/logging-util");
 
