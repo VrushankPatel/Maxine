@@ -11,10 +11,10 @@ const logRequest = require('./src/util/logging/log-request');
 const authenticationFilter = require('./src/security/authentication-filter');
 
 const app = ExpressAppBuilder.createNewApp()
-                .useIfPropertyOnce(expressStatusMonitor(statusMonitorConfig), "statusMonitor.enabled")
+                .useIfPropertyOnce(expressStatusMonitor(statusMonitorConfig), "statusMonitorEnabled")
                 .use(logRequest)
                 .use(authenticationFilter)
-                .useIfPropertyOnce(actuator(actuatorConfig), "actuator.enabled")
+                .useIfPropertyOnce(actuator(actuatorConfig), "actuatorEnabled")
                 .use('/api',maxineApiRoutes)
                 .blockUnknownUrls()
                 .use(logWebExceptions)

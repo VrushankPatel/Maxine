@@ -1,10 +1,8 @@
-const { properties } = require("../propertyReader/property-reader");
 const envArgs = require('minimist')(process.argv.slice(2));
 
 const PORT = parseInt(envArgs['p']) || parseInt(envArgs['port']) || 8080;
 
 const APP_NAME = "Maxine-Service-Discovery";
-const HEARTBEAT_TIMEOUT = properties["heartBeat.timeOut"];
 const PROFILE = (envArgs['env'] || envArgs['profile'] || "prod").trim();
 const BANNERPATH = 'src/resources/Banner.txt';
 const LOGDIR = './logs/';
@@ -37,7 +35,6 @@ const ROLES = [ADMIN.toUpperCase(), "USER"];
 const constants = {
     PORT,
     APP_NAME,
-    HEARTBEAT_TIMEOUT,
     PROFILE,
     BANNERPATH,
     LOGDIR,
