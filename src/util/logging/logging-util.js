@@ -29,7 +29,7 @@ const loggingUtil = {
     logger,
     log,
     error,
-    initApp : () => logger.info(`\n${banner} 〉 ${constants.PROFILE} server started on port : ${constants.PORT}\n`),
+    initApp : () => logger.info(`\n${banner} » ${constants.PROFILE} server started on port : ${constants.PORT}\n`),
     logExceptions,
     errorAndClose
 }
