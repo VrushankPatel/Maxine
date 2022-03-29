@@ -8,12 +8,12 @@ const maxineApiRoutes = require('./src/routes/routes');
 const expressStatusMonitor = require('express-status-monitor');
 const logWebExceptions = require('./src/util/logging/log-web-exceptions');
 const logRequest = require('./src/util/logging/log-request');
-const authenticationFilter = require('./src/security/authentication-filter');
+const { authenticationController } = require('./src/controller/maxine/authentication-controller');
 
 const app = ExpressAppBuilder.createNewApp()
                 .useIfPropertyOnce(expressStatusMonitor(statusMonitorConfig), "statusMonitorEnabled")
                 .use(logRequest)
-                .use(authenticationFilter)
+                .use(authenticationController)
                 .useIfPropertyOnce(actuator(actuatorConfig), "actuatorEnabled")
                 .use('/api',maxineApiRoutes)
                 .blockUnknownUrls()
