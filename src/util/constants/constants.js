@@ -39,6 +39,8 @@ const MSG_DB_CON_FAILURE = "Unable to connect to DB, closing App..";
 const MSG_JWT_EXPIRED = "JWT token expired";
 const MSG_UNAUTHORIZED = "Unauthorized";
 
+const API_URLS_WITH_AUTH = [];
+
 const constants = {
     PORT,
     APP_NAME,
@@ -52,7 +54,8 @@ const constants = {
     REQUEST_LOG_TIMESTAMP_FORMAT,
     DEFAULT_ADMIN_USERNAME_PWD,
     EXPIRATION_TIME,
-    SECRET
+    SECRET,
+    API_URLS_WITH_AUTH
 };
 
 const statusAndMsgs = {
