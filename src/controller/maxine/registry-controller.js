@@ -6,6 +6,12 @@ const config = require('../../config/config');
 const registryController = (req, res) => {
     let {hostName, nodeName, port, serviceName, timeOut, weight, ssl} = req.body;
 
+    if(!(hostName && nodeName && port && serviceName)){
+        error(statusAndMsgs.MSG_REGISTER_MISSING_DATA);
+        res.status(statusAndMsgs.STATUS_GENERIC_ERROR).json({"message" : statusAndMsgs.MSG_REGISTER_MISSING_DATA});
+        return;
+    }
+
     serviceName = serviceName.toUpperCase();
     nodeName = nodeName.toUpperCase();
     port = Math.abs(parseInt(port));
@@ -14,11 +20,6 @@ const registryController = (req, res) => {
     ssl = ssl || false;
     const address = `${ssl ? "https" : "http"}://${hostName}:${port}`;
 
-    if(!(hostName && nodeName && port && serviceName)){
-        error(statusAndMsgs.MSG_REGISTER_MISSING_DATA);
-        res.status(statusAndMsgs.STATUS_GENERIC_ERROR).json({"message" : statusAndMsgs.MSG_REGISTER_MISSING_DATA});
-        return;
-    }
 
     const serviceObj = {
         "serviceName" : serviceName,

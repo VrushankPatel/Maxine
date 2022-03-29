@@ -1,29 +1,40 @@
 const jwt = require('jsonwebtoken');
-const { secret, expirationTime } = require('../config/security/jwt-config');
+const _ = require('lodash');
+const { admin, User } = require('../entity/user');
+const { statusAndMsgs, constants } = require('../util/constants/constants');
 
-
-function generateAccessToken(obj) {
-    return jwt.sign(obj, secret, { expiresIn:`${expirationTime}s`});
+function generateAccessToken(payloadObj) {
+    return jwt.sign(payloadObj, constants.SECRET, { expiresIn:`${constants.EXPIRATION_TIME}s`});
 }
 
-const token = generateAccessToken({"userName" : "vrushankpatel", "pwd" : "samplepwd"});
-console.log(token);
+function authenticateToken(req, res, next) {
+    const authHeader = req.headers['authorization'];
+    const token = authHeader && authHeader.split(' ')[1];
 
+    if (token == null) return res.sendStatus(401);
 
-function authenticateToken(token) {
-    // const authHeader = req.headers['authorization']
-    // const token = authHeader && authHeader.split(' ')[1]
+    jwt.verify(token, constants.SECRET, (err, user) => {
+        if (user){
+            user = User.createUserFromObj(user);
+            if(_.isEqual(user, admin)){
+                next();
+                return;
+            }
+            res.status(statusAndMsgs.STATUS_UNAUTHORIZED).json({"message" : statusAndMsgs.MSG_UNAUTHORIZED});
+            return;
+        }
 
-    // if (token == null) return res.sendStatus(401)
+        if(err){
+            if(err.message.includes("jwt expired")){
+                res.status(statusAndMsgs.STATUS_UNAUTHORIZED).json({"message" : statusAndMsgs.MSG_JWT_EXPIRED});
+                return;
+            }
+            res.sendStatus(statusAndMsgs.STATUS_FORBIDDEN);
+        }
+    });
+}
 
-    jwt.verify(token, secret, (err, user) => {
-      console.log(err)
-
-    //   if (err) return res.sendStatus(403)
-
-    //   req.user = user
-        console.log(user);
-    //   next()
-    })
-  }
-authenticateToken(token);
+module.exports = {
+  generateAccessToken,
+  authenticateToken
+}
