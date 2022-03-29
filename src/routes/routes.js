@@ -3,6 +3,7 @@ const {logsDownloadController, logsLinkGenController} = require('../controller/l
 const bodyParser = require('body-parser');
 const { serverListController, registryController } = require('../controller/maxine/registry-controller');
 const discoveryController = require('../controller/maxine/discovery-controller');
+const { signInController } = require('../controller/maxine/signin-controller');
 
 
 var maxineApiRoutes = RouteBuilder.createNewRoute()
@@ -15,7 +16,7 @@ var maxineApiRoutes = RouteBuilder.createNewRoute()
                             .get("servers", serverListController)
                             .post("register", bodyParser.json(), registryController)
                             .get("discover", discoveryController)
-                            .stepToRoot()
+                            .post("signin", bodyParser.json(), signInController)
                         .stepToRoot()
                         .getRoute();
 

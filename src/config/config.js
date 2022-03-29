@@ -5,7 +5,6 @@ const config = {
     actuatorConfig,
     statusMonitorConfig,
     logFileTransports,
-    expirationTime: 1800,
     loggingType: "sync",
     heartBeatTimeOut: 5,
     logJsonPrettify: false,
