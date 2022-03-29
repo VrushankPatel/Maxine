@@ -15,23 +15,19 @@ function authenticationController(req, res, next) {
     if (token == null) return res.sendStatus(401);
 
     jwt.verify(token, constants.SECRET, (err, user) => {
-        if (user){
-            user = User.createUserFromObj(user);
-            if(_.isEqual(user, admin)){
-                next();
-                return;
-            }
-            res.status(statusAndMsgs.STATUS_UNAUTHORIZED).json({"message" : statusAndMsgs.MSG_UNAUTHORIZED});
+        if (user && _.isEqual(User.createUserFromObj(user), admin)){
+            next();
             return;
         }
 
         if(err){
-            if(err.message.includes("jwt expired")){
-                res.status(statusAndMsgs.STATUS_UNAUTHORIZED).json({"message" : statusAndMsgs.MSG_JWT_EXPIRED});
-                return;
-            }
+            err.message.includes("jwt expired") ? 
+            res.status(statusAndMsgs.STATUS_UNAUTHORIZED).json({"message" : statusAndMsgs.MSG_JWT_EXPIRED}) : 
             res.sendStatus(statusAndMsgs.STATUS_FORBIDDEN);
+            return;
         }
+
+        res.status(statusAndMsgs.STATUS_UNAUTHORIZED).json({"message" : statusAndMsgs.MSG_UNAUTHORIZED});
     });
 }
 
