@@ -16,7 +16,7 @@ const EXPIRATION_TIME = PROFILE === "dev" ? 86000 : 1800;
 const DEV_SECRET = "55e871f9889bb099df419b6b3c3a852582f9f0551d0ddc367b329dcd608a22d43b60efa62979ba0d9fe91d12cc56d03aa0c89e28707b1e039a7fc33e3a86b2d0";
 const PROD_SECRET = require('crypto').randomBytes(64).toString('hex');
 const SECRET = PROFILE === "dev" ? DEV_SECRET : PROD_SECRET;
-console.log(SECRET);
+
 // Http Status Code and Messages
 const STATUS_NOT_FOUND = 404;
 const MSG_NOT_FOUND = "Not found";
