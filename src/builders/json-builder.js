@@ -54,7 +54,7 @@ class JsonBuilder{
         }
         this.jsonObj[key] = value;
         return this;
-    };
+    }
 
     putIfNotNull(key, value){
         this.checkIfNull(value);
@@ -84,7 +84,7 @@ class JsonBuilder{
         }
         this.jsonObj[key] = this.registeredObj[refObj];
         return this;
-    };
+    }
 
     deregisterObj(){
         this.registeredObj = null;
