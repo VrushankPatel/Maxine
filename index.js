@@ -8,7 +8,7 @@ const maxineApiRoutes = require('./src/routes/routes');
 const expressStatusMonitor = require('express-status-monitor');
 const logWebExceptions = require('./src/util/logging/log-web-exceptions');
 const logRequest = require('./src/util/logging/log-request');
-const { authenticationController } = require('./src/controller/maxine/authentication-controller');
+const { authenticationController } = require('./src/controller/security/authentication-controller');
 
 const app = ExpressAppBuilder.createNewApp()
                 .useIfPropertyOnce(expressStatusMonitor(statusMonitorConfig), "statusMonitorEnabled")
