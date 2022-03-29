@@ -4,6 +4,11 @@ const { admin, User } = require('../../entity/user');
 const { statusAndMsgs, constants } = require('../../util/constants/constants');
 
 function authenticationController(req, res, next) {
+    if(!constants.API_URLS_WITH_AUTH.includes(req.url)){
+        next();
+        return;
+    }
+
     const authHeader = req.headers['authorization'];
     const token = authHeader && authHeader.split(' ')[1];
 
