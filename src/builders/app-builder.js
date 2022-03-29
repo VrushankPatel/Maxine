@@ -33,7 +33,7 @@ class ExpressAppBuilder{
     endIfProperty(){
         this.conditionStack.pop();
         return this;
-    };
+    }
 
     endAllIf(){
         this.conditionStack = [];
