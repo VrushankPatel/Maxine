@@ -3,7 +3,7 @@ const bodyParser = require('body-parser');
 const { serverListController, registryController } = require('../controller/maxine/registry-controller');
 const discoveryController = require('../controller/maxine/discovery-controller');
 const { signInController } = require('../controller/uac/signin-controller');
-const { logsDownloadController, logsLinkGenController } = require('../controller/logs/logs-controller');
+const { logsDownloadController, logsLinkGenController } = require('../controller/log-control/logs-controller');
 
 
 var maxineApiRoutes = RouteBuilder.createNewRoute()
