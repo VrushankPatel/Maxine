@@ -12,16 +12,19 @@ const port = 8080;
 const serviceName = "Sample-Service".toUpperCase();
 const nodeName = "node-4".toUpperCase();
 const timeOut = 4;
+const ssl = false;
+const httpOrNonHttp = ssl ? "https" : "http";
 
 const testServiceData = {
     "hostName" : hostName,
     "port" : port,
     "serviceName" : serviceName,
     "nodeName" : nodeName,
-    "timeOut" : timeOut
+    "timeOut" : timeOut,
+    "ssl": ssl
 };
 
-describe(`${fileName} : API /maxine`, () => {
+describe(`${fileName} : API /api/maxine/{registry urls}`, () => {
 
     it('/register (without passing necessary parameters) -> 400 & should return error', (done) => {
         chai.request(app)
@@ -37,10 +40,6 @@ describe(`${fileName} : API /maxine`, () => {
             });
     });
 
-    // first test will retrieve below two params after registering service and assign the values.
-    // second test will retrieve the registered server info and will verify it by below two params.
-    let expectedServiceObj;
-
     it('/register (With all necessary parameters) -> 200 & should register the server', (done) => {
         chai.request(app)
             .post('/api/maxine/register')
@@ -49,18 +48,13 @@ describe(`${fileName} : API /maxine`, () => {
             .end((err, res) => {
                 res.should.have.status(200);
                 res.should.be.json;
-
-                const tempNodeName = nodeName + "-0"; // no weight means 1 server, no replication
                 const body = res.body;
                 body.should.be.a('object');
-                body.should.have.own.property(tempNodeName);
-
-                const node = body[tempNodeName];
-                node.should.have.own.property("nodeName", tempNodeName);
-                node.should.have.own.property("address", `${hostName}:${port}`);
-                node.should.have.own.property("timeOut", timeOut);
-
-                expectedServiceObj = body;
+                body.should.have.own.property("serviceName", serviceName);
+                body.should.have.own.property("nodeName", nodeName);
+                body.should.have.own.property("address", `${httpOrNonHttp}://${hostName}:${port}`);
+                body.should.have.own.property("timeOut", timeOut);
+                body.should.have.own.property("weight", 1); // we havn't passed weight so, default is 1
                 done();
             });
     });
@@ -73,13 +67,21 @@ describe(`${fileName} : API /maxine`, () => {
                 res.should.be.json;
 
                 const tempNodeName = nodeName + "-0"; // no weight means 1 server, no replication
-
                 const body = res.body;
                 body.should.be.a('object');
                 body.should.have.own.property(serviceName);
-                body[serviceName].should.have.own.property("nodes");
-                body[serviceName]["nodes"].should.have.own.property(tempNodeName);
-                body[serviceName]["nodes"][tempNodeName].should.be.eql(expectedServiceObj[tempNodeName]);
+                const service = body[serviceName];
+                service.should.have.own.property("offset", 0);
+                service.should.have.own.property("nodes");
+
+                const nodes = service["nodes"]
+                nodes.should.have.own.property(tempNodeName);
+
+                const node = nodes[tempNodeName];
+                node.should.have.own.property("nodeName", tempNodeName);
+                node.should.have.own.property("parentNode", nodeName);
+                node.should.have.own.property("address", `${httpOrNonHttp}://${hostName}:${port}`);
+                node.should.have.own.property("timeOut", timeOut);
                 done();
             });
     });

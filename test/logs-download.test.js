@@ -7,7 +7,7 @@ chai.use(chaiHttp);
 
 const fileName = require('path').basename(__filename).replace(".js","");
 
-describe(`${fileName} : API /logs`, () => {
+describe(`${fileName} : API /api/logs`, () => {
     let logFiles = [];
 
     it('/download -> 200 && it should return all the log files available in logs dir in JSON format', (done) => {
