@@ -7,7 +7,7 @@ chai.use(chaiHttp);
 
 const fileName = require('path').basename(__filename).replace(".js","");
 
-describe(`${fileName} : API /actuator`, () => {
+describe(`${fileName} : API /api/actuator`, () => {
     it('/health -> 200', (done) => {
         chai.request(app)
             .get('/api/actuator/health')

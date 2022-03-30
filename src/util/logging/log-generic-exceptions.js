@@ -3,7 +3,7 @@ const { errorAndClose, error } = require("./logging-util");
 const logGenericExceptions = () => {
     process.on('uncaughtException', (err) => {
         const msg = err.message + err.stack.replace(/(\r\n|\n|\r)/gm, "");
-        errorAndClose(msg);
+        error(msg);
     });
 
     process.on('unhandledRejection', (err) => {
@@ -12,7 +12,7 @@ const logGenericExceptions = () => {
             return;
         }
         const msg = err.message + err.stack.replace(/(\r\n|\n|\r)/gm, "");
-        errorAndClose(msg);
+        error(msg);
     });
 
 };

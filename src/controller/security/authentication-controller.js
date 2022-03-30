@@ -21,8 +21,8 @@ function authenticationController(req, res, next) {
         }
 
         if(err){
-            err.message.includes("jwt expired") ? 
-            res.status(statusAndMsgs.STATUS_UNAUTHORIZED).json({"message" : statusAndMsgs.MSG_JWT_EXPIRED}) : 
+            err.message.includes("jwt expired") ?
+            res.status(statusAndMsgs.STATUS_UNAUTHORIZED).json({"message" : statusAndMsgs.MSG_JWT_EXPIRED}) :
             res.sendStatus(statusAndMsgs.STATUS_FORBIDDEN);
             return;
         }
