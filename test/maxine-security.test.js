@@ -21,7 +21,7 @@ describe(`${fileName} : API /api/maxine/signin`, () => {
             });
     });
 
-    it('/signin Signin endpoint fire with the payload of admin credentials, we should get token back.', (done) => {
+    it('/signin Signin endpoint fire with the payload of admin credentials, we should get accessToken as response.', (done) => {
         chai.request(app)
             .post('/api/maxine/signin')
             .set('content-type', 'application/json')
