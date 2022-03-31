@@ -1,5 +1,6 @@
 const { registryService } = require("../../service/registry-service");
 const { statusAndMsgs } = require("../../util/constants/constants");
+const _ = require('lodash');
 
 const discoveryController = (req, res) => {
     // Retrieving the serviceName from query params
@@ -13,16 +14,17 @@ const discoveryController = (req, res) => {
     // now, retrieving the serviceNode from the registry
     const serviceNode = registryService.getNode(serviceName.toUpperCase());
 
-    // if ServiceNode is there, we'll respond.
-    if(serviceNode){
-        res.redirect(serviceNode.address);
+    // no service node is there so, service unavailable is our error response.
+    if(_.isEmpty(serviceNode)){
+        res.status(statusAndMsgs.SERVICE_UNAVAILABLE).json({
+            "message" : statusAndMsgs.MSG_SERVICE_UNAVAILABLE
+        });
         return;
     }
 
-    // no service node is there so, service unavailable is our error response.
-    res.status(statusAndMsgs.SERVICE_UNAVAILABLE).json({
-        "message" : statusAndMsgs.MSG_SERVICE_UNAVAILABLE
-    });
+    // if ServiceNode is there, we'll respond.
+    // res.redirect(serviceNode.address);
+    res.json(serviceNode);
 }
 
 module.exports = discoveryController
