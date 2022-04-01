@@ -16,6 +16,7 @@ const EXPIRATION_TIME = PROFILE === "dev" ? 86000 : 1800;
 const DEV_SECRET = "55e871f9889bb099df419b6b3c3a852582f9f0551d0ddc367b329dcd608a22d43b60efa62979ba0d9fe91d12cc56d03aa0c89e28707b1e039a7fc33e3a86b2d0";
 const PROD_SECRET = require('crypto').randomBytes(64).toString('hex');
 const SECRET = PROFILE === "dev" ? DEV_SECRET : PROD_SECRET;
+const MAX_SERVER_WEIGHT = 10;
 
 // Http Status Code and Messages
 const STATUS_NOT_FOUND = 404;
@@ -38,7 +39,7 @@ const MSG_DB_CON_SUCCESS = "DB Connection Successful";
 const MSG_DB_CON_FAILURE = "Unable to connect to DB, closing App..";
 const MSG_JWT_EXPIRED = "JWT token expired";
 const MSG_UNAUTHORIZED = "Unauthorized";
-
+const MSG_INVALID_WEIGHT =`Maximum allowed size of weight is ${MAX_SERVER_WEIGHT} (One server can maximum be ${MAX_SERVER_WEIGHT}x more powerful than others`;
 const API_URLS_WITH_AUTH = [];
 
 const constants = {
@@ -55,7 +56,8 @@ const constants = {
     DEFAULT_ADMIN_USERNAME_PWD,
     EXPIRATION_TIME,
     SECRET,
-    API_URLS_WITH_AUTH
+    API_URLS_WITH_AUTH,
+    MAX_SERVER_WEIGHT
 };
 
 const statusAndMsgs = {
@@ -78,7 +80,8 @@ const statusAndMsgs = {
     MSG_DB_CON_FAILURE,
     MSG_MISSING_UNAME_PWD,
     MSG_JWT_EXPIRED,
-    MSG_UNAUTHORIZED
+    MSG_UNAUTHORIZED,
+    MSG_INVALID_WEIGHT
 }
 
 module.exports = {

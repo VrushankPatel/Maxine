@@ -20,6 +20,10 @@ const registryController = (req, res) => {
     ssl = ssl || false;
     const address = `${ssl ? "https" : "http"}://${hostName}:${port}`;
 
+    if(weight > constants.MAX_SERVER_WEIGHT){
+        res.status(statusAndMsgs.STATUS_GENERIC_ERROR).json({"message" : statusAndMsgs.MSG_INVALID_WEIGHT});
+        return;
+    }
 
     const serviceObj = {
         "serviceName" : serviceName,
