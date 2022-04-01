@@ -29,19 +29,18 @@ class RegistryService{
                 "registeredAt" : new Date().toLocaleString()
             }
 
-            this.updateConsistentHashRegistry(serviceName);
-
             const timeResetter = setTimeout(() => {
                 delete this.serviceRegistry[serviceName]["nodes"][subNodeName];
                 if(Object.keys(this.serviceRegistry[serviceName]["nodes"]).length === 0){
                     delete this.serviceRegistry[serviceName];
-                    delete this.consistentHashRegistry[serviceName];
                 }
-                this.updateConsistentHashRegistry(serviceName);
             }, ((timeOut)*1000)+500);
-
             this.timeResetters[subNodeName] = timeResetter;
         });
+        setTimeout(() => {
+            this.updateConsistentHashRegistry(serviceName);
+        }, ((timeOut)*1000)+500);
+        this.updateConsistentHashRegistry(serviceName);
     }
 
     registryService = (serviceObj) => {
@@ -52,10 +51,7 @@ class RegistryService{
 
     updateConsistentHashRegistry = (serviceName) => {
         const nodes = this.getNodes(serviceName);
-        if(_.isEmpty(nodes)){
-            return;
-        }
-        const serviceNodes = Object.keys(nodes);
+        const serviceNodes = _.isEmpty(nodes) ? [] : Object.keys(nodes);
         if(_.isEmpty(serviceNodes) || _.isNull(serviceNodes)){
             delete this.consistentHashRegistry[serviceName];
             return;
@@ -82,9 +78,9 @@ class RegistryService{
         return servers["offset"]++;
     }
 
-    getNode = (serviceName) => {
+    getNode = (serviceName, ip) => {
         if(ServerSelectionStrategy.isConsistentHashing()){
-            return this.getNodeByConsistentHashing(serviceName, "sample-ip-1");
+            return this.getNodeByConsistentHashing(serviceName, ip);
         }
         return this.getNodeByRoundRobin(serviceName);
     }
