@@ -5,6 +5,11 @@ const _ = require('lodash');
 const discoveryController = (req, res) => {
     // Retrieving the serviceName from query params
     const serviceName = req.query.serviceName;
+    var ip = req.ip
+    || req.connection.remoteAddress
+    || req.socket.remoteAddress
+    || req.connection.socket.remoteAddress;
+
     // if serviceName is not there, responding with error
     if(!serviceName) {
         res.status(statusAndMsgs.STATUS_GENERIC_ERROR).json({"message" : statusAndMsgs.MSG_DISCOVER_MISSING_DATA});
@@ -12,7 +17,7 @@ const discoveryController = (req, res) => {
     }
 
     // now, retrieving the serviceNode from the registry
-    const serviceNode = registryService.getNode(serviceName.toUpperCase());
+    const serviceNode = registryService.getNode(serviceName.toUpperCase(), ip);
 
     // no service node is there so, service unavailable is our error response.
     if(_.isEmpty(serviceNode)){
