@@ -31,5 +31,4 @@ endpoints.*
 setEnv.bat
 test-results.xml
 
-web/
 maxinedb.sqlite

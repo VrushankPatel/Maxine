@@ -1,4 +1,4 @@
-const Config = require("../config/Config");
+const Config = require("../config/config");
 const { constants } = require("../util/constants/constants");
 
 class JsonBuilder{
