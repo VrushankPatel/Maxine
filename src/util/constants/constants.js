@@ -42,7 +42,9 @@ const MSG_UNAUTHORIZED = "Unauthorized";
 const MSG_INVALID_WEIGHT =`Maximum allowed size of weight is ${MAX_SERVER_WEIGHT} (One server can maximum be ${MAX_SERVER_WEIGHT}x more powerful than others`;
 const CONFIGTYPES = ["sync", "async"];
 const SERVER_SELECTION_STRATEGIES = ["round-robin", "consistent-hashing"];
-const API_URLS_WITH_AUTH = [];
+const API_URLS_WITH_AUTH = [
+    '/api/maxine/config'
+];
 
 
 // for Config updates, status codes (customized)
