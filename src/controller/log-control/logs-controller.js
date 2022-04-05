@@ -9,7 +9,7 @@ const logsDownloadController = (req, res) => {
     res.download(logFilePath);
 }
 
-const logsLinkGenController = (req, res) => res.send(logFilesService.getLogLinks());
+const logsLinkGenController = (_, res) => res.send(logFilesService.getLogLinks());
 
 module.exports = {
     logsDownloadController,

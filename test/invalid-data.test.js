@@ -11,7 +11,7 @@ describe(`${fileName} : API /any_unknown_url`, () => {
     it('/8989 -> 404 (invalid url)', (done) => {
         chai.request(app)
             .get('/8989')
-            .end((err, res) => {
+            .end((_, res) => {
                 res.should.have.status(404);
                 res.should.be.json;
                 res.body.should.be.a('object');
