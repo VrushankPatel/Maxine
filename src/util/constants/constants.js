@@ -38,6 +38,7 @@ const MSG_MISSING_UNAME_PWD = "Please provide both of these -> userName and pass
 const MSG_DB_CON_SUCCESS = "DB Connection Successful";
 const MSG_DB_CON_FAILURE = "Unable to connect to DB, closing App..";
 const MSG_JWT_EXPIRED = "JWT token expired";
+const MSG_FORBIDDEN = "Forbidden";
 const MSG_UNAUTHORIZED = "Unauthorized";
 const MSG_INVALID_WEIGHT =`Maximum allowed size of weight is ${MAX_SERVER_WEIGHT} (One server can maximum be ${MAX_SERVER_WEIGHT}x more powerful than others`;
 const CONFIGTYPES = ["sync", "async"];
@@ -96,7 +97,8 @@ const statusAndMsgs = {
     MSG_MISSING_UNAME_PWD,
     MSG_JWT_EXPIRED,
     MSG_UNAUTHORIZED,
-    MSG_INVALID_WEIGHT
+    MSG_INVALID_WEIGHT,
+    MSG_FORBIDDEN
 }
 
 module.exports = {

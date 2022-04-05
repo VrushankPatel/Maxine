@@ -12,7 +12,7 @@ function authenticationController(req, res, next) {
     const authHeader = req.headers['authorization'];
     const token = authHeader && authHeader.split(' ')[1];
 
-    if (token == null) return res.sendStatus(401);
+    if (token == null) return res.status(statusAndMsgs.STATUS_UNAUTHORIZED).json({"message" : statusAndMsgs.MSG_UNAUTHORIZED});
 
     jwt.verify(token, constants.SECRET, (err, user) => {
         if (user && _.isEqual(User.createUserFromObj(user), admin)){
@@ -23,7 +23,7 @@ function authenticationController(req, res, next) {
         if(err){
             err.message.includes("jwt expired") ?
             res.status(statusAndMsgs.STATUS_UNAUTHORIZED).json({"message" : statusAndMsgs.MSG_JWT_EXPIRED}) :
-            res.sendStatus(statusAndMsgs.STATUS_FORBIDDEN);
+            res.status(statusAndMsgs.STATUS_FORBIDDEN).json({"message" : statusAndMsgs.MSG_FORBIDDEN});
             return;
         }
 
