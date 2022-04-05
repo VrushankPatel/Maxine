@@ -1,6 +1,6 @@
 const fs = require('fs');
 const winston = require('winston');
-const Config = require('../../config/Config');
+const Config = require('../../config/config');
 const { logConfiguration } = require('../../config/logging/logging-config');
 
 const {constants, statusAndMsgs} = require('../constants/constants');

@@ -1,5 +1,5 @@
 var express = require('express');
-const Config = require('../config/Config');
+const Config = require('../config/config');
 const { statusAndMsgs } = require('../util/constants/constants');
 
 class ExpressAppBuilder{
