@@ -111,6 +111,24 @@ paths:
             application/json:
               example: '{"DB-SERVICE":{"offset":0,"nodes":{"NODE-X-1-0":{"nodeName":"NODE-X-1-0","parentNode":"NODE-X-1","address":"https://192.168.0.1:8082","timeOut":50,"registeredAt":"5/4/2022, 3:38:58 pm"},"NODE-X-1-1":{"nodeName":"NODE-X-1-1","parentNode":"NODE-X-1","address":"https://192.168.0.1:8082","timeOut":50,"registeredAt":"5/4/2022, 3:38:58 pm"},"NODE-X-1-2":{"nodeName":"NODE-X-1-2","parentNode":"NODE-X-1","address":"https://192.168.0.1:8082","timeOut":50,"registeredAt":"5/4/2022, 3:38:58 pm"},"NODE-X-1-3":{"nodeName":"NODE-X-1-3","parentNode":"NODE-X-1","address":"https://192.168.0.1:8082","timeOut":50,"registeredAt":"5/4/2022, 3:38:58 pm"},"NODE-X-1-4":{"nodeName":"NODE-X-1-4","parentNode":"NODE-X-1","address":"https://192.168.0.1:8082","timeOut":50,"registeredAt":"5/4/2022, 3:38:58 pm"}}}}'
       x-codegen-request-body-name: service
+  /api/maxine/config:
+    put:
+      summary: Update the config data of Maxine.
+      operationId: Maxine configuration manipulation
+      requestBody:
+        description: The updated config data.
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Config'
+        required: false
+      responses:
+        200:
+          description: OK
+          content:
+            application/json:
+              example: '{"updateStatus":{"logAsync":0,"heartBeatTimeout":0,"logJsonPrettify":0},"statusCodes":{"0":"Success","1":"Type Error","2":"Wrong value Or Invalid value"}}'
+      x-codegen-request-body-name: service
 components:
   schemas:
     Service:
@@ -146,3 +164,16 @@ components:
           minimum: 1
           type: integer
           example: 5
+    Config:
+      type: object
+      properties:
+        logAsync:
+          type: boolean
+          example: false
+        heartBeatTimeout:
+          type: integer
+          minimum: 1
+          example: 3
+        logJsonPrettify:
+          type: boolean
+          example: true
