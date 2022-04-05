@@ -39,7 +39,7 @@ const registryController = (req, res) => {
 }
 
 
-const serverListController = (req, res) => {
+const serverListController = (_, res) => {
     res.type('application/json');
     res.send(JSON.stringify(registryService.getCurrentlyRegisteredServers()));
 }
