@@ -11,7 +11,7 @@ describe(`${fileName} : API /api/actuator`, () => {
     it('/health -> 200', (done) => {
         chai.request(app)
             .get('/api/actuator/health')
-            .end((err, res) => {
+            .end((_, res) => {
                 res.should.have.status(200);
                 res.should.be.json;
                 res.body.should.be.a('object');
