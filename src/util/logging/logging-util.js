@@ -1,6 +1,6 @@
 const fs = require('fs');
 const winston = require('winston');
-const Config = require('../../config/config');
+const config = require('../../config/config');
 const { logConfiguration } = require('../../config/logging/logging-config');
 
 const {constants, statusAndMsgs} = require('../constants/constants');
@@ -10,7 +10,7 @@ const banner = fs.readFileSync(constants.BANNERPATH, 'utf8');
 const logger = winston.createLogger(logConfiguration);
 
 
-const log = (logFunction) => Config.logAsync === true ? setTimeout(logFunction, 0) : logFunction();
+const log = (logFunction) => config.logAsync === true ? setTimeout(logFunction, 0) : logFunction();
 
 const info = (msg) => log(() => logger.info(logJsonBuilder("INFO", "GENERIC", null, null, msg)));
 
