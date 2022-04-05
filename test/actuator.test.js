@@ -23,7 +23,7 @@ describe(`${fileName} : API /api/actuator`, () => {
     it('/info -> 200', (done) => {
         chai.request(app)
             .get('/api/actuator/info')
-            .end((err, res) => {
+            .end((_, res) => {
                 res.should.have.status(200);
                 res.should.be.json;
                 res.body.should.be.a('object');
@@ -37,7 +37,7 @@ describe(`${fileName} : API /api/actuator`, () => {
     it('/metrics -> 200 & should return memory occupied and uptime', (done) => {
         chai.request(app)
             .get('/api/actuator/metrics')
-            .end((err, res) => {
+            .end((_, res) => {
                 res.should.have.status(200);
                 res.should.be.json;
                 res.body.should.be.a('object');

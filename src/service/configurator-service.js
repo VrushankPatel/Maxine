@@ -4,17 +4,22 @@ const _ = require('lodash');
 
 class ConfiguratorService{
     updateLoggingType(logAsync) {
-        return !_.isBoolean(logAsync) ? constants.CODE_TYPE_ERROR : (Config.logAsync = (logAsync ? constants.YES : constants.NO)) && constants.CODE_SUCCESS;
+        if(!_.isBoolean(logAsync)) return constants.CODE_TYPE_ERROR;
+        Config.logAsync = logAsync;
+        return constants.CODE_SUCCESS;
     }
 
     updateHeartBeatTimeout(heartBeatTimeOut) {
-        return !Number.isInteger(heartBeatTimeOut) ? constants.CODE_TYPE_ERROR :
-                heartBeatTimeOut < constants.CODE_TYPE_ERROR ? constants.CODE_INVALID_TYPE :
-                (Config.heartBeatTimeOut = heartBeatTimeOut) && constants.CODE_SUCCESS;
+        if(!Number.isInteger(heartBeatTimeOut)) return constants.CODE_TYPE_ERROR;
+        if(heartBeatTimeOut < 1) return constants.CODE_INVALID_TYPE;
+        Config.heartBeatTimeOut = heartBeatTimeOut
+        return constants.CODE_SUCCESS;
     }
 
     updateLogJsonPrettify(logJsonPrettify) {
-        return !_.isBoolean(logJsonPrettify) ? constants.CODE_TYPE_ERROR : (Config.logJsonPrettify = logJsonPrettify ? constants.YES : constants.NO) && constants.CODE_SUCCESS;
+        if(!_.isBoolean(logJsonPrettify)) return constants.CODE_TYPE_ERROR;
+        Config.logJsonPrettify = logJsonPrettify;
+        return constants.CODE_SUCCESS;
     }
 }
 

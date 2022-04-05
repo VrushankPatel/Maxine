@@ -44,8 +44,6 @@ const CONFIGTYPES = ["sync", "async"];
 const SERVER_SELECTION_STRATEGIES = ["round-robin", "consistent-hashing"];
 const API_URLS_WITH_AUTH = [];
 
-const YES = 0;
-const NO = 1;
 
 // for Config updates, status codes (customized)
 const CODE_SUCCESS = 0;
@@ -73,8 +71,6 @@ const constants = {
     CODE_SUCCESS,
     CODE_TYPE_ERROR,
     CODE_INVALID_TYPE,
-    YES,
-    NO
 };
 
 const statusAndMsgs = {

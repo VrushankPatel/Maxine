@@ -1,5 +1,4 @@
-const Config = require("../config/config");
-const { constants } = require("../util/constants/constants");
+const Config = require("../config/Config");
 
 class JsonBuilder{
     jsonObj;
@@ -98,7 +97,7 @@ class JsonBuilder{
     }
 
     formatJson(){
-      return Config.logJsonPrettify === constants.YES ? this.prettifyJSON() : this.minifyJSON();
+      return Config.logJsonPrettify === true ? this.prettifyJSON() : this.minifyJSON();
     }
 
     prettifyJSON(){

@@ -6,9 +6,9 @@ class Config {
     static actuatorConfig = actuatorConfig;
     static statusMonitorConfig = statusMonitorConfig;
     static logFileTransports = logFileTransports;
-    static logAsync = constants.NO;
+    static logAsync = false;
     static heartBeatTimeOut = 5;
-    static logJsonPrettify = constants.NO;
+    static logJsonPrettify = false;
     static actuatorEnabled = true;
     static statusMonitorEnabled = true;
 }

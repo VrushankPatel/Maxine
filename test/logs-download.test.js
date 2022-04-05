@@ -13,7 +13,7 @@ describe(`${fileName} : API /api/logs`, () => {
     it('/download -> 200 && it should return all the log files available in logs dir in JSON format', (done) => {
         chai.request(app)
             .get('/api/logs/download')
-            .end((err, res) => {
+            .end((_, res) => {
                 res.should.have.status(200);
                 res.should.be.json;
                 res.body.should.be.a('object');
@@ -26,7 +26,7 @@ describe(`${fileName} : API /api/logs`, () => {
         Object.keys(logFiles).forEach(key => {
             chai.request(app)
             .get(logFiles[key])
-            .end((err, res) => {
+            .end((_, res) => {
                 res.should.have.status(200);
                 res.should.be.text;
                 res.text.should.be.a('string');

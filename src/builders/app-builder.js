@@ -41,7 +41,7 @@ class ExpressAppBuilder{
     }
 
     blockUnknownUrls(){
-        this.app.all('*',(req, res) => res.status(statusAndMsgs.STATUS_NOT_FOUND).json({"message": statusAndMsgs.MSG_NOT_FOUND}));
+        this.app.all('*',(_, res) => res.status(statusAndMsgs.STATUS_NOT_FOUND).json({"message": statusAndMsgs.MSG_NOT_FOUND}));
         return this;
     }
 

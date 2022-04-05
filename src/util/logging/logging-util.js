@@ -10,7 +10,7 @@ const banner = fs.readFileSync(constants.BANNERPATH, 'utf8');
 const logger = winston.createLogger(logConfiguration);
 
 
-const log = (logFunction) => Config.logAsync === constants.YES ? setTimeout(logFunction, 0) : logFunction();
+const log = (logFunction) => Config.logAsync === true ? setTimeout(logFunction, 0) : logFunction();
 
 const info = (msg) => log(() => logger.info(logJsonBuilder("INFO", "GENERIC", null, null, msg)));
 

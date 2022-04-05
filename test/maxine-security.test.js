@@ -13,7 +13,7 @@ describe(`${fileName} : API /api/maxine/signin`, () => {
     it('/signin Signin endpoint fire but without any payload, it should return 400 Bad request.', (done) => {
         chai.request(app)
             .post('/api/maxine/signin')
-            .end((err, res) => {
+            .end((_, res) => {
                 res.should.have.status(400);
                 res.should.be.json;
                 res.body.should.be.a('object');
@@ -26,7 +26,7 @@ describe(`${fileName} : API /api/maxine/signin`, () => {
             .post('/api/maxine/signin')
             .set('content-type', 'application/json')
             .send({userName: constants.DEFAULT_ADMIN_USERNAME_PWD, password: constants.DEFAULT_ADMIN_USERNAME_PWD})
-            .end((err, res) => {
+            .end((_, res) => {
                 res.should.have.status(200);
                 res.should.be.json;
                 res.body.should.be.a('object');

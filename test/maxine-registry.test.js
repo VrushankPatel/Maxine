@@ -29,7 +29,7 @@ describe(`${fileName} : API /api/maxine/{registry urls}`, () => {
     it('/register (without passing necessary parameters) -> 400 & should return error', (done) => {
         chai.request(app)
             .post('/api/maxine/register')
-            .end((err, res) => {
+            .end((_, res) => {
                 res.should.have.status(400);
                 res.should.be.json;
 
@@ -45,7 +45,7 @@ describe(`${fileName} : API /api/maxine/{registry urls}`, () => {
             .post('/api/maxine/register')
             .set('Content-Type', 'application/json')
             .send(testServiceData)
-            .end((err, res) => {
+            .end((_, res) => {
                 res.should.have.status(200);
                 res.should.be.json;
                 const body = res.body;
@@ -62,7 +62,7 @@ describe(`${fileName} : API /api/maxine/{registry urls}`, () => {
     it('/servers -> 200 & should show the registered server (we just registered one above)', (done) => {
         chai.request(app)
             .get('/api/maxine/servers')
-            .end((err, res) => {
+            .end((_, res) => {
                 res.should.have.status(200);
                 res.should.be.json;
 
