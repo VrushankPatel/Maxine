@@ -115,6 +115,8 @@ paths:
     put:
       summary: Update the config data of Maxine.
       operationId: Maxine configuration manipulation
+      security:
+        - bearerAuth: []
       requestBody:
         description: The updated config data.
         content:
@@ -128,6 +130,16 @@ paths:
           content:
             application/json:
               example: '{"updateStatus":{"logAsync":0,"heartBeatTimeout":0,"logJsonPrettify":0},"statusCodes":{"0":"Success","1":"Type Error","2":"Wrong value Or Invalid value"}}'
+        401:
+          description: Unauthorized
+          content:
+            application/json:
+              example: '{"message":"Unauthorized"}'
+        403:
+          description: Forbidden
+          content:
+            application/json:
+              example: '{"message":"Forbidden"}'
       x-codegen-request-body-name: service
 components:
   schemas:
@@ -177,3 +189,8 @@ components:
         logJsonPrettify:
           type: boolean
           example: true
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
