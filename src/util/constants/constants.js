@@ -40,7 +40,17 @@ const MSG_DB_CON_FAILURE = "Unable to connect to DB, closing App..";
 const MSG_JWT_EXPIRED = "JWT token expired";
 const MSG_UNAUTHORIZED = "Unauthorized";
 const MSG_INVALID_WEIGHT =`Maximum allowed size of weight is ${MAX_SERVER_WEIGHT} (One server can maximum be ${MAX_SERVER_WEIGHT}x more powerful than others`;
+const CONFIGTYPES = ["sync", "async"];
+const SERVER_SELECTION_STRATEGIES = ["round-robin", "consistent-hashing"];
 const API_URLS_WITH_AUTH = [];
+
+const YES = 0;
+const NO = 1;
+
+// for Config updates, status codes (customized)
+const CODE_SUCCESS = 0;
+const CODE_TYPE_ERROR = 1;
+const CODE_INVALID_TYPE = 2;
 
 const constants = {
     PORT,
@@ -57,7 +67,14 @@ const constants = {
     EXPIRATION_TIME,
     SECRET,
     API_URLS_WITH_AUTH,
-    MAX_SERVER_WEIGHT
+    MAX_SERVER_WEIGHT,
+    CONFIGTYPES,
+    SERVER_SELECTION_STRATEGIES,
+    CODE_SUCCESS,
+    CODE_TYPE_ERROR,
+    CODE_INVALID_TYPE,
+    YES,
+    NO
 };
 
 const statusAndMsgs = {

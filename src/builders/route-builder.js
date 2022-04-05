@@ -42,6 +42,11 @@ class RouteBuilder{
         return this;
     }
 
+    put(endPoint, ...args){
+        this.route.put(this.createRouteString(endPoint), ...args);
+        return this;
+    }
+
     all(endPoint, ...args){
         this.route.all(this.createRouteString(endPoint), ...args);
         return this;

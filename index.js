@@ -9,6 +9,9 @@ const expressStatusMonitor = require('express-status-monitor');
 const logWebExceptions = require('./src/util/logging/log-web-exceptions');
 const logRequest = require('./src/util/logging/log-request');
 const { authenticationController } = require('./src/controller/security/authentication-controller');
+const swaggerUi = require('swagger-ui-express');
+const YAML = require('yamljs');
+const swaggerDocument = YAML.load('./api-docs/swagger.yaml');
 
 const app = ExpressAppBuilder.createNewApp()
                 .useIfPropertyOnce(expressStatusMonitor(statusMonitorConfig), "statusMonitorEnabled")
@@ -16,6 +19,7 @@ const app = ExpressAppBuilder.createNewApp()
                 .use(authenticationController)
                 .useIfPropertyOnce(actuator(actuatorConfig), "actuatorEnabled")
                 .use('/api',maxineApiRoutes)
+                .use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerDocument))
                 .blockUnknownUrls()
                 .use(logWebExceptions)
                 .getApp();

@@ -31,10 +31,12 @@
     "lodash": "^4.17.21",
     "minimist": "^1.2.5",
     "read-last-lines": "^1.8.0",
-    "winston": "^3.5.1"
+    "swagger-ui-express": "^4.3.0",
+    "winston": "^3.5.1",
+    "yamljs": "^0.3.0"
   },
   "nodemonConfig": {
-    "ext": "js,properties"
+    "ext": "js,properties,yaml"
   },
   "devDependencies": {
     "chai": "^4.3.6",
