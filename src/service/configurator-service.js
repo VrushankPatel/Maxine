@@ -4,10 +4,7 @@ const _ = require('lodash');
 
 class ConfiguratorService{
     updateLoggingType(logAsync) {
-        console.log(Config.logAsync);
-        let res = !_.isBoolean(logAsync) ? constants.CODE_TYPE_ERROR : (Config.logAsync = (logAsync ? constants.YES : constants.NO)) && constants.CODE_SUCCESS;
-        console.log(Config.logAsync);
-        return res;
+        return !_.isBoolean(logAsync) ? constants.CODE_TYPE_ERROR : (Config.logAsync = (logAsync ? constants.YES : constants.NO)) && constants.CODE_SUCCESS;
     }
 
     updateHeartBeatTimeout(heartBeatTimeOut) {
