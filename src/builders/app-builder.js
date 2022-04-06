@@ -11,13 +11,9 @@ class ExpressAppBuilder{
         this.app = app;
     }
 
-    static createNewApp(){
-        return new ExpressAppBuilder(new express());
-    }
+    static createNewApp = () => new ExpressAppBuilder(new express());
 
-    static loadApp(app){
-        return new ExpressAppBuilder(app);
-    }
+    static loadApp = (app) => new ExpressAppBuilder(app);
 
     ifPropertyOnce(property){
         this.conditionStack.push(Config[property] === true);
@@ -45,9 +41,7 @@ class ExpressAppBuilder{
         return this;
     }
 
-    getApp(){
-        return this.app;
-    }
+    getApp = () => this.app;
 
     use(...args){
         if(this.conditionStack.length > 0){
