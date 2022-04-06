@@ -24,18 +24,15 @@ class Service{
         service.weight = Math.abs(parseInt(weight)) || 1;
         service.ssl = ssl || false;
         service.address = `${ssl ? "https" : "http"}://${hostName}:${port}`;
-
         return service.validate();
     }
 
     validate(){
-        if(!(_.isString(this.hostName) && _.isString(this.nodeName) && _.isInteger(this.port) && _.isString(this.serviceName))){
-            error(statusAndMsgs.MSG_REGISTER_MISSING_DATA);
-            return statusAndMsgs.MSG_REGISTER_MISSING_DATA;
-        }
-        if(this.weight > constants.MAX_SERVER_WEIGHT){
-            error(statusAndMsgs.MSG_INVALID_WEIGHT);
-            return statusAndMsgs.MSG_INVALID_WEIGHT;
+        const areNotStrings = !(_.isString(this.hostName) && _.isString(this.nodeName) && _.isInteger(this.port) && _.isString(this.serviceName));
+        const isInvalidWeight = this.weight > constants.MAX_SERVER_WEIGHT;
+        if(areNotStrings || isInvalidWeight){
+            error(statusAndMsgs.MSG_INVALID_SERVICE_DATA);
+            return;
         }
         return this;
     }

@@ -6,8 +6,8 @@ const Service = require('../../entity/service-body');
 
 const registryController = (req, res) => {
     let service = Service.buildByObj(req.body);
-    if(_.isString(service)){
-        res.status(statusAndMsgs.STATUS_GENERIC_ERROR).json({"message" : service});
+    if(!service || _.isNull(service)){
+        res.status(statusAndMsgs.STATUS_GENERIC_ERROR).json({"message" : statusAndMsgs.MSG_INVALID_SERVICE_DATA});
         return;
     }
     const serviceResponse = registryService.registryService(service);
@@ -16,7 +16,7 @@ const registryController = (req, res) => {
 }
 
 
-const serverListController = (_, res) => {
+const serverListController = (_req, res) => {
     res.type('application/json');
     res.send(JSON.stringify(registryService.getCurrentlyRegisteredServers()));
 }

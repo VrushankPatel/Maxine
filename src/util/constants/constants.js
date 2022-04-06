@@ -29,7 +29,6 @@ const STATUS_UNAUTHORIZED = 401;
 const STATUS_FORBIDDEN = 403;
 const MSG_MAXINE_SERVER_ERROR = "Unknown error occured, Please try again later";
 const MSG_FILE_NOT_FOUND = "File not found";
-const MSG_REGISTER_MISSING_DATA = "Invalid or missing -> hostName, nodeName, port and serviceName";
 const MSG_DISCOVER_MISSING_DATA = "Please provide the serviceName.";
 const MSG_SERVICE_REMOVED = "Removed from registry";
 const MSG_SERVICE_REGISTERED = "Successfully Registered";
@@ -40,7 +39,7 @@ const MSG_DB_CON_FAILURE = "Unable to connect to DB, closing App..";
 const MSG_JWT_EXPIRED = "JWT token expired";
 const MSG_FORBIDDEN = "Forbidden";
 const MSG_UNAUTHORIZED = "Unauthorized";
-const MSG_INVALID_WEIGHT =`Maximum allowed size of weight is ${MAX_SERVER_WEIGHT} (One server can maximum be ${MAX_SERVER_WEIGHT}x more powerful than others`;
+const MSG_INVALID_SERVICE_DATA = `Invalid or missing -> hostName, nodeName, port ,serviceName or weight (Maximum allowed size of weight is ${MAX_SERVER_WEIGHT} (One server can maximum be ${MAX_SERVER_WEIGHT}x more powerful than others)`;
 const CONFIGTYPES = ["sync", "async"];
 const SERVER_SELECTION_STRATEGIES = ["round-robin", "consistent-hashing"];
 const API_URLS_WITH_AUTH = [
@@ -87,7 +86,7 @@ const statusAndMsgs = {
     MSG_MAXINE_SERVER_ERROR,
     MSG_FILE_NOT_FOUND,
     MSG_NOT_FOUND,
-    MSG_REGISTER_MISSING_DATA,
+    MSG_INVALID_SERVICE_DATA,
     MSG_DISCOVER_MISSING_DATA,
     MSG_SERVICE_REMOVED,
     MSG_SERVICE_REGISTERED,
@@ -97,7 +96,6 @@ const statusAndMsgs = {
     MSG_MISSING_UNAME_PWD,
     MSG_JWT_EXPIRED,
     MSG_UNAUTHORIZED,
-    MSG_INVALID_WEIGHT,
     MSG_FORBIDDEN
 }
 
