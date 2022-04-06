@@ -10,13 +10,9 @@ class JsonBuilder{
         this.jsonObj = jsonObj;
     }
 
-    static createNewJson(){
-        return new JsonBuilder({});
-    }
+    static createNewJson = () => new JsonBuilder({});
 
-    static loadJson(jsonObj){
-        return new JsonBuilder(jsonObj);
-    }
+    static loadJson = (jsonObj) => new JsonBuilder(jsonObj)
 
     checkCondition(condition){
         this.conditionStack.push(condition);
@@ -24,13 +20,9 @@ class JsonBuilder{
         return this;
     }
 
-    checkIfNull(element){
-        return this.checkCondition(element !== null);
-    }
+    checkIfNull = (element) => this.checkCondition(element !== null);
 
-    checkIfNullOrEmpty(element){
-        return this.checkCondition(element !== null && element.length !== 0);
-    }
+    checkIfNullOrEmpty = (element) => this.checkCondition(element !== null && element.length !== 0);
 
     endCondition(){
         this.conditionStack.pop();
@@ -92,13 +84,9 @@ class JsonBuilder{
         return this;
     }
 
-    getJson(){
-        return this.jsonObj;
-    }
+    getJson = () => this.jsonObj;
 
-    formatJson(){
-      return config.logJsonPrettify === true ? this.prettifyJSON() : this.minifyJSON();
-    }
+    formatJson = () => config.logJsonPrettify === true ? this.prettifyJSON() : this.minifyJSON();
 
     prettifyJSON(){
         this.jsonObj = JSON.stringify(this.jsonObj, null, "  ");

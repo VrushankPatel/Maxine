@@ -12,7 +12,7 @@ class ConfiguratorService{
     updateHeartBeatTimeout(heartBeatTimeOut) {
         if(!Number.isInteger(heartBeatTimeOut)) return constants.CODE_TYPE_ERROR;
         if(heartBeatTimeOut < 1) return constants.CODE_INVALID_TYPE;
-        config.heartBeatTimeOut = heartBeatTimeOut
+        config.heartBeatTimeOut = heartBeatTimeOut;
         return constants.CODE_SUCCESS;
     }
 

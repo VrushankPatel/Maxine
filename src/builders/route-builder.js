@@ -52,18 +52,11 @@ class RouteBuilder{
         return this;
     }
 
-    getRoute(){
-        return this.route;
-    }
+    getRoute = () => this.route;
 
-    createRouteString(endPt){
-        return this.routeStack.join('') + this.formatEndpoint(endPt);
-    }
+    createRouteString = (endPt) => this.routeStack.join('') + this.formatEndpoint(endPt);
 
-    formatEndpoint(endPt){
-        endPt = endPt[0] === "/" ? endPt : `/${endPt}`;
-        return endPt;
-    }
+    formatEndpoint = (endPt) => endPt[0] === "/" ? endPt : `/${endPt}`;
 }
 
 module.exports = RouteBuilder;
