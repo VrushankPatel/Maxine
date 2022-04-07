@@ -2,38 +2,47 @@ openapi: 3.0.1
 info:
   title: Maxine API(s)
   version: v1
-# servers:
-# - url: /
+  description: >-
+    Maxine is a service discovery and a naming server for microservices that
+    solves the issue of hard-wiring urls by hostnames and ports.
+  contact:
+    name: Vrushank Patel
+  license:
+    name: MIT
+    url: https://github.com/VrushankPatel/Maxine-Server/blob/master/LICENSE
 paths:
   /api/actuator/metrics:
     get:
       summary: Get the memory metrics info
       operationId: actuatorMetrics
       responses:
-        200:
+        '200':
           description: 200 response
           content:
             application/json:
-              example: '{"mem": {"rss": 54534144,"heapTotal": 25661440,"heapUsed":
-                22980160,"external": 1701211,"arrayBuffers": 83266},"uptime": 47.998038}'
+              example: >-
+                {"mem": {"rss": 54534144,"heapTotal": 25661440,"heapUsed":
+                22980160,"external": 1701211,"arrayBuffers": 83266},"uptime":
+                47.998038}
   /api/actuator/info:
     get:
       summary: Get the project info
       operationId: actuatorInfo
       responses:
-        200:
+        '200':
           description: 200 response
           content:
             application/json:
-              example: '{"build":{"name":"maxine-discovery","description":"Maxine
-                is a service discovery and a registry server for all the running nodes
-                with gargantua client dependency.","version":"1.0.0"}}'
+              example: >-
+                {"build":{"name":"maxine-discovery","description":"Maxine is a
+                service discovery and a registry server for all the running
+                nodes with gargantua client dependency.","version":"1.0.0"}}
   /api/actuator/health:
     get:
       summary: Get the currently running heartbeat
       operationId: actuatorHealth
       responses:
-        200:
+        '200':
           description: 200 response
           content:
             application/json:
@@ -43,19 +52,20 @@ paths:
       summary: Get the Maxine log files and it's download path
       operationId: Maxine Logs
       responses:
-        200:
+        '200':
           description: OK
           content:
             application/json:
               example: '{"Maxine-info.log": "/api/logs/download/Maxine-info.log"}'
-        404:
+        '404':
           description: Not Found
           content:
             application/json:
               example: '{"message":"File not found"}'
   /api/maxine/register:
     post:
-      summary: Register the server with it's data (ServiceName, NodeName, Host, Port,
+      summary: >-
+        Register the server with it's data (ServiceName, NodeName, Host, Port,
         Weight, ssl, timeOut, weight).
       operationId: Maxine service register
       requestBody:
@@ -66,20 +76,26 @@ paths:
               $ref: '#/components/schemas/Service'
         required: false
       responses:
-        200:
+        '200':
           description: OK
           content:
             application/json:
-              example: '{"serviceName":"MAXINE-123","nodeName":"NODE-4","address":"http://192.168.23.11:8080","timeOut":50,"weight":5,"registeredAt":"5/4/2022, 10:00:56 am"}'
-        400:
+              example: >-
+                {"serviceName":"MAXINE-123","nodeName":"NODE-4","address":"http://192.168.23.11:8080","timeOut":50,"weight":5,"registeredAt":"5/4/2022,
+                10:00:56 am"}
+        '400':
           description: Error, Bad Request
           content:
             application/json:
-              example: '{"message": "Please provide all of these -> hostName, nodeName, port and serviceName"}'
+              example: >-
+                {"message": "Please provide all of these -> hostName, nodeName,
+                port and serviceName"}
       x-codegen-request-body-name: service
   /api/maxine/discover:
     get:
-      summary: Get the server from registry if there is any registered one by service name.
+      summary: >-
+        Get the server from registry if there is any registered one by service
+        name.
       operationId: Maxine service discover
       parameters:
         - in: query
@@ -89,12 +105,12 @@ paths:
             example: db-service
           required: true
       responses:
-        200:
+        '200':
           description: OK
           content:
             redirect:
-              example: 'Redirect to registered service host:port if it is registered.'
-        503:
+              example: Redirect to registered service host:port if it is registered.
+        '503':
           description: Service Unavailable
           content:
             application/json:
@@ -102,14 +118,26 @@ paths:
       x-codegen-request-body-name: service
   /api/maxine/servers:
     get:
-      summary: Get all the registered servers in Maxine service registry if there are registered server nodes, otherwise empty object {}.
+      summary: >-
+        Get all the registered servers in Maxine service registry if there are
+        registered server nodes, otherwise empty object {}.
       operationId: Maxine services list
       responses:
-        200:
+        '200':
           description: OK
           content:
             application/json:
-              example: '{"DB-SERVICE":{"offset":0,"nodes":{"NODE-X-1-0":{"nodeName":"NODE-X-1-0","parentNode":"NODE-X-1","address":"https://192.168.0.1:8082","timeOut":50,"registeredAt":"5/4/2022, 3:38:58 pm"},"NODE-X-1-1":{"nodeName":"NODE-X-1-1","parentNode":"NODE-X-1","address":"https://192.168.0.1:8082","timeOut":50,"registeredAt":"5/4/2022, 3:38:58 pm"},"NODE-X-1-2":{"nodeName":"NODE-X-1-2","parentNode":"NODE-X-1","address":"https://192.168.0.1:8082","timeOut":50,"registeredAt":"5/4/2022, 3:38:58 pm"},"NODE-X-1-3":{"nodeName":"NODE-X-1-3","parentNode":"NODE-X-1","address":"https://192.168.0.1:8082","timeOut":50,"registeredAt":"5/4/2022, 3:38:58 pm"},"NODE-X-1-4":{"nodeName":"NODE-X-1-4","parentNode":"NODE-X-1","address":"https://192.168.0.1:8082","timeOut":50,"registeredAt":"5/4/2022, 3:38:58 pm"}}}}'
+              example: >-
+                {"DB-SERVICE":{"offset":0,"nodes":{"NODE-X-1-0":{"nodeName":"NODE-X-1-0","parentNode":"NODE-X-1","address":"https://192.168.0.1:8082","timeOut":50,"registeredAt":"5/4/2022,
+                3:38:58
+                pm"},"NODE-X-1-1":{"nodeName":"NODE-X-1-1","parentNode":"NODE-X-1","address":"https://192.168.0.1:8082","timeOut":50,"registeredAt":"5/4/2022,
+                3:38:58
+                pm"},"NODE-X-1-2":{"nodeName":"NODE-X-1-2","parentNode":"NODE-X-1","address":"https://192.168.0.1:8082","timeOut":50,"registeredAt":"5/4/2022,
+                3:38:58
+                pm"},"NODE-X-1-3":{"nodeName":"NODE-X-1-3","parentNode":"NODE-X-1","address":"https://192.168.0.1:8082","timeOut":50,"registeredAt":"5/4/2022,
+                3:38:58
+                pm"},"NODE-X-1-4":{"nodeName":"NODE-X-1-4","parentNode":"NODE-X-1","address":"https://192.168.0.1:8082","timeOut":50,"registeredAt":"5/4/2022,
+                3:38:58 pm"}}}}
       x-codegen-request-body-name: service
   /api/maxine/config:
     put:
@@ -125,17 +153,19 @@ paths:
               $ref: '#/components/schemas/Config'
         required: false
       responses:
-        200:
+        '200':
           description: OK
           content:
             application/json:
-              example: '{"updateStatus":{"logAsync":0,"heartBeatTimeout":0,"logJsonPrettify":0},"statusCodes":{"0":"Success","1":"Type Error","2":"Wrong value Or Invalid value"}}'
-        401:
+              example: >-
+                {"updateStatus":{"logAsync":0,"heartBeatTimeout":0,"logJsonPrettify":0},"statusCodes":{"0":"Success","1":"Type
+                Error","2":"Wrong value Or Invalid value"}}
+        '401':
           description: Unauthorized
           content:
             application/json:
               example: '{"message":"Unauthorized"}'
-        403:
+        '403':
           description: Forbidden
           content:
             application/json:
@@ -145,10 +175,10 @@ components:
   schemas:
     Service:
       required:
-      - hostName
-      - nodeName
-      - port
-      - serviceName
+        - hostName
+        - nodeName
+        - port
+        - serviceName
       type: object
       properties:
         hostName:
@@ -172,7 +202,7 @@ components:
           type: integer
           example: 5
         weight:
-          maximum: 1E+1
+          maximum: 10
           minimum: 1
           type: integer
           example: 5
