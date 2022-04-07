@@ -139,6 +139,34 @@ paths:
                 pm"},"NODE-X-1-4":{"nodeName":"NODE-X-1-4","parentNode":"NODE-X-1","address":"https://192.168.0.1:8082","timeOut":50,"registeredAt":"5/4/2022,
                 3:38:58 pm"}}}}
       x-codegen-request-body-name: service
+  /api/maxine/signin:
+    post:
+      summary: To sign in and get auth token.
+      operationId: Maxine Security
+      requestBody:
+        description: User.
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/User'
+        required: true
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              example: >-
+                {"accessToken":"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyTmFtZSI6ImFkbWluIiwicGFzc3dvcmQiOiJhZG1pbiIsImlhdCI6MTY0OTMyNTI0NywiZXhwIjoxNjQ5NDExMjQ3fQ.yQev9kn9yIChCXE-vlOLpc3Y89qNy_p7TKxoDJ1HghQ"}
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              example: '{"message":"Unauthorized"}'
+        '400':
+          description: Error, Bad Request
+          content:
+            application/json:
+              example: '{"message":"Please provide both of these -> userName and password."}'
   /api/maxine/config:
     put:
       summary: Update the config data of Maxine.
@@ -219,6 +247,15 @@ components:
         logJsonPrettify:
           type: boolean
           example: true
+    User:
+      type: object
+      properties:
+        userName:
+          type: string
+          example: "admin"
+        password:
+          type: string
+          example: "admin"
   securitySchemes:
     bearerAuth:
       type: http
