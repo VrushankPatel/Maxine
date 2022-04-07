@@ -156,7 +156,7 @@ paths:
           content:
             application/json:
               example: >-
-                {"accessToken":"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyTmFtZSI6ImFkbWluIiwicGFzc3dvcmQiOiJhZG1pbiIsImlhdCI6MTY0OTMyNTI0NywiZXhwIjoxNjQ5NDExMjQ3fQ.yQev9kn9yIChCXE-vlOLpc3Y89qNy_p7TKxoDJ1HghQ"}
+                {"accessToken":"eyJhbGciOiJIUzI1GiIsInR5cCI6IkpXVCJ9.eyJ1c2VyTmFtZSI6ImFkbWluIiwicGFzc3dvcmQiOiJhZG1pbiIsImlhdCI6MTY0OTMyNTI0NywiZXhwIjoxNjQ5NDExMjQ3fQ.yQev9kn9yIChCXE-vlOLpc3Y89qNy_p7TKxoDJ1HghQ"}
         '401':
           description: Unauthorized
           content:
