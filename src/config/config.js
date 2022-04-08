@@ -1,3 +1,4 @@
+const { constants } = require("../util/constants/constants");
 const { actuatorConfig, statusMonitorConfig } = require("./actuator/actuator-config");
 const { logFileTransports } = require("./logging/logging-config");
 
@@ -11,5 +12,10 @@ const config = {
     actuatorEnabled: true,
     statusMonitorEnabled: true
 }
+
+Object.defineProperty(config, "profile", {
+    value: constants.PROFILE,
+    writable: false
+});
 
 module.exports = config;

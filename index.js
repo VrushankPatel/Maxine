@@ -14,12 +14,15 @@ const YAML = require('yamljs');
 const swaggerDocument = YAML.load('./api-docs/swagger.yaml');
 
 const app = ExpressAppBuilder.createNewApp()
-                .useIfPropertyOnce(expressStatusMonitor(statusMonitorConfig), "statusMonitorEnabled")
+                .ifPropertyOnce("statusMonitorEnabled")
+                    .use(expressStatusMonitor(statusMonitorConfig))
                 .use(logRequest)
                 .use(authenticationController)
-                .useIfPropertyOnce(actuator(actuatorConfig), "actuatorEnabled")
+                .ifPropertyOnce("actuatorEnabled")
+                    .use(actuator(actuatorConfig))
                 .use('/api',maxineApiRoutes)
-                .use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerDocument))
+                .ifPropertyOnce('profile','dev')
+                    .use('/api-spec', swaggerUi.serve, swaggerUi.setup(swaggerDocument))
                 .blockUnknownUrls()
                 .use(logWebExceptions)
                 .getApp();
