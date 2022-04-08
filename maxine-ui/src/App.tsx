@@ -1,12 +1,17 @@
-import React from 'react';
-import './App.css';
+import React, { Component } from 'react'
 
-function App() {
-  return (
-    <div className="App">
-      Hello from maxine
-    </div>
-  );
+interface AppProps {}
+
+interface AppState {}
+
+class App extends React.Component<AppProps, AppState> {
+  constructor(props: AppProps) {
+    super(props);
+    this.state = {  };
+  }
+  render() {
+    return ( <p>vrushank</p> );
+  }
 }
 
 export default App;
