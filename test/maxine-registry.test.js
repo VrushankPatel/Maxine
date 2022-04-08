@@ -2,16 +2,13 @@ var chai = require('chai');
 var chaiHttp = require('chai-http');
 const app = require('..');
 const { generateAccessToken } = require('../src/security/jwt');
-const { constants } = require('../src/util/constants/constants');
+const { testUser } = require('./testUtil/test-constants');
 var should = chai.should();
 chai.use(require('chai-json'));
 chai.use(chaiHttp);
 
 const fileName = require('path').basename(__filename).replace(".js","");
-const accessToken = generateAccessToken({
-    userName: constants.DEFAULT_ADMIN_USERNAME_PWD,
-    password: constants.DEFAULT_ADMIN_USERNAME_PWD
-});
+const accessToken = generateAccessToken(testUser);
 
 const hostName = "xxx.xxx.xx.xxx";
 const port = 8080;
