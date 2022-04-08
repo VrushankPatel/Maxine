@@ -1,6 +1,6 @@
 var express = require('express');
-const Config = require('../config/config');
-const { statusAndMsgs } = require('../util/constants/constants');
+const config = require('../config/config');
+const { statusAndMsgs, constants } = require('../util/constants/constants');
 
 class ExpressAppBuilder{
     app;
@@ -15,14 +15,14 @@ class ExpressAppBuilder{
 
     static loadApp = (app) => new ExpressAppBuilder(app);
 
-    ifPropertyOnce(property){
-        this.conditionStack.push(Config[property] === true);
+    ifPropertyOnce(property, value = true){
+        this.conditionStack.push(config[property] === value);
         this.checkOnceOnly = true;
         return this;
     }
 
-    ifProperty(property){
-        this.conditionStack.push(Config[property] === true);
+    ifProperty(property, value = true){
+        this.conditionStack.push(config[property] === value);
         return this;
     }
 
@@ -55,13 +55,6 @@ class ExpressAppBuilder{
             return this;
         }
         this.app.use(...args)
-        return this;
-    }
-
-    useIfPropertyOnce(...args){
-        this.ifPropertyOnce(args[args.length - 1]);
-        args.pop();
-        this.use(args);
         return this;
     }
 
