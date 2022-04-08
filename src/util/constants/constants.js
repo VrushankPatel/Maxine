@@ -43,7 +43,8 @@ const MSG_INVALID_SERVICE_DATA = `Invalid or missing -> hostName, nodeName, port
 const CONFIGTYPES = ["sync", "async"];
 const SERVER_SELECTION_STRATEGIES = ["round-robin", "consistent-hashing"];
 const API_URLS_WITH_AUTH = [
-    '/api/maxine/config'
+    '/api/maxine/config',
+    '/api/maxine/servers'
 ];
 
 
