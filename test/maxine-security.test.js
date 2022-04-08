@@ -6,6 +6,7 @@ var should = chai.should();
 chai.use(require('chai-json'));
 chai.use(chaiHttp);
 const jwt = require('jsonwebtoken');
+const { testUser } = require('./testUtil/test-constants');
 
 const fileName = require('path').basename(__filename).replace(".js","");
 
@@ -25,7 +26,7 @@ describe(`${fileName} : API /api/maxine/signin`, () => {
         chai.request(app)
             .post('/api/maxine/signin')
             .set('content-type', 'application/json')
-            .send({userName: constants.DEFAULT_ADMIN_USERNAME_PWD, password: constants.DEFAULT_ADMIN_USERNAME_PWD})
+            .send(testUser)
             .end((_, res) => {
                 res.should.have.status(200);
                 res.should.be.json;
