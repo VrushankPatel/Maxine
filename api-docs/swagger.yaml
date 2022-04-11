@@ -180,6 +180,27 @@ paths:
               example: '{"message":"Forbidden"}'
       x-codegen-request-body-name: service
   /api/maxine/config:
+    get:
+      summary: Get the current config data of Maxine.
+      operationId: Maxine configuration Retrieval.
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+            description: OK
+            content:
+              application/json:
+                example: '{"logAsync":false,"heartBeatTimeOut":5,"logJsonPrettify":false,"actuatorEnabled":true,"statusMonitorEnabled":true,"serverSelStrat":{"name":"CH","code":"1","message":"Consistent Hashing","ordinal":1}}'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              example: '{"message":"Unauthorized"}'
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              example: '{"message":"Forbidden"}'
     put:
       summary: Update the config data of Maxine.
       operationId: Maxine configuration manipulation
