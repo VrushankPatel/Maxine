@@ -1,3 +1,4 @@
+const config = require("../../config/config");
 const { ConfiguratorService } = require("../../service/configurator-service");
 const { statusAndMsgs, constants } = require("../../util/constants/constants");
 const { info } = require("../../util/logging/logging-util");
@@ -38,6 +39,11 @@ const configuratorController = (req, res) => {
     res.status(statusAndMsgs.STATUS_SUCCESS).json(resultObj);
 }
 
+const configurationController = (req, res) => {
+    res.json(config);
+}
+
 module.exports = {
-    configuratorController
+    configuratorController,
+    configurationController
 };
