@@ -1,4 +1,5 @@
 const envArgs = require('minimist')(process.argv.slice(2));
+const Enums = require("enums");
 
 const PORT = parseInt(envArgs['p']) || parseInt(envArgs['port']) || 8080;
 
@@ -17,6 +18,18 @@ const DEV_SECRET = "55e871f9889bb099df419b6b3c3a852582f9f0551d0ddc367b329dcd608a
 const PROD_SECRET = require('crypto').randomBytes(64).toString('hex');
 const SECRET = PROFILE === "dev" ? DEV_SECRET : PROD_SECRET;
 const MAX_SERVER_WEIGHT = 10;
+
+/**
+ * Below are SSS : Server Selection Strategies for Load Balancer
+ * RR : Round Robin
+ * CH : Consistent Hashing
+ * RH : Rendezvous hashing
+ */
+const SSS = new Enums([
+    {name: 'RR', code: '0', message: 'Round Robin'},
+    {name: 'CH', code: '1', message: 'Consistent Hashing'},
+    {name: 'RH', code: '2', message: 'Rendezvous Hashing'}
+]);
 
 // Http Status Code and Messages
 const STATUS_NOT_FOUND = 404;
@@ -47,11 +60,16 @@ const API_URLS_WITH_AUTH = [
     '/api/maxine/servers'
 ];
 
-
 // for Config updates, status codes (customized)
 const CODE_SUCCESS = 0;
 const CODE_TYPE_ERROR = 1;
 const CODE_INVALID_TYPE = 2;
+
+const CONFIG_STATUS_CODES = {
+    0 : "Success",
+    1 : "Type Error",
+    2 : "Wrong value Or Invalid value"
+}
 
 const constants = {
     PORT,
@@ -69,11 +87,13 @@ const constants = {
     SECRET,
     API_URLS_WITH_AUTH,
     MAX_SERVER_WEIGHT,
+    SSS,
     CONFIGTYPES,
     SERVER_SELECTION_STRATEGIES,
     CODE_SUCCESS,
     CODE_TYPE_ERROR,
     CODE_INVALID_TYPE,
+    CONFIG_STATUS_CODES
 };
 
 const statusAndMsgs = {
