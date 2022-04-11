@@ -1,43 +1,43 @@
+const config = require("../../config/config");
 const { ConfiguratorService } = require("../../service/configurator-service");
 const { statusAndMsgs, constants } = require("../../util/constants/constants");
 const { info } = require("../../util/logging/logging-util");
-
+const _ = require('lodash');
 const configuratorService = new ConfiguratorService();
 
 const configuratorController = (req, res) => {
     const { logAsync, heartBeatTimeout, logJsonPrettify, serverSelectionStrategy} = req.body;
 
-    let resultObj = {
-        updateStatus: {},
-        statusCodes : {
-            0 : "Success",
-            1 : "Type Error",
-            2 : "Wrong value Or Invalid value"
-        }
-    };
+    let resultObj = {};
 
-    if(logAsync != null){
+    if(!_.isUndefined(logAsync)){
         const result = configuratorService.updateLoggingType(logAsync);
-        resultObj['updateStatus']['logAsync'] = result;
+        resultObj['logAsync'] = constants.CONFIG_STATUS_CODES[String(result)];
     }
 
-    if(heartBeatTimeout != null){
+    if(!_.isUndefined(heartBeatTimeout)){
         const result = configuratorService.updateHeartBeatTimeout(heartBeatTimeout);
-        resultObj['updateStatus']['heartBeatTimeout'] = result;
+        resultObj['heartBeatTimeout'] = constants.CONFIG_STATUS_CODES[String(result)];
     }
 
-    if(logJsonPrettify != null){
+    if(!_.isUndefined(logJsonPrettify)){
         const result = configuratorService.updateLogJsonPrettify(logJsonPrettify);
-        resultObj['updateStatus']['logJsonPrettify'] = result;
+        resultObj['logJsonPrettify'] = constants.CONFIG_STATUS_CODES[String(result)];
     }
 
-    if(serverSelectionStrategy != null){
+    if(!_.isUndefined(serverSelectionStrategy)){
         info(serverSelectionStrategy);
     }
+
     info(`config alter : ${JSON.stringify(resultObj)}}`);
     res.status(statusAndMsgs.STATUS_SUCCESS).json(resultObj);
 }
 
+const configurationController = (req, res) => {
+    res.json(config);
+}
+
 module.exports = {
-    configuratorController
+    configuratorController,
+    configurationController
 };
