@@ -1,6 +1,6 @@
-const { ServerSelectionStrategy } = require("../entity/server-selection-strategy");
 var ConsistentHashing = require('consistent-hashing');
 const _ = require('lodash');
+const util = require("../util/util");
 
 class RegistryService{
     serviceRegistry = {};
@@ -79,7 +79,7 @@ class RegistryService{
     }
 
     getNode = (serviceName, ip) => {
-        if(ServerSelectionStrategy.isConsistentHashing()){
+        if(util.sssUtil.isConsistentHashing()){
             return this.getNodeByConsistentHashing(serviceName, ip);
         }
         return this.getNodeByRoundRobin(serviceName);

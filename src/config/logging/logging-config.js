@@ -20,6 +20,5 @@ const logConfiguration = {
 };
 
 module.exports = {
-    logConfiguration,
-    logFileTransports
+    logConfiguration
 }
