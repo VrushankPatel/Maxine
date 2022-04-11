@@ -17,7 +17,7 @@ const discoveryController = (req, res) => {
     }
 
     // now, retrieving the serviceNode from the registry
-    const serviceNode = registryService.getNode(serviceName.toUpperCase(), ip);
+    const serviceNode = registryService.getNode(serviceName, ip);
 
     // no service node is there so, service unavailable is our error response.
     if(_.isEmpty(serviceNode)){
