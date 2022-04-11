@@ -79,7 +79,7 @@ class RegistryService{
     }
 
     getNode = (serviceName, ip) => {
-        if(util.sss.isConsistentHashing()){
+        if(util.sssUtil.isConsistentHashing()){
             return this.getNodeByConsistentHashing(serviceName, ip);
         }
         return this.getNodeByRoundRobin(serviceName);

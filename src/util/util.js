@@ -7,9 +7,9 @@ const { constants } = require('./constants/constants');
 const getCurrentDate = () => date.format(new Date(), constants.REQUEST_LOG_TIMESTAMP_FORMAT);
 
 /**
- * Below object contains method to chec ServerSelectionStrategy.
+ * Below object contains method to check ServerSelectionStrategy.
  */
-const sss = {
+const sssUtil = {
     isRoundRobin: () => config.serverSelStrat === constants.SSS.RR,
     isConsistentHashing: () => config.serverSelStrat === constants.SSS.CH,
     isRendezvousHashing: () => config.serverSelStrat === constants.SSS.RH
@@ -37,5 +37,5 @@ function logJsonBuilder(logLevel, logType, statusAndMsgs, req, msg = ""){
 module.exports = {
     getCurrentDate,
     logJsonBuilder,
-    sss
+    sssUtil
 }
