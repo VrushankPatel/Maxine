@@ -12,8 +12,8 @@ const accessToken = generateAccessToken(testUser);
 
 const hostName = "xxx.xxx.xx.xxx";
 const port = 8080;
-const serviceName = "Sample-Service".toUpperCase();
-const nodeName = "node-4".toUpperCase();
+const serviceName = "Sample-Service";
+const nodeName = "node-4";
 const timeOut = 4;
 const ssl = false;
 const httpOrNonHttp = ssl ? "https" : "http";
