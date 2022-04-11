@@ -10,7 +10,7 @@ const fileName = require('path').basename(__filename).replace(".js","");
 describe(`${fileName} : API /api/logs`, () => {
     let logFiles = [];
 
-    it('/download -> 200 && it should return all the log files available in logs dir in JSON format', (done) => {
+    it('GET /download -> 200 && it should return all the log files available in logs dir in JSON format', (done) => {
         chai.request(app)
             .get('/api/logs/download')
             .end((_, res) => {
@@ -22,7 +22,7 @@ describe(`${fileName} : API /api/logs`, () => {
             });
     });
 
-    it('/download/{log_filename.log} -> (Testing with all the log file names retrieved in above test) 200 && it should return attachment with response type text/plain', (done) => {
+    it('GET /download/{log_filename.log} -> (Testing with all the log file names retrieved in above test) 200 && it should return attachment with response type text/plain', (done) => {
         Object.keys(logFiles).forEach(key => {
             chai.request(app)
             .get(logFiles[key])

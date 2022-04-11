@@ -8,7 +8,7 @@ chai.use(chaiHttp);
 const fileName = require('path').basename(__filename).replace(".js","");
 
 describe(`${fileName} : API /api/actuator`, () => {
-    it('/health -> 200', (done) => {
+    it('GET /health -> 200', (done) => {
         chai.request(app)
             .get('/api/actuator/health')
             .end((_, res) => {
@@ -20,7 +20,7 @@ describe(`${fileName} : API /api/actuator`, () => {
             });
     });
 
-    it('/info -> 200', (done) => {
+    it('GET /info -> 200', (done) => {
         chai.request(app)
             .get('/api/actuator/info')
             .end((_, res) => {
@@ -34,7 +34,7 @@ describe(`${fileName} : API /api/actuator`, () => {
             });
     });
 
-    it('/metrics -> 200 & should return memory occupied and uptime', (done) => {
+    it('GET /metrics -> 200 & should return memory occupied and uptime', (done) => {
         chai.request(app)
             .get('/api/actuator/metrics')
             .end((_, res) => {

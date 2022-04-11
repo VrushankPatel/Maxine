@@ -8,7 +8,7 @@ chai.use(chaiHttp);
 const fileName = require('path').basename(__filename).replace(".js","");
 
 describe(`${fileName} : API /any_unknown_url`, () => {
-    it('/8989 -> 404 (invalid url)', (done) => {
+    it('GET /8989 -> 404 (invalid url)', (done) => {
         chai.request(app)
             .get('/8989')
             .end((_, res) => {

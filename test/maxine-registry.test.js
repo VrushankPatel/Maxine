@@ -29,7 +29,7 @@ const testServiceData = {
 
 describe(`${fileName} : API /api/maxine/{registry urls}`, () => {
 
-    it('/register (without passing necessary parameters) -> 400 & should return error', (done) => {
+    it('POST /register (without passing necessary parameters) -> 400 & should return error', (done) => {
         chai.request(app)
             .post('/api/maxine/register')
             .end((_, res) => {
@@ -43,7 +43,7 @@ describe(`${fileName} : API /api/maxine/{registry urls}`, () => {
             });
     });
 
-    it('/register (With all necessary parameters) -> 200 & should register the server', (done) => {
+    it('POST /register (With all necessary parameters) -> 200 & should register the server', (done) => {
         chai.request(app)
             .post('/api/maxine/register')
             .set('Content-Type', 'application/json')
@@ -62,7 +62,7 @@ describe(`${fileName} : API /api/maxine/{registry urls}`, () => {
             });
     });
 
-    it('/servers -> 200 & should show the registered server (we just registered one above)', (done) => {
+    it('GET /servers -> 200 & should show the registered server (we just registered one above)', (done) => {
         chai.request(app)
             .get('/api/maxine/servers')
             .set({ "Authorization": `Bearer ${accessToken}` })
