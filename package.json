@@ -24,6 +24,7 @@
     "body-parser": "^1.19.1",
     "consistent-hashing": "^0.3.0",
     "date-and-time": "^2.1.0",
+    "enums": "^1.0.3",
     "express": "^4.17.2",
     "express-actuator": "^1.8.0",
     "express-status-monitor": "^1.3.3",
