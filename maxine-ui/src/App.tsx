@@ -1,4 +1,4 @@
-import React, { Component } from 'react'
+import React from 'react'
 
 interface AppProps {}
 
@@ -10,7 +10,7 @@ class App extends React.Component<AppProps, AppState> {
     this.state = {  };
   }
   render() {
-    return ( <p>vrushank</p> );
+    return ( <h1>Hello from maxine</h1> );
   }
 }
 
