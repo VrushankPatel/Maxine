@@ -32,7 +32,7 @@ const configuratorController = (req, res) => {
     }
 
     if(serverSelectionStrategy != null){
-        console.log(serverSelectionStrategy);
+        info(serverSelectionStrategy);
     }
     info(`config alter : ${JSON.stringify(resultObj)}}`);
     res.status(statusAndMsgs.STATUS_SUCCESS).json(resultObj);
