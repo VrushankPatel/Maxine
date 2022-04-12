@@ -1,10 +1,8 @@
-const assert = require('assert');
 var chai = require('chai');
 var chaiHttp = require('chai-http');
 const app = require('..');
 const config = require('../src/config/config');
 const { generateAccessToken } = require('../src/security/jwt');
-const { constants } = require('../src/util/constants/constants');
 const { sssUtil } = require('../src/util/util');
 const { testUser } = require('./testUtil/test-constants');
 var should = chai.should();
