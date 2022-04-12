@@ -1,8 +1,10 @@
+const assert = require('assert');
 var chai = require('chai');
 var chaiHttp = require('chai-http');
 const app = require('..');
 const config = require('../src/config/config');
 const { generateAccessToken } = require('../src/security/jwt');
+const { constants } = require('../src/util/constants/constants');
 const { testUser } = require('./testUtil/test-constants');
 var should = chai.should();
 chai.use(require('chai-json'));
@@ -15,7 +17,7 @@ const serviceDataToUpdate = {
     "logAsync" : true,
     "heartBeatTimeout" : 12,
     "logJsonPrettify" : true,
-    "serverSelectionStrategy" : "round-robin"
+    "serverSelectionStrategy" : "RH"
 }
 
 describe(`${fileName} : API /api/maxine`, () => {
@@ -57,7 +59,18 @@ describe(`${fileName} : API /api/maxine`, () => {
             .end((_, res) => {
                 res.should.have.status(200);
                 res.should.be.json;
-                res.body.should.be.eql(config);
+
+                const body = res.body;
+
+                body.should.be.eql(config);
+
+                body.should.have.own.property("logAsync", serviceDataToUpdate["logAsync"]);
+                body.should.have.own.property("heartBeatTimeout", serviceDataToUpdate["heartBeatTimeout"]);
+                body.should.have.own.property("logJsonPrettify", serviceDataToUpdate["logJsonPrettify"]);
+                body.should.have.own.property("serverSelectionStrategy");
+                const serverSelStratRetrieved = body["serverSelectionStrategy"];
+                const serverSelStratOriginal = constants.SSS[serviceDataToUpdate["serverSelectionStrategy"]];
+                assert.deepEqual(serverSelStratRetrieved, serverSelStratOriginal, "[message]");
                 done();
             });
     });
