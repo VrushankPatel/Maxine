@@ -9,10 +9,10 @@ class ConfiguratorService{
         return constants.CODE_SUCCESS;
     }
 
-    updateHeartBeatTimeout(heartBeatTimeOut) {
-        if(!Number.isInteger(heartBeatTimeOut)) return constants.CODE_TYPE_ERROR;
-        if(heartBeatTimeOut < 1) return constants.CODE_INVALID_DATA;
-        config.heartBeatTimeOut = heartBeatTimeOut;
+    updateHeartBeatTimeout(heartBeatTimeout) {
+        if(!Number.isInteger(heartBeatTimeout)) return constants.CODE_TYPE_ERROR;
+        if(heartBeatTimeout < 1) return constants.CODE_INVALID_DATA;
+        config.heartBeatTimeout = heartBeatTimeout;
         return constants.CODE_SUCCESS;
     }
 
@@ -25,7 +25,7 @@ class ConfiguratorService{
     updateServerSelectionStrategy(serverSelectionStrategy){
         const serverSelStrat = constants.SSS[serverSelectionStrategy];
         if(_.isUndefined(serverSelStrat)) return constants.CODE_INVALID_DATA;
-        config.serverSelStrat = serverSelStrat;
+        config.serverSelectionStrategy = serverSelStrat;
         return constants.CODE_SUCCESS;
     }
 }
