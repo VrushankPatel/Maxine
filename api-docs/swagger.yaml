@@ -178,7 +178,6 @@ paths:
           content:
             application/json:
               example: '{"message":"Forbidden"}'
-      x-codegen-request-body-name: service
   /api/maxine/config:
     get:
       summary: Get the current config data of Maxine.
@@ -231,7 +230,6 @@ paths:
           content:
             application/json:
               example: '{"message":"Forbidden"}'
-      x-codegen-request-body-name: service
 components:
   schemas:
     Service:
@@ -280,6 +278,16 @@ components:
         logJsonPrettify:
           type: boolean
           example: true
+        serverSelectionStrategy:
+          type: string
+          enum: [RR, CH, RH]
+          example: "CH"
+          description: >
+            Server Selection Strategies:
+
+              * `RR` - Round Robin
+              * `CH` - Consistent Hashing
+              * `RH` - Rendezvous Hashing
     User:
       type: object
       properties:
