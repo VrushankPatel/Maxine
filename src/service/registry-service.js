@@ -5,7 +5,7 @@ const util = require("../util/util");
 class RegistryService{
     serviceRegistry = {};
     timeResetters = {};
-    consistentHashRegistry = {};
+    hashRegistry = {};
 
     registerService = (serviceObj) => {
         const {serviceName, nodeName, address, timeOut, weight} = serviceObj;
@@ -38,9 +38,9 @@ class RegistryService{
             this.timeResetters[subNodeName] = timeResetter;
         });
         setTimeout(() => {
-            this.updateConsistentHashRegistry(serviceName);
+            this.updateHashRegistry(serviceName);
         }, ((timeOut)*1000)+500);
-        this.updateConsistentHashRegistry(serviceName);
+        this.updateHashRegistry(serviceName);
     }
 
     registryService = (serviceObj) => {
@@ -49,34 +49,22 @@ class RegistryService{
         return serviceObj;
     }
 
-    updateConsistentHashRegistry = (serviceName) => {
+    updateHashRegistry = (serviceName) => {
         const nodes = this.getNodes(serviceName);
         const serviceNodes = _.isEmpty(nodes) ? [] : Object.keys(nodes);
         if(_.isEmpty(serviceNodes) || _.isNull(serviceNodes)){
-            delete this.consistentHashRegistry[serviceName];
+            delete this.hashRegistry[serviceName];
             return;
         }
         const cons = new ConsistentHashing(serviceNodes);
 
-        if(!this.consistentHashRegistry[serviceName]){
-            this.consistentHashRegistry[serviceName] = {};
+        if(!this.hashRegistry[serviceName]){
+            this.hashRegistry[serviceName] = {};
         }
-        this.consistentHashRegistry[serviceName] = cons;
+        this.hashRegistry[serviceName] = cons;
     }
 
     getCurrentlyRegisteredServers = () => this.serviceRegistry;
-
-    getServers = (serviceName) => this.serviceRegistry[serviceName];
-
-    getNodes = (serviceName) => {
-        const servers = this.getServers(serviceName) || {};
-        return servers["nodes"];
-    }
-
-    getOffsetAndIncrement = (serviceName) => {
-        const servers = this.getServers(serviceName) || {};
-        return servers["offset"]++;
-    }
 
     getNode = (serviceName, ip) => {
         if(util.sssUtil.isConsistentHashing()){
@@ -95,12 +83,16 @@ class RegistryService{
 
     getNodeByConsistentHashing = (serviceName, ip) => {
         const serviceNodesObj = this.getNodes(serviceName);
-        const cons = this.consistentHashRegistry[serviceName];
-        if(_.isEmpty(cons)){
-            return {};
-        }
+        const cons = this.hashRegistry[serviceName];
+        if(_.isEmpty(cons)) return {};
         const nodeName = cons.getNode(ip);
         return serviceNodesObj[nodeName];
+    }
+
+    getNodes = (serviceName) => (this.serviceRegistry[serviceName] || {})["nodes"];
+
+    getOffsetAndIncrement = (serviceName) => {
+        return (this.serviceRegistry[serviceName] || {})["offset"]++;
     }
 }
 
