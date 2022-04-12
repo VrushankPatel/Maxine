@@ -10,9 +10,9 @@ const getCurrentDate = () => date.format(new Date(), constants.REQUEST_LOG_TIMES
  * Below object contains method to check ServerSelectionStrategy.
  */
 const sssUtil = {
-    isRoundRobin: () => config.serverSelStrat === constants.SSS.RR,
-    isConsistentHashing: () => config.serverSelStrat === constants.SSS.CH,
-    isRendezvousHashing: () => config.serverSelStrat === constants.SSS.RH
+    isRoundRobin: () => config.serverSelectionStrategy === constants.SSS.RR,
+    isConsistentHashing: () => config.serverSelectionStrategy === constants.SSS.CH,
+    isRendezvousHashing: () => config.serverSelectionStrategy === constants.SSS.RH
 }
 
 function logJsonBuilder(logLevel, logType, statusAndMsgs, req, msg = ""){

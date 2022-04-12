@@ -6,7 +6,7 @@ const _ = require('lodash');
 const configuratorService = new ConfiguratorService();
 
 const configuratorController = (req, res) => {
-    const { logAsync, heartBeatTimeout, logJsonPrettify, serverSelectionStrategy} = req.body;
+    const { logAsync, heartBeatTimeout, logJsonPrettify, serverSelectionStrategy: serverSelStrat} = req.body;
 
     let resultObj = {};
 
@@ -25,8 +25,9 @@ const configuratorController = (req, res) => {
         resultObj['logJsonPrettify'] = constants.CONFIG_STATUS_CODES[String(result)];
     }
 
-    if(!_.isUndefined(serverSelectionStrategy)){
-        info(serverSelectionStrategy);
+    if(!_.isUndefined(serverSelStrat)){
+        const result = configuratorService.updateServerSelectionStrategy(serverSelStrat);
+        resultObj['serverSelectionStrategy'] = constants.CONFIG_STATUS_CODES[String(result)];
     }
 
     info(`config alter : ${JSON.stringify(resultObj)}}`);

@@ -20,7 +20,7 @@ class Service{
         service.nodeName = nodeName;
         service.port = Math.abs(parseInt(port));
         service.serviceName = serviceName;
-        service.timeOut = Math.abs(parseInt(timeOut)) || config.heartBeatTimeOut;
+        service.timeOut = Math.abs(parseInt(timeOut)) || config.heartBeatTimeout;
         service.weight = Math.abs(parseInt(weight)) || 1;
         service.ssl = ssl || false;
         service.address = `${ssl ? "https" : "http"}://${hostName}:${port}`;
