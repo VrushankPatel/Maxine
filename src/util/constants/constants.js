@@ -63,7 +63,7 @@ const API_URLS_WITH_AUTH = [
 // for Config updates, status codes (customized)
 const CODE_SUCCESS = 0;
 const CODE_TYPE_ERROR = 1;
-const CODE_INVALID_TYPE = 2;
+const CODE_INVALID_DATA = 2;
 
 const CONFIG_STATUS_CODES = {
     0 : "Success",
@@ -92,7 +92,7 @@ const constants = {
     SERVER_SELECTION_STRATEGIES,
     CODE_SUCCESS,
     CODE_TYPE_ERROR,
-    CODE_INVALID_TYPE,
+    CODE_INVALID_DATA,
     CONFIG_STATUS_CODES
 };
 
