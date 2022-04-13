@@ -2,7 +2,7 @@ const { serviceRegistry } = require("../../entity/service-registry");
 const _ = require('lodash');
 
 class ConsistentHashDiscovery{
-    getNodeByConsistentHashing = (serviceName, ip) => {
+    getNode = (serviceName, ip) => {
         const serviceNodesObj = serviceRegistry.getNodes(serviceName);
         const cons = serviceRegistry.hashRegistry[serviceName];
         if(_.isEmpty(cons)) return {};
