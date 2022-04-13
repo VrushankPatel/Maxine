@@ -15,8 +15,10 @@ class RegistryService{
             serviceRegistry.addNodeToHashRegistry(serviceName, subNodeName);
 
             if(serviceRegistry.registry[serviceName]["nodes"][subNodeName]){
-                const timeResetter = serviceRegistry.timeResetters[serviceRegistry.registry[serviceName]["nodes"][subNodeName]["nodeName"]];
-                clearTimeout(timeResetter);
+                clearTimeout(
+                    serviceRegistry
+                        .timeResetters[serviceRegistry
+                                        .registry[serviceName]["nodes"][subNodeName]["nodeName"]]);
             }
 
             serviceRegistry.registry[serviceName]["nodes"][subNodeName] = {
