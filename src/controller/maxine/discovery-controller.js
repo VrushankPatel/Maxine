@@ -1,5 +1,5 @@
-const { registryService } = require("../../service/registry-service");
 const { statusAndMsgs } = require("../../util/constants/constants");
+const { discoveryService } = require("../../service/discovery-service");
 const _ = require('lodash');
 
 const discoveryController = (req, res) => {
@@ -17,7 +17,7 @@ const discoveryController = (req, res) => {
     }
 
     // now, retrieving the serviceNode from the registry
-    const serviceNode = registryService.getNode(serviceName, ip);
+    const serviceNode = discoveryService.getNode(serviceName, ip);
 
     // no service node is there so, service unavailable is our error response.
     if(_.isEmpty(serviceNode)){
