@@ -7,9 +7,9 @@ class DiscoveryService{
     chd = new ConsistentHashDiscovery();
     getNode = (serviceName, ip) => {
         if(sssUtil.isConsistentHashing()){
-            return this.chd.getNodeByConsistentHashing(serviceName, ip);
+            return this.chd.getNode(serviceName, ip);
         }
-        return this.rrd.getNodeByRoundRobin(serviceName);
+        return this.rrd.getNode(serviceName);
     }
 }
 

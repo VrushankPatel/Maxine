@@ -16,23 +16,12 @@ class ServiceRegistry{
         }
     }
 
-    addNodeToHashRegistry = (serviceName) => {
-        const nodes = this.getNodes(serviceName);
-        const serviceNodes = _.isEmpty(nodes) ? [] : Object.keys(nodes);
-        if(_.isEmpty(serviceNodes) || _.isNull(serviceNodes)){
-            delete this.hashRegistry[serviceName];
-            return;
-        }
-        const cons = new ConsistentHashing(serviceNodes);
-        cons.addNode('node-x-1-2');
-        this.hashRegistry[serviceName] = cons;
-    }
-
     addNodeToHashRegistry = (serviceName, nodeName) => {
         this.initHashRegistry(serviceName);
+        if(Object.values(this.hashRegistry[serviceName]["nodes"]).includes(nodeName)) return;
         this.hashRegistry[serviceName].addNode(nodeName);
     }
-c
+
     removeNodeFromRegistry = (serviceName, nodeName) => {
         this.hashRegistry[serviceName].removeNode(nodeName);
     }

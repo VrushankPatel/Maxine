@@ -1,7 +1,7 @@
 const { serviceRegistry } = require("../../entity/service-registry");
 
 class RoundRobinDiscovery{
-    getNodeByRoundRobin = (serviceName) => {
+    getNode = (serviceName) => {
         const nodes = serviceRegistry.getNodes(serviceName) || {};
         const offset = this.getOffsetAndIncrement(serviceName) || 0;
         const keys = Object.keys(nodes);
