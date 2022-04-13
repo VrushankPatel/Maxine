@@ -34,7 +34,7 @@ const configuratorController = (req, res) => {
     res.status(statusAndMsgs.STATUS_SUCCESS).json(resultObj);
 }
 
-const configurationController = (req, res) => {
+const configurationController = (_req, res) => {
     res.json(config);
 }
 
