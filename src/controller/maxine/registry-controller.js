@@ -3,6 +3,7 @@ const { statusAndMsgs } = require('../../util/constants/constants');
 const { registryService } = require('../../service/registry-service');
 const _ = require('lodash');
 const Service = require('../../entity/service-body');
+const { serviceRegistry } = require('../../entity/service-registry');
 
 const registryController = (req, res) => {
     let service = Service.buildByObj(req.body);
@@ -18,7 +19,7 @@ const registryController = (req, res) => {
 
 const serverListController = (_req, res) => {
     res.type('application/json');
-    res.send(JSON.stringify(registryService.getCurrentlyRegisteredServers()));
+    res.send(JSON.stringify(serviceRegistry.getRegServers()));
 }
 
 module.exports = {
