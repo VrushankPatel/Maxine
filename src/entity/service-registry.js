@@ -10,7 +10,13 @@ class ServiceRegistry{
 
     getNodes = (serviceName) => (this.registry[serviceName] || {})["nodes"];
 
-    updateHashRegistry = (serviceName) => {
+    initHashRegistry = (serviceName) => {
+        if(!this.hashRegistry[serviceName]){
+            this.hashRegistry[serviceName] = new ConsistentHashing({});
+        }
+    }
+
+    addNodeToHashRegistry = (serviceName) => {
         const nodes = this.getNodes(serviceName);
         const serviceNodes = _.isEmpty(nodes) ? [] : Object.keys(nodes);
         if(_.isEmpty(serviceNodes) || _.isNull(serviceNodes)){
@@ -18,11 +24,17 @@ class ServiceRegistry{
             return;
         }
         const cons = new ConsistentHashing(serviceNodes);
-
-        if(!this.hashRegistry[serviceName]){
-            this.hashRegistry[serviceName] = {};
-        }
+        cons.addNode('node-x-1-2');
         this.hashRegistry[serviceName] = cons;
+    }
+
+    addNodeToHashRegistry = (serviceName, nodeName) => {
+        this.initHashRegistry(serviceName);
+        this.hashRegistry[serviceName].addNode(nodeName);
+    }
+c
+    removeNodeFromRegistry = (serviceName, nodeName) => {
+        this.hashRegistry[serviceName].removeNode(nodeName);
     }
 }
 
