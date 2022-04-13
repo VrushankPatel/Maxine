@@ -12,8 +12,11 @@ class RegistryService{
         [...Array(weight).keys()].forEach(index => {
             const subNodeName = `${nodeName}-${index}`;
 
+            serviceRegistry.addNodeToHashRegistry(serviceName, subNodeName);
+
             if(serviceRegistry.registry[serviceName]["nodes"][subNodeName]){
-                clearTimeout(serviceRegistry.timeResetters[serviceRegistry.registry[serviceName]["nodes"][subNodeName]["nodeName"]]);
+                const timeResetter = serviceRegistry.timeResetters[serviceRegistry.registry[serviceName]["nodes"][subNodeName]["nodeName"]];
+                clearTimeout(timeResetter);
             }
 
             serviceRegistry.registry[serviceName]["nodes"][subNodeName] = {
@@ -29,13 +32,11 @@ class RegistryService{
                 if(Object.keys(serviceRegistry.registry[serviceName]["nodes"]).length === 0){
                     delete serviceRegistry.registry[serviceName];
                 }
+                serviceRegistry.removeNodeFromRegistry(serviceName, subNodeName);
             }, ((timeOut)*1000)+500);
+
             serviceRegistry.timeResetters[subNodeName] = timeResetter;
         });
-        setTimeout(() => {
-            serviceRegistry.updateHashRegistry(serviceName);
-        }, ((timeOut)*1000)+500);
-        serviceRegistry.updateHashRegistry(serviceName);
     }
 
     registryService = (serviceObj) => {
