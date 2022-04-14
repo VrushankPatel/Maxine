@@ -35,6 +35,9 @@ class RegistryService{
                     delete serviceRegistry.registry[serviceName];
                 }
                 serviceRegistry.removeNodeFromRegistry(serviceName, subNodeName);
+                if(Object.keys(serviceRegistry.hashRegistry[serviceName]["nodes"]).length === 0){
+                    delete serviceRegistry.hashRegistry[serviceName];
+                }
             }, ((timeOut)*1000)+500);
 
             serviceRegistry.timeResetters[subNodeName] = timeResetter;

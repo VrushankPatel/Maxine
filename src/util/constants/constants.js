@@ -18,7 +18,7 @@ const DEV_SECRET = "55e871f9889bb099df419b6b3c3a852582f9f0551d0ddc367b329dcd608a
 const PROD_SECRET = require('crypto').randomBytes(64).toString('hex');
 const SECRET = PROFILE === "dev" ? DEV_SECRET : PROD_SECRET;
 const MAX_SERVER_WEIGHT = 10;
-
+const RENDEZVOUS_HASH_ALGO = "sha256";
 /**
  * Below are SSS : Server Selection Strategies for Load Balancer
  * RR : Round Robin
@@ -93,7 +93,8 @@ const constants = {
     CODE_SUCCESS,
     CODE_TYPE_ERROR,
     CODE_INVALID_DATA,
-    CONFIG_STATUS_CODES
+    CONFIG_STATUS_CODES,
+    RENDEZVOUS_HASH_ALGO
 };
 
 const statusAndMsgs = {
