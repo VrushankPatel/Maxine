@@ -1,6 +1,6 @@
 var express = require('express');
 const config = require('../config/config');
-const { statusAndMsgs, constants } = require('../util/constants/constants');
+const { statusAndMsgs } = require('../util/constants/constants');
 
 class ExpressAppBuilder{
     app;
@@ -11,6 +11,10 @@ class ExpressAppBuilder{
         this.app = app;
     }
 
+    /**
+     * Create a brand new ExpressAppBuilder object with Express app and returns it.
+     * @returns {object: ExpressAppBuilder}
+     */
     static createNewApp(){
         return new ExpressAppBuilder(new express());
     }
