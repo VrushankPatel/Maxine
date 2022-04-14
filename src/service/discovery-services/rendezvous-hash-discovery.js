@@ -1,6 +1,7 @@
 const { serviceRegistry } = require("../../entity/service-registry");
 const _ = require('lodash');
 const crypto = require('crypto');
+const { constants } = require("../../util/constants/constants");
 const separator = Buffer.from('\0');
 
 class RendezvousHashDiscovery{
@@ -23,7 +24,7 @@ class RendezvousHashDiscovery{
     }
 
     rank = (nodeId, ip)  => crypto
-                                .createHash('md5')
+                                .createHash(constants.RENDEZVOUS_HASH_ALGO)
                                 .update(nodeId)
                                 .update(separator)
                                 .update(ip)
