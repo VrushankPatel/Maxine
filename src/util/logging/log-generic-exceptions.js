@@ -1,4 +1,4 @@
-const { errorAndClose, error } = require("./logging-util");
+const { error } = require("./logging-util");
 
 const logGenericExceptions = () => {
     process.on('uncaughtException', (err) => {
