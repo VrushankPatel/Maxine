@@ -13,8 +13,7 @@ class RendezvousHashDiscovery{
      */
     getNode = (serviceName, ip) => {
         const serviceNodesObj = serviceRegistry.getNodes(serviceName);
-        const node = this.selectNode(serviceNodesObj, ip) || {};
-        return node;
+        return this.selectNode(serviceNodesObj, ip) || {};
     }
 
     /**
