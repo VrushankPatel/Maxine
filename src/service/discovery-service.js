@@ -3,6 +3,7 @@ const { sssUtil } = require("../util/util");
 const { ConsistentHashDiscovery } = require("./discovery-services/consistent-hash-discovery");
 const { RendezvousHashDiscovery } = require("./discovery-services/rendezvous-hash-discovery");
 const { RoundRobinDiscovery } = require("./discovery-services/round-robin-discovery");
+const _ = require('lodash');
 
 class DiscoveryService{
     rrd = new RoundRobinDiscovery();
@@ -26,7 +27,7 @@ class DiscoveryService{
         else if(sssUtil.isConsistentHashing()){
             node = this.chd.getNode(serviceName, ip);
         }
-        if(node) node["serverSelectionStrategy"] = config.serverSelectionStrategy.message;
+        if(!_.isUndefined(node)) node["serverSelectionStrategy"] = config.serverSelectionStrategy.message;
         return node;
     }
 }
