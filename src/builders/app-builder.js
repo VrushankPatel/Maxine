@@ -79,19 +79,11 @@ class ExpressAppBuilder{
     }
 
     /**
-     * returns the App.
-     * @returns {object: ExpressAppBuilder}
-     */
-    getApp(){
-        return this.app;
-    }
-
-    /**
      * Use accepts all kind of middleware to add in the Express App that this Builder will build.
      * Apart from that, before adding the middleware, it'll verify the conditions of conditionCheck.
      * If conditions pass then it'll add the middleware to App, otherwise not.
-     * @param  {...any} args 
-     * @returns 
+     * @param  {...any} args
+     * @returns
      */
     use(...args){
         if(this.conditionStack.length > 0){
@@ -113,9 +105,28 @@ class ExpressAppBuilder{
      * @param {function} method
      * @returns {object: ExpressAppBuilder}
      */
-    invoke = (method) => {
+    invoke(method){
         method();
         return this;
+    }
+
+    /**
+     * Starts the app on passed param port and  also pass callback to run after starting server.
+     * @param {number} port
+     * @param {function} callback
+     * @returns {object: ExpressAppBuilder}
+     */
+    listen(port, callback){
+        this.app.listen(port, callback);
+        return this;
+    }
+
+    /**
+     * returns the App.
+     * @returns {object: ExpressAppBuilder}
+     */
+     getApp(){
+        return this.app;
     }
 }
 

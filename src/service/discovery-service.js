@@ -1,3 +1,4 @@
+const config = require("../config/config");
 const { sssUtil } = require("../util/util");
 const { ConsistentHashDiscovery } = require("./discovery-services/consistent-hash-discovery");
 const { RendezvousHashDiscovery } = require("./discovery-services/rendezvous-hash-discovery");
@@ -15,13 +16,18 @@ class DiscoveryService{
      * @returns {object}
      */
     getNode = (serviceName, ip) => {
-        if(sssUtil.isConsistentHashing()){
-            return this.chd.getNode(serviceName, ip);
+        let node;
+        if(sssUtil.isRoundRobin()){
+            node = this.rrd.getNode(serviceName, ip);
         }
-        if(sssUtil.isRendezvousHashing()){
-            return this.rhd.getNode(serviceName, ip);
+        else if(sssUtil.isRendezvousHashing()){
+            node = this.rhd.getNode(serviceName, ip);
         }
-        return this.rrd.getNode(serviceName);
+        else if(sssUtil.isConsistentHashing()){
+            node = this.chd.getNode(serviceName, ip);
+        }
+        if(node) node["serverSelectionStrategy"] = config.serverSelectionStrategy.message;
+        return node;
     }
 }
 
