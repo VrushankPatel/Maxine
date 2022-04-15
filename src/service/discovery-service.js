@@ -3,6 +3,8 @@ const { ConsistentHashDiscovery } = require("./discovery-services/consistent-has
 const { RendezvousHashDiscovery } = require("./discovery-services/rendezvous-hash-discovery");
 const { RoundRobinDiscovery } = require("./discovery-services/round-robin-discovery");
 const _ = require('lodash');
+const config = require("../config/config");
+const { constants } = require("../util/constants/constants");
 
 class DiscoveryService{
     rrd = new RoundRobinDiscovery();
@@ -16,10 +18,19 @@ class DiscoveryService{
      * @returns {object}
      */
     getNode = (serviceName, ip) => {
-        if(sssUtil.isRoundRobin()) return this.rrd.getNode(serviceName, ip);
-        else if(sssUtil.isRendezvousHashing()) return this.rhd.getNode(serviceName, ip);
-        else if(sssUtil.isConsistentHashing()) return this.chd.getNode(serviceName, ip);
-        return this.rrd.getNode(serviceName, ip);
+        switch(config.serverSelectionStrategy){
+            case constants.SSS.RR:
+            return this.rrd.getNode(serviceName, ip);
+
+            case constants.SSS.CH:
+            return this.chd.getNode(serviceName, ip);
+
+            case constants.SSS.RH:
+            return this.rhd.getNode(serviceName, ip);
+
+            default:
+            return this.rrd.getNode(serviceName, ip);
+        }
     }
 }
 
