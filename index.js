@@ -25,8 +25,7 @@ const app = ExpressAppBuilder.createNewApp()
                     .use('/api-spec', swaggerUi.serve, swaggerUi.setup(swaggerDocument))
                 .blockUnknownUrls()
                 .use(logWebExceptions)
+                .listen(constants.PORT, loggingUtil.initApp)
                 .getApp();
-
-app.listen(constants.PORT, loggingUtil.initApp);
 
 module.exports = app;
