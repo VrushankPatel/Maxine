@@ -171,14 +171,14 @@ class JsonBuilder{
      * @returns {string} formattedJson
      */
     formatJson(){
-        return config.logJsonPrettify === true ? this.prettifyJSON() : this.minifyJSON();
+        return config.logJsonPrettify === true ? this.prettifyJson() : this.minifyJSON();
     }
 
     /**
      * It'll return prettified JSON.
      * @returns {object: JsonBuilder}
      */
-    prettifyJSON(){
+    prettifyJson(){
         this.jsonObj = JSON.stringify(this.jsonObj, null, "  ");
         return this;
     }
