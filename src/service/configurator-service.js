@@ -28,6 +28,13 @@ class ConfiguratorService{
         config.serverSelectionStrategy = serverSelStrat;
         return constants.CODE_SUCCESS;
     }
+
+    updateLogFormat(logFormat){
+        const loggingFormat = constants.LOG_FORMATS[logFormat]
+        if(_.isUndefined(loggingFormat)) return constants.CODE_INVALID_DATA;
+        config.logFormat = loggingFormat;
+        return constants.CODE_SUCCESS;
+    }
 }
 
 module.exports = {

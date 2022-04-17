@@ -3,7 +3,7 @@ const winston = require('winston');
 const config = require('../../config/config');
 const { logConfiguration } = require('../../config/logging/logging-config');
 const {constants, statusAndMsgs} = require('../constants/constants');
-const { logJsonBuilder } = require('../util');
+const { logBuilder } = require('../util');
 
 const banner = fs.readFileSync(constants.BANNERPATH, 'utf8');
 const logger = winston.createLogger(logConfiguration);
@@ -11,16 +11,16 @@ const logger = winston.createLogger(logConfiguration);
 
 const log = (logFunction) => config.logAsync === true ? setTimeout(logFunction, 0) : logFunction();
 
-const info = (msg) => log(() => logger.info(logJsonBuilder("INFO", "GENERIC", null, null, msg)));
+const info = (msg) => log(() => logger.info(logBuilder("INFO", "GENERIC", null, null, msg)));
 
-const error = (msg) => log(() => logger.error(logJsonBuilder("ERROR", "GENERIC", null, null, msg)));
+const error = (msg) => log(() => logger.error(logBuilder("ERROR", "GENERIC", null, null, msg)));
 
 const errorAndClose = (msg) => {
-    logger.error(logJsonBuilder("ERROR", "GENERIC", null, null, msg));
+    logger.error(logBuilder("ERROR", "GENERIC", null, null, msg));
     process.exit();
 };
 
-const logExceptions = (req, msg) => log(() => logger.error(logJsonBuilder("ERROR", "WEBREQUEST-Exception", statusAndMsgs.STATUS_SERVER_ERROR, req, msg)));
+const logExceptions = (req, msg) => log(() => logger.error(logBuilder("ERROR", "WEBREQUEST-Exception", statusAndMsgs.STATUS_SERVER_ERROR, req, msg)));
 
 const loggingUtil = {
     info,
