@@ -145,7 +145,7 @@ class JsonBuilder{
             }
             return this;
         }
-        this.jsonObj[key] = this.registeredObj[refObj];
+        this.jsonObj[key] = this.registeredObj[refObj] || undefined;
         return this;
     }
 

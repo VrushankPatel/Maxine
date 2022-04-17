@@ -11,7 +11,7 @@ const LOGLEVELS = ['info']; // verbose, silly, error, warn
 const LOGTIMESTAMPFORMAT = 'DD-MMM-YYYY HH:mm:ss';
 const ACTUATORPATH = '/api/actuator';
 const STATUSMONITORTITLE = 'Status : Maxine';
-const REQUEST_LOG_TIMESTAMP_FORMAT = 'YYYY/MM/DD HH:mm:ss';
+const REQUEST_LOG_TIMESTAMP_FORMAT = 'DD/MM/YYYY HH:mm:ss';
 const DEFAULT_ADMIN_USERNAME_PWD = "admin";
 const EXPIRATION_TIME = PROFILE === "dev" ? 86000 : 1800;
 const DEV_SECRET = "55e871f9889bb099df419b6b3c3a852582f9f0551d0ddc367b329dcd608a22d43b60efa62979ba0d9fe91d12cc56d03aa0c89e28707b1e039a7fc33e3a86b2d0";
@@ -30,6 +30,11 @@ const SSS = new Enums([
     {name: 'CH', code: '1', message: 'Consistent Hashing'},
     {name: 'RH', code: '2', message: 'Rendezvous Hashing'}
 ]);
+
+const LOG_FORMATS = new Enums([
+    {name: 'JSON', code: '0', message: 'Jsonified logging'},
+    {name: 'PLAIN', code: '1', message: 'Plain logs'}
+])
 
 // Http Status Code and Messages
 const STATUS_NOT_FOUND = 404;
@@ -88,6 +93,7 @@ const constants = {
     API_URLS_WITH_AUTH,
     MAX_SERVER_WEIGHT,
     SSS,
+    LOG_FORMATS,
     CONFIGTYPES,
     SERVER_SELECTION_STRATEGIES,
     CODE_SUCCESS,

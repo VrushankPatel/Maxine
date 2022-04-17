@@ -3,7 +3,7 @@ var chaiHttp = require('chai-http');
 const app = require('..');
 const config = require('../src/config/config');
 const { generateAccessToken } = require('../src/security/jwt');
-const { sssUtil } = require('../src/util/util');
+const { sssChecker, logFormatChecker } = require('../src/util/util');
 const { testUser } = require('./testUtil/test-constants');
 var should = chai.should();
 chai.use(require('chai-json'));
@@ -97,9 +97,9 @@ describe(`${fileName} : API /api/maxine`, () => {
                 const body = res.body;
                 body.should.be.a('object');
                 body.should.have.own.property("serverSelectionStrategy", "Success");
-                sssUtil.isRoundRobin().should.be.false;
-                sssUtil.isRendezvousHashing().should.be.true; // We assigned SSS to RH
-                sssUtil.isConsistentHashing().should.be.false;
+                sssChecker.isRoundRobin().should.be.false;
+                sssChecker.isRendezvousHashing().should.be.true; // We assigned SSS to RH
+                sssChecker.isConsistentHashing().should.be.false;
                 done();
             });
     });
@@ -118,9 +118,9 @@ describe(`${fileName} : API /api/maxine`, () => {
                 const body = res.body;
                 body.should.be.a('object');
                 body.should.have.own.property("serverSelectionStrategy", "Success");
-                sssUtil.isRoundRobin().should.be.false;
-                sssUtil.isRendezvousHashing().should.be.false;
-                sssUtil.isConsistentHashing().should.be.true; // We assigned SSS to CH
+                sssChecker.isRoundRobin().should.be.false;
+                sssChecker.isRendezvousHashing().should.be.false;
+                sssChecker.isConsistentHashing().should.be.true; // We assigned SSS to CH
                 done();
             });
     });
@@ -139,9 +139,49 @@ describe(`${fileName} : API /api/maxine`, () => {
                 const body = res.body;
                 body.should.be.a('object');
                 body.should.have.own.property("serverSelectionStrategy", "Success");
-                sssUtil.isRoundRobin().should.be.true; // We assigned SSS to RR
-                sssUtil.isRendezvousHashing().should.be.false;
-                sssUtil.isConsistentHashing().should.be.false;
+                sssChecker.isRoundRobin().should.be.true; // We assigned SSS to RR
+                sssChecker.isRendezvousHashing().should.be.false;
+                sssChecker.isConsistentHashing().should.be.false;
+                done();
+            });
+    });
+
+    it('PUT /config (Update logFormat to JSON) -> 200 & Update config logFormat (JSON)', (done) => {
+        const serviceDataToUpdate = {"logFormat" : 'JSON'}
+
+        chai.request(app)
+            .put('/api/maxine/config')
+            .set("Authorization", `Bearer ${accessToken}`)
+            .set('Content-Type', 'application/json')
+            .send(serviceDataToUpdate)
+            .end((_, res) => {
+                res.should.have.status(200);
+                res.should.be.json;
+                const body = res.body;
+                body.should.be.a('object');
+                body.should.have.own.property("logFormat", "Success");
+                logFormatChecker.isJsonFormat().should.be.true;
+                logFormatChecker.isPlainFormat().should.be.false;
+                done();
+            });
+    });
+
+    it('PUT /config (Update logFormat to PLAIN) -> 200 & Update config logFormat (PLAIN)', (done) => {
+        const serviceDataToUpdate = {"logFormat" : 'PLAIN'}
+
+        chai.request(app)
+            .put('/api/maxine/config')
+            .set("Authorization", `Bearer ${accessToken}`)
+            .set('Content-Type', 'application/json')
+            .send(serviceDataToUpdate)
+            .end((_, res) => {
+                res.should.have.status(200);
+                res.should.be.json;
+                const body = res.body;
+                body.should.be.a('object');
+                body.should.have.own.property("logFormat", "Success");
+                logFormatChecker.isJsonFormat().should.be.false;
+                logFormatChecker.isPlainFormat().should.be.true;
                 done();
             });
     });
