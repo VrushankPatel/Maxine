@@ -56,7 +56,8 @@
   },
   "nyc": {
     "include": "src",
-    "exclude": [
+    "exclude": [],
+    "excludeArchived": [
       "**/app-builder.js",
       "**/route-builder.js",
       "**/logging"
