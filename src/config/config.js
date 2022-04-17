@@ -6,7 +6,8 @@ const config = {
     logJsonPrettify: false,
     actuatorEnabled: true,
     statusMonitorEnabled: true,
-    serverSelectionStrategy: constants.SSS.RR
+    serverSelectionStrategy: constants.SSS.RR,
+    logFormat: constants.LOG_FORMATS.PLAIN
 }
 
 Object.defineProperty(config, "profile", {
