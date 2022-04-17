@@ -11,7 +11,7 @@ const { authenticationController } = require('./src/controller/security/authenti
 const swaggerUi = require('swagger-ui-express');
 const YAML = require('yamljs');
 const { statusMonitorConfig, actuatorConfig } = require('./src/config/actuator/actuator-config');
-const swaggerDocument = YAML.load('./api-docs/swagger.yaml');
+const swaggerDocument = YAML.load('./api-specs/swagger.yaml');
 
 const app = ExpressAppBuilder.createNewApp()
                 .ifPropertyOnce("statusMonitorEnabled")
