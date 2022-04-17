@@ -1,11 +1,11 @@
 const { statusAndMsgs } = require("../constants/constants");
-const { logJsonBuilder } = require("../util");
+const { logBuilder } = require("../util");
 const { log, logger } = require("./logging-util");
 
 const logRequest = (req, res, next) => {
     log(() => {
         const logLevel = res.statusCode >= statusAndMsgs.STATUS_NOT_FOUND ? "ERROR" : "INFO";
-        logger.info(logJsonBuilder(logLevel, "WEBREQUEST", res.statusCode, req));
+        logger.info(logBuilder(logLevel, "WEBREQUEST", res.statusCode, req));
     });
     next();
 }
