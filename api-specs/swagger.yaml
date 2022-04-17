@@ -189,7 +189,7 @@ paths:
             description: OK
             content:
               application/json:
-                example: '{"logAsync":false,"heartBeatTimeOut":5,"logJsonPrettify":false,"actuatorEnabled":true,"statusMonitorEnabled":true,"serverSelStrat":{"name":"CH","code":"1","message":"Consistent Hashing","ordinal":1}}'
+                example: '{"logAsync":false,"heartBeatTimeout":3,"logJsonPrettify":false,"actuatorEnabled":true,"statusMonitorEnabled":true,"serverSelectionStrategy":{"name":"CH","code":"1","message":"Consistent Hashing","ordinal":1},"logFormat":{"name":"PLAIN","code":"1","message":"Plain logs","ordinal":1}}'
         '401':
           description: Unauthorized
           content:
@@ -218,8 +218,7 @@ paths:
           content:
             application/json:
               example: >-
-                {"updateStatus":{"logAsync":0,"heartBeatTimeout":0,"logJsonPrettify":0},"statusCodes":{"0":"Success","1":"Type
-                Error","2":"Wrong value Or Invalid value"}}
+                {"logAsync":"Success","heartBeatTimeout":"Success","logJsonPrettify":"Success","serverSelectionStrategy":"Success","logFormat":"Success"}
         '401':
           description: Unauthorized
           content:
@@ -288,6 +287,15 @@ components:
               * `RR` - Round Robin
               * `CH` - Consistent Hashing
               * `RH` - Rendezvous Hashing
+        logFormat:
+          type: string
+          enum: [JSON, PLAIN]
+          example: "JSON"
+          description: >
+            Log Formats:
+
+              * `PLAIN` - Plain Logging
+              * `JSON`  - JSON Logging
     User:
       type: object
       properties:
