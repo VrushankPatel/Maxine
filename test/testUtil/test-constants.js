@@ -1,10 +1,29 @@
 const { constants } = require("../../src/util/constants/constants");
 
-const testUser = {
+const TESTUSER = {
     userName: constants.DEFAULT_ADMIN_USERNAME_PWD,
     password: constants.DEFAULT_ADMIN_USERNAME_PWD
 }
 
+const ENDPOINTS = {
+    actuator: {
+        health: '/api/actuator/health',
+        info: '/api/actuator/info',
+        metrics: '/api/actuator/metrics'
+    },
+    logs: {
+        download: '/api/logs/download'
+    },
+    maxine: {
+        config: '/api/maxine/control/config',
+        serviceops: {
+            register: '/api/maxine/serviceops/register',
+            servers: '/api/maxine/serviceops/servers',
+        },
+        signin: '/api/maxine/signin'
+    }
+}
 module.exports = {
-    testUser
+    testUser: TESTUSER,
+    ENDPOINTS
 }

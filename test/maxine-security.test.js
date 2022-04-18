@@ -6,14 +6,14 @@ var should = chai.should();
 chai.use(require('chai-json'));
 chai.use(chaiHttp);
 const jwt = require('jsonwebtoken');
-const { testUser } = require('./testUtil/test-constants');
+const { testUser, ENDPOINTS } = require('./testUtil/test-constants');
 
 const fileName = require('path').basename(__filename).replace(".js","");
 
 describe(`${fileName} : API /api/maxine/signin`, () => {
     it('POST /signin Signin endpoint fire but without any payload, it should return 400 Bad request.', (done) => {
         chai.request(app)
-            .post('/api/maxine/signin')
+            .post(ENDPOINTS.maxine.signin)
             .end((_, res) => {
                 res.should.have.status(400);
                 res.should.be.json;
@@ -24,7 +24,7 @@ describe(`${fileName} : API /api/maxine/signin`, () => {
 
     it('POST /signin Signin endpoint fire with the payload of admin credentials, we should get accessToken as response.', (done) => {
         chai.request(app)
-            .post('/api/maxine/signin')
+            .post(ENDPOINTS.maxine.signin)
             .set('content-type', 'application/json')
             .send(testUser)
             .end((_, res) => {
