@@ -1,6 +1,7 @@
 var chai = require('chai');
 var chaiHttp = require('chai-http');
 const app = require('..');
+const { ENDPOINTS } = require('./testUtil/test-constants');
 var should = chai.should();
 chai.use(require('chai-json'));
 chai.use(chaiHttp);
@@ -12,7 +13,7 @@ describe(`${fileName} : API /api/logs`, () => {
 
     it('GET /download -> 200 && it should return all the log files available in logs dir in JSON format', (done) => {
         chai.request(app)
-            .get('/api/logs/download')
+            .get(ENDPOINTS.logs.download)
             .end((_, res) => {
                 res.should.have.status(200);
                 res.should.be.json;
