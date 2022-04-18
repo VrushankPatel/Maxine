@@ -1,5 +1,6 @@
 var ConsistentHashing = require('consistent-hashing');
 const _ = require('lodash');
+const { constants } = require('../util/constants/constants');
 
 class ServiceRegistry{
     registry = {};
@@ -12,7 +13,7 @@ class ServiceRegistry{
 
     initHashRegistry = (serviceName) => {
         if(!this.hashRegistry[serviceName]){
-            this.hashRegistry[serviceName] = new ConsistentHashing({});
+            this.hashRegistry[serviceName] = new ConsistentHashing({}, constants.CONSISTENT_HASHING_OPTIONS);
         }
     }
 
