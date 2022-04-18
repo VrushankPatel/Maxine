@@ -33,3 +33,5 @@ setEnv.bat
 test-results.xml
 
 maxinedb.sqlite
+
+.vscode/
