@@ -4,7 +4,7 @@ const app = require('..');
 const config = require('../src/config/config');
 const { generateAccessToken } = require('../src/security/jwt');
 const { sssChecker, logFormatChecker } = require('../src/util/util');
-const { testUser } = require('./testUtil/test-constants');
+const { testUser, ENDPOINTS } = require('./testUtil/test-constants');
 var should = chai.should();
 chai.use(require('chai-json'));
 chai.use(chaiHttp);
@@ -16,7 +16,7 @@ describe(`${fileName} : API /api/maxine`, () => {
 
     it('GET /config -> 200 & should return the initial configs of maxine', (done) => {
         chai.request(app)
-            .get('/api/maxine/config')
+            .get(ENDPOINTS.maxine.config)
             .set("Authorization", `Bearer ${accessToken}`)
             .end((_, res) => {
                 res.should.have.status(200);
@@ -30,7 +30,7 @@ describe(`${fileName} : API /api/maxine`, () => {
         const serviceDataToUpdate = {"logAsync" : true}
 
         chai.request(app)
-            .put('/api/maxine/config')
+            .put(ENDPOINTS.maxine.config)
             .set("Authorization", `Bearer ${accessToken}`)
             .set('Content-Type', 'application/json')
             .send(serviceDataToUpdate)
@@ -49,7 +49,7 @@ describe(`${fileName} : API /api/maxine`, () => {
         const serviceDataToUpdate = {"heartBeatTimeout" : 12}
 
         chai.request(app)
-            .put('/api/maxine/config')
+            .put(ENDPOINTS.maxine.config)
             .set("Authorization", `Bearer ${accessToken}`)
             .set('Content-Type', 'application/json')
             .send(serviceDataToUpdate)
@@ -68,7 +68,7 @@ describe(`${fileName} : API /api/maxine`, () => {
         const serviceDataToUpdate = {"logJsonPrettify" : true}
 
         chai.request(app)
-            .put('/api/maxine/config')
+            .put(ENDPOINTS.maxine.config)
             .set("Authorization", `Bearer ${accessToken}`)
             .set('Content-Type', 'application/json')
             .send(serviceDataToUpdate)
@@ -87,7 +87,7 @@ describe(`${fileName} : API /api/maxine`, () => {
         const serviceDataToUpdate = {"serverSelectionStrategy" : 'RH'}
 
         chai.request(app)
-            .put('/api/maxine/config')
+            .put(ENDPOINTS.maxine.config)
             .set("Authorization", `Bearer ${accessToken}`)
             .set('Content-Type', 'application/json')
             .send(serviceDataToUpdate)
@@ -108,7 +108,7 @@ describe(`${fileName} : API /api/maxine`, () => {
         const serviceDataToUpdate = {"serverSelectionStrategy" : 'CH'}
 
         chai.request(app)
-            .put('/api/maxine/config')
+            .put(ENDPOINTS.maxine.config)
             .set("Authorization", `Bearer ${accessToken}`)
             .set('Content-Type', 'application/json')
             .send(serviceDataToUpdate)
@@ -129,7 +129,7 @@ describe(`${fileName} : API /api/maxine`, () => {
         const serviceDataToUpdate = {"serverSelectionStrategy" : 'RR'}
 
         chai.request(app)
-            .put('/api/maxine/config')
+            .put(ENDPOINTS.maxine.config)
             .set("Authorization", `Bearer ${accessToken}`)
             .set('Content-Type', 'application/json')
             .send(serviceDataToUpdate)
@@ -150,7 +150,7 @@ describe(`${fileName} : API /api/maxine`, () => {
         const serviceDataToUpdate = {"logFormat" : 'JSON'}
 
         chai.request(app)
-            .put('/api/maxine/config')
+            .put(ENDPOINTS.maxine.config)
             .set("Authorization", `Bearer ${accessToken}`)
             .set('Content-Type', 'application/json')
             .send(serviceDataToUpdate)
@@ -170,7 +170,7 @@ describe(`${fileName} : API /api/maxine`, () => {
         const serviceDataToUpdate = {"logFormat" : 'PLAIN'}
 
         chai.request(app)
-            .put('/api/maxine/config')
+            .put(ENDPOINTS.maxine.config)
             .set("Authorization", `Bearer ${accessToken}`)
             .set('Content-Type', 'application/json')
             .send(serviceDataToUpdate)
