@@ -40,7 +40,7 @@ function jsonLogBuilder(logLevel, logType, statusAndMsgs, req, msg = ""){
 }
 
 function plainLogBuilder(logLevel, logType, statusAndMsgs, req, msg = ""){
-    let log = ` 【${logLevel}】-`;
+    let log = `【${logLevel}】-`;
     log = log.concat(`【${logType}】`);
     if(statusAndMsgs) log = log.concat(`| ${statusAndMsgs} `);
     if(req){
@@ -48,10 +48,10 @@ function plainLogBuilder(logLevel, logType, statusAndMsgs, req, msg = ""){
                 .concat(`| ${req.method} |`)
                 .concat(` ${req.ip} |`)
                 .concat(` [ ${req.originalUrl} ] |`)
-                .concat(` HTTP/${req.httpVersion} |`)
-                .concat(` [ ${new Date().toUTCString()} ] `);
+                .concat(` HTTP/${req.httpVersion} |`);
     }
     if(!_.isEmpty(msg)) log = log.concat(` | ${JSON.stringify(msg)} |`);
+    log = log.concat(` [ ${new Date().toUTCString()} ] `);
     return log;
 }
 
