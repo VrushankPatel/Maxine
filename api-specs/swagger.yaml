@@ -62,7 +62,7 @@ paths:
           content:
             application/json:
               example: '{"message":"File not found"}'
-  /api/maxine/register:
+  /api/maxine/serviceops/register:
     post:
       summary: >-
         Register the server with it's data (ServiceName, NodeName, Host, Port,
@@ -91,7 +91,7 @@ paths:
                 {"message": "Please provide all of these -> hostName, nodeName,
                 port and serviceName"}
       x-codegen-request-body-name: service
-  /api/maxine/discover:
+  /api/maxine/serviceops/discover:
     get:
       summary: >-
         Get the server from registry if there is any registered one by service
@@ -144,7 +144,7 @@ paths:
           content:
             application/json:
               example: '{"message":"Please provide both of these -> userName and password."}'
-  /api/maxine/servers:
+  /api/maxine/serviceops/servers:
     get:
       summary: >-
         Get all the registered servers in Maxine service registry if there are
@@ -178,7 +178,7 @@ paths:
           content:
             application/json:
               example: '{"message":"Forbidden"}'
-  /api/maxine/config:
+  /api/maxine/control/config:
     get:
       summary: Get the current config data of Maxine.
       operationId: Maxine configuration Retrieval.
