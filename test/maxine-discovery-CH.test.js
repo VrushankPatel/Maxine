@@ -36,7 +36,7 @@ describe(`${fileName} : API /api/maxine/discover with config with Consistent Has
             .get(ENDPOINTS.maxine.serviceops.discover + "?serviceName=dbservice")
             .set('Content-Type', 'application/json')
             .send(testServiceData)
-            .end((err, res) => {
+            .end((_, res) => {
                 res.should.have.status(200);
                 res.should.be.json;
                 const body = res.body;
@@ -51,7 +51,7 @@ describe(`${fileName} : API /api/maxine/discover with config with Consistent Has
                     .get(ENDPOINTS.maxine.serviceops.discover + "?serviceName=dbservice")
                     .set('Content-Type', 'application/json')
                     .send(testServiceData)
-                    .end((err, res2) => {
+                    .end((_, res2) => {
                         const body2 = res2.body;
                         body2.nodeName.should.be.eql(body.nodeName);
                         body.should.have.own.property("parentNode", testServiceData.nodeName);
