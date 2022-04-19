@@ -19,11 +19,15 @@ const ENDPOINTS = {
         serviceops: {
             register: '/api/maxine/serviceops/register',
             servers: '/api/maxine/serviceops/servers',
+            discover: '/api/maxine/serviceops/discover'
         },
         signin: '/api/maxine/signin'
     }
 }
+
+const dateSample = new Date(Date.parse('12 Feb 2022 09:23:34 GMT'));
 module.exports = {
     testUser: TESTUSER,
-    ENDPOINTS
+    ENDPOINTS,
+    dateSample
 }
