@@ -34,7 +34,7 @@ describe(`${fileName} : API /api/maxine/discover with config with Round Robin`, 
             .get(ENDPOINTS.maxine.serviceops.discover + "?serviceName=dbservice")
             .set('Content-Type', 'application/json')
             .send(testServiceData)
-            .end((err, res) => {
+            .end((_, res) => {
                 res.should.have.status(200);
                 res.should.be.json;
                 const body = res.body;
