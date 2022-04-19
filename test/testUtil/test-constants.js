@@ -25,7 +25,7 @@ const ENDPOINTS = {
     }
 }
 
-const dateSample = new Date().toLocaleString();
+const dateSample = new Date(Date.parse('12 Feb 2022 09:23:34 GMT'));
 module.exports = {
     testUser: TESTUSER,
     ENDPOINTS,
