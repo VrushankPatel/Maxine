@@ -2,10 +2,9 @@ var chai = require('chai');
 var chaiHttp = require('chai-http');
 const app = require('..');
 const config = require('../src/config/config');
-const { generateAccessToken } = require('../src/security/jwt');
 const { registryService } = require('../src/service/registry-service');
 const { constants } = require('../src/util/constants/constants');
-const { testUser, ENDPOINTS, dateSample } = require('./testUtil/test-constants');
+const { ENDPOINTS, dateSample } = require('./testUtil/test-constants');
 var should = chai.should();
 chai.use(require('chai-json'));
 chai.use(chaiHttp);
@@ -25,8 +24,6 @@ const testServiceData = {
 
 // Registering fake server to discover afterwards for tests.
 registryService.registryService(testServiceData);
-
-config.serverSelectionStrategy = constants.SSS.RH;
 
 // We'll check if we're getting same server for multiple endpoint hits.
 describe(`${fileName} : API /api/maxine/discover with config with Rendezvous Hashing`, () => {
