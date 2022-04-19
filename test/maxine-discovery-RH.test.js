@@ -4,7 +4,7 @@ const app = require('..');
 const config = require('../src/config/config');
 const { registryService } = require('../src/service/registry-service');
 const { constants } = require('../src/util/constants/constants');
-const { ENDPOINTS } = require('./testUtil/test-constants');
+const { ENDPOINTS, serviceDataSample } = require('./testUtil/test-constants');
 var should = chai.should();
 chai.use(require('chai-json'));
 chai.use(chaiHttp);
