@@ -26,8 +26,20 @@ const ENDPOINTS = {
 }
 
 const dateSample = new Date(Date.parse('12 Feb 2022 09:23:34 GMT'));
+
+const serviceDataSample = {
+    nodeName: 'node-x-10',
+    port: 8082,
+    serviceName: 'dbservice',
+    timeOut: 50,
+    weight: 10,
+    ssl: true,
+    address: 'https://192.168.0.1:8082',
+    registeredAt: dateSample
+};
+
 module.exports = {
     testUser: TESTUSER,
     ENDPOINTS,
-    dateSample
+    serviceDataSample
 }

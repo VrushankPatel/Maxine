@@ -4,26 +4,15 @@ const app = require('..');
 const config = require('../src/config/config');
 const { registryService } = require('../src/service/registry-service');
 const { constants } = require('../src/util/constants/constants');
-const { ENDPOINTS, dateSample } = require('./testUtil/test-constants');
+const { ENDPOINTS, serviceDataSample } = require('./testUtil/test-constants');
 var should = chai.should();
 chai.use(require('chai-json'));
 chai.use(chaiHttp);
 
 const fileName = require('path').basename(__filename).replace(".js","");
 
-const testServiceData = {
-    nodeName: 'node-x-10',
-    port: 8082,
-    serviceName: 'dbservice',
-    timeOut: 50,
-    weight: 10,
-    ssl: true,
-    address: 'https://192.168.0.1:8082',
-    registeredAt: dateSample
-};
-
 // Registering fake server to discover afterwards for tests.
-registryService.registryService(testServiceData);
+registryService.registryService(serviceDataSample);
 
 // We'll check if we're getting same server for multiple endpoint hits.
 describe(`${fileName} : API /api/maxine/discover with config with Consistent Hashing`, () => {
@@ -35,14 +24,14 @@ describe(`${fileName} : API /api/maxine/discover with config with Consistent Has
         chai.request(app)
             .get(ENDPOINTS.maxine.serviceops.discover + "?serviceName=dbservice")
             .set('Content-Type', 'application/json')
-            .send(testServiceData)
+            .send(serviceDataSample)
             .end((_, res) => {
                 res.should.have.status(200);
                 res.should.be.json;
                 const body = res.body;
                 body.should.be.a('object');
-                body.should.have.own.property("parentNode", testServiceData.nodeName);
-                body.should.have.own.property("address", testServiceData.address);
+                body.should.have.own.property("parentNode", serviceDataSample.nodeName);
+                body.should.have.own.property("address", serviceDataSample.address);
                 body.should.have.own.property("nodeName");
 
                 // Again we'll hit the request similarly, we should get the same node.
@@ -50,12 +39,12 @@ describe(`${fileName} : API /api/maxine/discover with config with Consistent Has
                 chai.request(app)
                     .get(ENDPOINTS.maxine.serviceops.discover + "?serviceName=dbservice")
                     .set('Content-Type', 'application/json')
-                    .send(testServiceData)
+                    .send(serviceDataSample)
                     .end((_, res2) => {
                         const body2 = res2.body;
                         body2.nodeName.should.be.eql(body.nodeName);
-                        body.should.have.own.property("parentNode", testServiceData.nodeName);
-                        body.should.have.own.property("address", testServiceData.address);
+                        body.should.have.own.property("parentNode", serviceDataSample.nodeName);
+                        body.should.have.own.property("address", serviceDataSample.address);
                     });
             });
         done();
