@@ -19,11 +19,15 @@ const ENDPOINTS = {
         serviceops: {
             register: '/api/maxine/serviceops/register',
             servers: '/api/maxine/serviceops/servers',
+            discover: '/api/maxine/serviceops/discover'
         },
         signin: '/api/maxine/signin'
     }
 }
+
+const dateSample = new Date().toLocaleString();
 module.exports = {
     testUser: TESTUSER,
-    ENDPOINTS
+    ENDPOINTS,
+    dateSample
 }
