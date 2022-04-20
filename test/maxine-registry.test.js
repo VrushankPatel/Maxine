@@ -2,30 +2,13 @@ var chai = require('chai');
 var chaiHttp = require('chai-http');
 const app = require('..');
 const { generateAccessToken } = require('../src/security/jwt');
-const { testUser, ENDPOINTS } = require('./testUtil/test-constants');
+const { testUser, ENDPOINTS, serviceDataSample, httpOrNonHttp } = require('./testUtil/test-constants');
 var should = chai.should();
 chai.use(require('chai-json'));
 chai.use(chaiHttp);
 
 const fileName = require('path').basename(__filename).replace(".js","");
 const accessToken = generateAccessToken(testUser);
-
-const hostName = "xxx.xxx.xx.xxx";
-const port = 8080;
-const serviceName = "Sample-Service";
-const nodeName = "node-4";
-const timeOut = 4;
-const ssl = false;
-const httpOrNonHttp = ssl ? "https" : "http";
-
-const testServiceData = {
-    "hostName" : hostName,
-    "port" : port,
-    "serviceName" : serviceName,
-    "nodeName" : nodeName,
-    "timeOut" : timeOut,
-    "ssl": ssl
-};
 
 describe(`${fileName} : API /api/maxine/{registry urls}`, () => {
 
@@ -47,17 +30,17 @@ describe(`${fileName} : API /api/maxine/{registry urls}`, () => {
         chai.request(app)
             .post(ENDPOINTS.maxine.serviceops.register)
             .set('Content-Type', 'application/json')
-            .send(testServiceData)
+            .send(serviceDataSample)
             .end((_, res) => {
                 res.should.have.status(200);
                 res.should.be.json;
                 const body = res.body;
                 body.should.be.a('object');
-                body.should.have.own.property("serviceName", serviceName);
-                body.should.have.own.property("nodeName", nodeName);
-                body.should.have.own.property("address", `${httpOrNonHttp}://${hostName}:${port}`);
-                body.should.have.own.property("timeOut", timeOut);
-                body.should.have.own.property("weight", 1); // we havn't passed weight so, default is 1
+                body.should.have.own.property("serviceName", serviceDataSample.serviceName);
+                body.should.have.own.property("nodeName", serviceDataSample.nodeName);
+                body.should.have.own.property("address", `${httpOrNonHttp}://${serviceDataSample.hostName}:${serviceDataSample.port}`);
+                body.should.have.own.property("timeOut", serviceDataSample.timeOut);
+                body.should.have.own.property("weight", serviceDataSample.weight);
                 done();
             });
     });
@@ -70,12 +53,12 @@ describe(`${fileName} : API /api/maxine/{registry urls}`, () => {
                 res.should.have.status(200);
                 res.should.be.json;
 
-                const tempNodeName = nodeName + "-0"; // no weight means 1 server, no replication
+                const tempNodeName = serviceDataSample.nodeName + "-0"; // no weight means 1 server, no replication
                 const body = res.body;
                 body.should.be.a('object');
-                body.should.have.own.property(serviceName);
-                const service = body[serviceName];
-                service.should.have.own.property("offset", 0);
+                body.should.have.own.property(serviceDataSample.serviceName);
+                const service = body[serviceDataSample.serviceName];
+                service.should.have.own.property("offset");
                 service.should.have.own.property("nodes");
 
                 const nodes = service["nodes"]
@@ -83,9 +66,9 @@ describe(`${fileName} : API /api/maxine/{registry urls}`, () => {
 
                 const node = nodes[tempNodeName];
                 node.should.have.own.property("nodeName", tempNodeName);
-                node.should.have.own.property("parentNode", nodeName);
-                node.should.have.own.property("address", `${httpOrNonHttp}://${hostName}:${port}`);
-                node.should.have.own.property("timeOut", timeOut);
+                node.should.have.own.property("parentNode", serviceDataSample.nodeName);
+                node.should.have.own.property("address", `${httpOrNonHttp}://${serviceDataSample.hostName}:${serviceDataSample.port}`);
+                node.should.have.own.property("timeOut", serviceDataSample.timeOut);
                 done();
             });
     });

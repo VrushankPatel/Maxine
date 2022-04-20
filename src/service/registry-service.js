@@ -1,4 +1,6 @@
+const Service = require("../entity/service-body");
 const { serviceRegistry: sRegistry } = require("../entity/service-registry");
+const _ = require('lodash');
 class RegistryService{
 
     registerService = (serviceObj) => {
@@ -44,9 +46,11 @@ class RegistryService{
     }
 
     registryService = (serviceObj) => {
-        setTimeout(this.registerService, 0, serviceObj);
-        serviceObj.registeredAt = new Date().toLocaleString();
-        return serviceObj;
+        let service = Service.buildByObj(serviceObj);
+        if(!service || _.isNull(service)) return;
+        setTimeout(this.registerService, 0, service);
+        service.registeredAt = new Date().toLocaleString();
+        return service;
     }
 }
 
