@@ -2,9 +2,10 @@ var chai = require('chai');
 var chaiHttp = require('chai-http');
 const app = require('..');
 const config = require('../src/config/config');
+const { discoveryService } = require('../src/service/discovery-service');
 const { registryService } = require('../src/service/registry-service');
 const { constants } = require('../src/util/constants/constants');
-const { ENDPOINTS, serviceDataSample } = require('./testUtil/test-constants');
+const { ENDPOINTS, serviceDataSample, httpOrNonHttp } = require('./testUtil/test-constants');
 var should = chai.should();
 chai.use(require('chai-json'));
 chai.use(chaiHttp);
@@ -16,7 +17,7 @@ registryService.registryService(serviceDataSample);
 
 // We'll check if we're getting same server for multiple endpoint hits.
 describe(`${fileName} : API /api/maxine/discover with config with Consistent Hashing`, () => {
-    it(`POST /discover?serviceName={service_name} discovering service`, (done) => {
+    it(`GET /discover?serviceName={service_name} discovering service`, (done) => {
 
         config.serverSelectionStrategy = constants.SSS.CH;
 
@@ -24,29 +25,28 @@ describe(`${fileName} : API /api/maxine/discover with config with Consistent Has
         chai.request(app)
             .get(ENDPOINTS.maxine.serviceops.discover + "?serviceName=dbservice")
             .set('Content-Type', 'application/json')
-            .send(serviceDataSample)
             .end((_, res) => {
                 res.should.have.status(200);
                 res.should.be.json;
                 const body = res.body;
                 body.should.be.a('object');
                 body.should.have.own.property("parentNode", serviceDataSample.nodeName);
-                body.should.have.own.property("address", serviceDataSample.address);
+                body.should.have.own.property("address", `${httpOrNonHttp}://${serviceDataSample.hostName}:${serviceDataSample.port}`);
                 body.should.have.own.property("nodeName");
-
-                // Again we'll hit the request similarly, we should get the same node.
-                // because of consistent hashing. we'll assert the nodename we got earlier with this one.
-                chai.request(app)
-                    .get(ENDPOINTS.maxine.serviceops.discover + "?serviceName=dbservice")
-                    .set('Content-Type', 'application/json')
-                    .send(serviceDataSample)
-                    .end((_, res2) => {
-                        const body2 = res2.body;
-                        body2.nodeName.should.be.eql(body.nodeName);
-                        body.should.have.own.property("parentNode", serviceDataSample.nodeName);
-                        body.should.have.own.property("address", serviceDataSample.address);
-                    });
             });
+        done();
+    });
+
+    it(`CH discover with NonAPI`, (done) => {
+        // Making sure that server selection strategy is CH
+        config.serverSelectionStrategy = constants.SSS.CH;
+
+        const response1 = discoveryService.getNode(serviceDataSample.serviceName,serviceDataSample.hostName);
+
+        const response2 = discoveryService.getNode(serviceDataSample.serviceName,serviceDataSample.hostName);
+
+        // Because of consistent hashing, we should expect both the responses same because the ip we're passing is the same.
+        response1.should.be.eql(response2);
         done();
     });
 });

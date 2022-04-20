@@ -25,21 +25,21 @@ const ENDPOINTS = {
     }
 }
 
-const dateSample = new Date(Date.parse('12 Feb 2022 09:23:34 GMT'));
-
 const serviceDataSample = {
-    nodeName: 'node-x-10',
-    port: 8082,
-    serviceName: 'dbservice',
-    timeOut: 50,
-    weight: 10,
-    ssl: true,
-    address: 'https://192.168.0.1:8082',
-    registeredAt: dateSample
+    "hostName": "192.168.0.1",
+    "nodeName": "node-x-10",
+    "port": "8082",
+    "serviceName": "dbservice",
+    "ssl": true,
+    "timeOut": 5,
+    "weight": 10
 };
+
+const httpOrNonHttp = serviceDataSample.ssl ? "https" : "http";
 
 module.exports = {
     testUser: TESTUSER,
     ENDPOINTS,
-    serviceDataSample
+    serviceDataSample,
+    httpOrNonHttp
 }
