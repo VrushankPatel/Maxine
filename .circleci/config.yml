@@ -49,7 +49,7 @@ jobs:
 
       - store_artifacts:
           path: coverage
-  build:
+  scan:
     docker:
       - image: 'circleci/python:3.7.4'
     steps:
@@ -65,7 +65,7 @@ workflows:
       - test:
           requires:
             - install_dependencies
-  sonar-scan:
+  quality_check:
     jobs:
-      - build:
+      - scan:
           context: SonarCloud
