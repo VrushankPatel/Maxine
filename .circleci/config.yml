@@ -49,6 +49,13 @@ jobs:
 
       - store_artifacts:
           path: coverage
+  sonarScan:
+    docker:
+      - image: circleci/node:14.15.1-stretch
+    parallelism: 8
+    steps:
+      - checkout
+      - sonarcloud/scan
 orbs:
   sonarcloud: sonarsource/sonarcloud@1.0.3
 
@@ -62,5 +69,5 @@ workflows:
       - test:
           requires:
             - install_dependencies
-      - build:
+      - sonarScan:
           context: SonarCloud
