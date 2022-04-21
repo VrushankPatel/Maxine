@@ -26,7 +26,7 @@ const ENDPOINTS = {
 }
 
 const serviceDataSample = {
-    "hostName": "192.168.0.1",
+    "hostName": "xx.xxx.xx.xx",
     "nodeName": "node-x-10",
     "port": "8082",
     "serviceName": "dbservice",
