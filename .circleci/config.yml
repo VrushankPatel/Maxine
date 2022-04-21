@@ -10,6 +10,7 @@ jobs:
           root: .
           paths:
             - .
+      - sonarcloud/scan
   install_dependencies:
     docker:
       - image: circleci/node:14.15.1-stretch
@@ -48,6 +49,8 @@ jobs:
 
       - store_artifacts:
           path: coverage
+orbs:
+  sonarcloud: sonarsource/sonarcloud@1.0.3
 
 workflows:
   build_maxine:
@@ -59,3 +62,5 @@ workflows:
       - test:
           requires:
             - install_dependencies
+      - build:
+          context: SonarCloud
