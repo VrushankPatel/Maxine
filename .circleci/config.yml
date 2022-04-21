@@ -1,6 +1,7 @@
 version: 2.1
 orbs:
-  sonarcloud: sonarsource/sonarcloud@1.0.0
+  sonarcloud: sonarsource/sonarcloud@1.0.3
+
 jobs:
   checkout_source:
     docker:
@@ -51,7 +52,7 @@ jobs:
           path: coverage
   scan:
     docker:
-      - image: 'circleci/python:3.7.4'
+      - image: circleci/node:14.15.1-stretch
     steps:
     - checkout
     - sonarcloud/scan
