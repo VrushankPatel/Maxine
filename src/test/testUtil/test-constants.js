@@ -1,4 +1,4 @@
-const { constants } = require("../../src/util/constants/constants");
+const { constants } = require("../../main/util/constants/constants");
 
 const TESTUSER = {
     userName: constants.DEFAULT_ADMIN_USERNAME_PWD,

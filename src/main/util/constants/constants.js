@@ -5,7 +5,7 @@ const PORT = parseInt(envArgs['p']) || parseInt(envArgs['port']) || 8080;
 
 const APP_NAME = "Maxine-Service-Discovery";
 const PROFILE = (envArgs['env'] || envArgs['profile'] || "prod").trim();
-const BANNERPATH = process.cwd() + '/src/resources/Banner.txt';
+const BANNERPATH = process.cwd() + '/src/main/resources/Banner.txt';
 const LOGDIR = './logs/';
 const LOGLEVELS = ['info']; // verbose, silly, error, warn
 const LOGTIMESTAMPFORMAT = 'DD-MMM-YYYY HH:mm:ss';

@@ -1,9 +1,9 @@
 var chai = require('chai');
 var chaiHttp = require('chai-http');
-const app = require('..');
-const config = require('../src/config/config');
-const { generateAccessToken } = require('../src/security/jwt');
-const { sssChecker, logFormatChecker } = require('../src/util/util');
+const app = require('../../index');
+const config = require('../main/config/config');
+const { generateAccessToken } = require('../main/security/jwt');
+const { sssChecker, logFormatChecker } = require('../main/util/util');
 const { testUser, ENDPOINTS } = require('./testUtil/test-constants');
 var should = chai.should();
 chai.use(require('chai-json'));
