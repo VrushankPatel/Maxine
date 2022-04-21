@@ -1,5 +1,5 @@
 'use strict';
 
 module.exports = {
-  spec: 'src/test/*.test.js'
+  spec: 'src/test/**/*.test.js'
 };
