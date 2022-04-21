@@ -1,4 +1,4 @@
-const JsonBuilder = require("../src/builders/json-builder");
+const JsonBuilder = require("../main/builders/json-builder");
 
 const fileName = require('path').basename(__filename).replace(".js","");
 
