@@ -1,8 +1,6 @@
-const { sssChecker } = require("../util/util");
 const { ConsistentHashDiscovery } = require("./discovery-services/consistent-hash-discovery");
 const { RendezvousHashDiscovery } = require("./discovery-services/rendezvous-hash-discovery");
 const { RoundRobinDiscovery } = require("./discovery-services/round-robin-discovery");
-const _ = require('lodash');
 const config = require("../config/config");
 const { constants } = require("../util/constants/constants");
 

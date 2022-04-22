@@ -1,5 +1,5 @@
 const { User, admin } = require("../../entity/user");
-const { generateAccessToken, authenticateToken } = require("../../security/jwt");
+const { generateAccessToken } = require("../../security/jwt");
 const { statusAndMsgs } = require("../../util/constants/constants");
 const { error } = require("../../util/logging/logging-util");
 const _ = require('lodash');
