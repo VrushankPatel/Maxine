@@ -25,22 +25,27 @@
 <a target="_blank" href="https://github.com/VrushankPatel"><img src="https://img.shields.io/badge/maintainer-VrushankPatel-blue"/></a>
 <a target="_blank" href="https://app.fossa.com/reports/a83419a2-657c-400c-b3b6-f04c8a032a56"><img src="https://img.shields.io/badge/Fossa-Report-blue"/></a>
 <a targget="_blank" href="https://app.fossa.com/projects/git%2Bgithub.com%2FVrushankPatel%2FGargantua-Maxine-Server?ref=badge_shield" alt="FOSSA Status"><img src="https://app.fossa.com/api/projects/git%2Bgithub.com%2FVrushankPatel%2FGargantua-Maxine-Server.svg?type=shield"/></a>
+<a href="https://app.fossa.com/projects/git%2Bgithub.com%2FVrushankPatel%2FGargantua-Maxine-Server?ref=badge_small" alt="FOSSA Status"><img src="https://app.fossa.com/api/projects/git%2Bgithub.com%2FVrushankPatel%2FGargantua-Maxine-Server.svg?type=small"/></a>
 </div>
 <br/>
-<a target="_blank" href="https://app.fossa.com/projects/git%2Bgithub.com%2FVrushankPatel%2FGargantua-Maxine-Server?ref=badge_large"><img src="https://app.fossa.com/api/projects/git%2Bgithub.com%2FVrushankPatel%2FGargantua-Maxine-Server.svg?type=large"/></a>
 
-### Getting Started
+## Coverage graph
+|<b>sunburst</b>|<b>icicle</b>|<b>tree</b>|
+|---|---|---|
+|<img src="https://codecov.io/gh/VrushankPatel/Maxine-Server/branch/master/graphs/sunburst.svg"/>|<img src="https://codecov.io/gh/VrushankPatel/Maxine-Server/branch/master/graphs/icicle.svg"/>|<img src="https://codecov.io/gh/VrushankPatel/Maxine-Server/branch/master/graphs/tree.svg"/>|
+### Setup for development
 
 #### Starting the development server
 
 1. Clone the project in your local dir.
-2. Install all the dependencies by npm i.
-3. Start dev server by npm run dev (nodemon).
+2. Install all the dependencies by `npm i`.
+3. Start dev server by `npm run dev` (nodemon).
 
 #### Test the maxine and generate the coverage.
 
-1. run `npm test` to test the app and generate the coverage reports by nyc(istanbul).
-2. To upload the coverage report to codecov.io, the codecov token is required, set the parameter `>>> CODECOV_TOKEN = {token}` in environment and run `npm run coverage` to upload the coverage to codecov.
+1. run `npm test` to run all the tests.
+2. To generate the reports, there is a task called genreports, try `npm run genreports` to generate reports.
+3. To upload the coverage report to codecov.io, the codecov token is required, set the parameter `>>> CODECOV_TOKEN = {token}` in environment and run `npm run coverage` to upload the coverage to codecov.
 
 #### Run maxine on production.
 
@@ -70,3 +75,6 @@ EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR
 OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
 FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
+
+### Licence scan
+<a target="_blank" href="https://app.fossa.com/projects/git%2Bgithub.com%2FVrushankPatel%2FGargantua-Maxine-Server?ref=badge_large"><img src="https://app.fossa.com/api/projects/git%2Bgithub.com%2FVrushankPatel%2FGargantua-Maxine-Server.svg?type=large"/></a>
