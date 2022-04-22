@@ -42,12 +42,13 @@ jobs:
           command: |
             circleci tests glob 'test/**/*.test.js' |
             circleci tests split |
-            npm run coverage | cd .. && ls
+            npm run coverage
       - store_test_results:
           path: .
 
       - store_artifacts:
           path: coverage
+
 workflows:
   build_maxine:
     jobs:
