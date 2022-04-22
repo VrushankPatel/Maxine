@@ -17,6 +17,7 @@
 <a target="_blank" href="https://circleci.com/gh/VrushankPatel/Maxine-Server/tree/master"><img src="https://circleci.com/gh/VrushankPatel/Maxine-Server/tree/master.svg?style=shield"></a>
 <a target="_blank" href="https://circleci.com/gh/VrushankPatel/Maxine-Server/tree/master"><img src="https://circleci.com/gh/VrushankPatel/Maxine-Server/tree/master.svg?style=svg"></a>
 <a target="_blank" href="https://ci.appveyor.com/project/VrushankPatel/maxine-server"><img src="https://ci.appveyor.com/api/projects/status/vsoncd8c5fkqi4he?svg=true"></a>
+<a href="https://deepscan.io/dashboard#view=project&tid=17516&pid=20865&bid=581416"><img src="https://deepscan.io/api/teams/17516/projects/20865/branches/581416/badge/grade.svg" alt="DeepScan grade"></a>
 
 
 <br/>
