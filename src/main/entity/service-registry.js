@@ -1,5 +1,4 @@
 var ConsistentHashing = require('consistent-hashing');
-const _ = require('lodash');
 const { constants } = require('../util/constants/constants');
 
 class ServiceRegistry{
