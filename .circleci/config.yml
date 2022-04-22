@@ -42,7 +42,7 @@ jobs:
           command: |
             circleci tests glob 'test/**/*.test.js' |
             circleci tests split |
-            npm run coverage
+            npm run coverage | cd .. && ls
       - store_test_results:
           path: .
 
