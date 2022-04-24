@@ -56,11 +56,12 @@
   },
   "nyc": {
     "include": "src",
-    "exclude": [],
-    "excludeArchived": [
+    "exclude": [
       "**/app-builder.js",
       "**/route-builder.js",
       "**/logging"
+    ],
+    "excludeArchived": [
     ]
   }
 }
