@@ -7,6 +7,7 @@
     "start": "npm run test && node index.js",
     "dev": "nodemon index.js --env dev",
     "test": "npx mocha --reporter mocha-circleci-reporter --timeout 10000 --exit",
+    "load-test": "mkdir artifacts\\k6-reports && k6 run src/test/load-test/actuator.load.js",
     "genreports": "nyc --reporter=html --reporter=lcov npm test",
     "coverage": "npm run genreports && npx codecov -t $CODECOV_TOKEN"
   },
