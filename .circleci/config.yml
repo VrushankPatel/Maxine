@@ -47,7 +47,7 @@ jobs:
           path: .
 
       - store_artifacts:
-          path: coverage
+          path: artifacts/coverage
 
 workflows:
   build_maxine:
