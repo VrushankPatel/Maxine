@@ -1,12 +1,12 @@
 var chai = require('chai');
 var chaiHttp = require('chai-http');
-const app = require('../../index');
-const { constants } = require('../main/util/constants/constants');
+const app = require('../../../index');
+const { constants } = require('../../main/util/constants/constants');
 var should = chai.should();
 chai.use(require('chai-json'));
 chai.use(chaiHttp);
 const jwt = require('jsonwebtoken');
-const { testUser, ENDPOINTS } = require('./testUtil/test-constants');
+const { testUser, ENDPOINTS } = require('../testUtil/test-constants');
 
 const fileName = require('path').basename(__filename).replace(".js","");
 

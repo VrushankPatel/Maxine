@@ -1,11 +1,11 @@
 var chai = require('chai');
 var chaiHttp = require('chai-http');
-const app = require('../../../index');
-const config = require('../../main/config/config');
-const { discoveryService } = require('../../main/service/discovery-service');
-const { registryService } = require('../../main/service/registry-service');
-const { constants } = require('../../main/util/constants/constants');
-const { ENDPOINTS, serviceDataSample, httpOrNonHttp } = require('../testUtil/test-constants');
+const app = require('../../../../index');
+const config = require('../../../main/config/config');
+const { discoveryService } = require('../../../main/service/discovery-service');
+const { registryService } = require('../../../main/service/registry-service');
+const { constants } = require('../../../main/util/constants/constants');
+const { ENDPOINTS, serviceDataSample, httpOrNonHttp } = require('../../testUtil/test-constants');
 var should = chai.should();
 chai.use(require('chai-json'));
 chai.use(chaiHttp);
@@ -16,10 +16,10 @@ const fileName = require('path').basename(__filename).replace(".js","");
 registryService.registryService(serviceDataSample);
 
 // We'll check if we're getting same server for multiple endpoint hits.
-describe(`${fileName} : API /api/maxine/discover with config with Consistent Hashing`, () => {
+describe(`${fileName} : API /api/maxine/discover with config with Rendezvous Hashing`, () => {
     it(`GET /discover?serviceName={service_name} discovering service`, (done) => {
 
-        config.serverSelectionStrategy = constants.SSS.CH;
+        config.serverSelectionStrategy = constants.SSS.RH;
 
         // First request hit will return node name.
         chai.request(app)
@@ -37,9 +37,9 @@ describe(`${fileName} : API /api/maxine/discover with config with Consistent Has
         done();
     });
 
-    it(`CH discover with NonAPI`, (done) => {
-        // Making sure that server selection strategy is CH
-        config.serverSelectionStrategy = constants.SSS.CH;
+    it(`RH discover with NonAPI`, (done) => {
+        // Making sure that server selection strategy is RH
+        config.serverSelectionStrategy = constants.SSS.RH;
 
         const response1 = discoveryService.getNode(serviceDataSample.serviceName,serviceDataSample.hostName);
 
