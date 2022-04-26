@@ -1,8 +1,8 @@
 var chai = require('chai');
 var chaiHttp = require('chai-http');
-const app = require('../../../index');
-const { generateAccessToken } = require('../../main/security/jwt');
-const { testUser, ENDPOINTS, serviceDataSample, httpOrNonHttp } = require('../testUtil/test-constants');
+const app = require('../../../../index');
+const { generateAccessToken } = require('../../../main/security/jwt');
+const { testUser, ENDPOINTS, serviceDataSample, httpOrNonHttp } = require('../../testUtil/test-constants');
 var should = chai.should();
 chai.use(require('chai-json'));
 chai.use(chaiHttp);
