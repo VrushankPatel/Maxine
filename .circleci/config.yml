@@ -46,8 +46,11 @@ jobs:
       - store_test_results:
           path: .
 
+      # - store_artifacts:
+      #     path: artifacts/**/*.html
       - store_artifacts:
-          path: artifacts/**/*.html
+          path: artifacts/coverage
+          destination: index.html
 
 workflows:
   build_maxine:
