@@ -3,41 +3,37 @@ import { check } from 'k6';
 import { textSummary } from 'https://jslib.k6.io/k6-summary/0.0.1/index.js';
 import { htmlReport } from "https://raw.githubusercontent.com/benc-uk/k6-reporter/main/dist/bundle.js";
 
+const port = __ENV.port;
+const baseUrl = `http://localhost:${port}`;
+const apiActuatorUrl = `${baseUrl}/api/actuator`;
+const statusCheck = {"is status 200": response => response.status === 200};
+
 export default function () {
-    const rnd = Math.floor(Math.random() * 1000);
-    let response = http.get(`http://localhost:8080/api/actuator/health`);
-    check(response, {
-        "is status 200": (r) => r.status === 200
-    })
+    let response = http.get(`${apiActuatorUrl}/health`);
+    check(response, statusCheck)
 
-    response = http.get(`http://localhost:8080/api/actuator/metrics`);
-    check(response, {
-        "is status 200": (r) => r.status === 200
-    })
+    response = http.get(`${apiActuatorUrl}/metrics`);
+    check(response, statusCheck)
 
-    response = http.get(`http://localhost:8080/api/actuator/info`);
-    check(response, {
-        "is status 200": (r) => r.status === 200
-    })
+    response = http.get(`${apiActuatorUrl}/info`);
+    check(response, statusCheck)
 }
 
 export function handleSummary(data) {
-
-    // const resp = http.post('https://httpbin.test.k6.io/anything', JSON.stringify(data));
-    // if (resp.status != 200) {
-    //   console.error('Could not send summary, got status ' + resp.status);
-    // }
     return {
-      'stdout': textSummary(data, { indent: ' ', enableColors: true }),
-    //   'artifacts/k6-reports/actuator-load-summary/actuator-load-summary.json': JSON.stringify(data),
-      "artifacts/k6-reports/actuator-load-summary.html": htmlReport(data)
+        'stdout': textSummary(data, { indent: ' ', enableColors: true }),
+        "artifacts/k6-reports/actuator-load-summary.html": htmlReport(data)
     };
-  }
+}
+
+export function teardown() {
+    console.log("Ending Load-Test for Maxine");
+}
 
 export let options = {
-    vus: 100,
-    iterations: 200,
-    duration: '100s',
+    vus: 300,
+    iterations: 10000,
+    duration: '20s',
     thresholds: {
         'failed requests': ['rate<0.02'],
         http_req_duration: ['p(95)<500'],
