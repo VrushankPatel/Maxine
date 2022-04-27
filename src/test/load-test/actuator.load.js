@@ -22,7 +22,7 @@ export default function () {
 export function handleSummary(data) {
     return {
         'stdout': textSummary(data, { indent: ' ', enableColors: true }),
-        "artifacts/k6-reports/actuator-load-summary.html": htmlReport(data)
+        "artifacts/actuator-load-summary.html": htmlReport(data)
     };
 }
 
