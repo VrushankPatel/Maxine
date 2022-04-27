@@ -3,7 +3,7 @@ import { check } from 'k6';
 import { textSummary } from 'https://jslib.k6.io/k6-summary/0.0.1/index.js';
 import { htmlReport } from "https://raw.githubusercontent.com/benc-uk/k6-reporter/main/dist/bundle.js";
 
-const port = __ENV.port;
+const port = 64234;
 const baseUrl = `http://localhost:${port}`;
 const apiActuatorUrl = `${baseUrl}/api/actuator`;
 const statusCheck = {"is status 200": response => response.status === 200};

@@ -51,6 +51,16 @@ jobs:
 
       - store_artifacts:
           path: artifacts
+  run-test:
+    docker:
+      - image: circleci/node:14.15.1-stretch
+    parallelism: 8
+    steps:
+      - attach_workspace:
+          at: .
+      - run:
+          name: Run tests
+          command: node index.js --port 64234
 
 workflows:
   build_maxine:
@@ -62,7 +72,10 @@ workflows:
       - test:
           requires:
             - install_dependencies
-  load_test:
+  run-test:
     jobs:
+      - run-test
       - grafana/k6:
+          requires:
+            - run-test
           script: src/test/load-test/actuator.load.js
