@@ -72,10 +72,17 @@ workflows:
       - test:
           requires:
             - install_dependencies
-  run-test:
-    jobs:
-      - run-test
+      - run-test:
+          requires:
+            - test
       - grafana/k6:
           requires:
             - run-test
           script: src/test/load-test/actuator.load.js
+  # run-test:
+  #   jobs:
+  #     - run-test
+  #     - grafana/k6:
+  #         requires:
+  #           - run-test
+  #         script: src/test/load-test/actuator.load.js
