@@ -7,10 +7,11 @@
     "start": "npm run test && npm run prod",
     "prod": "node index.js",
     "dev": "nodemon index.js --env dev",
-    "test": "npx mocha --reporter mocha-circleci-reporter --timeout 10000 --exit",
-    "load-test": "start /b node index.js --port 64234 & mkdir artifacts\\k6-reports & k6 run -e port=64234 src/test/load-test/actuator.load.js",
-    "genreports": "nyc --reporter=html --reporter=lcov npm test",
-    "coverage": "npm run genreports && npx codecov -t $CODECOV_TOKEN"
+    "test": "npm run unit-test",
+    "unit-test": "npx mocha --reporter mocha-circleci-reporter --timeout 10000 --exit",
+    "genreports": "nyc --reporter=html --reporter=lcov npm run unit-test",
+    "coverage": "npm run genreports && npx codecov -t $CODECOV_TOKEN",
+    "load-test": "mkdir artifacts\\k6-reports & k6 run -e port=8080 src/test/load-test/actuator.load.js"
   },
   "keywords": [
     "maxine",
