@@ -4,11 +4,14 @@
   "description": "Maxine is a service discovery and a registry server for all the running nodes with gargantua client dependency.",
   "main": "index.js",
   "scripts": {
-    "start": "npm run test && node index.js",
+    "start": "npm run test && npm run prod",
+    "prod": "node index.js",
     "dev": "nodemon index.js --env dev",
-    "test": "npx mocha --reporter mocha-circleci-reporter --timeout 10000 --exit",
-    "genreports": "nyc --reporter=html --reporter=lcov npm test",
-    "coverage": "npm run genreports && npx codecov -t $CODECOV_TOKEN"
+    "test": "npm run unit-test",
+    "unit-test": "npx mocha --reporter mocha-circleci-reporter --timeout 10000 --exit",
+    "genreports": "nyc --reporter=html --reporter=lcov npm run unit-test",
+    "coverage": "npm run genreports && npx codecov -t $CODECOV_TOKEN",
+    "load-test": "mkdir artifacts\\k6-reports & k6 run -e port=8080 src/test/load-test/actuator.load.js"
   },
   "keywords": [
     "maxine",
