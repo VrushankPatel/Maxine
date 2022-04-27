@@ -51,16 +51,7 @@ jobs:
 
       - store_artifacts:
           path: artifacts
-  load_test:
-    docker:
-      - image: circleci/node:14.15.1-stretch
-    parallelism: 8
-    steps:
-      - attach_workspace:
-          at: .
-      - run:
-          name: Run load test
-          command: npm run load-test
+
 workflows:
   build_maxine:
     jobs:
@@ -71,10 +62,7 @@ workflows:
       - test:
           requires:
             - install_dependencies
-      - load_test:
-          requires:
-            - test
-  # load_test:
-  #   jobs:
-  #     - grafana/k6:
-  #         script: src/test/load-test/actuator.load.js
+  load_test:
+    jobs:
+      - grafana/k6:
+          script: src/test/load-test/actuator.load.js
