@@ -60,7 +60,7 @@ jobs:
           at: .
       - run:
           name: Run tests
-          command: node index.js --port 64234
+          command: node index.js --port 64234 &
 
 workflows:
   build_maxine:
