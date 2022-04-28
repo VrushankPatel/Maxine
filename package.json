@@ -4,7 +4,7 @@
   "description": "Maxine is a service discovery and a registry server for all the running nodes with gargantua client dependency.",
   "main": "index.js",
   "scripts": {
-    "start": "npm run test && npm run prod",
+    "start": "npm run prod",
     "prod": "node index.js",
     "dev": "nodemon index.js --env dev",
     "test": "npm run unit-test",
