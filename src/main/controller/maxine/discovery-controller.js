@@ -1,6 +1,7 @@
 const { statusAndMsgs } = require("../../util/constants/constants");
 const { discoveryService } = require("../../service/discovery-service");
 const _ = require('lodash');
+const config = require("../../config/config");
 
 const discoveryController = (req, res) => {
     // Retrieving the serviceName from query params
@@ -26,8 +27,11 @@ const discoveryController = (req, res) => {
         });
         return;
     }
-
-    res.redirect(serviceNode.address);
+    if(config.profile === "prod"){
+        res.redirect(serviceNode.address);
+        return;
+    }
+    res.json(serviceNode);
 }
 
 module.exports = discoveryController
