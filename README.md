@@ -30,10 +30,6 @@
 </div>
 <br/>
 
-## Coverage graph
-|<b>sunburst</b>|<b>icicle</b>|<b>tree</b>|
-|---|---|---|
-|<img src="https://codecov.io/gh/VrushankPatel/Maxine-Server/branch/master/graphs/sunburst.svg"/>|<img src="https://codecov.io/gh/VrushankPatel/Maxine-Server/branch/master/graphs/icicle.svg"/>|<img src="https://codecov.io/gh/VrushankPatel/Maxine-Server/branch/master/graphs/tree.svg"/>|
 ### Setup for development
 
 #### Starting the development server
