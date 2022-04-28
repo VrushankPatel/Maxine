@@ -4,7 +4,7 @@ const Enums = require("enums");
 const PORT = parseInt(envArgs['p']) || parseInt(envArgs['port']) || 8080;
 
 const APP_NAME = "Maxine-Service-Discovery";
-const PROFILE = (envArgs['env'] || envArgs['profile'] || "prod").trim();
+const PROFILE = (envArgs['env'] || envArgs['profile'] || "test").trim();
 const BANNERPATH = process.cwd() + '/src/main/resources/Banner.txt';
 const LOGDIR = './logs/';
 const LOGLEVELS = ['info']; // verbose, silly, error, warn
