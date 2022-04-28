@@ -235,7 +235,6 @@ components:
       required:
         - hostName
         - nodeName
-        - port
         - serviceName
       type: object
       properties:
@@ -264,6 +263,9 @@ components:
           minimum: 1
           type: integer
           example: 5
+        path:
+          type: string
+          example: /api/info
     Config:
       type: object
       properties:
