@@ -38,7 +38,7 @@ describe(`${fileName} : API /api/maxine/{registry urls}`, () => {
                 body.should.be.a('object');
                 body.should.have.own.property("serviceName", serviceDataSample.serviceName);
                 body.should.have.own.property("nodeName", serviceDataSample.nodeName);
-                body.should.have.own.property("address", `${httpOrNonHttp}://${serviceDataSample.hostName}:${serviceDataSample.port}`);
+                body.should.have.own.property("address");
                 body.should.have.own.property("timeOut", serviceDataSample.timeOut);
                 body.should.have.own.property("weight", serviceDataSample.weight);
                 done();
@@ -67,7 +67,7 @@ describe(`${fileName} : API /api/maxine/{registry urls}`, () => {
                 const node = nodes[tempNodeName];
                 node.should.have.own.property("nodeName", tempNodeName);
                 node.should.have.own.property("parentNode", serviceDataSample.nodeName);
-                node.should.have.own.property("address", `${httpOrNonHttp}://${serviceDataSample.hostName}:${serviceDataSample.port}`);
+                node.should.have.own.property("address");
                 node.should.have.own.property("timeOut", serviceDataSample.timeOut);
                 done();
             });
