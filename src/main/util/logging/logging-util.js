@@ -3,9 +3,8 @@ const winston = require('winston');
 const config = require('../../config/config');
 const { logConfiguration } = require('../../config/logging/logging-config');
 const {constants, statusAndMsgs} = require('../constants/constants');
+const BANNER = require('../constants/banner');
 const { logBuilder } = require('../util');
-
-const banner = fs.readFileSync(constants.BANNERPATH, 'utf8');
 const logger = winston.createLogger(logConfiguration);
 
 
@@ -27,7 +26,7 @@ const loggingUtil = {
     logger,
     log,
     error,
-    initApp : () => logger.info(`\n${banner} » ${constants.PROFILE} server started on port : ${constants.PORT}\n`),
+    initApp : () => logger.info(`\n${BANNER} » ${constants.PROFILE} server started on port : ${constants.PORT}\n`),
     logExceptions,
     errorAndClose
 }
