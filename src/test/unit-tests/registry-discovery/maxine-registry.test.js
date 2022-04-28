@@ -2,13 +2,22 @@ var chai = require('chai');
 var chaiHttp = require('chai-http');
 const app = require('../../../../index');
 const { generateAccessToken } = require('../../../main/security/jwt');
-const { testUser, ENDPOINTS, serviceDataSample, httpOrNonHttp } = require('../../testUtil/test-constants');
+const { testUser, ENDPOINTS } = require('../../testUtil/test-constants');
 var should = chai.should();
 chai.use(require('chai-json'));
 chai.use(chaiHttp);
 
 const fileName = require('path').basename(__filename).replace(".js","");
 const accessToken = generateAccessToken(testUser);
+const serviceSampleRS = {
+    "hostName": "xx.xxx.xx.xx",
+    "nodeName": "node-x-10",
+    "port": "8082",
+    "serviceName": "dbservice-rs",
+    "ssl": true,
+    "timeOut": 5,
+    "weight": 10
+};
 
 describe(`${fileName} : API /api/maxine/{registry urls}`, () => {
 
@@ -30,17 +39,17 @@ describe(`${fileName} : API /api/maxine/{registry urls}`, () => {
         chai.request(app)
             .post(ENDPOINTS.maxine.serviceops.register)
             .set('Content-Type', 'application/json')
-            .send(serviceDataSample)
+            .send(serviceSampleRS)
             .end((_, res) => {
                 res.should.have.status(200);
                 res.should.be.json;
                 const body = res.body;
                 body.should.be.a('object');
-                body.should.have.own.property("serviceName", serviceDataSample.serviceName);
-                body.should.have.own.property("nodeName", serviceDataSample.nodeName);
+                body.should.have.own.property("serviceName", serviceSampleRS.serviceName);
+                body.should.have.own.property("nodeName", serviceSampleRS.nodeName);
                 body.should.have.own.property("address");
-                body.should.have.own.property("timeOut", serviceDataSample.timeOut);
-                body.should.have.own.property("weight", serviceDataSample.weight);
+                body.should.have.own.property("timeOut", serviceSampleRS.timeOut);
+                body.should.have.own.property("weight", serviceSampleRS.weight);
                 done();
             });
     });
@@ -53,11 +62,11 @@ describe(`${fileName} : API /api/maxine/{registry urls}`, () => {
                 res.should.have.status(200);
                 res.should.be.json;
 
-                const tempNodeName = serviceDataSample.nodeName + "-0"; // no weight means 1 server, no replication
+                const tempNodeName = serviceSampleRS.nodeName + "-0"; // no weight means 1 server, no replication
                 const body = res.body;
                 body.should.be.a('object');
-                body.should.have.own.property(serviceDataSample.serviceName);
-                const service = body[serviceDataSample.serviceName];
+                body.should.have.own.property(serviceSampleRS.serviceName);
+                const service = body[serviceSampleRS.serviceName];
                 service.should.have.own.property("offset");
                 service.should.have.own.property("nodes");
 
@@ -66,9 +75,9 @@ describe(`${fileName} : API /api/maxine/{registry urls}`, () => {
 
                 const node = nodes[tempNodeName];
                 node.should.have.own.property("nodeName", tempNodeName);
-                node.should.have.own.property("parentNode", serviceDataSample.nodeName);
+                node.should.have.own.property("parentNode", serviceSampleRS.nodeName);
                 node.should.have.own.property("address");
-                node.should.have.own.property("timeOut", serviceDataSample.timeOut);
+                node.should.have.own.property("timeOut", serviceSampleRS.timeOut);
                 done();
             });
     });
