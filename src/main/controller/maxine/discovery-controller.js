@@ -28,8 +28,8 @@ const discoveryController = (req, res) => {
     }
 
     // if ServiceNode is there, we'll respond.
-    // res.redirect(serviceNode.address);
-    res.json(serviceNode);
+    res.redirect(serviceNode.address);
+    // res.json(serviceNode);
 }
 
 module.exports = discoveryController
