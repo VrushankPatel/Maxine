@@ -17,26 +17,6 @@ registryService.registryService(serviceDataSample);
 
 // We'll check if we're getting same server for multiple endpoint hits.
 describe(`${fileName} : API /api/maxine/discover with config with Consistent Hashing`, () => {
-    it(`GET /discover?serviceName={service_name} discovering service`, (done) => {
-
-        config.serverSelectionStrategy = constants.SSS.CH;
-
-        // First request hit will return node name.
-        chai.request(app)
-            .get(ENDPOINTS.maxine.serviceops.discover + "?serviceName=dbservice")
-            .set('Content-Type', 'application/json')
-            .end((_, res) => {
-                res.should.have.status(200);
-                res.should.be.json;
-                const body = res.body;
-                body.should.be.a('object');
-                body.should.have.own.property("parentNode", serviceDataSample.nodeName);
-                body.should.have.own.property("address", `${httpOrNonHttp}://${serviceDataSample.hostName}:${serviceDataSample.port}`);
-                body.should.have.own.property("nodeName");
-            });
-        done();
-    });
-
     it(`CH discover with NonAPI`, (done) => {
         // Making sure that server selection strategy is CH
         config.serverSelectionStrategy = constants.SSS.CH;
