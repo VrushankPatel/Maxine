@@ -21,7 +21,7 @@ class Service{
         service.weight = Math.abs(parseInt(weight)) || 1;
         port = Math.abs(parseInt(port)) || (ssl ? 443 : 80);
         path = path || "";
-        service.address = `${ssl ? "https" : "http"}://${hostName}:${port}${path ? `/${path}` : ""}`;
+        service.address = `${ssl ? "https" : "http"}://${hostName}:${port}${path ? "/"+path : ""}`;
         return service.validate();
     }
 
