@@ -6,6 +6,7 @@ const PROFILE = (envArgs['env'] || envArgs['profile'] || "prod").trim();
 const LOGDIR = './logs/';
 const LOGLEVELS = ['info']; // verbose, silly, error, warn
 const LOGTIMESTAMPFORMAT = 'DD-MMM-YYYY HH:mm:ss';
+const SWAGGER_PATH = "./api-specs/swagger.yaml";
 const ACTUATORPATH = '/api/actuator';
 const STATUSMONITORTITLE = 'Status : Maxine';
 const REQUEST_LOG_TIMESTAMP_FORMAT = 'DD/MM/YYYY HH:mm:ss';
@@ -93,6 +94,7 @@ const constants = {
     API_URLS_WITH_AUTH,
     MAX_SERVER_WEIGHT,
     SSS,
+    SWAGGER_PATH,
     LOG_FORMATS,
     CONFIGTYPES,
     SERVER_SELECTION_STRATEGIES,

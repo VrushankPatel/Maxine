@@ -71,8 +71,7 @@
   },
   "pkg": {
     "assets": [
-      "node_modules/**/*.css",
-      "/**/*.yaml"
+      "node_modules/**/*.css"
     ]
   }
 }
