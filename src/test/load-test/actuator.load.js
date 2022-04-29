@@ -4,19 +4,35 @@ import { textSummary } from 'https://jslib.k6.io/k6-summary/0.0.1/index.js';
 import { htmlReport } from "https://raw.githubusercontent.com/benc-uk/k6-reporter/main/dist/bundle.js";
 
 const port = __ENV.port;
-const baseUrl = `http://localhost:${port}`;
-const apiActuatorUrl = `${baseUrl}/api/actuator`;
+const host = "http://localhost";
+const baseUrl = `${host}:${port}`;
+const apiUrl = `${baseUrl}/api`;
 const statusCheck = {"is status 200": response => response.status === 200};
 
+const user = JSON.stringify({"userName" : "admin","password" : "admin"});
+
+const headers = {headers: {'Content-Type': 'application/json'}};
+
+const serviceObj = JSON.stringify({
+    "hostName": host,
+    "nodeName": "node-x-10",
+    "serviceName": "dbservice",
+    "port": 8080,
+    "ssl": false,
+    "timeOut": 50,
+    "weight": 10,
+    "path": "/api/actuator/health"
+});
+
 export default function () {
-    let response = http.get(`${apiActuatorUrl}/health`);
-    check(response, statusCheck)
+    let response = http.post(`${apiUrl}/maxine/signin`, user, headers);
+    check(response, statusCheck);
 
-    response = http.get(`${apiActuatorUrl}/metrics`);
-    check(response, statusCheck)
+    response = http.post(`${apiUrl}/maxine/serviceops/register`, serviceObj, headers);
+    check(response, statusCheck);
 
-    response = http.get(`${apiActuatorUrl}/info`);
-    check(response, statusCheck)
+    response = http.get(`${apiUrl}/maxine/serviceops/discover?serviceName=dbservice`);
+    check(response, statusCheck);
 }
 
 export function handleSummary(data) {
@@ -31,12 +47,12 @@ export function teardown() {
 }
 
 export let options = {
-    vus: 300,
-    iterations: 5000,
-    duration: '10s',
+    vus: 500,
+    iterations: 20000,
+    duration: '50s',
     thresholds: {
         'failed requests': ['rate<0.02'],
         http_req_duration: ['p(95)<500'],
-        http_reqs: ['count>90']
+        http_reqs: ['count>100']
     },
 };

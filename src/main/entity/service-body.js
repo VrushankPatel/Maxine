@@ -21,7 +21,9 @@ class Service{
         service.weight = Math.abs(parseInt(weight)) || 1;
         port = Math.abs(parseInt(port)) || (ssl ? 443 : 80);
         path = path || "";
-        service.address = `${ssl ? "https" : "http"}://${hostName}:${port}${path ? "/"+path : ""}`;
+        path = path[0] === "/" ? path : "/" + path;
+        const prefix = hostName.startsWith("http://") || hostName.startsWith("https://") ? "" : ssl ? "https://" : "http://";
+        service.address = `${prefix}${hostName}:${port}${path ? path : ""}`;
         return service.validate();
     }
 
