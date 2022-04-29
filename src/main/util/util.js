@@ -3,6 +3,7 @@ const JsonBuilder = require('../builders/json-builder');
 const config = require('../config/config');
 const { constants } = require('./constants/constants');
 const _ = require('lodash');
+const YAML = require('yamljs');
 
 const getCurrentDate = () => date.format(new Date(), constants.REQUEST_LOG_TIMESTAMP_FORMAT);
 
@@ -59,9 +60,16 @@ const logBuilder = (...args) => {
     return logFormatChecker.isJsonFormat() ? jsonLogBuilder(...args) : plainLogBuilder(...args);
 };
 
+const loadSwaggerYAML = () => {
+    try{
+        return YAML.load(constants.SWAGGER_PATH);
+    }catch(e){}
+}
+
 module.exports = {
     getCurrentDate,
     logBuilder,
     sssChecker,
-    logFormatChecker
+    logFormatChecker,
+    loadSwaggerYAML
 }

@@ -9,9 +9,9 @@ const logWebExceptions = require('./src/main/util/logging/log-web-exceptions');
 const logRequest = require('./src/main/util/logging/log-request');
 const { authenticationController } = require('./src/main/controller/security/authentication-controller');
 const swaggerUi = require('swagger-ui-express');
-const YAML = require('yamljs');
 const { statusMonitorConfig, actuatorConfig } = require('./src/main/config/actuator/actuator-config');
-const swaggerDocument = YAML.load('./api-specs/swagger.yaml');
+const { loadSwaggerYAML } = require('./src/main/util/util');
+const swaggerDocument = loadSwaggerYAML();
 
 const app = ExpressAppBuilder.createNewApp()
                 .ifPropertyOnce("statusMonitorEnabled")
