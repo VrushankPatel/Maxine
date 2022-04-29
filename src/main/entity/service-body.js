@@ -19,6 +19,7 @@ class Service{
         service.serviceName = serviceName;
         service.timeOut = Math.abs(parseInt(timeOut)) || config.heartBeatTimeout;
         service.weight = Math.abs(parseInt(weight)) || 1;
+        hostName = hostName || "";
         port = Math.abs(parseInt(port)) || (ssl ? 443 : 80);
         path = path || "";
         path = path[0] === "/" ? path : "/" + path;
