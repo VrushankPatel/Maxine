@@ -3,9 +3,7 @@ import { check } from 'k6';
 import { textSummary } from 'https://jslib.k6.io/k6-summary/0.0.1/index.js';
 import { htmlReport } from "https://raw.githubusercontent.com/benc-uk/k6-reporter/main/dist/bundle.js";
 
-const port = __ENV.port;
-const host = "https://maxine-lt.herokuapp.com";
-const baseUrl = `${host}:${port}`;
+const baseUrl = "https://maxine-lt.herokuapp.com";
 const apiUrl = `${baseUrl}/api`;
 const statusCheck = {"is status 200": response => response.status === 200};
 
