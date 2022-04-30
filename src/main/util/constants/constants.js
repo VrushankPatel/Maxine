@@ -1,6 +1,6 @@
 const envArgs = require('minimist')(process.argv.slice(2));
 const Enums = require("enums");
-const PORT = parseInt(envArgs['p']) || parseInt(envArgs['port']) || 8080;
+const PORT = process.env.PORT || parseInt(envArgs['p']) || parseInt(envArgs['port']) || 8080;
 const APP_NAME = "Maxine-Service-Discovery";
 const PROFILE = (envArgs['env'] || envArgs['profile'] || "prod").trim();
 const LOGDIR = './logs/';
