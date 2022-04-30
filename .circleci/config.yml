@@ -1,5 +1,8 @@
 version: 2.1
 
+orbs:
+  heroku: circleci/heroku@1.2.6
+
 jobs:
   checkout_source:
     docker:
@@ -59,3 +62,6 @@ workflows:
       - test:
           requires:
             - install_dependencies
+  heroku_deploy:
+    jobs:
+      - heroku/deploy-via-git
