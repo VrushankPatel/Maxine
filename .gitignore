@@ -8,8 +8,8 @@ node_modules/
 
 # testing
 /coverage
-/artifacts
-artifacts/**
+# /artifacts
+# artifacts/**
 # production
 /build
 /dist
