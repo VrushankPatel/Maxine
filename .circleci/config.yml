@@ -70,4 +70,3 @@ workflows:
           requires:
             - heroku/deploy-via-git
           script: src/test/load-test/performance-test.js
-          store_artifacts: tmp/artifacts
