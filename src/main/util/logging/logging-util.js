@@ -1,4 +1,3 @@
-const fs = require('fs');
 const winston = require('winston');
 const config = require('../../config/config');
 const { logConfiguration } = require('../../config/logging/logging-config');
