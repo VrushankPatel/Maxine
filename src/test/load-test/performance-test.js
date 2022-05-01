@@ -35,7 +35,7 @@ export default function () {
 export function handleSummary(data) {
     return {
         'stdout': textSummary(data, { indent: ' ', enableColors: true }),
-        "/tmp/artifacts/performance-summary.html": htmlReport(data)
+        // "/tmp/artifacts/performance-summary.html": htmlReport(data)
     };
 }
 
