@@ -8,7 +8,7 @@
     "prod": "node index.js",
     "dev": "nodemon index.js --env dev",
     "test": "npm run unit-test",
-    "maxibuild": "pkg --out-path build/ .",
+    "maxibuild": "npx pkg --out-path build/ .",
     "unit-test": "npx mocha --reporter mocha-circleci-reporter --timeout 10000 --exit",
     "genreports": "nyc --reporter=html --reporter=lcov npm run unit-test",
     "coverage": "npm run genreports && npx codecov -t $CODECOV_TOKEN",
@@ -40,7 +40,8 @@
     "read-last-lines": "^1.8.0",
     "swagger-ui-express": "^4.3.0",
     "winston": "^3.5.1",
-    "yamljs": "^0.3.0"
+    "yamljs": "^0.3.0",
+    "pkg": "5.6.0"
   },
   "nodemonConfig": {
     "ext": "js,properties,yaml"
@@ -67,8 +68,7 @@
       "**/route-builder.js",
       "**/logging"
     ],
-    "excludeArchived": [
-    ]
+    "excludeArchived": []
   },
   "pkg": {
     "assets": [
