@@ -3,8 +3,8 @@ import { check } from 'k6';
 import { textSummary } from 'https://jslib.k6.io/k6-summary/0.0.1/index.js';
 import { htmlReport } from "https://raw.githubusercontent.com/benc-uk/k6-reporter/main/dist/bundle.js";
 
-const baseUrl = "https://maxine-x.herokuapp.com";
-const apiUrl = `${baseUrl}/api`;
+const host = "https://maxine-x.herokuapp.com";
+const apiUrl = `${host}/api`;
 const statusCheck = {"is status 200": response => response.status === 200};
 
 const user = JSON.stringify({"userName" : "admin","password" : "admin"});
@@ -15,7 +15,6 @@ const serviceObj = JSON.stringify({
     "hostName": host,
     "nodeName": "node-x-10",
     "serviceName": "dbservice",
-    "port": 8080,
     "ssl": false,
     "timeOut": 50,
     "weight": 10,

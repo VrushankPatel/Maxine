@@ -20,11 +20,11 @@ class Service{
         service.timeOut = Math.abs(parseInt(timeOut)) || config.heartBeatTimeout;
         service.weight = Math.abs(parseInt(weight)) || 1;
         hostName = hostName || "";
-        port = Math.abs(parseInt(port)) || (ssl ? 443 : 80);
+        port = _.isUndefined(port) ? "" : `:${port}`;
         path = path || "";
         path = path[0] === "/" ? path : "/" + path;
         const prefix = hostName.startsWith("http://") || hostName.startsWith("https://") ? "" : ssl ? "https://" : "http://";
-        service.address = `${prefix}${hostName}:${port}${path ? path : ""}`;
+        service.address = `${prefix}${hostName}${port}${path ? path : ""}`;
         return service.validate();
     }
 
