@@ -65,8 +65,14 @@ workflows:
             - install_dependencies
   deploy_and_ltest:
     jobs:
-      - heroku/deploy-via-git
+      - heroku/deploy-via-git:
+          filters:
+            branches:
+              only:
+                - release
       - grafana/k6:
           requires:
             - heroku/deploy-via-git
-          script: src/test/load-test/performance-test.js --out json=performance_summary.json > /tmp/artifacts
+          cloud: true
+          script: src/test/load-test/performance-test.js
+          arguments: --quiet
