@@ -69,4 +69,4 @@ workflows:
       - grafana/k6:
           requires:
             - heroku/deploy-via-git
-          script: src/test/load-test/performance-test.js --out json=performance_summary.json > /tmp/artifacts
+          script: src/test/load-test/performance-test.js --out json=performance_summary.json > artifacts
