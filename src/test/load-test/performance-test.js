@@ -44,8 +44,8 @@ export function teardown() {
 }
 
 export let options = {
-    vus: 300,
-    iterations: 10000,
+    vus: 50,
+    iterations: 5000,
     duration: '40s',
     thresholds: {
         'failed requests': ['rate<0.02'],
