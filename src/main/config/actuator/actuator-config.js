@@ -1,4 +1,6 @@
-const { constants } = require("../../util/constants/constants")
+const { default: axios } = require("axios")
+const { constants, statusAndMsgs } = require("../../util/constants/constants")
+const { error } = require("../../util/logging/logging-util");
 
 const statusMonitorConfig = {
     title: constants.STATUSMONITORTITLE,
@@ -13,12 +15,25 @@ const statusMonitorConfig = {
         host: 'localhost',
         path: constants.ACTUATORPATH + '/health',
         port: constants.PORT
-      }]
+    }]
 }
 
 const actuatorConfig = {
     basePath: constants.ACTUATORPATH,
-    customEndpoints: []
+    customEndpoints: [
+        {
+            id: 'performance',
+            controller: (req, res) => {
+                axios.get(constants.CIRCLECI_ARTIFACTS)
+                    .then(response => {
+                        res.redirect(response.data[1].url);
+                    }).catch(err => {
+                        res.status(statusAndMsgs.STATUS_SERVER_ERROR).json({"message" : statusAndMsgs.MSG_MAXINE_SERVER_ERROR});
+                        error(err);
+                    })
+            }
+        }
+    ]
 }
 
 module.exports = {
