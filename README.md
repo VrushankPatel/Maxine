@@ -14,6 +14,7 @@
 <a target="_blank" href="https://github.com/VrushankPatel/Gargantua-Maxine-Server/actions/workflows/codeql.yml"><img src="https://github.com/VrushankPatel/Gargantua-Maxine-Server/actions/workflows/codeql.yml/badge.svg"/></a>
 <a target="_blank" href="https://github.com/VrushankPatel/Maxine-Server/actions/workflows/node.js.yml"><img src="https://github.com/VrushankPatel/Maxine-Server/actions/workflows/node.js.yml/badge.svg?branch=master"/></a>
 <a target="_blank" href="https://codecov.io/gh/VrushankPatel/Maxine-Server"><img src="https://codecov.io/gh/VrushankPatel/Maxine-Server/branch/master/graph/badge.svg?token=SONYL0TJKT"/></a>
+<a target="_blank" href="https://app.k6.io/runs/public/23fbf58304af4024aae52f7c3a0c9ea1"><img src="https://img.shields.io/badge/K6-Load%20Test%20Report-Blue"/></a>
 <a target="_blank" href="https://circleci.com/gh/VrushankPatel/Maxine-Server/tree/master"><img src="https://circleci.com/gh/VrushankPatel/Maxine-Server/tree/master.svg?style=shield"></a>
 <a target="_blank" href="https://circleci.com/gh/VrushankPatel/Maxine-Server/tree/master"><img src="https://circleci.com/gh/VrushankPatel/Maxine-Server/tree/master.svg?style=svg"></a>
 <a target="_blank" href="https://ci.appveyor.com/project/VrushankPatel/maxine-server"><img src="https://ci.appveyor.com/api/projects/status/vsoncd8c5fkqi4he?svg=true"></a>

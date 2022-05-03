@@ -12,7 +12,7 @@
     "unit-test": "npx mocha --reporter mocha-circleci-reporter --timeout 10000 --exit",
     "genreports": "nyc --reporter=html --reporter=lcov npm run unit-test",
     "coverage": "npm run genreports && npx codecov -t $CODECOV_TOKEN",
-    "load-test": "k6 run src/test/load-test/performance-test.js"
+    "load-test": "chmod +x bin/k6 && bin/k6 run src/test/load-test/performance-test.js"
   },
   "keywords": [
     "maxine",
@@ -36,11 +36,11 @@
     "jsonwebtoken": "^8.5.1",
     "lodash": "^4.17.21",
     "minimist": "^1.2.5",
+    "pkg": "5.6.0",
     "read-last-lines": "^1.8.0",
     "swagger-ui-express": "^4.3.0",
     "winston": "^3.5.1",
-    "yamljs": "^0.3.0",
-    "pkg": "5.6.0"
+    "yamljs": "^0.3.0"
   },
   "nodemonConfig": {
     "ext": "js,properties,yaml"

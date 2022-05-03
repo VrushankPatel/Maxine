@@ -21,6 +21,7 @@ const CONSISTENT_HASH_ALGO = "sha256";
 const CONSISTENT_HASHING_OPTIONS = {
     algorithm: CONSISTENT_HASH_ALGO
 }
+const CIRCLECI_ARTIFACTS = "https://circleci.com/api/v1.1/project/github/VrushankPatel/Maxine-Server/latest/artifacts?branch=master";
 /**
  * Below are SSS : Server Selection Strategies for Load Balancer
  * RR : Round Robin
@@ -91,6 +92,7 @@ const constants = {
     DEFAULT_ADMIN_USERNAME_PWD,
     EXPIRATION_TIME,
     SECRET,
+    CIRCLECI_ARTIFACTS,
     API_URLS_WITH_AUTH,
     MAX_SERVER_WEIGHT,
     SSS,
