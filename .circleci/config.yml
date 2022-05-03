@@ -74,16 +74,16 @@ jobs:
 workflows:
   build_and_utest:
     jobs:
-      # - checkout_source
-      # - install_dependencies:
-      #     requires:
-      #       - checkout_source
-      # - test:
-      #     requires:
-      #       - install_dependencies
-      - load-test
-          # requires:
-          #   - test
+      - checkout_source
+      - install_dependencies:
+          requires:
+            - checkout_source
+      - test:
+          requires:
+            - install_dependencies
+      - load-test:
+          requires:
+            - test
   deploy_and_ltest:
     jobs:
       - heroku/deploy-via-git:
