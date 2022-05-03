@@ -1,6 +1,6 @@
 {
 	"reporter": ["lcov", "text-summary", "html"],
 	"temp-dir": "artifacts/.nyc_output",
-	"report-dir": "artifacts",
+	"report-dir": "artifacts/coverage",
 	"all": true
 }
