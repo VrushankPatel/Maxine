@@ -12,7 +12,7 @@
     "unit-test": "npx mocha --reporter mocha-circleci-reporter --timeout 10000 --exit",
     "genreports": "nyc --reporter=html --reporter=lcov npm run unit-test",
     "coverage": "npm run genreports && npx codecov -t $CODECOV_TOKEN",
-    "load-test": "bin/k6 run src/test/load-test/performance-test.js"
+    "load-test": "chmod +x bin/k6 && bin/k6 run src/test/load-test/performance-test.js"
   },
   "keywords": [
     "maxine",
