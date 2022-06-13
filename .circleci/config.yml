@@ -94,7 +94,7 @@ workflows:
           filters:
             branches:
               only:
-                - release
+                - master
       - grafana/k6:
           requires:
             - heroku/deploy-via-git
