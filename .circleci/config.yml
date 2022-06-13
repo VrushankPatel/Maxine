@@ -74,7 +74,11 @@ jobs:
 workflows:
   build_and_utest:
     jobs:
-      - checkout_source
+      - checkout_source:
+          filters:
+            branches:
+                ignore:
+                  - pages
       - install_dependencies:
           requires:
             - checkout_source
