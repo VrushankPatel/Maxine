@@ -78,7 +78,8 @@ workflows:
           filters:
             branches:
                 ignore:
-                  - pages
+                  - master
+                  - release
       - install_dependencies:
           requires:
             - checkout_source
