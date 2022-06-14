@@ -77,7 +77,7 @@ workflows:
       - checkout_source:
           filters:
             branches:
-                ignore:
+                only:
                   - master
                   - release
       - install_dependencies:
