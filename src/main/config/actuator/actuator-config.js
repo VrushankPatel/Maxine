@@ -23,7 +23,7 @@ const actuatorConfig = {
     customEndpoints: [
         {
             id: 'performance',
-            controller: (req, res) => {
+            controller: (_req, res) => {
                 axios.get(constants.CIRCLECI_ARTIFACTS)
                     .then(response => {
                         axios.get(response.data[1].url)
@@ -31,7 +31,7 @@ const actuatorConfig = {
                                 res.set('Content-Type', 'text/html');
                                 res.send(Buffer.from(webres.data));
                             });
-                    }).catch(err => {
+                    }).catch(_err => {
                         axios.get(constants.DEFAULT_REPORT)
                             .then(webres => {
                                 res.set('Content-Type', 'text/html');
