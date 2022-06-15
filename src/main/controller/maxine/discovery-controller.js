@@ -5,7 +5,7 @@ const _ = require('lodash');
 const discoveryController = (req, res) => {
     // Retrieving the serviceName from query params
     const serviceName = req.query.serviceName;
-    var ip = req.ip
+    const ip = req.ip
     || req.connection.remoteAddress
     || req.socket.remoteAddress
     || req.connection.socket.remoteAddress;
