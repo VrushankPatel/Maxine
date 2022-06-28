@@ -48,7 +48,7 @@ export let options = {
     iterations: 5000,
     duration: '40s',
     thresholds: {
-        'failed requests': ['rate<0.02'],
+        http_req_failed: ['rate<0.02'],
         http_req_duration: ['p(95)<500'],
         http_reqs: ['count>100']
     },

@@ -23,13 +23,23 @@ const actuatorConfig = {
     customEndpoints: [
         {
             id: 'performance',
-            controller: (req, res) => {
+            controller: (_req, res) => {
                 axios.get(constants.CIRCLECI_ARTIFACTS)
                     .then(response => {
-                        res.redirect(response.data[1].url);
-                    }).catch(err => {
-                        res.status(statusAndMsgs.STATUS_SERVER_ERROR).json({"message" : statusAndMsgs.MSG_MAXINE_SERVER_ERROR});
-                        error(err);
+                        axios.get(response.data[1].url)
+                            .then(webres => {
+                                res.set('Content-Type', 'text/html');
+                                res.send(Buffer.from(webres.data));
+                            });
+                    }).catch(_err => {
+                        axios.get(constants.DEFAULT_REPORT)
+                            .then(webres => {
+                                res.set('Content-Type', 'text/html');
+                                res.send(Buffer.from(webres.data));
+                            }).catch(err => {
+                                res.status(statusAndMsgs.STATUS_SERVER_ERROR).json({"message" : statusAndMsgs.MSG_MAXINE_SERVER_ERROR});
+                                error(err);
+                            });
                     })
             }
         }
