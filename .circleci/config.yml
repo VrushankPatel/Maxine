@@ -74,7 +74,12 @@ jobs:
 workflows:
   build_and_utest:
     jobs:
-      - checkout_source
+      - checkout_source:
+          filters:
+            branches:
+                only:
+                  - master
+                  - release
       - install_dependencies:
           requires:
             - checkout_source
