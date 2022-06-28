@@ -55,7 +55,7 @@ jobs:
   load-test:
     docker:
       - image: circleci/node:14.15.1-stretch
-    parallelism: 1
+    parallelism: 8
     steps:
       - attach_workspace:
           at: .
