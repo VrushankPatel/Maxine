@@ -7,7 +7,7 @@ const { logsDownloadController, logsLinkGenController } = require('../controller
 const { configuratorController, configurationController } = require('../controller/config-control/configurator-controller');
 
 
-var maxineApiRoutes = RouteBuilder.createNewRoute()
+let maxineApiRoutes = RouteBuilder.createNewRoute()
                         .from("logs")
                             .from("download")
                                 .get("/",logsLinkGenController)

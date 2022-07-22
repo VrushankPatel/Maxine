@@ -11,9 +11,41 @@ info:
     name: MIT
     url: https://github.com/VrushankPatel/Maxine-Server/blob/master/LICENSE
 paths:
+  /api/maxine/signin:
+    post:
+      summary: To sign in and get auth token.
+      tags:
+        - "UAC"
+      operationId: Maxine Security
+      requestBody:
+        description: User.
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/User'
+        required: true
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              example: >-
+                {"accessToken":"eyJhbGciOiJIUzI1GiIsInR5cCI6IkpXVCJ9.eyJ1c2VyTmFtZSI6ImFkbWluIiwicGFzc3dvcmQiOiJhZG1pbiIsImlhdCI6MTY0OTMyNTI0NywiZXhwIjoxNjQ5NDExMjQ3fQ.yQev9kn9yIChCXE-vlOLpc3Y89qNy_p7TKxoDJ1HghQ"}
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              example: '{"message":"Unauthorized"}'
+        '400':
+          description: Error, Bad Request
+          content:
+            application/json:
+              example: '{"message":"Please provide both of these -> userName and password."}'
   /api/actuator/metrics:
     get:
       summary: Get the memory metrics info
+      tags:
+        - "Actuator"
       operationId: actuatorMetrics
       responses:
         '200':
@@ -27,6 +59,8 @@ paths:
   /api/actuator/info:
     get:
       summary: Get the project info
+      tags:
+        - "Actuator"
       operationId: actuatorInfo
       responses:
         '200':
@@ -40,6 +74,8 @@ paths:
   /api/actuator/health:
     get:
       summary: Get the currently running heartbeat
+      tags:
+        - "Actuator"
       operationId: actuatorHealth
       responses:
         '200':
@@ -50,6 +86,8 @@ paths:
   /api/logs/download:
     get:
       summary: Get the Maxine log files and it's download path
+      tags:
+        - "Logs"
       operationId: Maxine Logs
       responses:
         '200':
@@ -67,6 +105,8 @@ paths:
       summary: >-
         Register the server with it's data (ServiceName, NodeName, Host, Port,
         Weight, ssl, timeOut, weight).
+      tags:
+        - "ServiceOps"
       operationId: Maxine service register
       requestBody:
         description: The service to register.
@@ -96,6 +136,8 @@ paths:
       summary: >-
         Get the server from registry if there is any registered one by service
         name.
+      tags:
+        - "ServiceOps"
       operationId: Maxine service discover
       parameters:
         - in: query
@@ -116,39 +158,13 @@ paths:
             application/json:
               example: '{"message": "Service Unavailable"}'
       x-codegen-request-body-name: service
-  /api/maxine/signin:
-    post:
-      summary: To sign in and get auth token.
-      operationId: Maxine Security
-      requestBody:
-        description: User.
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/User'
-        required: true
-      responses:
-        '200':
-          description: OK
-          content:
-            application/json:
-              example: >-
-                {"accessToken":"eyJhbGciOiJIUzI1GiIsInR5cCI6IkpXVCJ9.eyJ1c2VyTmFtZSI6ImFkbWluIiwicGFzc3dvcmQiOiJhZG1pbiIsImlhdCI6MTY0OTMyNTI0NywiZXhwIjoxNjQ5NDExMjQ3fQ.yQev9kn9yIChCXE-vlOLpc3Y89qNy_p7TKxoDJ1HghQ"}
-        '401':
-          description: Unauthorized
-          content:
-            application/json:
-              example: '{"message":"Unauthorized"}'
-        '400':
-          description: Error, Bad Request
-          content:
-            application/json:
-              example: '{"message":"Please provide both of these -> userName and password."}'
   /api/maxine/serviceops/servers:
     get:
       summary: >-
         Get all the registered servers in Maxine service registry if there are
         registered server nodes, otherwise empty object {}.
+      tags:
+        - "ServiceOps"
       operationId: Maxine services list
       security:
         - bearerAuth: []
@@ -181,6 +197,8 @@ paths:
   /api/maxine/control/config:
     get:
       summary: Get the current config data of Maxine.
+      tags:
+        - "Controls"
       operationId: Maxine configuration Retrieval.
       security:
         - bearerAuth: []
@@ -202,6 +220,8 @@ paths:
               example: '{"message":"Forbidden"}'
     put:
       summary: Update the config data of Maxine.
+      tags:
+        - "Controls"
       operationId: Maxine configuration manipulation
       security:
         - bearerAuth: []
