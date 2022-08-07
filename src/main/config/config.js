@@ -1,7 +1,7 @@
 const { constants } = require("../util/constants/constants");
 
 const config = {
-    logAsync: false,
+    logAsync: true,
     heartBeatTimeout: 5,
     logJsonPrettify: false,
     actuatorEnabled: true,
