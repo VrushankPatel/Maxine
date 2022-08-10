@@ -1,6 +1,7 @@
 var express = require('express');
 const config = require('../config/config');
 const { statusAndMsgs } = require('../util/constants/constants');
+var cors = require('cors');
 
 class ExpressAppBuilder{
     app;
@@ -26,6 +27,16 @@ class ExpressAppBuilder{
      */
     static loadApp(app) {
         return new ExpressAppBuilder(app);
+    }
+
+    /**
+     * 
+     * @param {object: Express} app 
+     * @returns {object: ExpressAppBuilder}
+     */
+    addCors() {
+        this.app.use(cors());
+        return this;
     }
 
     /**

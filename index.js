@@ -14,6 +14,7 @@ const { loadSwaggerYAML } = require('./src/main/util/util');
 const swaggerDocument = loadSwaggerYAML();
 
 const app = ExpressAppBuilder.createNewApp()
+                .addCors()
                 .ifPropertyOnce("statusMonitorEnabled")
                     .use(expressStatusMonitor(statusMonitorConfig))
                 .use(logRequest)

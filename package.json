@@ -28,6 +28,7 @@
     "axios": "^0.25.0",
     "body-parser": "^1.19.1",
     "consistent-hashing": "^0.3.0",
+    "cors": "^2.8.5",
     "date-and-time": "^2.1.0",
     "enums": "^1.0.3",
     "express": "^4.17.2",
