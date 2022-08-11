@@ -1,3 +1,4 @@
+const { last100LogsTrack } = require('../../config/logging/logging-config');
 const LogFilesService = require('../../service/logfiles-service');
 const { constants } = require('../../util/constants/constants');
 
@@ -11,7 +12,12 @@ const logsDownloadController = (req, res) => {
 
 const logsLinkGenController = (_, res) => res.send(logFilesService.getLogLinks());
 
+const recentLogsController = (_, res) => res.status(200).json({
+    "logs" : last100LogsTrack.join("\n")
+});
+
 module.exports = {
     logsDownloadController,
-    logsLinkGenController
+    logsLinkGenController,
+    recentLogsController
 };

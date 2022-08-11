@@ -6,6 +6,9 @@ const PROFILE = (envArgs['env'] || envArgs['profile'] || "prod").trim();
 const LOGDIR = './logs/';
 const LOGLEVELS = ['info']; // verbose, silly, error, warn
 const LOGTIMESTAMPFORMAT = 'DD-MMM-YYYY HH:mm:ss';
+const LOG_EXPELLED_URLS = [
+    "/api/logs/recent"
+]
 const SWAGGER_PATH = "./api-specs/swagger.yaml";
 const ACTUATORPATH = '/api/actuator';
 const STATUSMONITORTITLE = 'Status : Maxine';
@@ -86,6 +89,7 @@ const constants = {
     LOGDIR,
     LOGLEVELS,
     LOGTIMESTAMPFORMAT,
+    LOG_EXPELLED_URLS,
     ACTUATORPATH,
     STATUSMONITORTITLE,
     REQUEST_LOG_TIMESTAMP_FORMAT,
