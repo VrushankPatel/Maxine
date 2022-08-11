@@ -12,13 +12,28 @@ const logFileTransports = [new winston.transports.Console()]
     }))
 );
 
+let last100LogsTrack = [];
+
+const addToRecentLogs = (message) => {
+    setTimeout(() => {
+        if (last100LogsTrack.length == 100){
+            last100LogsTrack.shift();
+        }
+        last100LogsTrack.push(message);
+    }, 0);
+}
+
 const logConfiguration = {
     transports: logFileTransports,
     format: format.combine(
-        format.printf(log => log.message),
+        format.printf(log => {
+            addToRecentLogs(log.message);
+            return log.message;
+        }),
     )
 };
 
 module.exports = {
+    last100LogsTrack,
     logConfiguration
 }
