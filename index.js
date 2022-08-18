@@ -15,6 +15,7 @@ const swaggerDocument = loadSwaggerYAML();
 
 const app = ExpressAppBuilder.createNewApp()
                 .addCors()
+                .useStaticDir('/logs', 'logs')
                 .ifPropertyOnce("statusMonitorEnabled")
                     .use(expressStatusMonitor(statusMonitorConfig))
                 .use(logRequest)

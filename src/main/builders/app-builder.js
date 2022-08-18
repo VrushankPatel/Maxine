@@ -34,10 +34,7 @@ class ExpressAppBuilder{
      * @param {object: Express} app 
      * @returns {object: ExpressAppBuilder}
      */
-    addCors() {
-        this.app.use(cors());
-        return this;
-    }
+    addCors = () => this.use(cors());
 
     /**
      * Add condition property check but will enable the checker to check property only once, then condition check will be disabled.
@@ -88,6 +85,8 @@ class ExpressAppBuilder{
         this.app.all('*',(_, res) => res.status(statusAndMsgs.STATUS_NOT_FOUND).json({"message": statusAndMsgs.MSG_NOT_FOUND}));
         return this;
     }
+
+    useStaticDir = (route, dir) => this.use(route, express.static(dir));
 
     /**
      * Use accepts all kind of middleware to add in the Express App that this Builder will build.
