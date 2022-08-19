@@ -72,8 +72,11 @@ const MSG_INVALID_SERVICE_DATA = `Invalid or missing -> hostName, nodeName, serv
 const CONFIGTYPES = ["sync", "async"];
 const SERVER_SELECTION_STRATEGIES = ["round-robin", "consistent-hashing"];
 const API_URLS_WITH_AUTH = [
-    // '/api/maxine/control/config',
-    // '/api/maxine/serviceops/servers'
+    '/api/maxine/control/config',
+    '/api/maxine/serviceops/servers',
+    '/api/maxine/verifyToken',
+    '/api/logs',
+    '/logs'
 ];
 const DEFAULT_REPORT = "https://output.circle-artifacts.com/output/job/86b51398-8c83-40cf-b7c1-11a499287f39/artifacts/0/artifacts/performance-summary.html";
 // for Config updates, status codes (customized)

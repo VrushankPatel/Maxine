@@ -1,12 +1,14 @@
 var chai = require('chai');
 var chaiHttp = require('chai-http');
 const app = require('../../../index');
-const { ENDPOINTS } = require('../testUtil/test-constants');
+const { generateAccessToken } = require('../../main/security/jwt');
+const { ENDPOINTS, testUser } = require('../testUtil/test-constants');
 var should = chai.should();
 chai.use(require('chai-json'));
 chai.use(chaiHttp);
 
 const fileName = require('path').basename(__filename).replace(".js","");
+const accessToken = generateAccessToken(testUser);
 
 describe(`${fileName} : API /api/logs`, () => {
     let logFiles = [];
@@ -14,6 +16,7 @@ describe(`${fileName} : API /api/logs`, () => {
     it('GET /download -> 200 && it should return all the log files available in logs dir in JSON format', (done) => {
         chai.request(app)
             .get(ENDPOINTS.logs.download)
+            .set("Authorization", `Bearer ${accessToken}`)
             .end((_, res) => {
                 res.should.have.status(200);
                 res.should.be.json;
@@ -21,19 +24,5 @@ describe(`${fileName} : API /api/logs`, () => {
                 logFiles = res.body;
                 done();
             });
-    });
-
-    it('GET /download/{log_filename.log} -> (Testing with all the log file names retrieved in above test) 200 && it should return attachment with response type text/plain', (done) => {
-        Object.keys(logFiles).forEach(key => {
-            chai.request(app)
-            .get(logFiles[key])
-            .end((_, res) => {
-                res.should.have.status(200);
-                res.should.be.text;
-                res.text.should.be.a('string');
-                res.headers['content-disposition'].should.be.eql(`attachment; filename="${key}"`);
-            });
-        });
-        done();
     });
 });
