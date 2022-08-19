@@ -12,15 +12,46 @@ const logFileTransports = [new winston.transports.Console()]
     }))
 );
 
+let last100LogsTrack = [];
+let clearLogs = false;
+
+const getRecents = () => {
+    return last100LogsTrack.join("\n");
+};
+
+const clearRecents = () => {
+    clearLogs = true;
+}
+
+const addToRecentLogs = (message) => {
+    setTimeout(() => {
+        if (clearLogs) {
+            last100LogsTrack = [""];
+            clearLogs = false;
+            return;
+        }
+        if (last100LogsTrack.length == 100){
+            last100LogsTrack.shift();
+        }
+        last100LogsTrack.push(message);
+    }, 0);
+}
+
 const logConfiguration = {
     transports: logFileTransports,
     // exceptionHandlers: [new winston.transports.File({ filename: "logs/Maxine-exceptions.log" })],
     // rejectionHandlers: [new winston.transports.File({ filename: "logs/Maxine-rejections.log" })],
     format: format.combine(
-        format.printf(log => log.message),
+        format.printf(log => {
+            setTimeout(() => addToRecentLogs(log.message), 0);
+            return log.message;
+        }),
     )
 };
 
 module.exports = {
+    last100LogsTrack,
+    clearRecents,
+    getRecents,
     logConfiguration
 }

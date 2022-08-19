@@ -8,6 +8,7 @@ const LOGDIR = `${CURRDIR}/logs/`;
 const LOGLEVELS = ['info']; // verbose, silly, error, warn
 const LOGTIMESTAMPFORMAT = 'DD-MMM-YYYY HH:mm:ss';
 const LOG_EXPELLED_URLS = [
+    "/api/logs/recent",
     "/api/logs/download",
     "/api/logs/latestfile",
     "/api/maxine/control/config",
