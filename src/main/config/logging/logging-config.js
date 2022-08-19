@@ -15,9 +15,7 @@ const logFileTransports = [new winston.transports.Console()]
 let last100LogsTrack = [];
 let clearLogs = false;
 
-const getRecents = () => {
-    return last100LogsTrack.join("\n");
-};
+const getRecents = () => last100LogsTrack.join("\n");
 
 const clearRecents = () => {
     clearLogs = true;
