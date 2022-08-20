@@ -13,6 +13,7 @@ const { statusMonitorConfig, actuatorConfig } = require('./src/main/config/actua
 const { loadSwaggerYAML } = require('./src/main/util/util');
 const swaggerDocument = loadSwaggerYAML();
 const path = require("path");
+const uiRoute = require('./src/main/routes/ui-route');
 
 const app = ExpressAppBuilder.createNewApp()
                 .addCors()
@@ -25,6 +26,7 @@ const app = ExpressAppBuilder.createNewApp()
                 .ifPropertyOnce("actuatorEnabled")
                     .use(actuator(actuatorConfig))
                 .use('/api',maxineApiRoutes)
+                .use('/*', uiRoute)
                 .ifPropertyOnce('profile','dev')
                     .use('/api-spec', swaggerUi.serve, swaggerUi.setup(swaggerDocument))
                     .use('/shutdown', process.exit)
