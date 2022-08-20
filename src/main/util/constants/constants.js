@@ -8,10 +8,10 @@ const LOGDIR = `${CURRDIR}/logs/`;
 const LOGLEVELS = ['info']; // verbose, silly, error, warn
 const LOGTIMESTAMPFORMAT = 'DD-MMM-YYYY HH:mm:ss';
 const LOG_EXPELLED_URLS = [
+    "/static",
     "/api/logs/recent",
     "/api/logs/download",
     "/api/logs/latestfile",
-    "/api/maxine/control/config",
     "/api/maxine/serviceops/servers"
 ]
 const SWAGGER_PATH = "./api-specs/swagger.yaml";

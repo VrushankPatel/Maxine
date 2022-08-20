@@ -11,7 +11,6 @@ const { authenticationController } = require('./src/main/controller/security/aut
 const swaggerUi = require('swagger-ui-express');
 const { statusMonitorConfig, actuatorConfig } = require('./src/main/config/actuator/actuator-config');
 const { loadSwaggerYAML } = require('./src/main/util/util');
-const uiRoute = require('./src/main/routes/ui-route');
 const swaggerDocument = loadSwaggerYAML();
 const path = require("path");
 
@@ -26,7 +25,6 @@ const app = ExpressAppBuilder.createNewApp()
                 .ifPropertyOnce("actuatorEnabled")
                     .use(actuator(actuatorConfig))
                 .use('/api',maxineApiRoutes)
-                .use('/*',uiRoute)
                 .ifPropertyOnce('profile','dev')
                     .use('/api-spec', swaggerUi.serve, swaggerUi.setup(swaggerDocument))
                     .use('/shutdown', process.exit)

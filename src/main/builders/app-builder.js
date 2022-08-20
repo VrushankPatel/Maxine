@@ -29,8 +29,8 @@ class ExpressAppBuilder{
     }
 
     /**
-     * 
-     * @param {object: Express} app 
+     *
+     * @param {object: Express} app
      * @returns {object: ExpressAppBuilder}
      */
     addCors = () => this.use(cors());
@@ -85,8 +85,18 @@ class ExpressAppBuilder{
         return this;
     }
 
+    /**
+     * Serve the static files
+     * @param {String} dir
+     * @returns {object: ExpressAppBuilder}
+     */
     mapStaticDir = (dir) => this.use(express.static(dir));
 
+    /**
+     * Serve the static files on the given route of original url
+     * @param {String} dir
+     * @returns {object: ExpressAppBuilder}
+     */
     mapStaticDirWithRoute = (route, dir) => this.use(route, express.static(dir));
 
     /**
@@ -94,7 +104,7 @@ class ExpressAppBuilder{
      * Apart from that, before adding the middleware, it'll verify the conditions of conditionCheck.
      * If conditions pass then it'll add the middleware to App, otherwise not.
      * @param  {...any} args
-     * @returns
+     * @returns {object: ExpressAppBuilder}
      */
     use(...args){
         if(this.conditionStack.length > 0){
