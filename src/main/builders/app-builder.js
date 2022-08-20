@@ -2,7 +2,6 @@ var express = require('express');
 const config = require('../config/config');
 const { statusAndMsgs } = require('../util/constants/constants');
 var cors = require('cors');
-
 class ExpressAppBuilder{
     app;
     conditionStack = [];
@@ -86,7 +85,9 @@ class ExpressAppBuilder{
         return this;
     }
 
-    useStaticDir = (route, dir) => this.use(route, express.static(dir));
+    mapStaticDir = (dir) => this.use(express.static(dir));
+
+    mapStaticDirWithRoute = (route, dir) => this.use(route, express.static(dir));
 
     /**
      * Use accepts all kind of middleware to add in the Express App that this Builder will build.

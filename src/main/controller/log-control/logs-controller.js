@@ -1,7 +1,5 @@
-let { clearRecents, getRecents, last100LogsTrack } = require('../../config/logging/logging-config');
+let { clearRecents, getRecents } = require('../../config/logging/logging-config');
 const LogFilesService = require('../../service/logfiles-service');
-const { constants } = require('../../util/constants/constants');
-const { promises: fs } = require('fs');
 
 const logFilesService = new LogFilesService();
 
