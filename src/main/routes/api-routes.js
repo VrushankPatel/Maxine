@@ -5,7 +5,6 @@ const discoveryController = require('../controller/maxine/discovery-controller')
 const { signInController } = require('../controller/uac/signin-controller');
 const { logsLinkGenController, logsController, recentLogsController, recentLogsClearController } = require('../controller/log-control/logs-controller');
 const { configuratorController, configurationController } = require('../controller/config-control/configurator-controller');
-const { uiController } = require('../controller/ui-control/ui-controller');
 
 
 let maxineApiRoutes = RouteBuilder.createNewRoute()
