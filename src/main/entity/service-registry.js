@@ -1,4 +1,4 @@
-var ConsistentHashing = require('consistent-hashing');
+const ConsistentHashing = require('consistent-hashing');
 const { constants } = require('../util/constants/constants');
 
 class ServiceRegistry{
