@@ -3,9 +3,17 @@ const Enums = require("enums");
 const PORT = process.env.PORT || parseInt(envArgs['p']) || parseInt(envArgs['port']) || 8080;
 const APP_NAME = "Maxine-Service-Discovery";
 const PROFILE = (envArgs['env'] || envArgs['profile'] || "prod").trim();
-const LOGDIR = './logs/';
+const CURRDIR = process.cwd();
+const LOGDIR = `${CURRDIR}/logs/`;
 const LOGLEVELS = ['info']; // verbose, silly, error, warn
 const LOGTIMESTAMPFORMAT = 'DD-MMM-YYYY HH:mm:ss';
+const LOG_EXPELLED_URLS = [
+    "/static",
+    "/api/logs/recent",
+    "/api/logs/download",
+    "/api/logs/latestfile",
+    "/api/maxine/serviceops/servers"
+]
 const SWAGGER_PATH = "./api-specs/swagger.yaml";
 const ACTUATORPATH = '/api/actuator';
 const STATUSMONITORTITLE = 'Status : Maxine';
@@ -64,8 +72,11 @@ const MSG_INVALID_SERVICE_DATA = `Invalid or missing -> hostName, nodeName, serv
 const CONFIGTYPES = ["sync", "async"];
 const SERVER_SELECTION_STRATEGIES = ["round-robin", "consistent-hashing"];
 const API_URLS_WITH_AUTH = [
-    '/api/maxine/config',
-    '/api/maxine/servers'
+    '/api/maxine/control/config',
+    '/api/maxine/serviceops/servers',
+    '/api/maxine/verifyToken',
+    '/api/logs',
+    '/logs'
 ];
 const DEFAULT_REPORT = "https://output.circle-artifacts.com/output/job/86b51398-8c83-40cf-b7c1-11a499287f39/artifacts/0/artifacts/performance-summary.html";
 // for Config updates, status codes (customized)
@@ -83,9 +94,11 @@ const constants = {
     PORT,
     APP_NAME,
     PROFILE,
+    CURRDIR,
     LOGDIR,
     LOGLEVELS,
     LOGTIMESTAMPFORMAT,
+    LOG_EXPELLED_URLS,
     ACTUATORPATH,
     STATUSMONITORTITLE,
     REQUEST_LOG_TIMESTAMP_FORMAT,

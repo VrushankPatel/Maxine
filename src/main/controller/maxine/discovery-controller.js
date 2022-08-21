@@ -1,10 +1,12 @@
 const { statusAndMsgs } = require("../../util/constants/constants");
 const { discoveryService } = require("../../service/discovery-service");
 const _ = require('lodash');
+const { info } = require("../../util/logging/logging-util");
 
 const discoveryController = (req, res) => {
     // Retrieving the serviceName from query params
     const serviceName = req.query.serviceName;
+    const endPoint = req.query.endPoint;
     const ip = req.ip
     || req.connection.remoteAddress
     || req.socket.remoteAddress
@@ -18,7 +20,7 @@ const discoveryController = (req, res) => {
 
     // now, retrieving the serviceNode from the registry
     const serviceNode = discoveryService.getNode(serviceName, ip);
-
+ 
     // no service node is there so, service unavailable is our error response.
     if(_.isEmpty(serviceNode)){
         res.status(statusAndMsgs.SERVICE_UNAVAILABLE).json({
@@ -26,8 +28,9 @@ const discoveryController = (req, res) => {
         });
         return;
     }
-
-    res.redirect(serviceNode.address);
+    const addressToRedirect = serviceNode.address + (endPoint[0] == "/" ? endPoint : `/${endPoint}`);
+    info(`Redirecting to ${addressToRedirect}`);
+    res.redirect(addressToRedirect);
 }
 
 module.exports = discoveryController

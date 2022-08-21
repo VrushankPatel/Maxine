@@ -3,15 +3,18 @@ const bodyParser = require('body-parser');
 const { serverListController, registryController } = require('../controller/maxine/registry-controller');
 const discoveryController = require('../controller/maxine/discovery-controller');
 const { signInController } = require('../controller/uac/signin-controller');
-const { logsDownloadController, logsLinkGenController } = require('../controller/log-control/logs-controller');
+const { logsLinkGenController, logsController, recentLogsController, recentLogsClearController } = require('../controller/log-control/logs-controller');
 const { configuratorController, configurationController } = require('../controller/config-control/configurator-controller');
 
 
-var maxineApiRoutes = RouteBuilder.createNewRoute()
+let maxineApiRoutes = RouteBuilder.createNewRoute()
                         .from("logs")
                             .from("download")
                                 .get("/",logsLinkGenController)
-                                .get(":level", logsDownloadController)
+                            .stepBack()
+                            .from("recent")
+                                .get("/", recentLogsController)
+                                .get("/clear", recentLogsClearController)
                         .stepToRoot()
                         .from("maxine")
                             .from("serviceops")

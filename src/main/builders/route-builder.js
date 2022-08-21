@@ -26,7 +26,7 @@ class RouteBuilder{
 
     /**
      * Add the endpoint to routeStack and will use it as prefix to all the upcoming route endpoints.
-     * @param {string} routeEndPt 
+     * @param {string} routeEndPt
      * @returns {object: RouteBuilder}
      */
     from(routeEndPt){
@@ -116,7 +116,7 @@ class RouteBuilder{
 
     /**
      * Add slash / at the beginning of endpoint
-     * @param {string} endPt 
+     * @param {string} endPt
      * @returns {object: RouteBuilder}
      */
     formatEndpoint(endPt) {

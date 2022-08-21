@@ -4,7 +4,14 @@ const { admin, User } = require('../../entity/user');
 const { statusAndMsgs, constants } = require('../../util/constants/constants');
 
 function authenticationController(req, res, next) {
-    if(!constants.API_URLS_WITH_AUTH.includes(req.url)){
+    let authRequired = false;
+    constants.API_URLS_WITH_AUTH.forEach(url => {
+        if (req.url.startsWith(url)){
+            authRequired = true;
+        }
+    })
+
+    if(!authRequired){
         next();
         return;
     }
@@ -13,6 +20,11 @@ function authenticationController(req, res, next) {
     const token = authHeader && authHeader.split(' ')[1];
 
     if (token == null) return res.status(statusAndMsgs.STATUS_UNAUTHORIZED).json({"message" : statusAndMsgs.MSG_UNAUTHORIZED});
+
+    if (_.isNull(token) || _.isUndefined(token) || _.isEmpty(token)){
+        res.status(statusAndMsgs.STATUS_UNAUTHORIZED).json({"message" : statusAndMsgs.MSG_UNAUTHORIZED});
+        return;
+    }
 
     jwt.verify(token, constants.SECRET, (err, user) => {
         if (user && _.isEqual(User.createUserFromObj(user), admin)){

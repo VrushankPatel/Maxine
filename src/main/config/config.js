@@ -1,13 +1,13 @@
 const { constants } = require("../util/constants/constants");
 
 const config = {
-    logAsync: false,
+    logAsync: true,
     heartBeatTimeout: 5,
     logJsonPrettify: false,
     actuatorEnabled: true,
     statusMonitorEnabled: true,
     serverSelectionStrategy: constants.SSS.RR,
-    logFormat: constants.LOG_FORMATS.PLAIN
+    logFormat: constants.LOG_FORMATS.JSON
 }
 
 Object.defineProperty(config, "profile", {

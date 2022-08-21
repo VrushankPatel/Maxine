@@ -1,7 +1,7 @@
 var express = require('express');
 const config = require('../config/config');
 const { statusAndMsgs } = require('../util/constants/constants');
-
+const cors = require('cors');
 class ExpressAppBuilder{
     app;
     conditionStack = [];
@@ -27,6 +27,13 @@ class ExpressAppBuilder{
     static loadApp(app) {
         return new ExpressAppBuilder(app);
     }
+
+    /**
+     *
+     * @param {object: Express} app
+     * @returns {object: ExpressAppBuilder}
+     */
+    addCors = () => this.use(cors());
 
     /**
      * Add condition property check but will enable the checker to check property only once, then condition check will be disabled.
@@ -79,11 +86,25 @@ class ExpressAppBuilder{
     }
 
     /**
+     * Serve the static files
+     * @param {String} dir
+     * @returns {object: ExpressAppBuilder}
+     */
+    mapStaticDir = (dir) => this.use(express.static(dir));
+
+    /**
+     * Serve the static files on the given route of original url
+     * @param {String} dir
+     * @returns {object: ExpressAppBuilder}
+     */
+    mapStaticDirWithRoute = (route, dir) => this.use(route, express.static(dir));
+
+    /**
      * Use accepts all kind of middleware to add in the Express App that this Builder will build.
      * Apart from that, before adding the middleware, it'll verify the conditions of conditionCheck.
      * If conditions pass then it'll add the middleware to App, otherwise not.
      * @param  {...any} args
-     * @returns
+     * @returns {object: ExpressAppBuilder}
      */
     use(...args){
         if(this.conditionStack.length > 0){
