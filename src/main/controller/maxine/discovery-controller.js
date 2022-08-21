@@ -6,7 +6,7 @@ const { info } = require("../../util/logging/logging-util");
 const discoveryController = (req, res) => {
     // Retrieving the serviceName from query params
     const serviceName = req.query.serviceName;
-    const endPoint = req.query.endPoint;
+    const endPoint = req.query.endPoint || "";
     const ip = req.ip
     || req.connection.remoteAddress
     || req.socket.remoteAddress
@@ -28,7 +28,7 @@ const discoveryController = (req, res) => {
         });
         return;
     }
-    const addressToRedirect = serviceNode.address + (endPoint[0] == "/" ? endPoint : `/${endPoint}`);
+    const addressToRedirect = serviceNode.address + (endPoint.length > 0 ? (endPoint[0] == "/" ? endPoint : `/${endPoint}`) : "");
     info(`Redirecting to ${addressToRedirect}`);
     res.redirect(addressToRedirect);
 }
