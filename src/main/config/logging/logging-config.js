@@ -13,21 +13,13 @@ const logFileTransports = [new winston.transports.Console()]
 );
 
 let last100LogsTrack = [];
-let clearLogs = false;
 
 const getRecents = () => last100LogsTrack.join("\n");
 
-const clearRecents = () => {
-    clearLogs = true;
-}
+const clearRecents = () => last100LogsTrack = [""];
 
 const addToRecentLogs = (message) => {
     setTimeout(() => {
-        if (clearLogs) {
-            last100LogsTrack = [""];
-            clearLogs = false;
-            return;
-        }
         if (last100LogsTrack.length == 100){
             last100LogsTrack.shift();
         }

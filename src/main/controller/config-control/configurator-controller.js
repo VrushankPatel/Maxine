@@ -39,7 +39,10 @@ const configuratorController = (req, res) => {
     res.status(statusAndMsgs.STATUS_SUCCESS).json(resultObj);
 }
 
-const configurationController = (_req, res) => res.json(config);
+const configurationController = (_req, res) => {
+    config.port = constants.PORT;
+    res.json(config);
+};
 
 module.exports = {
     configuratorController,

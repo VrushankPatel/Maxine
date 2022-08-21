@@ -1,7 +1,7 @@
 var express = require('express');
 const config = require('../config/config');
 const { statusAndMsgs } = require('../util/constants/constants');
-var cors = require('cors');
+const cors = require('cors');
 class ExpressAppBuilder{
     app;
     conditionStack = [];
