@@ -7,8 +7,6 @@ const host = "https://maxine-x.herokuapp.com";
 const apiUrl = `${host}/api`;
 const statusCheck = {"is status 200": response => response.status === 200};
 
-const user = JSON.stringify({"userName" : "admin","password" : "admin"});
-
 const headers = {headers: {'Content-Type': 'application/json'}};
 
 const serviceObj = JSON.stringify({
@@ -22,10 +20,7 @@ const serviceObj = JSON.stringify({
 });
 
 export default function () {
-    let response = http.post(`${apiUrl}/maxine/signin`, user, headers);
-    check(response, statusCheck);
-
-    response = http.post(`${apiUrl}/maxine/serviceops/register`, serviceObj, headers);
+    let response = http.post(`${apiUrl}/maxine/serviceops/register`, serviceObj, headers);
     check(response, statusCheck);
 
     response = http.get(`${apiUrl}/maxine/serviceops/discover?serviceName=dbservice`);
@@ -46,7 +41,7 @@ export function teardown() {
 export let options = {
     vus: 50,
     iterations: 5000,
-    duration: '40s',
+    duration: '50s',
     thresholds: {
         http_req_failed: ['rate<0.02'],
         http_req_duration: ['p(95)<500'],
