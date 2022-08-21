@@ -13,6 +13,7 @@ const { statusMonitorConfig, actuatorConfig } = require('./src/main/config/actua
 const { loadSwaggerYAML } = require('./src/main/util/util');
 const swaggerDocument = loadSwaggerYAML();
 const path = require("path");
+const currDir = require('./conf');
 
 const app = ExpressAppBuilder.createNewApp()
                 .addCors()
@@ -20,8 +21,8 @@ const app = ExpressAppBuilder.createNewApp()
                     .use(expressStatusMonitor(statusMonitorConfig))
                 .use(logRequest)
                 .use(authenticationController)
-                .mapStaticDir(path.join(process.cwd(),"client"))
-                .mapStaticDirWithRoute('/logs', `${process.cwd()}/logs`)
+                .mapStaticDir(path.join(currDir, "client"))
+                .mapStaticDirWithRoute('/logs', path.join(currDir,"logs"))
                 .ifPropertyOnce("actuatorEnabled")
                     .use(actuator(actuatorConfig))
                 .use('/api',maxineApiRoutes)
