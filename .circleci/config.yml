@@ -79,7 +79,6 @@ workflows:
             branches:
                 only:
                   - master
-                  - release
       - install_dependencies:
           requires:
             - checkout_source
