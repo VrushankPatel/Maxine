@@ -72,7 +72,8 @@
   },
   "pkg": {
     "assets": [
-      "node_modules/**/*.css"
+      "node_modules/**/*.css",
+      "client/**/*"
     ]
   }
 }
