@@ -32,7 +32,8 @@ class Service{
     validate(){
         const areNotStrings = !(_.isString(this.hostName) && _.isString(this.nodeName) && _.isString(this.serviceName));
         const isInvalidWeight = this.weight > constants.MAX_SERVER_WEIGHT;
-        if(areNotStrings || isInvalidWeight){
+        const areInvalidStrings = !this.serviceName || !this.hostName || !this.nodeName;
+        if(areNotStrings || isInvalidWeight || areInvalidStrings){
             error(statusAndMsgs.MSG_INVALID_SERVICE_DATA);
             return;
         }
