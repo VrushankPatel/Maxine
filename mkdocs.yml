@@ -13,17 +13,4 @@ theme:
   nav_style: dark
   highlightjs: true
 
-plugins:
-  - search
-  - mkdocstrings:
-      handlers:
-        python:
-          options:
-            docstring_style: sphinx
-
-markdown_extensions:
-  - markdown_include.include:
-      base_path: .
-  - admonition
-
 site_dir: buildocs
