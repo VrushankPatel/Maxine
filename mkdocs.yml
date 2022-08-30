@@ -5,13 +5,11 @@ nav:
     - Features: features.md
     - Getting started: about.md
     - API: about.md
+    - LICENCE: licence.md
     - About: about.md
 
 theme:
   name: readthedocs
   nav_style: dark
-  # highlightjs: true
-  # hljs_languages:
-  #     - yaml
-  #     - rust
+
 site_dir: build/docs

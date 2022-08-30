@@ -31,6 +31,12 @@ Maxine SRD has the ability to locate a network automatically making it so that t
 5. SRD will receive the request and will extract the serviceName from it. It'll discover if that service is stored there in the registry, If it is, then it'll redirect the request to that service's URL.
 6. If that service name has multiple nodes in the registry, then SRD will distribute the traffic across all the nodes of that service.
 
+Below is a tiny animation that explains how maxine registers all the services in the network by their HEARTBEATs sent by the maxine client.
+<br/><br/>
+<img src="/img/anim/maxine-registry.gif" />
+<br/><br/>
+Notice that the service 3 doesn't have maxine-client installed so it is not sending the heartbeat and therefore, it can not be registered in the maxine registry.
+
 ## What problems does Maxine solve?
 
 * When working with SOA (Service oriented architecture) or microservices, we usually have to establish the inter-service communication by their URL that gets constituted by SSL check, Hostname, port, and path.
@@ -39,7 +45,6 @@ Maxine SRD has the ability to locate a network automatically making it so that t
 * Also, based on the service's performance diagnostics (If it's down or not working properly), we can stop its registration to the SRD. The client provides functions that can stop sending the heartbeat to the SRD so that the service can be deregistered.
 * Also, If any of the services are hosted on more powerful hardware, then we can make SRD distribute more traffic on that service's nodes than the others. All we have to do is to provide weight property to that service's client. the weight means how much power that service has compared to others. Based on weight property, the SRD will register that service will replications, and traffic will be distributed accordingly.
 
-## Architecture and Design (with presentation)
 ## Limitations
 
 We can not scale the SRD internally, multi-node SRD is under development still.
