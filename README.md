@@ -1,4 +1,4 @@
-<img src="logo/logo.png"/>
+<img src="docs/img/logo.png"/>
 
 ## Maxine : Service Discovery and Registry for Microservices
 

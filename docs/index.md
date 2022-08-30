@@ -35,7 +35,8 @@ Below is a tiny animation that explains how maxine registers all the services in
 <br/><br/>
 <img src="img/anim/maxine-registry.gif" />
 <br/><br/>
-Notice that the service 3 doesn't have maxine-client installed so it is not sending the heartbeat and therefore, it can not be registered in the maxine registry.
+Notice that the service 3 doesn't have maxine-client installed so it is not sending the heartbeat and therefore, it is not being registered in the maxine registry.
+However, that's not the end of it, the explicit custom client can be developed (based on the API Documentation) to communicate with maxine server.
 
 ## What problems does Maxine solve?
 
