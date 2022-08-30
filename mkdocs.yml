@@ -11,5 +11,19 @@ nav:
 theme:
   name: readthedocs
   nav_style: dark
+  highlightjs: true
 
-site_dir: build/docs
+plugins:
+  - search
+  - mkdocstrings:
+      handlers:
+        python:
+          options:
+            docstring_style: sphinx
+
+markdown_extensions:
+  - markdown_include.include:
+      base_path: .
+  - admonition
+
+site_dir: buildocs
