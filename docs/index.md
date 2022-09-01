@@ -8,7 +8,7 @@
 <a target="_blank" href="https://github.com/VrushankPatel/Maxine-Server/actions/workflows/node.js.yml"><img src="https://github.com/VrushankPatel/Maxine-Server/actions/workflows/node.js.yml/badge.svg?branch=master"/></a>
 <a target="_blank" href="https://codecov.io/gh/VrushankPatel/Maxine-Server"><img src="https://codecov.io/gh/VrushankPatel/Maxine-Server/branch/master/graph/badge.svg?token=SONYL0TJKT"/></a>
 <a target="_blank" href="https://maxine-x.herokuapp.com/api/actuator/performance"><img src="https://img.shields.io/badge/k6-Load Test Report-blue"/></a>
-<a target="_blank" href="https://circleci.com/gh/VrushankPatel/Maxine-Server/tree/master"><img src="https://circleci.com/gh/VrushankPatel/Maxine-Server/tree/master.svg?style=svg"></a>
+<a target="_blank" href="https://circleci.com/gh/VrushankPatel/Maxine/tree/master"><img src="https://circleci.com/gh/VrushankPatel/Maxine/tree/master.svg?style=svg"></a>
 <a target="_blank" href="https://opensource.org/licenses/MIT"><img src="https://img.shields.io/badge/License-MIT-teal.svg"/></a>
 <a target="_blank" href="https://github.com/VrushankPatel/Maxine-Server/releases"><img src="https://img.shields.io/badge/Maxine-Release-blue" /></a>
 <a target="_blank" href="https://app.fossa.com/reports/a83419a2-657c-400c-b3b6-f04c8a032a56"><img src="https://img.shields.io/badge/Fossa-Report-blue"/></a>
@@ -38,6 +38,11 @@ Below is a tiny animation that explains how maxine registers all the services in
 Notice that the service 3 doesn't have maxine-client installed so it is not sending the heartbeat and therefore, it is not being registered in the maxine registry.
 However, that's not the end of it, the explicit custom client can be developed (based on the API Documentation) to communicate with maxine server.
 
+Once the services are registered, Below is the animation that shows how services intercommunicate by maxine client and via maxine's service discovery.
+<br/><br/>
+<img src="img/anim/maxine-discovery.gif" />
+<br/><br/>
+As we can see, maxine SRD is working as a reverse proxy for each servers, and redirecting all the requests to the respective servers by searching for their URLS in registery by using the serviceName as a key.
 ## What problems does Maxine solve?
 
 * When working with SOA (Service oriented architecture) or microservices, we usually have to establish the inter-service communication by their URL that gets constituted by SSL check, Hostname, port, and path.
