@@ -10,7 +10,7 @@
 <a target="_blank" href="https://app.k6.io/runs/public/23fbf58304af4024aae52f7c3a0c9ea1"><img src="https://img.shields.io/badge/k6 cloud-Performance-blue"/></a>
 <a target="_blank" href="https://maxine-x.herokuapp.com/api/actuator/performance"><img src="https://img.shields.io/badge/k6-Load Test Report-blue"/></a>
 <a target="_blank" href="https://circleci.com/gh/VrushankPatel/Maxine-Server/tree/master"><img src="https://circleci.com/gh/VrushankPatel/Maxine/tree/master.svg?style=shield"></a>
-<a target="_blank" href="https://circleci.com/gh/VrushankPatel/Maxine-Server/tree/master"><img src="https://circleci.com/gh/VrushankPatel/Maxine-Server/tree/master.svg?style=svg"></a>
+<a target="_blank" href="https://circleci.com/gh/VrushankPatel/Maxine-Server/tree/master"><img src="https://circleci.com/gh/VrushankPatel/Maxine/tree/master.svg?style=svg"></a>
 <a target="_blank" href="https://opensource.org/licenses/MIT"><img src="https://img.shields.io/badge/License-MIT-teal.svg"/></a>
 <a target="_blank" href="https://www.javascript.com"><img src="https://img.shields.io/badge/Made%20with-JavaScript-1f425f.svg"/></a>
 <a target="_blank" href="https://github.com/VrushankPatel"><img src="https://img.shields.io/badge/maintainer-VrushankPatel-blue"/></a>
