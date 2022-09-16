@@ -41,6 +41,38 @@ paths:
           content:
             application/json:
               example: '{"message":"Please provide both of these -> userName and password."}'
+  /api/maxine/change-password:
+    put:
+      summary: To change the password
+      tags:
+        - "UAC"
+      operationId: Maxine UAC
+      security:
+        - bearerAuth: []
+      requestBody:
+        description: Current password and new password to be updated.
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Passwords'
+        required: true
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              example: >-
+                {"message" : "successfully updated password"}
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              example: '{"message":"Unauthorized"}'
+        '400':
+          description: Error, Bad Request
+          content:
+            application/json:
+              example: '{"message":"Please provide valid existing password and new password both."}'
   /api/actuator/metrics:
     get:
       summary: Get the memory metrics info
@@ -89,6 +121,8 @@ paths:
       tags:
         - "Logs"
       operationId: Maxine Logs
+      security:
+        - bearerAuth: []
       responses:
         '200':
           description: OK
@@ -172,6 +206,8 @@ paths:
       tags:
         - "ServiceOps"
       operationId: Maxine services list
+      security:
+        - bearerAuth: []
       responses:
         '200':
           description: OK
@@ -331,6 +367,15 @@ components:
         password:
           type: string
           example: "admin"
+    Passwords:
+      type: object
+      properties:
+        password:
+          type: string
+          example: "admin"
+        newPassword:
+          type: string
+          example: "admin2"
   securitySchemes:
     bearerAuth:
       type: http
