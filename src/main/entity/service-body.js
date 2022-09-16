@@ -24,7 +24,8 @@ class Service{
         path = path || "";
         path = path[0] === "/" ? path : "/" + path;
         path = path[path.length-1] == "/" ? path.slice(0, path.length - 1) : path;
-        const prefix = hostName.startsWith("http://") || hostName.startsWith("https://") ? "" : ssl ? "https://" : "http://";
+        const httpOrS = ssl ? "https://" : "http://";
+        const prefix = hostName.startsWith("http://") || hostName.startsWith("https://") ? "" : httpOrS;
         service.address = `${prefix}${hostName}${port}${path ? path : ""}`;
         return service.validate();
     }
@@ -32,7 +33,8 @@ class Service{
     validate(){
         const areNotStrings = !(_.isString(this.hostName) && _.isString(this.nodeName) && _.isString(this.serviceName));
         const isInvalidWeight = this.weight > constants.MAX_SERVER_WEIGHT;
-        if(areNotStrings || isInvalidWeight){
+        const areInvalidStrings = !this.serviceName || !this.hostName || !this.nodeName;
+        if(areNotStrings || isInvalidWeight || areInvalidStrings){
             error(statusAndMsgs.MSG_INVALID_SERVICE_DATA);
             return;
         }
