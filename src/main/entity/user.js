@@ -14,7 +14,8 @@ class User {
     }
 }
 
+const admin = new User(constants.DEFAULT_ADMIN_USERNAME_PWD, constants.DEFAULT_ADMIN_USERNAME_PWD)
 module.exports = {
     User,
-    admin: new User(constants.DEFAULT_ADMIN_USERNAME_PWD, constants.DEFAULT_ADMIN_USERNAME_PWD)
+    admin: admin
 }

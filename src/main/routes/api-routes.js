@@ -5,6 +5,7 @@ const discoveryController = require('../controller/maxine/discovery-controller')
 const { signInController } = require('../controller/uac/signin-controller');
 const { logsLinkGenController, recentLogsController, recentLogsClearController } = require('../controller/log-control/logs-controller');
 const { configuratorController, configurationController } = require('../controller/config-control/configurator-controller');
+const { changePwdController } = require('../controller/security/changepwd-controller');
 
 
 let maxineApiRoutes = RouteBuilder.createNewRoute()
@@ -23,6 +24,7 @@ let maxineApiRoutes = RouteBuilder.createNewRoute()
                                 .get("discover", discoveryController)
                             .stepBack()
                             .post("signin", bodyParser.json(), signInController)
+                            .put("change-password", bodyParser.json(), changePwdController)
                             .from("control")
                                 .put("config", bodyParser.json(), configuratorController)
                                 .get("config", configurationController)

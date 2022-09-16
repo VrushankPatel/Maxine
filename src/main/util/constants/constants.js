@@ -63,6 +63,7 @@ const MSG_SERVICE_REMOVED = "Removed from registry";
 const MSG_SERVICE_REGISTERED = "Successfully Registered";
 const MSG_SERVICE_UNAVAILABLE = "Service Unavailable";
 const MSG_MISSING_UNAME_PWD = "Please provide both of these -> userName and password."
+const MSG_MISSING_PWD = "Please provide existing password and new password both."
 const MSG_DB_CON_SUCCESS = "DB Connection Successful";
 const MSG_DB_CON_FAILURE = "Unable to connect to DB, closing App..";
 const MSG_JWT_EXPIRED = "JWT token expired";
@@ -74,6 +75,7 @@ const SERVER_SELECTION_STRATEGIES = ["round-robin", "consistent-hashing"];
 const API_URLS_WITH_AUTH = [
     '/api/maxine/control/config',
     '/api/maxine/serviceops/servers',
+    '/api/maxine/change-password',
     '/api/maxine/verifyToken',
     '/api/logs',
     '/logs'
@@ -142,6 +144,7 @@ const statusAndMsgs = {
     MSG_DB_CON_SUCCESS,
     MSG_DB_CON_FAILURE,
     MSG_MISSING_UNAME_PWD,
+    MSG_MISSING_PWD,
     MSG_JWT_EXPIRED,
     MSG_UNAUTHORIZED,
     MSG_FORBIDDEN
