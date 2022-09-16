@@ -14,10 +14,10 @@ const changePwdController = (req, res) => {
     }
     if (_.isEqual(new User(constants.DEFAULT_ADMIN_USERNAME_PWD, password), admin)){
         admin.password = newPassword;
-        res.json({"accessToken" : "success"});
+        res.status(200).json({"message" : "successfully updated password"});
         return;
     }
-    res.status(statusAndMsgs.STATUS_UNAUTHORIZED).json({"message" : statusAndMsgs.MSG_UNAUTHORIZED});
+    res.status(statusAndMsgs.STATUS_GENERIC_ERROR).json({"message" : statusAndMsgs.MSG_MISSING_PWD});
 }
 
 module.exports = {
