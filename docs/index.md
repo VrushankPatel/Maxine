@@ -53,18 +53,5 @@ As we can see, maxine SRD is working as a reverse proxy for each servers, and re
 
 ## Limitations
 
-We can not scale the SRD internally, multi-node SRD is under development still.
+Maxine SRD has no such option like internal scaling, multi-node SRD is under development still.
 SRD can be replicated explicitly but without that, SRD can be a single point of failure in the System.
-
-## Project layout
-
-    {
-        "serviceName": "bed-mgmt",
-        "hostName" : "10.72.131.21",
-        "nodeName" : "Node-4",
-        "port": 8080,
-        "ssl" : true,
-        "timeOut" : 30,
-        "weight" : 5,
-        "path" : "/api/v3"
-    }
