@@ -29,7 +29,7 @@ const CONSISTENT_HASH_ALGO = "sha256";
 const CONSISTENT_HASHING_OPTIONS = {
     algorithm: CONSISTENT_HASH_ALGO
 }
-const CIRCLECI_ARTIFACTS = "https://circleci.com/api/v1.1/project/github/VrushankPatel/Maxine-Server/latest/artifacts?branch=master";
+const CIRCLECI_ARTIFACTS = "https://circleci.com/api/v1.1/project/github/VrushankPatel/Maxine/latest/artifacts?branch=master";
 /**
  * Below are SSS : Server Selection Strategies for Load Balancer
  * RR : Round Robin
@@ -80,7 +80,6 @@ const API_URLS_WITH_AUTH = [
     '/api/logs',
     '/logs'
 ];
-const DEFAULT_REPORT = "https://output.circle-artifacts.com/output/job/86b51398-8c83-40cf-b7c1-11a499287f39/artifacts/0/artifacts/performance-summary.html";
 // for Config updates, status codes (customized)
 const CODE_SUCCESS = 0;
 const CODE_TYPE_ERROR = 1;
@@ -121,8 +120,7 @@ const constants = {
     CONFIG_STATUS_CODES,
     RENDEZVOUS_HASH_ALGO,
     CONSISTENT_HASH_ALGO,
-    CONSISTENT_HASHING_OPTIONS,
-    DEFAULT_REPORT
+    CONSISTENT_HASHING_OPTIONS
 };
 
 const statusAndMsgs = {

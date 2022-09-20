@@ -32,14 +32,7 @@ const actuatorConfig = {
                                 res.send(Buffer.from(webres.data));
                             });
                     }).catch(_err => {
-                        axios.get(constants.DEFAULT_REPORT)
-                            .then(webres => {
-                                res.set('Content-Type', 'text/html');
-                                res.send(Buffer.from(webres.data));
-                            }).catch(err => {
-                                res.status(statusAndMsgs.STATUS_SERVER_ERROR).json({"message" : statusAndMsgs.MSG_MAXINE_SERVER_ERROR});
-                                error(err);
-                            });
+                        res.status(404).send({"message" : "Could not retrieve load test report."})
                     })
             }
         }
