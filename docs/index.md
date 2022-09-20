@@ -6,13 +6,13 @@
 <a target="_blank" href="https://sonarcloud.io/summary/new_code?id=VrushankPatel_Gargantua-Maxine-Server"><img src="https://sonarcloud.io/api/project_badges/measure?project=VrushankPatel_Gargantua-Maxine-Server&metric=alert_status" />
 <a target="_blank" href="https://github.com/VrushankPatel/Gargantua-Maxine-Server/actions/workflows/codeql.yml"><img src="https://github.com/VrushankPatel/Gargantua-Maxine-Server/actions/workflows/codeql.yml/badge.svg"/></a>
 <a target="_blank" href="https://github.com/VrushankPatel/Maxine-Server/actions/workflows/node.js.yml"><img src="https://github.com/VrushankPatel/Maxine-Server/actions/workflows/node.js.yml/badge.svg?branch=master"/></a>
-<a target="_blank" href="https://codecov.io/gh/VrushankPatel/Maxine-Server"><img src="https://codecov.io/gh/VrushankPatel/Maxine/branch/master/graph/badge.svg?token=SONYL0TJKT"/></a>
+<a target="_blank" href="https://codecov.io/gh/VrushankPatel/Maxine"><img src="https://codecov.io/gh/VrushankPatel/Maxine/branch/master/graph/badge.svg?token=SONYL0TJKT"/></a>
 <a target="_blank" href="https://maxine-x.herokuapp.com/api/actuator/performance"><img src="https://img.shields.io/badge/k6-Load Test Report-blue"/></a>
 <a target="_blank" href="https://circleci.com/gh/VrushankPatel/Maxine/tree/master"><img src="https://circleci.com/gh/VrushankPatel/Maxine/tree/master.svg?style=svg"></a>
 <a target="_blank" href="https://opensource.org/licenses/MIT"><img src="https://img.shields.io/badge/License-MIT-teal.svg"/></a>
 <a target="_blank" href="https://github.com/VrushankPatel/Maxine-Server/releases"><img src="https://img.shields.io/badge/Maxine-Release-blue" /></a>
 <a target="_blank" href="https://app.fossa.com/reports/a83419a2-657c-400c-b3b6-f04c8a032a56"><img src="https://img.shields.io/badge/Fossa-Report-blue"/></a>
-<a target="_blank" href="https://app.swaggerhub.com/apis-docs/VRUSHANKPATEL5/maxine-api_s/v1#/"><img src="https://img.shields.io/badge/API Docs-Swagger-blue"/></a>
+<a target="_blank" href="https://app.swaggerhub.com/apis-docs/VRUSHANKPATEL5/maxine-api_s/2.0.2#/"><img src="https://img.shields.io/badge/API Docs-Swagger-blue"/></a>
 </div>
 </p>
 
@@ -58,7 +58,13 @@ SRD can be replicated explicitly but without that, SRD can be a single point of 
 
 ## Project layout
 
-    mkdocs.yml    # The configuration file.
-    docs/
-        index.md  # The documentation homepage.
-        ...       # Other markdown pages, images and other files.
+    {
+        "serviceName": "bed-mgmt",
+        "hostName" : "10.72.131.21",
+        "nodeName" : "Node-4",
+        "port": 8080,
+        "ssl" : true,
+        "timeOut" : 30,
+        "weight" : 5,
+        "path" : "/api/v3"
+    }
