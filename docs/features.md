@@ -2,7 +2,7 @@
 ### Dashboard UI
 - Maxine dashboard UI provides a very interactive way to monitor the configuration, logs, SRD info and the SRD's current status like memory occupied, requests per second etc.
 
-<img src="/img/maxine-dashboard.png" />
+<img src="img/maxine-dashboard.png" />
 ### Service registry
 - The service registry is the part of Maxine that register or save the service metadata (Extracted data like serviceName, hostName, nodeName, port, SSL, timeOut, weight, path from heartbeat) in memory to make the retrieval faster.
 - Also, the SRD replicates the more weighted services (The service that sends a weight of more than one).
@@ -63,7 +63,7 @@
         }
 - Maxine client takes care of sending the heartbeat to the registry but before you start the server, you have to provide all these parameters in the properties or configurations.
 - If you pass the above example request to Maxine registry and then open the Maxine UI's servers page, it'll show the registered server like given below.
-<img src="/img/maxine-servers.png" />
+<img src="img/maxine-servers.png" />
 
 ### Asynchronous logging
 - For Maxine SRD, logging is by default enabled and once you start the server, It'll start showing console logs, apart from that it'll also start storing logs into the files.
@@ -75,7 +75,7 @@
 - Also, the old and archived logs will be available on UI, you can download the old and archived logs from the dropdown given right above the Logging console.
 - Also, if you notice in the given picture, maxine supports the asyncronous logging, you can turn off and on it from the logging panel of the UI. It's recommended to keep the async logging on because it can significantly reduce the latency to serve requests.
 <br>
-<img src="/img/maxine-logging.png" />
+<img src="img/maxine-logging.png" />
 ### Config control
 - Maxine config control provides interactive way to manage the configuration.
 - the Settings and Logging tab provides options to monitor and manipulate the Maxine configuration.
