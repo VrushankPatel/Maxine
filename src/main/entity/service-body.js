@@ -20,7 +20,7 @@ class Service{
         service.timeOut = Math.abs(parseInt(timeOut)) || config.heartBeatTimeout;
         service.weight = Math.abs(parseInt(weight)) || 1;
         hostName = hostName || "";
-        port = _.isUndefined(port) ? "" : `:${port}`;
+        port = _.isUndefined(port) || _.isString(port) && _.isEmpty(port) ? "" : `:${port}`;
         path = path || "";
         path = path[0] === "/" ? path : "/" + path;
         path = path[path.length-1] == "/" ? path.slice(0, path.length - 1) : path;
