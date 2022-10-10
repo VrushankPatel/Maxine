@@ -3,6 +3,12 @@ const { format } = require('winston');
 const currDir = require('../../../../conf');
 const { constants } = require('../../util/constants/constants');
 const path = require("path");
+const logDir = path.join(currDir, 'logs');
+const fs = require('fs');
+
+if (!fs.existsSync(logDir)){
+    fs.mkdirSync("logs", { recursive: true });
+}
 
 const logFileTransports = [new winston.transports.Console()]
     .concat(constants.LOGLEVELS.map(logLevel => new winston.transports.File({
