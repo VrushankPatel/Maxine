@@ -7,7 +7,7 @@ const logDir = path.join(currDir, 'logs');
 const fs = require('fs');
 
 if (!fs.existsSync(logDir)){
-    fs.mkdirSync("logs", { recursive: true });
+    fs.mkdirSync(logDir, { recursive: true });
 }
 
 const logFileTransports = [new winston.transports.Console()]
