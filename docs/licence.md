@@ -1,4 +1,4 @@
-<p align="center"><img src="./img/logo.png"  title="Maxine Logo"></p>
+<p align="center"><img src="https://maxine.readthedocs.io/en/latest/img/logo.png"  title="Maxine Logo"></p>
 
 <p align="center">
 <div align=center>
