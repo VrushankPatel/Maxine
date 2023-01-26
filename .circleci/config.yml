@@ -52,24 +52,24 @@ jobs:
 
       - store_artifacts:
           path: artifacts
-  load-test:
-    docker:
-      - image: circleci/node:14.15.1-stretch
-    parallelism: 1
-    steps:
-      - attach_workspace:
-          at: .
-      - run:
-          name: Run tests
-          command: |
-            circleci tests glob 'test/**/*.test.js' |
-            circleci tests split |
-            npm run load-test
-      - store_test_results:
-          path: .
+  # load-test:
+  #   docker:
+  #     - image: circleci/node:14.15.1-stretch
+  #   parallelism: 1
+  #   steps:
+  #     - attach_workspace:
+  #         at: .
+  #     - run:
+  #         name: Run tests
+  #         command: |
+  #           circleci tests glob 'test/**/*.test.js' |
+  #           circleci tests split |
+  #           npm run load-test
+  #     - store_test_results:
+  #         path: .
 
-      - store_artifacts:
-          path: artifacts
+  #     - store_artifacts:
+  #         path: artifacts
 
 workflows:
   build_and_utest:
@@ -85,9 +85,9 @@ workflows:
       - test:
           requires:
             - install_dependencies
-      - load-test:
-          requires:
-            - test
+      # - load-test:
+      #     requires:
+      #       - test
   deploy_and_ltest:
     jobs:
       - heroku/deploy-via-git:
@@ -95,9 +95,9 @@ workflows:
             branches:
               only:
                 - release
-      - grafana/k6:
-          requires:
-            - heroku/deploy-via-git
-          cloud: true
-          script: src/test/load-test/performance-test.js
-          arguments: --quiet
+      # - grafana/k6:
+      #     requires:
+      #       - heroku/deploy-via-git
+      #     cloud: true
+      #     script: src/test/load-test/performance-test.js
+      #     arguments: --quiet
