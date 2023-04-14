@@ -40,6 +40,13 @@ Below is a tiny animation that explains how maxine registers all the services in
 <img src="docs/img/anim/maxine-registry.gif" />
 <br/><br/>
 Notice that the service 3 doesn't have maxine-client installed so it is not sending the heartbeat and therefore, it can not be registered in the maxine registry.
+However, that's not the end of it, the explicit custom client can be developed (based on the API Documentation) to communicate with maxine server.
+Once the services are registered, Below is the animation that shows how services intercommunicate by maxine client and via maxine's service discovery.
+<br/><br/>
+<img src="docs/img/anim/maxine-discovery.gif" />
+<br/><br/>
+As we can see, maxine SRD is working as a reverse proxy for each servers, and redirecting all the requests to the respective servers by searching for their URLS in registery by using the serviceName as a key.
+
 
 ## What problems does Maxine solve?
 
