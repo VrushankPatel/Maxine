@@ -14,6 +14,7 @@ jobs:
           root: .
           paths:
             - .
+            
   install_dependencies:
     docker:
       - image: circleci/node:14.15.1-stretch
