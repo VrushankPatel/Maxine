@@ -1,0 +1,1 @@
+<swagger-ui src="https://raw.githubusercontent.com/VrushankPatel/Maxine/master/api-specs/swagger.yaml"/>
