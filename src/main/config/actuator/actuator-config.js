@@ -4,18 +4,18 @@ const { error } = require("../../util/logging/logging-util");
 
 const statusMonitorConfig = {
     title: constants.STATUSMONITORTITLE,
-    path: constants.ACTUATORPATH + '/status',
     socketPath: '/socket.io',
-    spans: [{interval: 1, retention: 60}, {interval: 5,retention: 60}, {interval: 15,retention: 60}, {interval: 30,retention: 60}],
-    chartVisibility: {
-        cpu: true,mem: true, load: true, rps: true, statusCodes: true, eventLoop: true, heap: true, responseTime: true
-    },
+    path: constants.ACTUATORPATH + '/status',
     healthChecks: [{
         protocol: 'http',
         host: 'localhost',
         path: constants.ACTUATORPATH + '/health',
         port: constants.PORT
-    }]
+    }],
+    spans: [{interval: 1, retention: 60}, {interval: 5,retention: 60}, {interval: 15,retention: 60}, {interval: 30,retention: 60}],
+    chartVisibility: {
+        cpu: true,mem: true, load: true, rps: true, statusCodes: true, eventLoop: true, heap: true, responseTime: true
+    },
 }
 
 const actuatorConfig = {
@@ -32,7 +32,7 @@ const actuatorConfig = {
                                 res.send(Buffer.from(webres.data));
                             });
                     }).catch(_err => {
-                        res.status(404).send({"message" : "Could not retrieve load test report."})
+                        res.status(404).send({"message" : "Can not retrieve load test report."})
                     })
             }
         }
