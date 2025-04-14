@@ -5,18 +5,18 @@ const { constants } = require('../../util/constants/constants');
 const logFileTransports = [new winston.transports.Console()]
     .concat(constants.LOGLEVELS.map(logLevel => new winston.transports.File({
         level: logLevel,
-        filename: `logs/Maxine-${logLevel}.log`,
-        maxsize:1000000,
-        keep: 5,
+        filename: `logx/Maxine-${logLevel}.log`,
+        maxsize:2000000,
+        keep: 10,
         compress: true
     }))
 );
 
 let last100LogsTrack = [];
 
-const getRecents = () => last100LogsTrack.join("\n");
-
 const clearRecents = () => last100LogsTrack = [""];
+
+const getRecents = () => last100LogsTrack.join("\n\n");
 
 const addToRecentLogs = (message) => {
     setTimeout(() => {
@@ -29,8 +29,6 @@ const addToRecentLogs = (message) => {
 
 const logConfiguration = {
     transports: logFileTransports,
-    // exceptionHandlers: [new winston.transports.File({ filename: "logs/Maxine-exceptions.log" })],
-    // rejectionHandlers: [new winston.transports.File({ filename: "logs/Maxine-rejections.log" })],
     format: format.combine(
         format.printf(log => {
             setTimeout(() => addToRecentLogs(log.message), 0);
