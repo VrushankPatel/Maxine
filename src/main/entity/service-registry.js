@@ -12,6 +12,7 @@ class ServiceRegistry{
     responseTimes = new Map();
     saveTimeout = null;
     changes = [];
+    webhooks = new Map(); // serviceName -> set of webhook URLs
 
     constructor() {
         this.loadFromFile();
@@ -20,21 +21,52 @@ class ServiceRegistry{
     getRegServers = () => this.registry;
 
     addChange = (type, serviceName, nodeName, data) => {
-        this.changes.push({
+        const change = {
             type,
             serviceName,
             nodeName,
             data,
             timestamp: Date.now()
-        });
+        };
+        this.changes.push(change);
         // Keep only last 1000 changes
         if (this.changes.length > 1000) {
             this.changes.shift();
         }
+        // Notify webhooks asynchronously
+        this.notifyWebhooks(serviceName, change);
+    }
+
+    notifyWebhooks = (serviceName, change) => {
+        const urls = this.getWebhooks(serviceName);
+        urls.forEach(url => {
+            // Send POST request to webhook
+            const axios = require('axios');
+            axios.post(url, change, { timeout: 5000 }).catch(err => {
+                console.error('Webhook notification failed:', url, err.message);
+            });
+        });
     }
 
     getChangesSince = (since) => {
         return this.changes.filter(change => change.timestamp > since);
+    }
+
+    addWebhook = (serviceName, url) => {
+        if (!this.webhooks.has(serviceName)) {
+            this.webhooks.set(serviceName, new Set());
+        }
+        this.webhooks.get(serviceName).add(url);
+    }
+
+    removeWebhook = (serviceName, url) => {
+        if (this.webhooks.has(serviceName)) {
+            this.webhooks.get(serviceName).delete(url);
+        }
+    }
+
+    getWebhooks = (serviceName) => {
+        return this.webhooks.has(serviceName) ? Array.from(this.webhooks.get(serviceName)) : [];
     }
 
     getNodes = (serviceName) => (this.registry[serviceName] || {})["nodes"];

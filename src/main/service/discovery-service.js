@@ -41,36 +41,36 @@ class DiscoveryService{
         }
 
         let node;
-        switch(config.serverSelectionStrategy){
-            case constants.SSS.RR:
+        switch(config.serverSelectionStrategy.name){
+            case 'RR':
             node = this.rrd.getNode(fullServiceName);
             break;
 
-            case constants.SSS.WRR:
+            case 'WRR':
             node = this.wrrd.getNode(fullServiceName);
             break;
 
-            case constants.SSS.LRT:
+            case 'LRT':
             node = this.lrtd.getNode(fullServiceName);
             break;
 
-            case constants.SSS.CH:
+            case 'CH':
             node = this.chd.getNode(fullServiceName, ip);
             break;
 
-            case constants.SSS.RH:
+            case 'RH':
             node = this.rhd.getNode(fullServiceName, ip);
             break;
 
-            case constants.SSS.LC:
+            case 'LC':
             node = this.lcd.getNode(fullServiceName);
             break;
 
-            case constants.SSS.LL:
+            case 'LL':
             node = this.lld.getNode(fullServiceName);
             break;
 
-            case constants.SSS.RANDOM:
+            case 'RANDOM':
             node = this.rand.getNode(fullServiceName);
             break;
 
