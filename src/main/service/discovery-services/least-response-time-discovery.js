@@ -8,32 +8,27 @@ class LeastResponseTimeDiscovery {
      * @returns {object}
      */
     getNode = (fullServiceName) => {
-        const nodes = serviceRegistry.getNodes(fullServiceName) || {};
         const healthyNodeNames = serviceRegistry.getHealthyNodes(fullServiceName);
         if (healthyNodeNames.length === 0) return null;
 
-        let selectedNode = null;
+        let selectedNodeName = null;
         let minResponseTime = Infinity;
 
         for (const nodeName of healthyNodeNames) {
-            const node = nodes[nodeName];
-            if (node) {
-                const avgResponseTime = serviceRegistry.getAverageResponseTime(fullServiceName, nodeName);
-                if (avgResponseTime < minResponseTime) {
-                    minResponseTime = avgResponseTime;
-                    selectedNode = node;
-                }
+            const avgResponseTime = serviceRegistry.getAverageResponseTime(fullServiceName, nodeName);
+            if (avgResponseTime < minResponseTime) {
+                minResponseTime = avgResponseTime;
+                selectedNodeName = nodeName;
             }
         }
 
         // If no response times recorded, fall back to round-robin
-        if (!selectedNode || minResponseTime === Infinity) {
+        if (!selectedNodeName || minResponseTime === Infinity) {
             const offset = this.getOffsetAndIncrement(fullServiceName);
-            const key = healthyNodeNames[offset % healthyNodeNames.length];
-            selectedNode = nodes[key];
+            selectedNodeName = healthyNodeNames[offset % healthyNodeNames.length];
         }
 
-        return selectedNode;
+        return selectedNodeName;
     }
 
     /**

@@ -12,20 +12,20 @@ const https = require('https');
 const proxy = httpProxy.createProxyServer({
     agent: new http.Agent({
         keepAlive: true,
-        maxSockets: 50000, // Increased for higher throughput
-        maxFreeSockets: 25600,
+        maxSockets: 10000, // Optimized for high throughput without memory issues
+        maxFreeSockets: 5000,
         timeout: 60000,
-        keepAliveMsecs: 30000
+        keepAliveMsecs: 60000
     }),
     httpsAgent: new https.Agent({
         keepAlive: true,
-        maxSockets: 50000, // Increased for higher throughput
-        maxFreeSockets: 25600,
+        maxSockets: 10000, // Optimized for high throughput without memory issues
+        maxFreeSockets: 5000,
         timeout: 60000,
-        keepAliveMsecs: 30000
+        keepAliveMsecs: 60000
     }),
-    proxyTimeout: 30000, // 30 second timeout for proxy requests
-    timeout: 30000
+    proxyTimeout: 60000, // 60 second timeout for proxy requests
+    timeout: 60000
 });
 
 proxy.on('error', (err, req, res) => {

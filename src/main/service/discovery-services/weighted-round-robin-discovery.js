@@ -8,13 +8,11 @@ class WeightedRoundRobinDiscovery {
      * @returns {object}
      */
     getNode = (fullServiceName) => {
-        const nodes = serviceRegistry.getNodes(fullServiceName) || {};
         const expanded = serviceRegistry.expandedHealthy.get(fullServiceName) || [];
         if (expanded.length === 0) return null;
 
         const offset = this.getOffsetAndIncrement(fullServiceName);
-        const nodeName = expanded[offset % expanded.length];
-        return nodes[nodeName];
+        return expanded[offset % expanded.length];
     }
 
     /**

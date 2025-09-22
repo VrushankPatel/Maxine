@@ -10,8 +10,22 @@ const httpProxy = require('http-proxy');
 const http = require('http');
 const https = require('https');
 const proxy = httpProxy.createProxyServer({
-    agent: new http.Agent({ keepAlive: true, maxSockets: 500, maxFreeSockets: 256, timeout: 60000 }),
-    httpsAgent: new https.Agent({ keepAlive: true, maxSockets: 500, maxFreeSockets: 256, timeout: 60000 })
+    agent: new http.Agent({
+        keepAlive: true,
+        maxSockets: 10000,
+        maxFreeSockets: 5000,
+        timeout: 60000,
+        keepAliveMsecs: 60000
+    }),
+    httpsAgent: new https.Agent({
+        keepAlive: true,
+        maxSockets: 10000,
+        maxFreeSockets: 5000,
+        timeout: 60000,
+        keepAliveMsecs: 60000
+    }),
+    proxyTimeout: 60000,
+    timeout: 60000
 });
 
 proxy.on('error', (err, req, res) => {

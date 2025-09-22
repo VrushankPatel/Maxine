@@ -8,22 +8,21 @@ class LeastLoadedDiscovery{
      * @returns {object}
      */
     getNode = (fullServiceName) => {
-        const nodes = serviceRegistry.getNodes(fullServiceName) || {};
         const healthyNodeNames = serviceRegistry.getHealthyNodes(fullServiceName);
         if (healthyNodeNames.length === 0) return null;
 
         let minConnections = Infinity;
-        let selectedNode = null;
+        let selectedNodeName = null;
 
         for (const nodeName of healthyNodeNames) {
             const connections = serviceRegistry.getActiveConnections(fullServiceName, nodeName);
             if (connections < minConnections) {
                 minConnections = connections;
-                selectedNode = nodes[nodeName];
+                selectedNodeName = nodeName;
             }
         }
 
-        return selectedNode;
+        return selectedNodeName;
     }
 }
 

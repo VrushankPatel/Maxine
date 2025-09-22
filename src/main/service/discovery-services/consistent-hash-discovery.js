@@ -9,11 +9,10 @@ class ConsistentHashDiscovery{
      * @returns {object}
      */
     getNode = (fullServiceName, ip) => {
-        const ring = serviceRegistry.hashRegistry[fullServiceName];
-        if (!ring) return null;
-        const nodeName = ring.get(ip);
-        const nodes = serviceRegistry.getNodes(fullServiceName);
-        return nodes ? nodes[nodeName] : null;
+        const healthyNodeNames = serviceRegistry.getHealthyNodes(fullServiceName);
+        if (healthyNodeNames.length === 0) return null;
+        const hash = ip.split('').reduce((a, b) => a + b.charCodeAt(0), 0);
+        return healthyNodeNames[hash % healthyNodeNames.length];
     }
 }
 
