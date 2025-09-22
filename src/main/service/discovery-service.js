@@ -6,6 +6,7 @@ const { LeastResponseTimeDiscovery } = require("./discovery-services/least-respo
 const { LeastConnectionsDiscovery } = require("./discovery-services/least-connections-discovery");
 const { LeastLoadedDiscovery } = require("./discovery-services/least-loaded-discovery");
 const { RandomDiscovery } = require("./discovery-services/random-discovery");
+const { PowerOfTwoDiscovery } = require("./discovery-services/power-of-two-discovery");
 const LRU = require('lru-cache');
 const config = require("../config/config");
 const { constants } = require("../util/constants/constants");
@@ -19,6 +20,7 @@ class DiscoveryService{
     lcd = new LeastConnectionsDiscovery();
     lld = new LeastLoadedDiscovery();
     rand = new RandomDiscovery();
+    p2d = new PowerOfTwoDiscovery();
     cache = new LRU({ max: 500000, ttl: config.discoveryCacheTTL });
     serviceKeys = new Map(); // Map serviceName to set of cache keys
 
@@ -72,6 +74,10 @@ class DiscoveryService{
 
             case 'RANDOM':
             node = this.rand.getNode(fullServiceName);
+            break;
+
+            case 'P2':
+            node = this.p2d.getNode(fullServiceName);
             break;
 
             default:
