@@ -6,6 +6,7 @@ class MetricsService {
             failedRequests: 0,
             averageLatency: 0,
             latencies: [],
+            latencySum: 0,
             serviceRequests: {},
             errors: {}
         };
@@ -19,10 +20,11 @@ class MetricsService {
             this.metrics.failedRequests++;
         }
         this.metrics.latencies.push(latency);
+        this.metrics.latencySum += latency;
         if (this.metrics.latencies.length > 1000) {
-            this.metrics.latencies.shift(); // keep last 1000
+            this.metrics.latencySum -= this.metrics.latencies.shift(); // keep last 1000
         }
-        this.metrics.averageLatency = this.metrics.latencies.reduce((a, b) => a + b, 0) / this.metrics.latencies.length;
+        this.metrics.averageLatency = this.metrics.latencySum / this.metrics.latencies.length;
 
         if (!this.metrics.serviceRequests[serviceName]) {
             this.metrics.serviceRequests[serviceName] = 0;

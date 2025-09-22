@@ -22,11 +22,12 @@ class DiscoveryService{
      * Get serviceName and IP and based on the serverSelectionStrategy we've selected, It'll call that discoveryService and retrieve the node from it. (Ex. RoundRobin, Rendezvous, ConsistentHashing).
      * @param {string} serviceName
      * @param {string} ip
+     * @param {string} version
      * @returns {object}
      */
-    getNode = (serviceName, ip) => {
+    getNode = (serviceName, ip, version) => {
         const usesIp = [constants.SSS.CH, constants.SSS.RH].includes(config.serverSelectionStrategy);
-        const cacheKey = usesIp ? `${serviceName}:${ip}` : serviceName;
+        const cacheKey = usesIp ? `${serviceName}:${version || ''}:${ip}` : `${serviceName}:${version || ''}`;
         const cached = this.cache.get(cacheKey);
         if (cached && (Date.now() - cached.timestamp) < config.discoveryCacheTTL) {
             return cached.node;
@@ -35,35 +36,35 @@ class DiscoveryService{
         let node;
         switch(config.serverSelectionStrategy){
             case constants.SSS.RR:
-            node = this.rrd.getNode(serviceName);
+            node = this.rrd.getNode(serviceName, version);
             break;
 
             case constants.SSS.WRR:
-            node = this.wrrd.getNode(serviceName);
+            node = this.wrrd.getNode(serviceName, version);
             break;
 
             case constants.SSS.LRT:
-            node = this.lrtd.getNode(serviceName);
+            node = this.lrtd.getNode(serviceName, version);
             break;
 
             case constants.SSS.CH:
-            node = this.chd.getNode(serviceName, ip);
+            node = this.chd.getNode(serviceName, ip, version);
             break;
 
             case constants.SSS.RH:
-            node = this.rhd.getNode(serviceName, ip);
+            node = this.rhd.getNode(serviceName, ip, version);
             break;
 
             case constants.SSS.LC:
-            node = this.lcd.getNode(serviceName);
+            node = this.lcd.getNode(serviceName, version);
             break;
 
             case constants.SSS.RANDOM:
-            node = this.rand.getNode(serviceName);
+            node = this.rand.getNode(serviceName, version);
             break;
 
             default:
-            node = this.rrd.getNode(serviceName);
+            node = this.rrd.getNode(serviceName, version);
         }
 
         this.cache.set(cacheKey, { node, timestamp: Date.now() });
