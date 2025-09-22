@@ -13,10 +13,10 @@ class HealthService {
     }
 
     startBackgroundChecks() {
-        // Run health checks every 60 seconds
+        // Run health checks every 30 seconds
         this.intervalId = setInterval(() => {
             this.performHealthChecks();
-        }, 60000);
+        }, 30000);
     }
 
     stopBackgroundChecks() {
@@ -27,7 +27,7 @@ class HealthService {
     }
 
     async performHealthChecks() {
-        const limit = pLimit(50);
+        const limit = pLimit(100);
         const services = Object.keys(serviceRegistry.registry);
         const allHealthPromises = [];
 

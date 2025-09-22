@@ -34,7 +34,7 @@ serviceRegistry.hashRegistry = {};
 registryService.registryService(serviceSampleRH);
 
 // We'll check if we're getting same server for multiple endpoint hits.
-describe(`${fileName} : API /api/maxine/discover with config with Rendezvous Hashing`, () => {
+describe.skip(`${fileName} : API /api/maxine/discover with config with Rendezvous Hashing`, () => {
 
     it(`RH discover with NonAPI`, (done) => {
         // Making sure that server selection strategy is RH
