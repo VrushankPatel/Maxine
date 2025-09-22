@@ -30,6 +30,11 @@
     - Per-service request counts
     - Error type breakdowns
 - Metrics are collected automatically for all discovery operations.
+### Service Changes Watch API
+- Maxine provides a watch API for real-time monitoring of registry changes.
+- The changes endpoint `/api/maxine/serviceops/changes?since=<timestamp>` returns all registry events (register, deregister, health status changes) that occurred after the specified timestamp.
+- This enables clients to poll for updates and maintain synchronized views of the service registry without full refreshes.
+- Changes are tracked for the last 1000 events to balance memory usage with historical visibility.
 ### Load Balancing
 - If there are multiple nodes of that service available in the registry, then the discovery needs to distribute the load across those nodes.
 - Choosing the right server is a very important thing here because if we're using the server-side and server-specific cache, then choosing the wrong node or server might cost us (High latency especially).
