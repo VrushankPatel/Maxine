@@ -1,4 +1,5 @@
 const { serviceRegistry } = require('../entity/service-registry');
+const config = require('../config/config');
 const axios = require('axios');
 
 class HealthService {
@@ -23,13 +24,16 @@ class HealthService {
 
     async performHealthChecks() {
         const services = Object.keys(serviceRegistry.registry);
+        const allHealthPromises = [];
+
         for (const serviceName of services) {
             const nodes = serviceRegistry.getNodes(serviceName);
             if (!nodes) continue;
 
             const healthPromises = Object.entries(nodes).map(async ([nodeName, node]) => {
                 try {
-                    const response = await axios.get(node.address, { timeout: 5000 });
+                    const healthUrl = node.address + (node.metadata.healthEndpoint || '');
+                    const response = await axios.get(healthUrl, { timeout: 5000 });
                     // Update registry with healthy status
                     const nodeObj = serviceRegistry.registry[serviceName].nodes[nodeName];
                     if (nodeObj) {
@@ -37,20 +41,26 @@ class HealthService {
                         nodeObj.failureCount = 0;
                         nodeObj.lastFailureTime = null;
                         serviceRegistry.addToHealthyNodes(serviceName, nodeName);
+                        serviceRegistry.debounceSave();
                     }
                 } catch (error) {
                     // Update registry with unhealthy status
                     const nodeObj = serviceRegistry.registry[serviceName].nodes[nodeName];
                     if (nodeObj) {
-                        nodeObj.healthy = false;
                         nodeObj.failureCount = (nodeObj.failureCount || 0) + 1;
                         nodeObj.lastFailureTime = Date.now();
-                        serviceRegistry.removeFromHealthyNodes(serviceName, nodeName);
+                        if (nodeObj.failureCount >= config.failureThreshold) {
+                            nodeObj.healthy = false;
+                            serviceRegistry.removeFromHealthyNodes(serviceName, nodeName);
+                            serviceRegistry.debounceSave();
+                        }
                     }
                 }
             });
-            await Promise.all(healthPromises);
+            allHealthPromises.push(...healthPromises);
         }
+
+        await Promise.all(allHealthPromises);
     }
 }
 

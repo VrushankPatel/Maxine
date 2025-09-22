@@ -8,8 +8,8 @@ const httpProxy = require('http-proxy');
 const http = require('http');
 const https = require('https');
 const proxy = httpProxy.createProxyServer({
-    agent: new http.Agent({ keepAlive: true, maxSockets: 500, maxFreeSockets: 256, timeout: 60000 }),
-    httpsAgent: new https.Agent({ keepAlive: true, maxSockets: 500, maxFreeSockets: 256, timeout: 60000 })
+    agent: new http.Agent({ keepAlive: true, maxSockets: 5000, maxFreeSockets: 2560, timeout: 60000 }),
+    httpsAgent: new https.Agent({ keepAlive: true, maxSockets: 5000, maxFreeSockets: 2560, timeout: 60000 })
 });
 
 proxy.on('error', (err, req, res) => {
@@ -54,6 +54,10 @@ const discoveryController = (req, res) => {
     const addressToRedirect = serviceNode.address + (endPoint.length > 0 ? (endPoint[0] == "/" ? endPoint : `/${endPoint}`) : "");
     info(`Proxying to ${addressToRedirect}`);
 
+    // Increment active connections
+    const { serviceRegistry } = require("../../entity/service-registry");
+    serviceRegistry.incrementActiveConnections(serviceName, serviceNode.nodeName);
+
     try {
         proxy.web(req, res, { target: addressToRedirect, changeOrigin: true });
         const latency = Date.now() - startTime;
@@ -63,8 +67,17 @@ const discoveryController = (req, res) => {
         const latency = Date.now() - startTime;
         metricsService.recordRequest(serviceName, false, latency);
         metricsService.recordError('proxy_error');
+        serviceRegistry.decrementActiveConnections(serviceName, serviceNode.nodeName);
         res.status(500).json({ message: 'Proxy Error' });
     }
+
+    // Decrement on response finish
+    res.on('finish', () => {
+        serviceRegistry.decrementActiveConnections(serviceName, serviceNode.nodeName);
+    });
+    res.on('close', () => {
+        serviceRegistry.decrementActiveConnections(serviceName, serviceNode.nodeName);
+    });
 }
 
 module.exports = discoveryController

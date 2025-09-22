@@ -4,25 +4,26 @@ const _ = require('lodash');
 class RegistryService{
 
     registerService = (serviceObj) => {
-        const {serviceName, nodeName, address, timeOut, weight} = serviceObj;
+        const {serviceName, version, nodeName, address, timeOut, weight, metadata} = serviceObj;
+        const fullServiceName = version ? `${serviceName}:${version}` : serviceName;
 
-        if (!sRegistry.registry[serviceName]){
-            sRegistry.registry[serviceName] = {offset: 0, nodes: {}};
+        if (!sRegistry.registry[fullServiceName]){
+            sRegistry.registry[fullServiceName] = {offset: 0, nodes: {}};
         }
 
         [...Array(weight).keys()].forEach(index => {
             const subNodeName = `${nodeName}-${index}`;
 
-            sRegistry.addNodeToHashRegistry(serviceName, subNodeName);
+            sRegistry.addNodeToHashRegistry(fullServiceName, subNodeName);
 
-            if(sRegistry.registry[serviceName]["nodes"][subNodeName]){
+            if(sRegistry.registry[fullServiceName]["nodes"][subNodeName]){
                 clearTimeout(
                     sRegistry
                         .timeResetters[sRegistry
-                                        .registry[serviceName]["nodes"][subNodeName]["nodeName"]]);
+                                        .registry[fullServiceName]["nodes"][subNodeName]["nodeName"]]);
             }
 
-            sRegistry.registry[serviceName]["nodes"][subNodeName] = {
+            sRegistry.registry[fullServiceName]["nodes"][subNodeName] = {
                 "nodeName" : subNodeName,
                 "parentNode" : nodeName,
                 "address" : address,
@@ -30,19 +31,20 @@ class RegistryService{
                 "registeredAt" : Date.now(),
                 "healthy" : true,
                 "failureCount" : 0,
-                "lastFailureTime" : null
+                "lastFailureTime" : null,
+                "metadata" : metadata
             }
 
-            sRegistry.addToHealthyNodes(serviceName, subNodeName);
+            sRegistry.addToHealthyNodes(fullServiceName, subNodeName);
 
             const timeResetter = setTimeout(() => {
-                delete sRegistry.registry[serviceName]["nodes"][subNodeName];
-                if(Object.keys(sRegistry.registry[serviceName]["nodes"]).length === 0){
-                    delete sRegistry.registry[serviceName];
+                delete sRegistry.registry[fullServiceName]["nodes"][subNodeName];
+                if(Object.keys(sRegistry.registry[fullServiceName]["nodes"]).length === 0){
+                    delete sRegistry.registry[fullServiceName];
                 }
-                sRegistry.removeNodeFromRegistry(serviceName, subNodeName);
-                if(Object.keys(sRegistry.hashRegistry[serviceName]["nodes"]).length === 0){
-                    delete sRegistry.hashRegistry[serviceName];
+                sRegistry.removeNodeFromRegistry(fullServiceName, subNodeName);
+                if(Object.keys(sRegistry.hashRegistry[fullServiceName]["nodes"]).length === 0){
+                    delete sRegistry.hashRegistry[fullServiceName];
                 }
             }, ((timeOut)*1000)+500);
 
@@ -53,7 +55,7 @@ class RegistryService{
     registryService = (serviceObj) => {
         let service = Service.buildByObj(serviceObj);
         if(!service || _.isNull(service)) return;
-        setTimeout(this.registerService, 0, service);
+        this.registerService(service);
         service.registeredAt = new Date().toLocaleString();
         return service;
     }

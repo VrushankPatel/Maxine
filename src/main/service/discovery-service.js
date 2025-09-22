@@ -21,7 +21,8 @@ class DiscoveryService{
      * @returns {object}
      */
     getNode = (serviceName, ip) => {
-        const cacheKey = `${serviceName}:${ip}`;
+        const usesIp = [constants.SSS.CH, constants.SSS.RH].includes(config.serverSelectionStrategy);
+        const cacheKey = usesIp ? `${serviceName}:${ip}` : serviceName;
         const cached = this.cache.get(cacheKey);
         if (cached && (Date.now() - cached.timestamp) < config.discoveryCacheTTL) {
             return cached.node;
@@ -30,7 +31,7 @@ class DiscoveryService{
         let node;
         switch(config.serverSelectionStrategy){
             case constants.SSS.RR:
-            node = this.rrd.getNode(serviceName, ip);
+            node = this.rrd.getNode(serviceName);
             break;
 
             case constants.SSS.CH:
@@ -42,15 +43,15 @@ class DiscoveryService{
             break;
 
             case constants.SSS.LC:
-            node = this.lcd.getNode(serviceName, ip);
+            node = this.lcd.getNode(serviceName);
             break;
 
             case constants.SSS.RANDOM:
-            node = this.rand.getNode(serviceName, ip);
+            node = this.rand.getNode(serviceName);
             break;
 
             default:
-            node = this.rrd.getNode(serviceName, ip);
+            node = this.rrd.getNode(serviceName);
         }
 
         this.cache.set(cacheKey, { node, timestamp: Date.now() });

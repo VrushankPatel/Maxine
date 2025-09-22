@@ -8,7 +8,8 @@ const config = {
     statusMonitorEnabled: true,
     serverSelectionStrategy: constants.SSS.RR,
     logFormat: constants.LOG_FORMATS.JSON,
-    discoveryCacheTTL: 60000 // 60 seconds
+    discoveryCacheTTL: 60000, // 60 seconds
+    failureThreshold: 3 // number of failures before marking unhealthy
 }
 
 Object.defineProperty(config, "profile", {
