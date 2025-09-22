@@ -12,7 +12,8 @@ const LOG_EXPELLED_URLS = [
     "/api/logs/recent",
     "/api/logs/download",
     "/api/logs/latestfile",
-    "/api/maxine/serviceops/servers"
+    "/api/maxine/serviceops/servers",
+    "/api/maxine/serviceops/discover"
 ]
 const SWAGGER_PATH = "./api-specs/swagger.yaml";
 const ACTUATORPATH = '/api/actuator';

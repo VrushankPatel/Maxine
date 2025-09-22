@@ -1,7 +1,7 @@
 const RouteBuilder = require('../builders/route-builder');
 const bodyParser = require('body-parser');
 const rateLimit = require('express-rate-limit');
-const { serverListController, registryController, deregisterController, healthController, metricsController, filteredDiscoveryController, discoveryInfoController, changesController } = require('../controller/maxine/registry-controller');
+const { serverListController, registryController, deregisterController, healthController, metricsController, filteredDiscoveryController, discoveryInfoController, changesController, bulkRegisterController, bulkDeregisterController } = require('../controller/maxine/registry-controller');
 const discoveryController = require('../controller/maxine/discovery-controller');
 const { signInController } = require('../controller/uac/signin-controller');
 const { logsLinkGenController, recentLogsController, recentLogsClearController } = require('../controller/log-control/logs-controller');
@@ -28,8 +28,10 @@ let maxineApiRoutes = RouteBuilder.createNewRoute()
                          .from("maxine")
                              .from("serviceops")
                                  .get("servers", authenticationController, serverListController)
-                                 .post("register", authenticationController, bodyParser.json(), registryController)
-                                 .delete("deregister", authenticationController, bodyParser.json(), deregisterController)
+                                  .post("register", authenticationController, bodyParser.json(), registryController)
+                                  .post("register/bulk", authenticationController, bodyParser.json(), bulkRegisterController)
+                                  .delete("deregister", authenticationController, bodyParser.json(), deregisterController)
+                                  .delete("deregister/bulk", authenticationController, bodyParser.json(), bulkDeregisterController)
                                   .get("discover", authenticationController, discoveryController)
                                   .get("discover/info", authenticationController, discoveryInfoController)
                                   .get("discover/filtered", authenticationController, filteredDiscoveryController)

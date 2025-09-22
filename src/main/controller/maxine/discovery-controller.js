@@ -25,6 +25,7 @@ const discoveryController = (req, res) => {
     // Retrieving the serviceName from query params
     const serviceName = req.query.serviceName;
     const version = req.query.version;
+    const namespace = req.query.namespace || "default";
     const endPoint = req.query.endPoint || "";
     const ip = req.ip
     || req.connection.remoteAddress
@@ -41,7 +42,7 @@ const discoveryController = (req, res) => {
     }
 
     // now, retrieving the serviceNode from the registry
-    const serviceNode = discoveryService.getNode(serviceName, ip, version);
+    const serviceNode = discoveryService.getNode(serviceName, ip, version, namespace);
 
     // no service node is there so, service unavailable is our error response.
     if(_.isEmpty(serviceNode)){
@@ -57,7 +58,8 @@ const discoveryController = (req, res) => {
 
     // Increment active connections
     const { serviceRegistry } = require("../../entity/service-registry");
-    serviceRegistry.incrementActiveConnections(serviceName, serviceNode.nodeName);
+    const fullServiceName = version ? `${namespace}:${serviceName}:${version}` : `${namespace}:${serviceName}`;
+    serviceRegistry.incrementActiveConnections(fullServiceName, serviceNode.nodeName);
 
     try {
         proxy.web(req, res, { target: addressToRedirect, changeOrigin: true });
@@ -66,7 +68,7 @@ const discoveryController = (req, res) => {
         const latency = Date.now() - startTime;
         metricsService.recordRequest(serviceName, false, latency);
         metricsService.recordError('proxy_error');
-        serviceRegistry.decrementActiveConnections(serviceName, serviceNode.nodeName);
+        serviceRegistry.decrementActiveConnections(fullServiceName, serviceNode.nodeName);
         res.status(500).json({ message: 'Proxy Error' });
         return;
     }
@@ -78,12 +80,12 @@ const discoveryController = (req, res) => {
         metricsService.recordRequest(serviceName, success, latency);
         if (success) {
             // Record response time for LRT algorithm
-            serviceRegistry.recordResponseTime(serviceName, serviceNode.nodeName, latency);
+            serviceRegistry.recordResponseTime(fullServiceName, serviceNode.nodeName, latency);
         }
-        serviceRegistry.decrementActiveConnections(serviceName, serviceNode.nodeName);
+        serviceRegistry.decrementActiveConnections(fullServiceName, serviceNode.nodeName);
     });
     res.on('close', () => {
-        serviceRegistry.decrementActiveConnections(serviceName, serviceNode.nodeName);
+        serviceRegistry.decrementActiveConnections(fullServiceName, serviceNode.nodeName);
     });
 }
 

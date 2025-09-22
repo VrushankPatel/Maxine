@@ -7,12 +7,9 @@ class RandomDiscovery{
      * @param {string} version
      * @returns {object}
      */
-    getNode = (serviceName, version) => {
-        const nodes = serviceRegistry.getNodes(serviceName) || {};
-        let healthyNodeNames = serviceRegistry.getHealthyNodes(serviceName);
-        if (version) {
-            healthyNodeNames = healthyNodeNames.filter(nodeName => nodes[nodeName] && nodes[nodeName].version === version);
-        }
+    getNode = (fullServiceName) => {
+        const nodes = serviceRegistry.getNodes(fullServiceName) || {};
+        const healthyNodeNames = serviceRegistry.getHealthyNodes(fullServiceName);
         if (healthyNodeNames.length === 0) return null;
         const randomIndex = Math.floor(Math.random() * healthyNodeNames.length);
         return nodes[healthyNodeNames[randomIndex]];

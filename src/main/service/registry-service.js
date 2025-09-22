@@ -1,11 +1,12 @@
 const Service = require("../entity/service-body");
 const { serviceRegistry: sRegistry } = require("../entity/service-registry");
+const { discoveryService } = require("../service/discovery-service");
 const _ = require('lodash');
 class RegistryService{
 
     registerService = (serviceObj) => {
-        const {serviceName, version, nodeName, address, timeOut, weight, metadata} = serviceObj;
-        const fullServiceName = version ? `${serviceName}:${version}` : serviceName;
+        const {serviceName, version, namespace, nodeName, address, timeOut, weight, metadata} = serviceObj;
+        const fullServiceName = version ? `${namespace}:${serviceName}:${version}` : `${namespace}:${serviceName}`;
 
         if (!sRegistry.registry[fullServiceName]){
             sRegistry.registry[fullServiceName] = {offset: 0, nodes: {}};
@@ -51,6 +52,7 @@ class RegistryService{
             sRegistry.timeResetters[subNodeName] = timeResetter;
         });
         sRegistry.addChange('register', fullServiceName, nodeName, { address, metadata });
+        discoveryService.invalidateServiceCache(fullServiceName);
     }
 
     registryService = (serviceObj) => {
@@ -61,9 +63,10 @@ class RegistryService{
         return service;
     }
 
-    deregisterService = (serviceName, nodeName) => {
-        if (!sRegistry.registry[serviceName]) return false;
-        const nodes = sRegistry.registry[serviceName].nodes;
+    deregisterService = (serviceName, nodeName, namespace = "default") => {
+        const fullServiceName = `${namespace}:${serviceName}`;
+        if (!sRegistry.registry[fullServiceName]) return false;
+        const nodes = sRegistry.registry[fullServiceName].nodes;
         const toRemove = Object.keys(nodes).filter(key => nodes[key].parentNode === nodeName);
         toRemove.forEach(subNode => {
             if (sRegistry.timeResetters[subNode]) {
@@ -71,13 +74,14 @@ class RegistryService{
                 delete sRegistry.timeResetters[subNode];
             }
             delete nodes[subNode];
-            sRegistry.removeNodeFromRegistry(serviceName, subNode);
+            sRegistry.removeNodeFromRegistry(fullServiceName, subNode);
         });
         if (Object.keys(nodes).length === 0) {
-            delete sRegistry.registry[serviceName];
-            delete sRegistry.hashRegistry[serviceName];
+            delete sRegistry.registry[fullServiceName];
+            delete sRegistry.hashRegistry[fullServiceName];
         }
-        sRegistry.addChange('deregister', serviceName, nodeName, {});
+        sRegistry.addChange('deregister', fullServiceName, nodeName, {});
+        discoveryService.invalidateServiceCache(fullServiceName);
         return true;
     }
 }

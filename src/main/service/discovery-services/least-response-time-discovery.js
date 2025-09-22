@@ -7,12 +7,9 @@ class LeastResponseTimeDiscovery {
      * @param {string} version
      * @returns {object}
      */
-    getNode = (serviceName, version) => {
-        const nodes = serviceRegistry.getNodes(serviceName) || {};
-        let healthyNodeNames = serviceRegistry.getHealthyNodes(serviceName);
-        if (version) {
-            healthyNodeNames = healthyNodeNames.filter(nodeName => nodes[nodeName] && nodes[nodeName].version === version);
-        }
+    getNode = (fullServiceName) => {
+        const nodes = serviceRegistry.getNodes(fullServiceName) || {};
+        const healthyNodeNames = serviceRegistry.getHealthyNodes(fullServiceName);
         if (healthyNodeNames.length === 0) return null;
 
         let selectedNode = null;
@@ -21,7 +18,7 @@ class LeastResponseTimeDiscovery {
         for (const nodeName of healthyNodeNames) {
             const node = nodes[nodeName];
             if (node) {
-                const avgResponseTime = serviceRegistry.getAverageResponseTime(serviceName, nodeName);
+                const avgResponseTime = serviceRegistry.getAverageResponseTime(fullServiceName, nodeName);
                 if (avgResponseTime < minResponseTime) {
                     minResponseTime = avgResponseTime;
                     selectedNode = node;
@@ -31,7 +28,7 @@ class LeastResponseTimeDiscovery {
 
         // If no response times recorded, fall back to round-robin
         if (!selectedNode || minResponseTime === Infinity) {
-            const offset = this.getOffsetAndIncrement(serviceName);
+            const offset = this.getOffsetAndIncrement(fullServiceName);
             const key = healthyNodeNames[offset % healthyNodeNames.length];
             selectedNode = nodes[key];
         }
@@ -44,8 +41,8 @@ class LeastResponseTimeDiscovery {
      * @param {string} serviceName
      * @returns {number}
      */
-    getOffsetAndIncrement = (serviceName) => {
-        const service = serviceRegistry.registry[serviceName];
+    getOffsetAndIncrement = (fullServiceName) => {
+        const service = serviceRegistry.registry[fullServiceName];
         if (!service) return 0;
         const currentOffset = service.offset || 0;
         service.offset = currentOffset + 1;

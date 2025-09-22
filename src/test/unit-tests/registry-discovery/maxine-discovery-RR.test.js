@@ -15,10 +15,23 @@ const serviceSampleRR = {
     "nodeName": "node-x-10",
     "port": "8082",
     "serviceName": "dbservice-rr",
+    "version": "1.0",
     "ssl": true,
     "timeOut": 5,
     "weight": 10
 };
+
+// Clear registry for clean test
+const { serviceRegistry } = require('../../../main/entity/service-registry');
+const fs = require('fs');
+const path = require('path');
+const registryPath = path.join(__dirname, '../../../registry.json');
+if (fs.existsSync(registryPath)) {
+    fs.unlinkSync(registryPath);
+}
+serviceRegistry.registry = {};
+serviceRegistry.healthyNodes = new Map();
+serviceRegistry.hashRegistry = {};
 
 // Registering fake server to discover afterwards for tests.
 registryService.registryService(serviceSampleRR);
@@ -29,11 +42,12 @@ describe(`${fileName} : NON API discover with config with Round Robin`, () => {
         config.serverSelectionStrategy = constants.SSS.RR;
         // Reset offset and cache for test
         const { serviceRegistry } = require('../../../main/entity/service-registry');
-        if (serviceRegistry.registry[serviceSampleRR.serviceName]) {
-            serviceRegistry.registry[serviceSampleRR.serviceName].offset = 0;
+        const fullServiceName = `default:${serviceSampleRR.serviceName}`;
+        if (serviceRegistry.registry[fullServiceName]) {
+            serviceRegistry.registry[fullServiceName].offset = 0;
         }
         discoveryService.clearCache();
-        const response1 = discoveryService.getNode(serviceSampleRR.serviceName,serviceSampleRR.hostName);
+        const response1 = discoveryService.getNode(serviceSampleRR.serviceName,serviceSampleRR.hostName, "1.0", "default");
         response1.should.be.a('object');
         // by default, Round robin will return node with name like nodename + '-0', we'll test it.
         response1.should.have.own.property("nodeName", `${serviceSampleRR.nodeName}-0`);

@@ -36,12 +36,12 @@ const serverListController = (_req, res) => {
 }
 
 const deregisterController = (req, res) => {
-    const { serviceName, nodeName } = req.body;
+    const { serviceName, nodeName, namespace } = req.body;
     if (!serviceName || !nodeName) {
         res.status(statusAndMsgs.STATUS_GENERIC_ERROR).json({ message: "Missing serviceName or nodeName" });
         return;
     }
-    const success = registryService.deregisterService(serviceName, nodeName);
+    const success = registryService.deregisterService(serviceName, nodeName, namespace);
     if (success) {
         res.status(statusAndMsgs.STATUS_SUCCESS).json({ message: "Deregistered successfully" });
     } else {
@@ -51,11 +51,13 @@ const deregisterController = (req, res) => {
 
 const healthController = async (req, res) => {
     const serviceName = req.query.serviceName;
+    const namespace = req.query.namespace || "default";
     if (!serviceName) {
         res.status(statusAndMsgs.STATUS_GENERIC_ERROR).json({ message: "Missing serviceName" });
         return;
     }
-    const nodes = serviceRegistry.getNodes(serviceName);
+    const fullServiceName = `${namespace}:${serviceName}`;
+    const nodes = serviceRegistry.getNodes(fullServiceName);
     if (!nodes || Object.keys(nodes).length === 0) {
         res.status(statusAndMsgs.SERVICE_UNAVAILABLE).json({ message: "Service not found" });
         return;
@@ -65,23 +67,23 @@ const healthController = async (req, res) => {
             const healthUrl = node.address + (node.metadata.healthEndpoint || '');
             const response = await axios.get(healthUrl, { timeout: 5000 });
             // Update registry with healthy status
-            if (serviceRegistry.registry[serviceName] && serviceRegistry.registry[serviceName].nodes[nodeName]) {
-                const nodeObj = serviceRegistry.registry[serviceName].nodes[nodeName];
+            if (serviceRegistry.registry[fullServiceName] && serviceRegistry.registry[fullServiceName].nodes[nodeName]) {
+                const nodeObj = serviceRegistry.registry[fullServiceName].nodes[nodeName];
                 nodeObj.healthy = true;
                 nodeObj.failureCount = 0;
                 nodeObj.lastFailureTime = null;
-                serviceRegistry.addToHealthyNodes(serviceName, nodeName);
+                serviceRegistry.addToHealthyNodes(fullServiceName, nodeName);
                 serviceRegistry.debounceSave();
             }
             return [nodeName, { status: 'healthy', code: response.status }];
         } catch (error) {
             // Update registry with unhealthy status
-            if (serviceRegistry.registry[serviceName] && serviceRegistry.registry[serviceName].nodes[nodeName]) {
-                const nodeObj = serviceRegistry.registry[serviceName].nodes[nodeName];
+            if (serviceRegistry.registry[fullServiceName] && serviceRegistry.registry[fullServiceName].nodes[nodeName]) {
+                const nodeObj = serviceRegistry.registry[fullServiceName].nodes[nodeName];
                 nodeObj.healthy = false;
                 nodeObj.failureCount = (nodeObj.failureCount || 0) + 1;
                 nodeObj.lastFailureTime = Date.now();
-                serviceRegistry.removeFromHealthyNodes(serviceName, nodeName);
+                serviceRegistry.removeFromHealthyNodes(fullServiceName, nodeName);
                 serviceRegistry.debounceSave();
             }
             return [nodeName, { status: 'unhealthy', error: error.message }];
@@ -89,12 +91,13 @@ const healthController = async (req, res) => {
     });
     const healthResultsArray = await Promise.all(healthPromises);
     const healthResults = Object.fromEntries(healthResultsArray);
-    res.status(statusAndMsgs.STATUS_SUCCESS).json({ serviceName, health: healthResults });
+    res.status(statusAndMsgs.STATUS_SUCCESS).json({ serviceName, namespace, health: healthResults });
 }
 
 const filteredDiscoveryController = (req, res) => {
     const startTime = Date.now();
     const serviceName = req.query.serviceName;
+    const namespace = req.query.namespace || "default";
     const tags = req.query.tags ? req.query.tags.split(',') : [];
     const endPoint = req.query.endPoint || "";
     const ip = req.ip
@@ -110,8 +113,9 @@ const filteredDiscoveryController = (req, res) => {
         return;
     }
 
-    const nodes = serviceRegistry.getNodes(serviceName);
-    const healthyNodeNames = serviceRegistry.getHealthyNodes(serviceName);
+    const fullServiceName = `${namespace}:${serviceName}`;
+    const nodes = serviceRegistry.getNodes(fullServiceName);
+    const healthyNodeNames = serviceRegistry.getHealthyNodes(fullServiceName);
     if (healthyNodeNames.length === 0) {
         const latency = Date.now() - startTime;
         metricsService.recordRequest(serviceName, false, latency);
@@ -140,8 +144,8 @@ const filteredDiscoveryController = (req, res) => {
     }
 
     // Simple round-robin for filtered
-    const offset = (serviceRegistry.registry[serviceName] || {}).filteredOffset || 0;
-    serviceRegistry.registry[serviceName].filteredOffset = (offset + 1) % filteredNodes.length;
+    const offset = (serviceRegistry.registry[fullServiceName] || {}).filteredOffset || 0;
+    serviceRegistry.registry[fullServiceName].filteredOffset = (offset + 1) % filteredNodes.length;
     const selectedNodeName = filteredNodes[offset];
     const serviceNode = nodes[selectedNodeName];
 
@@ -149,7 +153,7 @@ const filteredDiscoveryController = (req, res) => {
     info(`Filtered proxying to ${addressToRedirect}`);
 
     // Increment active connections
-    serviceRegistry.incrementActiveConnections(serviceName, serviceNode.nodeName);
+    serviceRegistry.incrementActiveConnections(fullServiceName, serviceNode.nodeName);
 
     try {
         proxy.web(req, res, { target: addressToRedirect, changeOrigin: true });
@@ -158,7 +162,7 @@ const filteredDiscoveryController = (req, res) => {
         const latency = Date.now() - startTime;
         metricsService.recordRequest(serviceName, false, latency);
         metricsService.recordError('proxy_error');
-        serviceRegistry.decrementActiveConnections(serviceName, serviceNode.nodeName);
+        serviceRegistry.decrementActiveConnections(fullServiceName, serviceNode.nodeName);
         res.status(500).json({ message: 'Proxy Error' });
         return;
     }
@@ -167,10 +171,10 @@ const filteredDiscoveryController = (req, res) => {
         const latency = Date.now() - startTime;
         const success = res.statusCode >= 200 && res.statusCode < 300;
         metricsService.recordRequest(serviceName, success, latency);
-        serviceRegistry.decrementActiveConnections(serviceName, serviceNode.nodeName);
+        serviceRegistry.decrementActiveConnections(fullServiceName, serviceNode.nodeName);
     });
     res.on('close', () => {
-        serviceRegistry.decrementActiveConnections(serviceName, serviceNode.nodeName);
+        serviceRegistry.decrementActiveConnections(fullServiceName, serviceNode.nodeName);
     });
 }
 
@@ -182,6 +186,7 @@ const discoveryInfoController = (req, res) => {
     const startTime = Date.now();
     const serviceName = req.query.serviceName;
     const version = req.query.version;
+    const namespace = req.query.namespace || "default";
     const ip = req.ip
     || req.connection.remoteAddress
     || req.socket.remoteAddress
@@ -195,7 +200,7 @@ const discoveryInfoController = (req, res) => {
         return;
     }
 
-    const serviceNode = discoveryService.getNode(serviceName, ip, version);
+    const serviceNode = discoveryService.getNode(serviceName, ip, version, namespace);
 
     if(_.isEmpty(serviceNode)){
         const latency = Date.now() - startTime;
@@ -211,6 +216,7 @@ const discoveryInfoController = (req, res) => {
     metricsService.recordRequest(serviceName, true, latency);
     res.status(statusAndMsgs.STATUS_SUCCESS).json({
         serviceName,
+        namespace,
         node: {
             nodeName: serviceNode.nodeName,
             address: serviceNode.address,
@@ -225,6 +231,39 @@ const changesController = (req, res) => {
     res.status(statusAndMsgs.STATUS_SUCCESS).json({ changes });
 }
 
+const bulkRegisterController = (req, res) => {
+    const services = req.body;
+    if (!Array.isArray(services)) {
+        res.status(statusAndMsgs.STATUS_GENERIC_ERROR).json({ message: "Body must be an array of services" });
+        return;
+    }
+    const results = services.map(service => {
+        try {
+            const serviceResponse = registryService.registryService(service);
+            return serviceResponse ? { success: true, service: serviceResponse } : { success: false, error: "Invalid service data" };
+        } catch (error) {
+            return { success: false, error: error.message };
+        }
+    });
+    res.status(statusAndMsgs.STATUS_SUCCESS).json({ results });
+}
+
+const bulkDeregisterController = (req, res) => {
+    const services = req.body;
+    if (!Array.isArray(services)) {
+        res.status(statusAndMsgs.STATUS_GENERIC_ERROR).json({ message: "Body must be an array of {serviceName, nodeName, namespace}" });
+        return;
+    }
+    const results = services.map(({ serviceName, nodeName, namespace }) => {
+        if (!serviceName || !nodeName) {
+            return { success: false, error: "Missing serviceName or nodeName" };
+        }
+        const success = registryService.deregisterService(serviceName, nodeName, namespace);
+        return success ? { success: true } : { success: false, error: "Service not found" };
+    });
+    res.status(statusAndMsgs.STATUS_SUCCESS).json({ results });
+}
+
 module.exports = {
     registryController,
     serverListController,
@@ -233,5 +272,7 @@ module.exports = {
     metricsController,
     filteredDiscoveryController,
     discoveryInfoController,
-    changesController
+    changesController,
+    bulkRegisterController,
+    bulkDeregisterController
 };
