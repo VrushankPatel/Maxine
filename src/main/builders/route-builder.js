@@ -87,6 +87,17 @@ class RouteBuilder{
     }
 
     /**
+     * Map the endpoint with the args (bodyParser, Callback of req res etc.) by delete Mapping.
+     * @param {string} endPoint
+     * @param  {...any} args
+     * @returns {object: RouteBuilder}
+     */
+    delete(endPoint, ...args){
+        this.route.delete(this.createRouteString(endPoint), ...args);
+        return this;
+    }
+
+    /**
      * Map the endpoint with the args (bodyParser, Callback of req res etc.) by all (get, post, put, etc..) Mapping.
      * @param {string} endPoint
      * @param  {...any} args
