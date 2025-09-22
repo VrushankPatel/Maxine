@@ -1,6 +1,7 @@
 const { statusAndMsgs, constants } = require("../constants/constants");
 const { logBuilder } = require("../util");
 const { log, logger } = require("./logging-util");
+const config = require("../../config/config");
 
 const logRequest = (req, res, next) => {
     log(() => {
@@ -11,6 +12,9 @@ const logRequest = (req, res, next) => {
                 logRequired = false;
             }
         })
+        if (config.highPerformanceMode && req.originalUrl.startsWith('/api/maxine/serviceops/discover')) {
+            logRequired = false;
+        }
         if (!logRequired) return;
         const logLevel = res.statusCode >= statusAndMsgs.STATUS_NOT_FOUND ? "ERROR" : "INFO";
         logger.info(logBuilder(logLevel, "WEBREQUEST", res.statusCode, req));

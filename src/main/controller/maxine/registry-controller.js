@@ -184,6 +184,35 @@ const metricsController = (req, res) => {
     res.status(statusAndMsgs.STATUS_SUCCESS).json(metricsService.getMetrics());
 }
 
+const prometheusMetricsController = (req, res) => {
+    const metrics = metricsService.getMetrics();
+    let prometheusOutput = '';
+
+    // Request counts
+    for (const [service, count] of Object.entries(metrics.requestCounts || {})) {
+        prometheusOutput += `# HELP maxine_requests_total Total number of requests for service\n`;
+        prometheusOutput += `# TYPE maxine_requests_total counter\n`;
+        prometheusOutput += `maxine_requests_total{service="${service}"} ${count}\n`;
+    }
+
+    // Error counts
+    for (const [error, count] of Object.entries(metrics.errorCounts || {})) {
+        prometheusOutput += `# HELP maxine_errors_total Total number of errors\n`;
+        prometheusOutput += `# TYPE maxine_errors_total counter\n`;
+        prometheusOutput += `maxine_errors_total{error="${error}"} ${count}\n`;
+    }
+
+    // Latencies
+    for (const [service, latency] of Object.entries(metrics.averageLatencies || {})) {
+        prometheusOutput += `# HELP maxine_request_duration_seconds Average request duration in seconds\n`;
+        prometheusOutput += `# TYPE maxine_request_duration_seconds gauge\n`;
+        prometheusOutput += `maxine_request_duration_seconds{service="${service}"} ${latency / 1000}\n`;
+    }
+
+    res.set('Content-Type', 'text/plain; charset=utf-8');
+    res.send(prometheusOutput);
+}
+
 const discoveryInfoController = (req, res) => {
     const startTime = Date.now();
     const serviceName = req.query.serviceName;
@@ -272,6 +301,7 @@ module.exports = {
     deregisterController,
     healthController,
     metricsController,
+    prometheusMetricsController,
     filteredDiscoveryController,
     discoveryInfoController,
     changesController,

@@ -64,11 +64,11 @@ As we can see, maxine SRD is working as a true reverse proxy for each servers, a
 
  * **Performance Optimizations**: In-memory caching for discovery operations with configurable TTL (5min), debounced asynchronous file/Redis saves for persistence, parallel health checks, aggressive connection pooling for proxying (10000 max sockets), and API rate limiting. Discovery cache now intelligently uses IP-based keys only for strategies that require it (CH/RH), eliminating unnecessary cache misses. Optimized data structures using Maps and Sets for O(1) lookups in healthy nodes and response times tracking. Fixed metrics latency recording to accurately measure full request response times. Consistent Hashing now uses the hashring library for O(1) hash lookups. Healthy nodes array is cached to avoid repeated Array.from() calls. Weighted Round Robin implemented properly using expanded node lists based on weights. Increased LRU cache size to 500,000 entries for better performance under high load.
 * **Circuit Breaker**: Automatically skips unhealthy service nodes during discovery with failure counting and automatic recovery to improve reliability.
-* **Background Health Monitoring**: Continuous health checks every 30 seconds to maintain up-to-date service status without impacting request latency. Supports custom health endpoints via service metadata.
+ * **Background Health Monitoring**: Continuous health checks every 60 seconds to maintain up-to-date service status without impacting request latency. Supports custom health endpoints via service metadata.
 * **Optimized Discovery**: Healthy nodes cache eliminates filtering overhead on each discovery request, ensuring lightning-fast service lookups.
- * **Load Balancing Strategies**: Supports Round Robin (RR), Weighted Round Robin (WRR), Least Response Time (LRT), Consistent Hashing (CH), Rendezvous Hashing (RH), Least Connections (LC) with real connection tracking, Least Loaded (LL), Random selection with health-aware routing, and Power of Two Choices (P2).
+ * **Load Balancing Strategies**: Supports Round Robin (RR), Weighted Round Robin (WRR), Least Response Time (LRT), Consistent Hashing (CH), Rendezvous Hashing (RH), Least Connections (LC) with real connection tracking, Least Loaded (LL), Random selection with health-aware routing, Power of Two Choices (P2), and Adaptive load balancing that combines response time and connection metrics.
 * **Security**: JWT-based authentication for registry operations (register, deregister, discover, health, metrics).
-* **Metrics**: Real-time metrics endpoint at `/api/maxine/serviceops/metrics` providing request counts, latencies, and error statistics.
+ * **Metrics**: Real-time metrics endpoint at `/api/maxine/serviceops/metrics` providing request counts, latencies, and error statistics. Prometheus-compatible metrics at `/api/maxine/serviceops/metrics/prometheus`.
 * **Health Checks**: Enhanced parallel health monitoring for service nodes with automatic status updates and persistence across restarts.
 * **Service Tagging and Filtering**: Services can be tagged via metadata, and discovery can be filtered by tags using the new `/api/maxine/serviceops/discover/filtered` endpoint.
 * **Service Versioning**: Discovery supports version-specific routing via the `version` query parameter, allowing clients to target specific service versions.
@@ -109,7 +109,7 @@ Maxine can be configured via environment variables:
 - `LOG_JSON_PRETTIFY`: Prettify JSON logs (default: false)
 - `ACTUATOR_ENABLED`: Enable actuator endpoints (default: true)
 - `STATUS_MONITOR_ENABLED`: Enable status monitor (default: true)
-- `SERVER_SELECTION_STRATEGY`: Load balancing strategy (RR, WRR, LRT, CH, RH, LC, LL, RANDOM, P2) (default: RR)
+ - `SERVER_SELECTION_STRATEGY`: Load balancing strategy (RR, WRR, LRT, CH, RH, LC, LL, RANDOM, P2, ADAPTIVE) (default: RR)
 - `LOG_FORMAT`: Log format (JSON or PLAIN) (default: JSON)
  - `DISCOVERY_CACHE_TTL`: Discovery cache TTL in ms (default: 300000)
  - `FAILURE_THRESHOLD`: Health check failure threshold (default: 3)
@@ -117,6 +117,8 @@ Maxine can be configured via environment variables:
  - `REDIS_HOST`: Redis host (default: localhost)
  - `REDIS_PORT`: Redis port (default: 6379)
  - `REDIS_PASSWORD`: Redis password (default: null)
+ - `METRICS_ENABLED`: Enable metrics collection (default: true)
+ - `HIGH_PERFORMANCE_MODE`: Disable logging for discovery endpoints to improve performance (default: false)
 
 ### Run maxine on production.
 
