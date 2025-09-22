@@ -8,6 +8,8 @@ class ServiceRegistry{
     timeResetters = {};
     hashRegistry = {};
     healthyNodes = new Map();
+    healthyCache = new Map(); // serviceName -> array of healthy node names
+    expandedHealthy = new Map(); // serviceName -> array of nodeNames repeated by weight
     activeConnections = {};
     responseTimes = new Map();
     saveTimeout = null;
@@ -91,7 +93,27 @@ class ServiceRegistry{
 
     getNodes = (serviceName) => (this.registry[serviceName] || {})["nodes"];
 
-    getHealthyNodes = (serviceName) => this.healthyNodes.has(serviceName) ? Array.from(this.healthyNodes.get(serviceName)) : [];
+    getHealthyNodes = (serviceName) => {
+        if (!this.healthyCache.has(serviceName)) {
+            this.healthyCache.set(serviceName, this.healthyNodes.has(serviceName) ? Array.from(this.healthyNodes.get(serviceName)) : []);
+        }
+        return this.healthyCache.get(serviceName);
+    }
+
+    buildExpandedHealthy = (serviceName) => {
+        const healthy = this.getHealthyNodes(serviceName);
+        const expanded = [];
+        for (const nodeName of healthy) {
+            const node = this.registry[serviceName]?.nodes?.[nodeName];
+            if (node) {
+                const weight = parseInt(node.weight) || 1;
+                for (let i = 0; i < weight; i++) {
+                    expanded.push(nodeName);
+                }
+            }
+        }
+        this.expandedHealthy.set(serviceName, expanded);
+    }
 
     initHashRegistry = (serviceName) => {
         if(!this.hashRegistry[serviceName]){
@@ -104,12 +126,16 @@ class ServiceRegistry{
             this.healthyNodes.set(serviceName, new Set());
         }
         this.healthyNodes.get(serviceName).add(nodeName);
+        this.healthyCache.delete(serviceName); // invalidate cache
+        this.buildExpandedHealthy(serviceName); // rebuild expanded
         this.addChange('healthy', serviceName, nodeName, { healthy: true });
     }
 
     removeFromHealthyNodes = (serviceName, nodeName) => {
         if (this.healthyNodes.has(serviceName)) {
             this.healthyNodes.get(serviceName).delete(nodeName);
+            this.healthyCache.delete(serviceName); // invalidate cache
+            this.buildExpandedHealthy(serviceName); // rebuild expanded
             this.addChange('unhealthy', serviceName, nodeName, { healthy: false });
         }
     }
