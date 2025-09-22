@@ -10,10 +10,10 @@ class HealthService {
     }
 
     startBackgroundChecks() {
-        // Run health checks every 60 seconds
+        // Run health checks every 30 seconds
         this.intervalId = setInterval(() => {
             this.performHealthChecks();
-        }, 60000);
+        }, 30000);
     }
 
     stopBackgroundChecks() {
@@ -37,27 +37,29 @@ class HealthService {
                     const response = await axios.get(healthUrl, { timeout: 3000 });
                     // Update registry with healthy status
                     const nodeObj = serviceRegistry.registry[serviceName].nodes[nodeName];
-                    if (nodeObj) {
-                        nodeObj.healthy = true;
-                        nodeObj.failureCount = 0;
-                        nodeObj.lastFailureTime = null;
-                        serviceRegistry.addToHealthyNodes(serviceName, nodeName);
-                        serviceRegistry.debounceSave();
-                        discoveryService.invalidateServiceCache(serviceName);
-                    }
+                     if (nodeObj) {
+                         nodeObj.healthy = true;
+                         nodeObj.failureCount = 0;
+                         nodeObj.lastFailureTime = null;
+                         serviceRegistry.addToHealthyNodes(serviceName, nodeName);
+                         serviceRegistry.addToHashRegistry(serviceName, nodeName);
+                         serviceRegistry.debounceSave();
+                         discoveryService.invalidateServiceCache(serviceName);
+                     }
                 } catch (error) {
                     // Update registry with unhealthy status
                     const nodeObj = serviceRegistry.registry[serviceName].nodes[nodeName];
-                    if (nodeObj) {
-                        nodeObj.failureCount = (nodeObj.failureCount || 0) + 1;
-                        nodeObj.lastFailureTime = Date.now();
-                        if (nodeObj.failureCount >= config.failureThreshold) {
-                            nodeObj.healthy = false;
-                            serviceRegistry.removeFromHealthyNodes(serviceName, nodeName);
-                            serviceRegistry.debounceSave();
-                            discoveryService.invalidateServiceCache(serviceName);
-                        }
-                    }
+                     if (nodeObj) {
+                         nodeObj.failureCount = (nodeObj.failureCount || 0) + 1;
+                         nodeObj.lastFailureTime = Date.now();
+                         if (nodeObj.failureCount >= config.failureThreshold) {
+                             nodeObj.healthy = false;
+                             serviceRegistry.removeFromHealthyNodes(serviceName, nodeName);
+                             serviceRegistry.removeFromHashRegistry(serviceName, nodeName);
+                             serviceRegistry.debounceSave();
+                             discoveryService.invalidateServiceCache(serviceName);
+                         }
+                     }
                 }
             });
             allHealthPromises.push(...healthPromises);

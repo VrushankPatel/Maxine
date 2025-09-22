@@ -78,6 +78,7 @@ As we can see, maxine SRD is working as a true reverse proxy for each servers, a
 * **Clustering Support**: Enable multi-worker clustering for better CPU utilization by setting `CLUSTERING_ENABLED=true`.
 * **Environment Configuration**: All configuration options can now be set via environment variables for easier deployment and management.
 * **Service Regions and Zones**: Support for multi-datacenter deployments with region and zone parameters in service registration and discovery.
+* **Service Configuration Management**: Added endpoints for setting, getting, and deleting service-specific configurations at `/api/maxine/serviceops/config/*`.
 
 ## Setup for development
 

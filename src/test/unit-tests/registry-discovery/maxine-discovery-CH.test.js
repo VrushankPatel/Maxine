@@ -42,6 +42,7 @@ describe(`${fileName} : API /api/maxine/discover with config with Consistent Has
     it(`CH discover with NonAPI`, (done) => {
         // Making sure that server selection strategy is CH
         config.serverSelectionStrategy = constants.SSS.CH;
+        discoveryService.clearCache();
 
         const response1 = discoveryService.getNode(serviceSampleCH.serviceName,serviceSampleCH.hostName, "1.0", "default");
 

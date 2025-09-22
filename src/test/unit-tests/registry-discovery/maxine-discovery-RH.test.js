@@ -42,6 +42,7 @@ describe(`${fileName} : API /api/maxine/discover with config with Rendezvous Has
     it(`RH discover with NonAPI`, (done) => {
         // Making sure that server selection strategy is RH
         config.serverSelectionStrategy = constants.SSS.RH;
+        discoveryService.clearCache();
 
         const response1 = discoveryService.getNode(serviceSampleRH.serviceName,serviceSampleRH.hostName, "1.0", "default");
 
