@@ -1,4 +1,6 @@
 require('./src/main/util/logging/log-generic-exceptions')();
+const cluster = require('cluster');
+const os = require('os');
 const loggingUtil = require('./src/main/util/logging/logging-util');
 const { constants } = require('./src/main/util/constants/constants');
 const actuator = require('express-actuator');
@@ -14,31 +16,52 @@ const { loadSwaggerYAML } = require('./src/main/util/util');
 const rateLimit = require('express-rate-limit');
 const swaggerDocument = loadSwaggerYAML();
 const { healthService } = require('./src/main/service/health-service');
+const config = require('./src/main/config/config');
 const path = require("path");
 const currDir = require('./conf');
 
-const limiter = rateLimit({
-    windowMs: 15 * 60 * 1000, // 15 minutes
-    max: 1000, // limit each IP to 1000 requests per windowMs
-    message: 'Too many requests from this IP, please try again later.'
-});
-const app = ExpressAppBuilder.createNewApp()
-                .addCors()
-                .ifPropertyOnce("statusMonitorEnabled")
-                    .use(expressStatusMonitor(statusMonitorConfig))
-                .use(logRequest)
-                .use(authenticationController)
-                .mapStaticDir(path.join(currDir, "client"))
-                .mapStaticDirWithRoute('/logs', path.join(currDir,"logs"))
-                 .ifPropertyOnce("actuatorEnabled")
-                     .use(actuator(actuatorConfig))
-                 .use('/api', limiter, maxineApiRoutes)
-                .ifPropertyOnce('profile','dev')
-                    .use('/api-spec', swaggerUi.serve, swaggerUi.setup(swaggerDocument))
-                    .use('/shutdown', process.exit)
-                .blockUnknownUrls()
-                .use(logWebExceptions)
-                .listen(constants.PORT, loggingUtil.initApp)
-                .getApp();
+if (config.clusteringEnabled && cluster.isMaster) {
+    console.log(`Master ${process.pid} is running`);
 
-module.exports = app;
+    // Fork workers
+    for (let i = 0; i < config.numWorkers; i++) {
+        cluster.fork();
+    }
+
+    cluster.on('exit', (worker, code, signal) => {
+        console.log(`Worker ${worker.process.pid} died with code: ${code}, and signal: ${signal}`);
+        console.log('Starting a new worker');
+        cluster.fork();
+    });
+} else {
+    const limiter = rateLimit({
+        windowMs: 15 * 60 * 1000, // 15 minutes
+        max: 1000, // limit each IP to 1000 requests per windowMs
+        message: 'Too many requests from this IP, please try again later.'
+    });
+    const app = ExpressAppBuilder.createNewApp()
+                    .addCors()
+                    .ifPropertyOnce("statusMonitorEnabled")
+                        .use(expressStatusMonitor(statusMonitorConfig))
+                    .use(logRequest)
+                    .use(authenticationController)
+                    .mapStaticDir(path.join(currDir, "client"))
+                    .mapStaticDirWithRoute('/logs', path.join(currDir,"logs"))
+                      .ifPropertyOnce("actuatorEnabled")
+                          .use(actuator(actuatorConfig))
+                      .use('/api', limiter, maxineApiRoutes)
+                    .ifPropertyOnce('profile','dev')
+                        .use('/api-spec', swaggerUi.serve, swaggerUi.setup(swaggerDocument))
+                        .use('/shutdown', process.exit)
+                    .blockUnknownUrls()
+                    .use(logWebExceptions)
+                    .listen(constants.PORT, () => {
+                        if (config.clusteringEnabled) {
+                            console.log(`Worker ${process.pid} started`);
+                        }
+                        loggingUtil.initApp();
+                    })
+                    .getApp();
+
+    module.exports = app;
+}
