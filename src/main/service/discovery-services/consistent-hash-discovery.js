@@ -14,7 +14,7 @@ class ConsistentHashDiscovery{
         if(_.isEmpty(cons) || _.isEmpty(cons.nodes)) return null;
         const nodeName = cons.getNode(ip);
         const node = serviceNodesObj[nodeName];
-        return node && node.healthy ? node : null;
+        return node && serviceRegistry.getHealthyNodes(serviceName).includes(nodeName) ? node : null;
     }
 }
 

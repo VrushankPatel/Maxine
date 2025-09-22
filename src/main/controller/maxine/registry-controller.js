@@ -50,13 +50,21 @@ const healthController = async (req, res) => {
             const response = await axios.get(node.address, { timeout: 5000 });
             // Update registry with healthy status
             if (serviceRegistry.registry[serviceName] && serviceRegistry.registry[serviceName].nodes[nodeName]) {
-                serviceRegistry.registry[serviceName].nodes[nodeName].healthy = true;
+                const nodeObj = serviceRegistry.registry[serviceName].nodes[nodeName];
+                nodeObj.healthy = true;
+                nodeObj.failureCount = 0;
+                nodeObj.lastFailureTime = null;
+                serviceRegistry.addToHealthyNodes(serviceName, nodeName);
             }
             return [nodeName, { status: 'healthy', code: response.status }];
         } catch (error) {
             // Update registry with unhealthy status
             if (serviceRegistry.registry[serviceName] && serviceRegistry.registry[serviceName].nodes[nodeName]) {
-                serviceRegistry.registry[serviceName].nodes[nodeName].healthy = false;
+                const nodeObj = serviceRegistry.registry[serviceName].nodes[nodeName];
+                nodeObj.healthy = false;
+                nodeObj.failureCount = (nodeObj.failureCount || 0) + 1;
+                nodeObj.lastFailureTime = Date.now();
+                serviceRegistry.removeFromHealthyNodes(serviceName, nodeName);
             }
             return [nodeName, { status: 'unhealthy', error: error.message }];
         }

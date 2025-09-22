@@ -8,10 +8,10 @@ class RandomDiscovery{
      */
     getNode = (serviceName) => {
         const nodes = serviceRegistry.getNodes(serviceName) || {};
-        const healthyKeys = Object.keys(nodes).filter(key => nodes[key].healthy);
-        if (healthyKeys.length === 0) return null;
-        const randomIndex = Math.floor(Math.random() * healthyKeys.length);
-        return nodes[healthyKeys[randomIndex]];
+        const healthyNodeNames = serviceRegistry.getHealthyNodes(serviceName);
+        if (healthyNodeNames.length === 0) return null;
+        const randomIndex = Math.floor(Math.random() * healthyNodeNames.length);
+        return nodes[healthyNodeNames[randomIndex]];
     }
 }
 

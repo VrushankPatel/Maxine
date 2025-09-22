@@ -13,6 +13,7 @@ const { statusMonitorConfig, actuatorConfig } = require('./src/main/config/actua
 const { loadSwaggerYAML } = require('./src/main/util/util');
 const rateLimit = require('express-rate-limit');
 const swaggerDocument = loadSwaggerYAML();
+const { healthService } = require('./src/main/service/health-service');
 const path = require("path");
 const currDir = require('./conf');
 

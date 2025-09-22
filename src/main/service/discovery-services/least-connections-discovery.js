@@ -8,12 +8,12 @@ class LeastConnectionsDiscovery{
      */
     getNode = (serviceName) => {
         const nodes = serviceRegistry.getNodes(serviceName) || {};
-        const healthyKeys = Object.keys(nodes).filter(key => nodes[key].healthy);
-        if (healthyKeys.length === 0) return null;
+        const healthyNodeNames = serviceRegistry.getHealthyNodes(serviceName);
+        if (healthyNodeNames.length === 0) return null;
         // Simple round-robin for now
         const offset = (serviceRegistry.registry[serviceName] || {}).offset || 0;
-        serviceRegistry.registry[serviceName].offset = (offset + 1) % healthyKeys.length;
-        return nodes[healthyKeys[offset]];
+        serviceRegistry.registry[serviceName].offset = (offset + 1) % healthyNodeNames.length;
+        return nodes[healthyNodeNames[offset]];
     }
 }
 
