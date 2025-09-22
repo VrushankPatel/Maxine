@@ -38,6 +38,9 @@ class ServiceRegistry{
 
     getRegServers = () => this.registry;
 
+    // Service aliases support
+    serviceAliases = new Map(); // alias -> primaryServiceName
+
     addChange = (type, serviceName, nodeName, data) => {
         const change = {
             type,
@@ -104,6 +107,31 @@ class ServiceRegistry{
 
     getWebhooks = (serviceName) => {
         return this.webhooks.has(serviceName) ? Array.from(this.webhooks.get(serviceName)) : [];
+    }
+
+    // Alias management
+    addServiceAlias = (alias, primaryServiceName) => {
+        this.serviceAliases.set(alias, primaryServiceName);
+        this.debounceSave();
+    }
+
+    removeServiceAlias = (alias) => {
+        this.serviceAliases.delete(alias);
+        this.debounceSave();
+    }
+
+    getServiceByAlias = (alias) => {
+        return this.serviceAliases.get(alias) || alias; // Return primary name or the alias itself if not found
+    }
+
+    getAliasesForService = (serviceName) => {
+        const aliases = [];
+        for (const [alias, primary] of this.serviceAliases) {
+            if (primary === serviceName) {
+                aliases.push(alias);
+            }
+        }
+        return aliases;
     }
 
     getNodes = (serviceName) => (this.registry[serviceName] || {})["nodes"];

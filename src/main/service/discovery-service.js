@@ -32,9 +32,17 @@ class DiscoveryService{
      * @returns {object}
      */
     getNode = (serviceName, ip, version, namespace = "default", region = "default", zone = "default") => {
-        const fullServiceName = (region !== "default" || zone !== "default") ?
+        let fullServiceName = (region !== "default" || zone !== "default") ?
             (version ? `${namespace}:${region}:${zone}:${serviceName}:${version}` : `${namespace}:${region}:${zone}:${serviceName}`) :
             (version ? `${namespace}:${serviceName}:${version}` : `${namespace}:${serviceName}`);
+
+        // Check if serviceName is an alias
+        const { serviceRegistry } = require("../entity/service-registry");
+        const resolvedServiceName = serviceRegistry.getServiceByAlias(fullServiceName);
+        if (resolvedServiceName !== fullServiceName) {
+            fullServiceName = resolvedServiceName;
+        }
+
         const usesIp = [constants.SSS.CH, constants.SSS.RH].includes(config.serverSelectionStrategy);
         const cacheKey = usesIp ? `${fullServiceName}:${ip}` : fullServiceName;
         const cached = this.cache.get(cacheKey);

@@ -5,7 +5,7 @@ const _ = require('lodash');
 class RegistryService{
 
     registerService = (serviceObj) => {
-        const {serviceName, version, namespace, region = "default", zone = "default", nodeName, address, timeOut, weight, metadata} = serviceObj;
+        const {serviceName, version, namespace, region = "default", zone = "default", nodeName, address, timeOut, weight, metadata, aliases = []} = serviceObj;
         const fullServiceName = (region !== "default" || zone !== "default") ?
             (version ? `${namespace}:${region}:${zone}:${serviceName}:${version}` : `${namespace}:${region}:${zone}:${serviceName}`) :
             (version ? `${namespace}:${serviceName}:${version}` : `${namespace}:${serviceName}`);
@@ -54,7 +54,18 @@ class RegistryService{
 
             sRegistry.timeResetters[subNodeName] = timeResetter;
         });
-        sRegistry.addChange('register', fullServiceName, nodeName, { address, metadata });
+
+        // Register aliases
+        if (aliases && Array.isArray(aliases)) {
+            for (const alias of aliases) {
+                const fullAliasName = (region !== "default" || zone !== "default") ?
+                    (version ? `${namespace}:${region}:${zone}:${alias}:${version}` : `${namespace}:${region}:${zone}:${alias}`) :
+                    (version ? `${namespace}:${alias}:${version}` : `${namespace}:${alias}`);
+                sRegistry.addServiceAlias(fullAliasName, fullServiceName);
+            }
+        }
+
+        sRegistry.addChange('register', fullServiceName, nodeName, { address, metadata, aliases });
         discoveryService.invalidateServiceCache(fullServiceName);
     }
 

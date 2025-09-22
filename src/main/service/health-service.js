@@ -27,7 +27,7 @@ class HealthService {
     }
 
     async performHealthChecks() {
-        const limit = pLimit(100);
+        const limit = pLimit(1000); // Increased concurrency for faster health checks
         const services = Object.keys(serviceRegistry.registry);
         const allHealthPromises = [];
 

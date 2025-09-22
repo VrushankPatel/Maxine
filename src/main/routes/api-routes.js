@@ -4,6 +4,7 @@ const rateLimit = require('express-rate-limit');
 const { serverListController, registryController, deregisterController, healthController, metricsController, filteredDiscoveryController, discoveryInfoController, changesController, bulkRegisterController, bulkDeregisterController } = require('../controller/maxine/registry-controller');
 const { setConfig, getConfig, getAllConfig, deleteConfig } = require('../controller/config-control/config-controller');
 const { addWebhook, removeWebhook, getWebhooks } = require('../controller/webhook-controller');
+const { addAlias, removeAlias, getAliases } = require('../controller/alias-controller');
 const discoveryController = require('../controller/maxine/discovery-controller');
 const { signInController } = require('../controller/uac/signin-controller');
 const { logsLinkGenController, recentLogsController, recentLogsClearController } = require('../controller/log-control/logs-controller');
@@ -13,8 +14,14 @@ const { authenticationController } = require('../controller/security/authenticat
 
 const limiter = rateLimit({
     windowMs: 15 * 60 * 1000, // 15 minutes
-    max: 100, // limit each IP to 100 requests per windowMs
+    max: 10000, // limit each IP to 10000 requests per windowMs for non-discovery endpoints
     message: 'Too many requests from this IP, please try again later.'
+});
+
+const discoveryLimiter = rateLimit({
+    windowMs: 60 * 1000, // 1 minute
+    max: 100000, // allow high rate for discovery requests
+    message: 'Too many discovery requests, please try again later.'
 });
 
 
@@ -29,24 +36,27 @@ let maxineApiRoutes = RouteBuilder.createNewRoute()
                         .stepToRoot()
                          .from("maxine")
                              .from("serviceops")
-                                 .get("servers", authenticationController, serverListController)
-                                  .post("register", authenticationController, bodyParser.json(), registryController)
-                                  .post("register/bulk", authenticationController, bodyParser.json(), bulkRegisterController)
-                                  .delete("deregister", authenticationController, bodyParser.json(), deregisterController)
-                                  .delete("deregister/bulk", authenticationController, bodyParser.json(), bulkDeregisterController)
-                                  .get("discover", authenticationController, discoveryController)
-                                  .get("discover/info", authenticationController, discoveryInfoController)
-                                  .get("discover/filtered", authenticationController, filteredDiscoveryController)
-                                  .get("health", authenticationController, healthController)
-                                   .get("metrics", authenticationController, metricsController)
-                                    .get("changes", authenticationController, changesController)
-                                    .post("webhooks/add", authenticationController, bodyParser.json(), addWebhook)
-                                    .delete("webhooks/remove", authenticationController, bodyParser.json(), removeWebhook)
-                                    .get("webhooks", authenticationController, getWebhooks)
-                                    .post("config/set", authenticationController, bodyParser.json(), setConfig)
-                                   .get("config/get", authenticationController, getConfig)
-                                   .get("config/all", authenticationController, getAllConfig)
-                                   .delete("config/delete", authenticationController, bodyParser.json(), deleteConfig)
+                                 .get("servers", authenticationController, limiter, serverListController)
+                                  .post("register", authenticationController, limiter, bodyParser.json(), registryController)
+                                  .post("register/bulk", authenticationController, limiter, bodyParser.json(), bulkRegisterController)
+                                  .delete("deregister", authenticationController, limiter, bodyParser.json(), deregisterController)
+                                  .delete("deregister/bulk", authenticationController, limiter, bodyParser.json(), bulkDeregisterController)
+                                  .get("discover", authenticationController, discoveryLimiter, discoveryController)
+                                  .get("discover/info", authenticationController, discoveryLimiter, discoveryInfoController)
+                                  .get("discover/filtered", authenticationController, discoveryLimiter, filteredDiscoveryController)
+                                  .get("health", authenticationController, limiter, healthController)
+                                   .get("metrics", authenticationController, limiter, metricsController)
+                                    .get("changes", authenticationController, limiter, changesController)
+                                    .post("webhooks/add", authenticationController, limiter, bodyParser.json(), addWebhook)
+                                    .delete("webhooks/remove", authenticationController, limiter, bodyParser.json(), removeWebhook)
+                                    .get("webhooks", authenticationController, limiter, getWebhooks)
+                                    .post("aliases/add", authenticationController, limiter, bodyParser.json(), addAlias)
+                                    .delete("aliases/remove", authenticationController, limiter, bodyParser.json(), removeAlias)
+                                    .get("aliases", authenticationController, limiter, getAliases)
+                                    .post("config/set", authenticationController, limiter, bodyParser.json(), setConfig)
+                                   .get("config/get", authenticationController, limiter, getConfig)
+                                   .get("config/all", authenticationController, limiter, getAllConfig)
+                                   .delete("config/delete", authenticationController, limiter, bodyParser.json(), deleteConfig)
                             .stepBack()
                             .post("signin", bodyParser.json(), signInController)
                             .put("change-password", bodyParser.json(), changePwdController)

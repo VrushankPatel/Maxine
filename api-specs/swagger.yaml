@@ -343,12 +343,164 @@ paths:
           content:
             application/json:
               example: '{"message":"Unauthorized"}'
-        '403':
-          description: Forbidden
+         '403':
+           description: Forbidden
+           content:
+             application/json:
+               example: '{"message":"Forbidden"}'
+    /api/maxine/serviceops/aliases/add:
+      post:
+        summary: Add an alias for a service.
+        tags:
+          - "ServiceOps"
+        operationId: Maxine add alias
+        security:
+          - bearerAuth: []
+        requestBody:
+          description: The alias to add.
           content:
             application/json:
-              example: '{"message":"Forbidden"}'
-  /api/maxine/control/config:
+              schema:
+                type: object
+                required:
+                  - alias
+                  - serviceName
+                properties:
+                  alias:
+                    type: string
+                    example: db-service-alias
+                  serviceName:
+                    type: string
+                    example: db-service
+                  version:
+                    type: string
+                    example: 1.0
+                  namespace:
+                    type: string
+                    example: default
+                  region:
+                    type: string
+                    example: default
+                  zone:
+                    type: string
+                    example: default
+          required: true
+        responses:
+          '200':
+            description: OK
+            content:
+              application/json:
+                example: '{"message": "Alias added successfully", "alias": "default:db-service-alias", "service": "default:db-service"}'
+          '400':
+            description: Bad Request
+            content:
+              application/json:
+                example: '{"message": "alias and serviceName are required"}'
+          '401':
+            description: Unauthorized
+            content:
+              application/json:
+                example: '{"message":"Unauthorized"}'
+    /api/maxine/serviceops/aliases/remove:
+      delete:
+        summary: Remove an alias for a service.
+        tags:
+          - "ServiceOps"
+        operationId: Maxine remove alias
+        security:
+          - bearerAuth: []
+        requestBody:
+          description: The alias to remove.
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - alias
+                properties:
+                  alias:
+                    type: string
+                    example: db-service-alias
+                  version:
+                    type: string
+                    example: 1.0
+                  namespace:
+                    type: string
+                    example: default
+                  region:
+                    type: string
+                    example: default
+                  zone:
+                    type: string
+                    example: default
+          required: true
+        responses:
+          '200':
+            description: OK
+            content:
+              application/json:
+                example: '{"message": "Alias removed successfully", "alias": "default:db-service-alias"}'
+          '400':
+            description: Bad Request
+            content:
+              application/json:
+                example: '{"message": "alias is required"}'
+          '401':
+            description: Unauthorized
+            content:
+              application/json:
+                example: '{"message":"Unauthorized"}'
+    /api/maxine/serviceops/aliases:
+      get:
+        summary: Get aliases for services.
+        tags:
+          - "ServiceOps"
+        operationId: Maxine get aliases
+        security:
+          - bearerAuth: []
+        parameters:
+          - in: query
+            name: serviceName
+            schema:
+              type: string
+              example: db-service
+            required: false
+          - in: query
+            name: version
+            schema:
+              type: string
+              example: 1.0
+            required: false
+          - in: query
+            name: namespace
+            schema:
+              type: string
+              example: default
+            required: false
+          - in: query
+            name: region
+            schema:
+              type: string
+              example: default
+            required: false
+          - in: query
+            name: zone
+            schema:
+              type: string
+              example: default
+            required: false
+        responses:
+          '200':
+            description: OK
+            content:
+              application/json:
+                example: '{"aliases": [{"alias": "default:db-service-alias", "service": "default:db-service"}]}'
+          '401':
+            description: Unauthorized
+            content:
+              application/json:
+                example: '{"message":"Unauthorized"}'
+   /api/maxine/control/config:
     get:
       summary: Get the current config data of Maxine.
       tags:
@@ -440,17 +592,23 @@ components:
          path:
            type: string
            example: /api/actuator
-         metadata:
-           type: object
-           properties:
-             healthEndpoint:
-               type: string
-               example: /health
-             tags:
-               type: array
-               items:
-                 type: string
-               example: ["prod", "api"]
+          metadata:
+            type: object
+            properties:
+              healthEndpoint:
+                type: string
+                example: /health
+              tags:
+                type: array
+                items:
+                  type: string
+                example: ["prod", "api"]
+          aliases:
+            type: array
+            items:
+              type: string
+            example: ["db-service-alias", "database"]
+            description: Alternative names for the service that can be used for discovery
     Config:
       type: object
       properties:
