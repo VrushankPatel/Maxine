@@ -16,7 +16,9 @@ const config = {
     redisEnabled: process.env.REDIS_ENABLED === 'true' || false,
     redisHost: process.env.REDIS_HOST || 'localhost',
     redisPort: process.env.REDIS_PORT ? parseInt(process.env.REDIS_PORT) : 6379,
-    redisPassword: process.env.REDIS_PASSWORD || null
+    redisPassword: process.env.REDIS_PASSWORD || null,
+    metricsEnabled: process.env.METRICS_ENABLED !== 'false',
+    highPerformanceMode: process.env.HIGH_PERFORMANCE_MODE === 'true'
 }
 
 Object.defineProperty(config, "profile", {

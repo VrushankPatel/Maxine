@@ -5,6 +5,7 @@ const _ = require('lodash');
 const { info } = require("../../util/logging/logging-util");
 const httpProxy = require('http-proxy');
 const rateLimit = require('express-rate-limit');
+const config = require("../../config/config");
 
 const http = require('http');
 const https = require('https');
@@ -50,9 +51,11 @@ const discoveryController = (req, res) => {
 
     // if serviceName is not there, responding with error
     if(!serviceName) {
-        const latency = Date.now() - startTime;
-        metricsService.recordRequest(serviceName, false, latency);
-        metricsService.recordError('missing_service_name');
+        if (config.metricsEnabled) {
+            const latency = Date.now() - startTime;
+            metricsService.recordRequest(serviceName, false, latency);
+            metricsService.recordError('missing_service_name');
+        }
         res.status(statusAndMsgs.STATUS_GENERIC_ERROR).json({"message" : statusAndMsgs.MSG_DISCOVER_MISSING_DATA});
         return;
     }
@@ -62,9 +65,11 @@ const discoveryController = (req, res) => {
 
     // no service node is there so, service unavailable is our error response.
     if(_.isEmpty(serviceNode)){
-        const latency = Date.now() - startTime;
-        metricsService.recordRequest(serviceName, false, latency);
-        metricsService.recordError('service_unavailable');
+        if (config.metricsEnabled) {
+            const latency = Date.now() - startTime;
+            metricsService.recordRequest(serviceName, false, latency);
+            metricsService.recordError('service_unavailable');
+        }
         res.status(statusAndMsgs.SERVICE_UNAVAILABLE).json({
             "message" : statusAndMsgs.MSG_SERVICE_UNAVAILABLE
         });
@@ -83,9 +88,11 @@ const discoveryController = (req, res) => {
         proxy.web(req, res, { target: addressToRedirect, changeOrigin: true });
     } catch (err) {
         console.error('Proxy setup error:', err);
-        const latency = Date.now() - startTime;
-        metricsService.recordRequest(serviceName, false, latency);
-        metricsService.recordError('proxy_error');
+        if (config.metricsEnabled) {
+            const latency = Date.now() - startTime;
+            metricsService.recordRequest(serviceName, false, latency);
+            metricsService.recordError('proxy_error');
+        }
         serviceRegistry.decrementActiveConnections(fullServiceName, serviceNode.nodeName);
         res.status(500).json({ message: 'Proxy Error' });
         return;
@@ -95,7 +102,9 @@ const discoveryController = (req, res) => {
     res.on('finish', () => {
         const latency = Date.now() - startTime;
         const success = res.statusCode >= 200 && res.statusCode < 300;
-        metricsService.recordRequest(serviceName, success, latency);
+        if (config.metricsEnabled) {
+            metricsService.recordRequest(serviceName, success, latency);
+        }
         if (success) {
             // Record response time for LRT algorithm
             serviceRegistry.recordResponseTime(fullServiceName, serviceNode.nodeName, latency);
