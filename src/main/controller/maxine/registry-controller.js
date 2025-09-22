@@ -18,7 +18,22 @@ const serverListController = (_req, res) => {
     res.send(JSON.stringify(serviceRegistry.getRegServers()));
 }
 
+const deregisterController = (req, res) => {
+    const { serviceName, nodeName } = req.body;
+    if (!serviceName || !nodeName) {
+        res.status(statusAndMsgs.STATUS_GENERIC_ERROR).json({ message: "Missing serviceName or nodeName" });
+        return;
+    }
+    const success = registryService.deregisterService(serviceName, nodeName);
+    if (success) {
+        res.status(statusAndMsgs.STATUS_SUCCESS).json({ message: "Deregistered successfully" });
+    } else {
+        res.status(statusAndMsgs.SERVICE_UNAVAILABLE).json({ message: "Service not found" });
+    }
+}
+
 module.exports = {
     registryController,
-    serverListController
+    serverListController,
+    deregisterController
 };

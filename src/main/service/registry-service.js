@@ -52,6 +52,25 @@ class RegistryService{
         service.registeredAt = new Date().toLocaleString();
         return service;
     }
+
+    deregisterService = (serviceName, nodeName) => {
+        if (!sRegistry.registry[serviceName]) return false;
+        const nodes = sRegistry.registry[serviceName].nodes;
+        const toRemove = Object.keys(nodes).filter(key => nodes[key].parentNode === nodeName);
+        toRemove.forEach(subNode => {
+            if (sRegistry.timeResetters[subNode]) {
+                clearTimeout(sRegistry.timeResetters[subNode]);
+                delete sRegistry.timeResetters[subNode];
+            }
+            delete nodes[subNode];
+            sRegistry.removeNodeFromRegistry(serviceName, subNode);
+        });
+        if (Object.keys(nodes).length === 0) {
+            delete sRegistry.registry[serviceName];
+            delete sRegistry.hashRegistry[serviceName];
+        }
+        return true;
+    }
 }
 
 const registryService = new RegistryService();
