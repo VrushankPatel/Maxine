@@ -54,9 +54,11 @@ As we can see, maxine SRD is working as a true reverse proxy for each servers, a
 * Also, based on the service's performance diagnostics (If it's down or not working properly), we can stop its registration to the SRD. The client provides functions that can stop sending the heartbeat to the SRD so that the service can be deregistered.
 * Also, If any of the services are hosted on more powerful hardware, then we can make SRD distribute more traffic on that service's nodes than the others. All we have to do is to provide weight property to that service's client. the weight means how much power that service has compared to others. Based on weight property, the SRD will register that service will replications, and traffic will be distributed accordingly.
 * Maxine now includes health check capabilities to monitor service availability and persistence to survive restarts.
-* Maxine is optimized for high performance with in-memory caching (configurable TTL), debounced file saves, parallel health checks, connection pooling, circuit breaker for unhealthy nodes, and efficient load balancing algorithms including Round Robin, Weighted Round Robin, Least Response Time, Consistent Hashing, Rendezvous Hashing, Least Connections, and Random.
+* Maxine is optimized for high performance with in-memory LRU caching (configurable TTL), debounced file saves, parallel health checks (every 60 seconds), connection pooling, circuit breaker for unhealthy nodes, and efficient load balancing algorithms including Round Robin, Weighted Round Robin, Least Response Time, Consistent Hashing, Rendezvous Hashing, Least Connections, Least Loaded, and Random.
 * Security is enhanced with JWT authentication for all registry operations.
 * Comprehensive metrics collection provides insights into request counts, latencies, and error rates.
+* Clustering support for multi-core CPU utilization.
+* Configuration via environment variables for flexible deployment.
 
 ## New Features
 
@@ -72,6 +74,9 @@ As we can see, maxine SRD is working as a true reverse proxy for each servers, a
 * **Service Versioning**: Discovery supports version-specific routing via the `version` query parameter, allowing clients to target specific service versions.
 * **Non-Proxy Discovery**: Added `/api/maxine/serviceops/discover/info` endpoint to retrieve service node information without proxying, useful for clients that need the address directly.
 * **Service Changes Watch API**: Added `/api/maxine/serviceops/changes` endpoint to poll for real-time registry changes (register, deregister, health status updates) since a given timestamp.
+* **Least Loaded Load Balancing**: New LL strategy that routes requests to the service node with the least active connections.
+* **Clustering Support**: Enable multi-worker clustering for better CPU utilization by setting `CLUSTERING_ENABLED=true`.
+* **Environment Configuration**: All configuration options can now be set via environment variables for easier deployment and management.
 
 ## Setup for development
 
@@ -79,13 +84,30 @@ As we can see, maxine SRD is working as a true reverse proxy for each servers, a
 
 1. Clone the project in your local dir.
 2. Install all the dependencies by `npm i`.
-3. Start dev server by `npm run dev` (nodemon).
+3. (Optional) Configure via environment variables (see Configuration section).
+4. Start dev server by `npm run dev` (nodemon).
 
 ### Test the maxine and generate the coverage.
 
 1. run `npm test` to run all the tests.
 2. To generate the reports, there is a task called genreports, try `npm run genreports` to generate reports.
 3. To upload the coverage report to codecov.io, the codecov token is required, set the parameter `>>> CODECOV_TOKEN = {token}` in environment and run `npm run coverage` to upload the coverage to codecov.
+
+### Configuration
+
+Maxine can be configured via environment variables:
+
+- `CLUSTERING_ENABLED`: Enable clustering (default: false)
+- `NUM_WORKERS`: Number of worker processes (default: CPU cores)
+- `LOG_ASYNC`: Enable async logging (default: true)
+- `HEARTBEAT_TIMEOUT`: Heartbeat timeout in seconds (default: 5)
+- `LOG_JSON_PRETTIFY`: Prettify JSON logs (default: false)
+- `ACTUATOR_ENABLED`: Enable actuator endpoints (default: true)
+- `STATUS_MONITOR_ENABLED`: Enable status monitor (default: true)
+- `SERVER_SELECTION_STRATEGY`: Load balancing strategy (RR, WRR, LRT, CH, RH, LC, LL, RANDOM) (default: RR)
+- `LOG_FORMAT`: Log format (JSON or PLAIN) (default: JSON)
+- `DISCOVERY_CACHE_TTL`: Discovery cache TTL in ms (default: 60000)
+- `FAILURE_THRESHOLD`: Health check failure threshold (default: 3)
 
 ### Run maxine on production.
 

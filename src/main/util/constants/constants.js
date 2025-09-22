@@ -45,6 +45,7 @@ const SSS = new Enums([
     {name: 'CH', code: '1', message: 'Consistent Hashing'},
     {name: 'RH', code: '2', message: 'Rendezvous Hashing'},
     {name: 'LC', code: '3', message: 'Least Connections'},
+    {name: 'LL', code: '7', message: 'Least Loaded'},
     {name: 'RANDOM', code: '4', message: 'Random'}
 ]);
 

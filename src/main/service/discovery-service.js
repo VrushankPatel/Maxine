@@ -4,7 +4,9 @@ const { RoundRobinDiscovery } = require("./discovery-services/round-robin-discov
 const { WeightedRoundRobinDiscovery } = require("./discovery-services/weighted-round-robin-discovery");
 const { LeastResponseTimeDiscovery } = require("./discovery-services/least-response-time-discovery");
 const { LeastConnectionsDiscovery } = require("./discovery-services/least-connections-discovery");
+const { LeastLoadedDiscovery } = require("./discovery-services/least-loaded-discovery");
 const { RandomDiscovery } = require("./discovery-services/random-discovery");
+const LRU = require('lru-cache');
 const config = require("../config/config");
 const { constants } = require("../util/constants/constants");
 
@@ -15,8 +17,9 @@ class DiscoveryService{
     chd = new ConsistentHashDiscovery();
     rhd = new RendezvousHashDiscovery();
     lcd = new LeastConnectionsDiscovery();
+    lld = new LeastLoadedDiscovery();
     rand = new RandomDiscovery();
-    cache = new Map();
+    cache = new LRU({ max: 10000, ttl: config.discoveryCacheTTL });
 
     /**
      * Get serviceName and IP and based on the serverSelectionStrategy we've selected, It'll call that discoveryService and retrieve the node from it. (Ex. RoundRobin, Rendezvous, ConsistentHashing).
@@ -29,8 +32,8 @@ class DiscoveryService{
         const usesIp = [constants.SSS.CH, constants.SSS.RH].includes(config.serverSelectionStrategy);
         const cacheKey = usesIp ? `${serviceName}:${version || ''}:${ip}` : `${serviceName}:${version || ''}`;
         const cached = this.cache.get(cacheKey);
-        if (cached && (Date.now() - cached.timestamp) < config.discoveryCacheTTL) {
-            return cached.node;
+        if (cached) {
+            return cached;
         }
 
         let node;
@@ -59,6 +62,10 @@ class DiscoveryService{
             node = this.lcd.getNode(serviceName, version);
             break;
 
+            case constants.SSS.LL:
+            node = this.lld.getNode(serviceName, version);
+            break;
+
             case constants.SSS.RANDOM:
             node = this.rand.getNode(serviceName, version);
             break;
@@ -67,7 +74,9 @@ class DiscoveryService{
             node = this.rrd.getNode(serviceName, version);
         }
 
-        this.cache.set(cacheKey, { node, timestamp: Date.now() });
+        if (node) {
+            this.cache.set(cacheKey, node);
+        }
         return node;
     }
 
