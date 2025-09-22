@@ -28,12 +28,7 @@ if (fs.existsSync(registryPath)) {
     fs.unlinkSync(registryPath);
 }
 serviceRegistry.registry = {};
-serviceRegistry.healthyNodes = new Map();
 serviceRegistry.hashRegistry = {};
-serviceRegistry.healthyCache = new Map();
-serviceRegistry.expandedHealthy = new Map();
-serviceRegistry.healthyCache = new Map();
-serviceRegistry.expandedHealthy = new Map();
 
 // Registering fake server to discover afterwards for tests.
 registryService.registryService(serviceSampleCH);
@@ -47,7 +42,7 @@ describe(`${fileName} : API /api/maxine/discover with config with Consistent Has
         discoveryService.serviceKeys = new Map();
 
         const fullServiceName = `default:${serviceSampleCH.serviceName}:1.0`;
-        const ip = "127.0.0.1";
+        const ip = serviceSampleCH.hostName;
 
         const response1 = discoveryService.getNode(fullServiceName, ip);
 

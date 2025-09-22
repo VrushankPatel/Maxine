@@ -1,6 +1,6 @@
 const { serviceRegistry } = require("../../entity/service-registry");
 
-class LeastResponseTimeDiscovery {
+class FastestDiscovery {
     constructor() {
         this.fastestCache = new Map(); // serviceName -> {nodeName, timestamp}
         this.cacheTTL = 1000; // 1 second
@@ -33,10 +33,9 @@ class LeastResponseTimeDiscovery {
             }
         }
 
-        // If no response times recorded, fall back to round-robin
+        // If no response times, pick first
         if (!selectedNodeName || minResponseTime === Infinity) {
-            const offset = this.getOffsetAndIncrement(fullServiceName);
-            selectedNodeName = healthyNodeNames[offset % healthyNodeNames.length];
+            selectedNodeName = healthyNodeNames[0];
         }
 
         // Cache the result
@@ -44,21 +43,8 @@ class LeastResponseTimeDiscovery {
 
         return selectedNodeName;
     }
-
-    /**
-     * Increment offset for fallback
-     * @param {string} serviceName
-     * @returns {number}
-     */
-    getOffsetAndIncrement = (fullServiceName) => {
-        const service = serviceRegistry.registry[fullServiceName];
-        if (!service) return 0;
-        const currentOffset = service.offset || 0;
-        service.offset = currentOffset + 1;
-        return currentOffset;
-    }
 }
 
 module.exports = {
-    LeastResponseTimeDiscovery
+    FastestDiscovery
 }

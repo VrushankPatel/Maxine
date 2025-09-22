@@ -3,6 +3,7 @@ const { RendezvousHashDiscovery } = require("./discovery-services/rendezvous-has
 const { RoundRobinDiscovery } = require("./discovery-services/round-robin-discovery");
 const { WeightedRoundRobinDiscovery } = require("./discovery-services/weighted-round-robin-discovery");
 const { LeastResponseTimeDiscovery } = require("./discovery-services/least-response-time-discovery");
+const { FastestDiscovery } = require("./discovery-services/fastest-discovery");
 const { LeastConnectionsDiscovery } = require("./discovery-services/least-connections-discovery");
 const { LeastLoadedDiscovery } = require("./discovery-services/least-loaded-discovery");
 const { RandomDiscovery } = require("./discovery-services/random-discovery");
@@ -17,6 +18,7 @@ class DiscoveryService{
     rrd = new RoundRobinDiscovery();
     wrrd = new WeightedRoundRobinDiscovery();
     lrtd = new LeastResponseTimeDiscovery();
+    fd = new FastestDiscovery();
     chd = new ConsistentHashDiscovery();
     rhd = new RendezvousHashDiscovery();
     lcd = new LeastConnectionsDiscovery();
@@ -24,7 +26,7 @@ class DiscoveryService{
     rand = new RandomDiscovery();
     p2d = new PowerOfTwoDiscovery();
     ad = new AdaptiveDiscovery();
-    cache = new LRU({ max: 500000, ttl: config.discoveryCacheTTL });
+    cache = new LRU({ max: 1000000, ttl: config.discoveryCacheTTL });
     serviceKeys = new Map(); // Map serviceName to set of cache keys
 
     /**
@@ -60,6 +62,10 @@ class DiscoveryService{
 
             case 'LRT':
             nodeName = this.lrtd.getNode(fullServiceName);
+            break;
+
+            case 'FASTEST':
+            nodeName = this.fd.getNode(fullServiceName);
             break;
 
             case 'CH':

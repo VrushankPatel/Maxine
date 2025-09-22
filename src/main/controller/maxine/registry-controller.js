@@ -227,6 +227,16 @@ const prometheusMetricsController = (req, res) => {
     res.send(prometheusOutput);
 }
 
+const cacheStatsController = (req, res) => {
+    const stats = {
+        cacheSize: discoveryService.cache.size,
+        cacheMax: discoveryService.cache.max,
+        cacheTTL: discoveryService.cache.ttl,
+        serviceKeysCount: discoveryService.serviceKeys.size
+    };
+    res.status(statusAndMsgs.STATUS_SUCCESS).json(stats);
+}
+
 const discoveryInfoController = (req, res) => {
     const startTime = Date.now();
     const serviceName = req.query.serviceName;
@@ -328,6 +338,7 @@ module.exports = {
     healthController,
     metricsController,
     prometheusMetricsController,
+    cacheStatsController,
     filteredDiscoveryController,
     discoveryInfoController,
     changesController,
