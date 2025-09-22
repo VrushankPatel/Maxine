@@ -29,23 +29,31 @@ if (fs.existsSync(registryPath)) {
 serviceRegistry.registry = {};
 serviceRegistry.healthyNodes = new Map();
 serviceRegistry.hashRegistry = {};
+serviceRegistry.healthyCache = new Map();
+serviceRegistry.expandedHealthy = new Map();
 
 // Registering fake server to discover afterwards for tests.
 registryService.registryService(serviceSampleRH);
 
 // We'll check if we're getting same server for multiple endpoint hits.
-describe.skip(`${fileName} : API /api/maxine/discover with config with Rendezvous Hashing`, () => {
+describe(`${fileName} : API /api/maxine/discover with config with Rendezvous Hashing`, () => {
 
     it(`RH discover with NonAPI`, (done) => {
         // Making sure that server selection strategy is RH
         config.serverSelectionStrategy = constants.SSS.RH;
         discoveryService.clearCache();
+        discoveryService.serviceKeys = new Map();
 
-        const response1 = discoveryService.getNode(serviceSampleRH.serviceName,serviceSampleRH.hostName, "1.0", "default");
+        const fullServiceName = `default:${serviceSampleRH.serviceName}:1.0`;
+        const ip = "127.0.0.1";
 
-        const response2 = discoveryService.getNode(serviceSampleRH.serviceName,serviceSampleRH.hostName, "1.0", "default");
+        const response1 = discoveryService.getNode(fullServiceName, ip);
 
-        // Because of consistent hashing, we should expect both the responses same because the ip we're passing is the same.
+        const response2 = discoveryService.getNode(fullServiceName, ip);
+
+        // Because of rendezvous hashing, we should expect both the responses same because the ip we're passing is the same.
+        response1.should.be.a('object');
+        response2.should.be.a('object');
         response1.should.be.eql(response2);
         done();
     });

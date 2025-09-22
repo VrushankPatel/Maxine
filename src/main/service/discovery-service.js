@@ -11,6 +11,7 @@ const { AdaptiveDiscovery } = require("./discovery-services/adaptive-discovery")
 const LRU = require('lru-cache');
 const config = require("../config/config");
 const { constants } = require("../util/constants/constants");
+const { serviceRegistry } = require("../entity/service-registry");
 
 class DiscoveryService{
     rrd = new RoundRobinDiscovery();
@@ -47,61 +48,63 @@ class DiscoveryService{
             return cached;
         }
 
-        let node;
+        let nodeName;
         switch(config.serverSelectionStrategy.name){
             case 'RR':
-            node = this.rrd.getNode(fullServiceName);
+            nodeName = this.rrd.getNode(fullServiceName);
             break;
 
             case 'WRR':
-            node = this.wrrd.getNode(fullServiceName);
+            nodeName = this.wrrd.getNode(fullServiceName);
             break;
 
             case 'LRT':
-            node = this.lrtd.getNode(fullServiceName);
+            nodeName = this.lrtd.getNode(fullServiceName);
             break;
 
             case 'CH':
-            node = this.chd.getNode(fullServiceName, ip);
+            nodeName = this.chd.getNode(fullServiceName, ip);
             break;
 
             case 'RH':
-            node = this.rhd.getNode(fullServiceName, ip);
+            nodeName = this.rhd.getNode(fullServiceName, ip);
             break;
 
             case 'LC':
-            node = this.lcd.getNode(fullServiceName);
+            nodeName = this.lcd.getNode(fullServiceName);
             break;
 
             case 'LL':
-            node = this.lld.getNode(fullServiceName);
+            nodeName = this.lld.getNode(fullServiceName);
             break;
 
             case 'RANDOM':
-            node = this.rand.getNode(fullServiceName);
+            nodeName = this.rand.getNode(fullServiceName);
             break;
 
             case 'P2':
-            node = this.p2d.getNode(fullServiceName);
+            nodeName = this.p2d.getNode(fullServiceName);
             break;
 
             case 'ADAPTIVE':
-            node = this.ad.getNode(fullServiceName);
+            nodeName = this.ad.getNode(fullServiceName);
             break;
 
             default:
-            node = this.rrd.getNode(fullServiceName);
+            nodeName = this.rrd.getNode(fullServiceName);
         }
 
-        if (node) {
-            this.cache.set(cacheKey, node);
+        if (nodeName) {
+            this.cache.set(cacheKey, nodeName);
             // Track keys per service
             if (!this.serviceKeys.has(fullServiceName)) {
                 this.serviceKeys.set(fullServiceName, new Set());
             }
             this.serviceKeys.get(fullServiceName).add(cacheKey);
         }
-        return node;
+
+        const nodes = serviceRegistry.getNodes(fullServiceName);
+        return nodeName && nodes ? nodes[nodeName] : null;
     }
 
     clearCache = () => {

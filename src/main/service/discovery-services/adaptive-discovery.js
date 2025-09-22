@@ -8,15 +8,14 @@ class AdaptiveDiscovery {
      * @returns {object}
      */
     getNode(fullServiceName) {
-        const nodes = serviceRegistry.getNodes(fullServiceName) || {};
         const healthyNodeNames = serviceRegistry.getHealthyNodes(fullServiceName);
         if (healthyNodeNames.length === 0) return null;
 
-        let bestNode = null;
+        let bestNodeName = null;
         let bestScore = Infinity;
 
         for (const nodeName of healthyNodeNames) {
-            const node = nodes[nodeName];
+            const node = serviceRegistry.registry[fullServiceName]?.nodes?.[nodeName];
             if (!node) continue;
 
             const avgResponseTime = serviceRegistry.getAverageResponseTime(fullServiceName, nodeName) || 100; // default 100ms
@@ -28,11 +27,11 @@ class AdaptiveDiscovery {
 
             if (score < bestScore) {
                 bestScore = score;
-                bestNode = node;
+                bestNodeName = nodeName;
             }
         }
 
-        return bestNode;
+        return bestNodeName;
     }
 }
 

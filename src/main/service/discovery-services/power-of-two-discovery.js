@@ -7,10 +7,9 @@ class PowerOfTwoDiscovery {
      * @returns {object}
      */
     getNode = (fullServiceName) => {
-        const nodes = serviceRegistry.getNodes(fullServiceName) || {};
         const healthyNodeNames = serviceRegistry.getHealthyNodes(fullServiceName);
         if (healthyNodeNames.length === 0) return null;
-        if (healthyNodeNames.length === 1) return nodes[healthyNodeNames[0]];
+        if (healthyNodeNames.length === 1) return healthyNodeNames[0];
 
         // Select two random nodes
         const idx1 = Math.floor(Math.random() * healthyNodeNames.length);
@@ -25,8 +24,7 @@ class PowerOfTwoDiscovery {
         const conn1 = serviceRegistry.getActiveConnections(fullServiceName, node1);
         const conn2 = serviceRegistry.getActiveConnections(fullServiceName, node2);
 
-        const selected = conn1 <= conn2 ? node1 : node2;
-        return nodes[selected];
+        return conn1 <= conn2 ? node1 : node2;
     }
 }
 
