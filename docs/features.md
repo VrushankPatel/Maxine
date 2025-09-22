@@ -19,7 +19,7 @@
 ### Health checks
 - Maxine provides comprehensive health monitoring for registered services with both on-demand and background checks.
 - The health check endpoint `/api/maxine/serviceops/health?serviceName=<name>` performs parallel HTTP requests to all nodes of the specified service and reports their status.
-- Background health checks run continuously every 30 seconds to maintain up-to-date service status without impacting request latency.
+- Background health checks run continuously every 60 seconds to maintain up-to-date service status without impacting request latency.
 - Health status is cached in optimized data structures, enabling circuit breaker functionality with failure counting that automatically skips unhealthy nodes during discovery.
 - Circuit breaker includes automatic recovery when services become healthy again, improving overall system reliability and performance.
 ### Metrics
@@ -35,6 +35,11 @@
 - The changes endpoint `/api/maxine/serviceops/changes?since=<timestamp>` returns all registry events (register, deregister, health status changes) that occurred after the specified timestamp.
 - This enables clients to poll for updates and maintain synchronized views of the service registry without full refreshes.
 - Changes are tracked for the last 1000 events to balance memory usage with historical visibility.
+### Webhook Notifications
+- Maxine supports webhook notifications for real-time alerts on service registry changes.
+- Register webhooks via `/api/maxine/serviceops/webhooks/add` with serviceName and URL.
+- Receive HTTP POST notifications to the webhook URL for register, deregister, and health status change events.
+- Webhooks enable external systems to react immediately to service availability changes without polling.
 ### Load Balancing
 - If there are multiple nodes of that service available in the registry, then the discovery needs to distribute the load across those nodes.
 - Choosing the right server is a very important thing here because if we're using the server-side and server-specific cache, then choosing the wrong node or server might cost us (High latency especially).
@@ -111,10 +116,10 @@
 - All service operations (register, deregister, discover, health, metrics) require valid JWT tokens.
 - Authentication is handled via the `/api/maxine/signin` endpoint with admin credentials.
 ### Performance Optimizations
-- In-memory caching for discovery operations with configurable TTL (60s) to reduce lookup times and support high-throughput scenarios.
+- In-memory caching for discovery operations with configurable TTL (5min) to reduce lookup times and support high-throughput scenarios.
 - Healthy nodes cache eliminates filtering overhead, ensuring sub-millisecond service discovery lookups.
 - Debounced asynchronous file saves to minimize I/O blocking during high-frequency registrations with persistence across restarts.
-- Background parallel health checks every 30 seconds maintain service status without request latency impact.
+- Background parallel health checks every 60 seconds maintain service status without request latency impact.
 - Aggressive connection pooling for HTTP proxying (500 max sockets, keep-alive) to handle thousands of concurrent requests.
 - Circuit breaker with failure counting automatically isolates unhealthy nodes while allowing recovery.
 - API rate limiting prevents abuse and ensures stability under load.

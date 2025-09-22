@@ -79,6 +79,7 @@ As we can see, maxine SRD is working as a true reverse proxy for each servers, a
 * **Environment Configuration**: All configuration options can now be set via environment variables for easier deployment and management.
 * **Service Regions and Zones**: Support for multi-datacenter deployments with region and zone parameters in service registration and discovery.
 * **Service Configuration Management**: Added endpoints for setting, getting, and deleting service-specific configurations at `/api/maxine/serviceops/config/*`.
+* **Webhook Notifications**: Added webhook support for real-time notifications on service registry changes. Register webhooks via `/api/maxine/serviceops/webhooks/add` and receive POST notifications for register, deregister, and health status changes.
 
 ## Setup for development
 

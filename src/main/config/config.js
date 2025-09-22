@@ -8,10 +8,11 @@ const config = {
     statusMonitorEnabled: process.env.STATUS_MONITOR_ENABLED === 'false' ? false : true,
     serverSelectionStrategy: process.env.SERVER_SELECTION_STRATEGY ? constants.SSS[process.env.SERVER_SELECTION_STRATEGY] || constants.SSS.RR : constants.SSS.RR,
     logFormat: process.env.LOG_FORMAT === 'PLAIN' ? constants.LOG_FORMATS.PLAIN : constants.LOG_FORMATS.JSON,
-    discoveryCacheTTL: process.env.DISCOVERY_CACHE_TTL ? parseInt(process.env.DISCOVERY_CACHE_TTL) : 60000,
+    discoveryCacheTTL: process.env.DISCOVERY_CACHE_TTL ? parseInt(process.env.DISCOVERY_CACHE_TTL) : 300000,
     failureThreshold: process.env.FAILURE_THRESHOLD ? parseInt(process.env.FAILURE_THRESHOLD) : 3,
     clusteringEnabled: process.env.CLUSTERING_ENABLED === 'true' || false,
-    numWorkers: process.env.NUM_WORKERS ? parseInt(process.env.NUM_WORKERS) : require('os').cpus().length
+    numWorkers: process.env.NUM_WORKERS ? parseInt(process.env.NUM_WORKERS) : require('os').cpus().length,
+    healthCheckEnabled: process.env.HEALTH_CHECK_ENABLED !== 'false'
 }
 
 Object.defineProperty(config, "profile", {
