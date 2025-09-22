@@ -1,7 +1,7 @@
 const RouteBuilder = require('../builders/route-builder');
 const bodyParser = require('body-parser');
 const rateLimit = require('express-rate-limit');
-const { serverListController, registryController, deregisterController, healthController, metricsController, prometheusMetricsController, filteredDiscoveryController, discoveryInfoController, changesController, bulkRegisterController, bulkDeregisterController, setMaintenanceController } = require('../controller/maxine/registry-controller');
+const { serverListController, registryController, deregisterController, healthController, metricsController, prometheusMetricsController, cacheStatsController, filteredDiscoveryController, discoveryInfoController, changesController, bulkRegisterController, bulkDeregisterController, setMaintenanceController } = require('../controller/maxine/registry-controller');
 const { setConfig, getConfig, getAllConfig, deleteConfig } = require('../controller/config-control/config-controller');
 const { addWebhook, removeWebhook, getWebhooks } = require('../controller/webhook-controller');
 const { addAlias, removeAlias, getAliases } = require('../controller/alias-controller');
@@ -46,8 +46,9 @@ let maxineApiRoutes = RouteBuilder.createNewRoute()
                                   .get("discover/info", authenticationController, discoveryLimiter, discoveryInfoController)
                                   .get("discover/filtered", authenticationController, discoveryLimiter, filteredDiscoveryController)
                                    .get("health", authenticationController, limiter, healthController)
-                                    .get("metrics", authenticationController, limiter, metricsController)
-                                    .get("metrics/prometheus", authenticationController, limiter, prometheusMetricsController)
+                                     .get("metrics", authenticationController, limiter, metricsController)
+                                     .get("metrics/prometheus", authenticationController, limiter, prometheusMetricsController)
+                                     .get("cache/stats", authenticationController, limiter, cacheStatsController)
                                     .get("changes", authenticationController, limiter, changesController)
                                     .post("webhooks/add", authenticationController, limiter, bodyParser.json(), addWebhook)
                                     .delete("webhooks/remove", authenticationController, limiter, bodyParser.json(), removeWebhook)

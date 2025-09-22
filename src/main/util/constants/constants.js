@@ -43,13 +43,14 @@ const SSS = new Enums([
     {name: 'RR', code: '0', message: 'Round Robin'},
     {name: 'WRR', code: '5', message: 'Weighted Round Robin'},
     {name: 'LRT', code: '6', message: 'Least Response Time'},
+    {name: 'FASTEST', code: '9', message: 'Fastest Node'},
     {name: 'CH', code: '1', message: 'Consistent Hashing'},
     {name: 'RH', code: '2', message: 'Rendezvous Hashing'},
     {name: 'LC', code: '3', message: 'Least Connections'},
     {name: 'LL', code: '7', message: 'Least Loaded'},
     {name: 'RANDOM', code: '4', message: 'Random'},
     {name: 'ADAPTIVE', code: '8', message: 'Adaptive Load Balancing'},
-    {name: 'P2', code: '8', message: 'Power of Two Choices'}
+    {name: 'P2', code: '10', message: 'Power of Two Choices'}
 ]);
 
 const LOG_FORMATS = new Enums([

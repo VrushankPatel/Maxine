@@ -239,7 +239,7 @@ class ServiceRegistry{
 
     initHashRegistry = (serviceName) => {
         if(!this.hashRegistry[serviceName]){
-            this.hashRegistry[serviceName] = new HashRing();
+            this.hashRegistry[serviceName] = new HashRing({algorithm: 'md5'});
         }
     }
 

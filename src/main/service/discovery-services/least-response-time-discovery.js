@@ -1,6 +1,11 @@
 const { serviceRegistry } = require("../../entity/service-registry");
 
 class LeastResponseTimeDiscovery {
+    constructor() {
+        this.fastestCache = new Map(); // serviceName -> {nodeName, timestamp}
+        this.cacheTTL = 1000; // 1 second
+    }
+
     /**
      * Retrieve the node with the lowest average response time
      * @param {string} serviceName
@@ -10,6 +15,12 @@ class LeastResponseTimeDiscovery {
     getNode = (fullServiceName) => {
         const healthyNodeNames = serviceRegistry.getHealthyNodes(fullServiceName);
         if (healthyNodeNames.length === 0) return null;
+
+        // Check cache
+        const cached = this.fastestCache.get(fullServiceName);
+        if (cached && (Date.now() - cached.timestamp) < this.cacheTTL) {
+            return cached.nodeName;
+        }
 
         let selectedNodeName = null;
         let minResponseTime = Infinity;
@@ -27,6 +38,9 @@ class LeastResponseTimeDiscovery {
             const offset = this.getOffsetAndIncrement(fullServiceName);
             selectedNodeName = healthyNodeNames[offset % healthyNodeNames.length];
         }
+
+        // Cache the result
+        this.fastestCache.set(fullServiceName, { nodeName: selectedNodeName, timestamp: Date.now() });
 
         return selectedNodeName;
     }
