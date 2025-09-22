@@ -11,12 +11,31 @@ class ServiceRegistry{
     activeConnections = {};
     responseTimes = new Map();
     saveTimeout = null;
+    changes = [];
 
     constructor() {
         this.loadFromFile();
     }
 
     getRegServers = () => this.registry;
+
+    addChange = (type, serviceName, nodeName, data) => {
+        this.changes.push({
+            type,
+            serviceName,
+            nodeName,
+            data,
+            timestamp: Date.now()
+        });
+        // Keep only last 1000 changes
+        if (this.changes.length > 1000) {
+            this.changes.shift();
+        }
+    }
+
+    getChangesSince = (since) => {
+        return this.changes.filter(change => change.timestamp > since);
+    }
 
     getNodes = (serviceName) => (this.registry[serviceName] || {})["nodes"];
 
@@ -33,11 +52,13 @@ class ServiceRegistry{
             this.healthyNodes.set(serviceName, new Set());
         }
         this.healthyNodes.get(serviceName).add(nodeName);
+        this.addChange('healthy', serviceName, nodeName, { healthy: true });
     }
 
     removeFromHealthyNodes = (serviceName, nodeName) => {
         if (this.healthyNodes.has(serviceName)) {
             this.healthyNodes.get(serviceName).delete(nodeName);
+            this.addChange('unhealthy', serviceName, nodeName, { healthy: false });
         }
     }
 
