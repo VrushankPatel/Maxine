@@ -66,7 +66,7 @@ As we can see, maxine SRD is working as a true reverse proxy for each servers, a
 * **Circuit Breaker**: Automatically skips unhealthy service nodes during discovery with failure counting and automatic recovery to improve reliability.
 * **Background Health Monitoring**: Continuous health checks every 30 seconds to maintain up-to-date service status without impacting request latency. Supports custom health endpoints via service metadata.
 * **Optimized Discovery**: Healthy nodes cache eliminates filtering overhead on each discovery request, ensuring lightning-fast service lookups.
-* **Load Balancing Strategies**: Supports Round Robin (RR), Weighted Round Robin (WRR), Least Response Time (LRT), Consistent Hashing (CH), Rendezvous Hashing (RH), Least Connections (LC) with real connection tracking, and Random selection with health-aware routing.
+ * **Load Balancing Strategies**: Supports Round Robin (RR), Weighted Round Robin (WRR), Least Response Time (LRT), Consistent Hashing (CH), Rendezvous Hashing (RH), Least Connections (LC) with real connection tracking, Least Loaded (LL), Random selection with health-aware routing, and Power of Two Choices (P2).
 * **Security**: JWT-based authentication for registry operations (register, deregister, discover, health, metrics).
 * **Metrics**: Real-time metrics endpoint at `/api/maxine/serviceops/metrics` providing request counts, latencies, and error statistics.
 * **Health Checks**: Enhanced parallel health monitoring for service nodes with automatic status updates and persistence across restarts.
@@ -101,14 +101,14 @@ As we can see, maxine SRD is working as a true reverse proxy for each servers, a
 
 Maxine can be configured via environment variables:
 
-- `CLUSTERING_ENABLED`: Enable clustering (default: false)
+- `CLUSTERING_ENABLED`: Enable clustering (default: true)
 - `NUM_WORKERS`: Number of worker processes (default: CPU cores)
 - `LOG_ASYNC`: Enable async logging (default: true)
 - `HEARTBEAT_TIMEOUT`: Heartbeat timeout in seconds (default: 5)
 - `LOG_JSON_PRETTIFY`: Prettify JSON logs (default: false)
 - `ACTUATOR_ENABLED`: Enable actuator endpoints (default: true)
 - `STATUS_MONITOR_ENABLED`: Enable status monitor (default: true)
-- `SERVER_SELECTION_STRATEGY`: Load balancing strategy (RR, WRR, LRT, CH, RH, LC, LL, RANDOM) (default: RR)
+- `SERVER_SELECTION_STRATEGY`: Load balancing strategy (RR, WRR, LRT, CH, RH, LC, LL, RANDOM, P2) (default: RR)
 - `LOG_FORMAT`: Log format (JSON or PLAIN) (default: JSON)
  - `DISCOVERY_CACHE_TTL`: Discovery cache TTL in ms (default: 300000)
  - `FAILURE_THRESHOLD`: Health check failure threshold (default: 3)

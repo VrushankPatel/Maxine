@@ -44,15 +44,17 @@
 - If there are multiple nodes of that service available in the registry, then the discovery needs to distribute the load across those nodes.
 - Choosing the right server is a very important thing here because if we're using the server-side and server-specific cache, then choosing the wrong node or server might cost us (High latency especially).
 - Maxine implements health-aware load balancing, automatically excluding unhealthy nodes from selection.
-- Here, the Maxine discovery comes with seven server-selection strategies.
+ - Here, the Maxine discovery comes with eight server-selection strategies.
     - Round robin: This strategy is very simple, discovery will start forwarding the request to the next healthy server each server in turn and in order. Note that the requests to the same service name can be redirected to different nodes each time.
     - Weighted Round Robin: Distributes load based on node weights, preferring higher-weight nodes for better resource utilization.
     - Least Response Time: Routes requests to the node with the lowest average response time for optimal performance.
     - Hashing-based: In this strategy, the discovery hashes the IP of the client and based on that hash, It'll come up with the number and that numbered healthy node will be the chosen server. In Maxine, there are two hashing-based strategies are developed.
         - <a href="https://medium.com/swlh/load-balancing-and-consistent-hashing-5fe0156035e1">Consistent hashing</a>
         - <a href="https://randorithms.com/2020/12/26/rendezvous-hashing.html">Rendezvous hashing</a>
-    - Least Connections: Distributes load to the node with the fewest active connections among healthy nodes.
-    - Random: Randomly selects a healthy node for each request.
+     - Least Connections: Distributes load to the node with the fewest active connections among healthy nodes.
+     - Least Loaded: Routes requests to the service node with the least active connections.
+     - Random: Randomly selects a healthy node for each request.
+     - Power of Two Choices: Selects two random healthy nodes and chooses the one with fewer active connections.
 ### HeartBeat
 - As we know that in order to let the service registry know that the service is alive, service has to send the heartbeat to the registry and after certain period of time (timeout), that service will be removed from the registry automatically so becore that service gets deregistered from registry, the service has to send the heartbeat again, That's why we call it a heart beat because it literally keeps beating in a period of time, Let's understand what is this heartbeat.
 - Heartbeat in maxine is a special kind of request that contains all the meta data about the service.
@@ -133,5 +135,5 @@
     - JSONified Logging : To Jsonify the logs, Logs console will show plain logs if turned off.
     - Prettify Logs : To pretify the JSONified logs (Works only if JSOnified logging is turned on).
     - Default heartbeat : To modify the default heartbeat timeout if the heartbeat is not bringing the timeout parameter from service.
-    - Server selection strategy : To change the load balancer's server selection strategy. By default, it's Round robin but can be changed to weighted round robin, least response time, consistent hashing, rendezvous hashing, least connections, or random.
+     - Server selection strategy : To change the load balancer's server selection strategy. By default, it's Round robin but can be changed to weighted round robin, least response time, consistent hashing, rendezvous hashing, least connections, least loaded, random, or power of two choices.
     - Status monitor : To turn on and off the status monitor.
