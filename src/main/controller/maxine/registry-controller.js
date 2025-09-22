@@ -152,8 +152,6 @@ const filteredDiscoveryController = (req, res) => {
 
     try {
         proxy.web(req, res, { target: addressToRedirect, changeOrigin: true });
-        const latency = Date.now() - startTime;
-        metricsService.recordRequest(serviceName, true, latency);
     } catch (err) {
         console.error('Proxy setup error:', err);
         const latency = Date.now() - startTime;
@@ -161,9 +159,13 @@ const filteredDiscoveryController = (req, res) => {
         metricsService.recordError('proxy_error');
         serviceRegistry.decrementActiveConnections(serviceName, serviceNode.nodeName);
         res.status(500).json({ message: 'Proxy Error' });
+        return;
     }
 
     res.on('finish', () => {
+        const latency = Date.now() - startTime;
+        const success = res.statusCode >= 200 && res.statusCode < 300;
+        metricsService.recordRequest(serviceName, success, latency);
         serviceRegistry.decrementActiveConnections(serviceName, serviceNode.nodeName);
     });
     res.on('close', () => {
@@ -175,11 +177,53 @@ const metricsController = (req, res) => {
     res.status(statusAndMsgs.STATUS_SUCCESS).json(metricsService.getMetrics());
 }
 
+const discoveryInfoController = (req, res) => {
+    const startTime = Date.now();
+    const serviceName = req.query.serviceName;
+    const version = req.query.version;
+    const ip = req.ip
+    || req.connection.remoteAddress
+    || req.socket.remoteAddress
+    || req.connection.socket.remoteAddress;
+
+    if(!serviceName) {
+        const latency = Date.now() - startTime;
+        metricsService.recordRequest(serviceName, false, latency);
+        metricsService.recordError('missing_service_name');
+        res.status(statusAndMsgs.STATUS_GENERIC_ERROR).json({"message" : statusAndMsgs.MSG_DISCOVER_MISSING_DATA});
+        return;
+    }
+
+    const serviceNode = discoveryService.getNode(serviceName, ip, version);
+
+    if(_.isEmpty(serviceNode)){
+        const latency = Date.now() - startTime;
+        metricsService.recordRequest(serviceName, false, latency);
+        metricsService.recordError('service_unavailable');
+        res.status(statusAndMsgs.SERVICE_UNAVAILABLE).json({
+            "message" : statusAndMsgs.MSG_SERVICE_UNAVAILABLE
+        });
+        return;
+    }
+
+    const latency = Date.now() - startTime;
+    metricsService.recordRequest(serviceName, true, latency);
+    res.status(statusAndMsgs.STATUS_SUCCESS).json({
+        serviceName,
+        node: {
+            nodeName: serviceNode.nodeName,
+            address: serviceNode.address,
+            metadata: serviceNode.metadata
+        }
+    });
+}
+
 module.exports = {
     registryController,
     serverListController,
     deregisterController,
     healthController,
     metricsController,
-    filteredDiscoveryController
+    filteredDiscoveryController,
+    discoveryInfoController
 };
