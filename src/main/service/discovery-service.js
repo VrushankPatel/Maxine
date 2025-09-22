@@ -27,17 +27,12 @@ class DiscoveryService{
     serviceKeys = new Map(); // Map serviceName to set of cache keys
 
     /**
-     * Get serviceName and IP and based on the serverSelectionStrategy we've selected, It'll call that discoveryService and retrieve the node from it. (Ex. RoundRobin, Rendezvous, ConsistentHashing).
-     * @param {string} serviceName
+     * Get fullServiceName and IP and based on the serverSelectionStrategy we've selected, It'll call that discoveryService and retrieve the node from it. (Ex. RoundRobin, Rendezvous, ConsistentHashing).
+     * @param {string} fullServiceName
      * @param {string} ip
-     * @param {string} version
      * @returns {object}
      */
-    getNode = (serviceName, ip, version, namespace = "default", region = "default", zone = "default") => {
-        let fullServiceName = (region !== "default" || zone !== "default") ?
-            (version ? `${namespace}:${region}:${zone}:${serviceName}:${version}` : `${namespace}:${region}:${zone}:${serviceName}`) :
-            (version ? `${namespace}:${serviceName}:${version}` : `${namespace}:${serviceName}`);
-
+    getNode = (fullServiceName, ip) => {
         // Check if serviceName is an alias
         const { serviceRegistry } = require("../entity/service-registry");
         const resolvedServiceName = serviceRegistry.getServiceByAlias(fullServiceName);

@@ -5,6 +5,7 @@ const { serverListController, registryController, deregisterController, healthCo
 const { setConfig, getConfig, getAllConfig, deleteConfig } = require('../controller/config-control/config-controller');
 const { addWebhook, removeWebhook, getWebhooks } = require('../controller/webhook-controller');
 const { addAlias, removeAlias, getAliases } = require('../controller/alias-controller');
+const { setKv, getKv, deleteKv, getAllKv } = require('../controller/kv-controller');
 const discoveryController = require('../controller/maxine/discovery-controller');
 const { signInController } = require('../controller/uac/signin-controller');
 const { logsLinkGenController, recentLogsController, recentLogsClearController } = require('../controller/log-control/logs-controller');
@@ -55,10 +56,14 @@ let maxineApiRoutes = RouteBuilder.createNewRoute()
                                     .delete("aliases/remove", authenticationController, limiter, bodyParser.json(), removeAlias)
                                     .get("aliases", authenticationController, limiter, getAliases)
                                      .post("config/set", authenticationController, limiter, bodyParser.json(), setConfig)
-                                    .get("config/get", authenticationController, limiter, getConfig)
-                                    .get("config/all", authenticationController, limiter, getAllConfig)
-                                    .delete("config/delete", authenticationController, limiter, bodyParser.json(), deleteConfig)
-                                     .post("maintenance", authenticationController, limiter, bodyParser.json(), setMaintenanceController)
+                                     .get("config/get", authenticationController, limiter, getConfig)
+                                     .get("config/all", authenticationController, limiter, getAllConfig)
+                                     .delete("config/delete", authenticationController, limiter, bodyParser.json(), deleteConfig)
+                                      .post("maintenance", authenticationController, limiter, bodyParser.json(), setMaintenanceController)
+                                     .post("kv/set", authenticationController, limiter, bodyParser.json(), setKv)
+                                     .get("kv/get", authenticationController, limiter, getKv)
+                                     .get("kv/all", authenticationController, limiter, getAllKv)
+                                     .delete("kv/delete", authenticationController, limiter, bodyParser.json(), deleteKv)
                             .stepBack()
                             .post("signin", bodyParser.json(), signInController)
                             .put("change-password", bodyParser.json(), changePwdController)

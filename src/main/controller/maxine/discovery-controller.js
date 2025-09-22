@@ -44,10 +44,10 @@ const discoveryController = (req, res) => {
     const region = req.query.region || "default";
     const zone = req.query.zone || "default";
     const endPoint = req.query.endPoint || "";
-    const ip = req.ip
+    const ip = req.clientIp || (req.clientIp = req.ip
     || req.connection.remoteAddress
     || req.socket.remoteAddress
-    || req.connection.socket.remoteAddress;
+    || req.connection.socket.remoteAddress);
 
     // if serviceName is not there, responding with error
     if(!serviceName) {
@@ -61,7 +61,10 @@ const discoveryController = (req, res) => {
     }
 
     // now, retrieving the serviceNode from the registry
-    const serviceNode = discoveryService.getNode(serviceName, ip, version, namespace, region, zone);
+    const fullServiceName = (region !== "default" || zone !== "default") ?
+        (version ? `${namespace}:${region}:${zone}:${serviceName}:${version}` : `${namespace}:${region}:${zone}:${serviceName}`) :
+        (version ? `${namespace}:${serviceName}:${version}` : `${namespace}:${serviceName}`);
+    const serviceNode = discoveryService.getNode(fullServiceName, ip);
 
     // no service node is there so, service unavailable is our error response.
     if(_.isEmpty(serviceNode)){
@@ -79,9 +82,6 @@ const discoveryController = (req, res) => {
 
     // Increment active connections
     const { serviceRegistry } = require("../../entity/service-registry");
-    const fullServiceName = (region !== "default" || zone !== "default") ?
-        (version ? `${namespace}:${region}:${zone}:${serviceName}:${version}` : `${namespace}:${region}:${zone}:${serviceName}`) :
-        (version ? `${namespace}:${serviceName}:${version}` : `${namespace}:${serviceName}`);
     serviceRegistry.incrementActiveConnections(fullServiceName, serviceNode.nodeName);
 
     try {
@@ -107,6 +107,7 @@ const discoveryController = (req, res) => {
         }
         if (success) {
             // Record response time for LRT algorithm
+            const { serviceRegistry } = require("../../entity/service-registry");
             serviceRegistry.recordResponseTime(fullServiceName, serviceNode.nodeName, latency);
         }
         serviceRegistry.decrementActiveConnections(fullServiceName, serviceNode.nodeName);
