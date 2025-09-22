@@ -13,7 +13,7 @@ class RendezvousHashDiscovery{
      */
     getNode = (serviceName, ip) => {
         const serviceNodesObj = serviceRegistry.getNodes(serviceName);
-        return this.selectNode(serviceNodesObj, ip) || {};
+        return this.selectNode(serviceNodesObj, ip) || null;
     }
 
     /**
@@ -23,16 +23,16 @@ class RendezvousHashDiscovery{
      * @returns {object} select the node based on IP Hashing
      */
     selectNode(nodes, ip) {
-        if(_.isUndefined(nodes)) return {};
+        if(_.isUndefined(nodes)) return null;
         let targetNodeId, targetNodeRank = 0;
-        for (let nodeId in nodes) if ({}.hasOwnProperty.call(nodes, nodeId)) {
+        for (let nodeId in nodes) if ({}.hasOwnProperty.call(nodes, nodeId) && nodes[nodeId].healthy) {
             let nodeRank = this.rank(nodeId, ip);
             if (nodeRank > targetNodeRank) {
                 targetNodeId = nodeId;
                 targetNodeRank = nodeRank;
             }
         }
-        return nodes[targetNodeId];
+        return targetNodeId ? nodes[targetNodeId] : null;
     }
 
     /**

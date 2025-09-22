@@ -7,7 +7,8 @@ const config = {
     actuatorEnabled: true,
     statusMonitorEnabled: true,
     serverSelectionStrategy: constants.SSS.RR,
-    logFormat: constants.LOG_FORMATS.JSON
+    logFormat: constants.LOG_FORMATS.JSON,
+    discoveryCacheTTL: 5000 // 5 seconds
 }
 
 Object.defineProperty(config, "profile", {

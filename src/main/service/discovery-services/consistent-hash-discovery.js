@@ -11,9 +11,10 @@ class ConsistentHashDiscovery{
     getNode = (serviceName, ip) => {
         const serviceNodesObj = serviceRegistry.getNodes(serviceName);
         const cons = serviceRegistry.hashRegistry[serviceName];
-        if(_.isEmpty(cons) || _.isEmpty(cons.nodes)) return {};
+        if(_.isEmpty(cons) || _.isEmpty(cons.nodes)) return null;
         const nodeName = cons.getNode(ip);
-        return serviceNodesObj[nodeName];
+        const node = serviceNodesObj[nodeName];
+        return node && node.healthy ? node : null;
     }
 }
 

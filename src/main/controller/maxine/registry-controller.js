@@ -45,15 +45,24 @@ const healthController = async (req, res) => {
         res.status(statusAndMsgs.SERVICE_UNAVAILABLE).json({ message: "Service not found" });
         return;
     }
-    const healthResults = {};
-    for (const [nodeName, node] of Object.entries(nodes)) {
+    const healthPromises = Object.entries(nodes).map(async ([nodeName, node]) => {
         try {
             const response = await axios.get(node.address, { timeout: 5000 });
-            healthResults[nodeName] = { status: 'healthy', code: response.status };
+            // Update registry with healthy status
+            if (serviceRegistry.registry[serviceName] && serviceRegistry.registry[serviceName].nodes[nodeName]) {
+                serviceRegistry.registry[serviceName].nodes[nodeName].healthy = true;
+            }
+            return [nodeName, { status: 'healthy', code: response.status }];
         } catch (error) {
-            healthResults[nodeName] = { status: 'unhealthy', error: error.message };
+            // Update registry with unhealthy status
+            if (serviceRegistry.registry[serviceName] && serviceRegistry.registry[serviceName].nodes[nodeName]) {
+                serviceRegistry.registry[serviceName].nodes[nodeName].healthy = false;
+            }
+            return [nodeName, { status: 'unhealthy', error: error.message }];
         }
-    }
+    });
+    const healthResultsArray = await Promise.all(healthPromises);
+    const healthResults = Object.fromEntries(healthResultsArray);
     res.status(statusAndMsgs.STATUS_SUCCESS).json({ serviceName, health: healthResults });
 }
 

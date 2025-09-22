@@ -11,9 +11,16 @@ const { authenticationController } = require('./src/main/controller/security/aut
 const swaggerUi = require('swagger-ui-express');
 const { statusMonitorConfig, actuatorConfig } = require('./src/main/config/actuator/actuator-config');
 const { loadSwaggerYAML } = require('./src/main/util/util');
+const rateLimit = require('express-rate-limit');
 const swaggerDocument = loadSwaggerYAML();
 const path = require("path");
 const currDir = require('./conf');
+
+const limiter = rateLimit({
+    windowMs: 15 * 60 * 1000, // 15 minutes
+    max: 1000, // limit each IP to 1000 requests per windowMs
+    message: 'Too many requests from this IP, please try again later.'
+});
 const app = ExpressAppBuilder.createNewApp()
                 .addCors()
                 .ifPropertyOnce("statusMonitorEnabled")
@@ -22,9 +29,9 @@ const app = ExpressAppBuilder.createNewApp()
                 .use(authenticationController)
                 .mapStaticDir(path.join(currDir, "client"))
                 .mapStaticDirWithRoute('/logs', path.join(currDir,"logs"))
-                .ifPropertyOnce("actuatorEnabled")
-                    .use(actuator(actuatorConfig))
-                .use('/api',maxineApiRoutes)
+                 .ifPropertyOnce("actuatorEnabled")
+                     .use(actuator(actuatorConfig))
+                 .use('/api', limiter, maxineApiRoutes)
                 .ifPropertyOnce('profile','dev')
                     .use('/api-spec', swaggerUi.serve, swaggerUi.setup(swaggerDocument))
                     .use('/shutdown', process.exit)

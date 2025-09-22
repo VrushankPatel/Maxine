@@ -5,7 +5,12 @@ const _ = require('lodash');
 const { info } = require("../../util/logging/logging-util");
 const httpProxy = require('http-proxy');
 
-const proxy = httpProxy.createProxyServer({});
+const http = require('http');
+const https = require('https');
+const proxy = httpProxy.createProxyServer({
+    agent: new http.Agent({ keepAlive: true, maxSockets: 100 }),
+    httpsAgent: new https.Agent({ keepAlive: true, maxSockets: 100 })
+});
 
 proxy.on('error', (err, req, res) => {
     console.error('Proxy error:', err);
