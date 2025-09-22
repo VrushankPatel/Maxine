@@ -3,7 +3,14 @@ const LogFilesService = require('../../service/logfiles-service');
 
 const logFilesService = new LogFilesService();
 
-const logsLinkGenController = (_, res) => res.send(logFilesService.getLogLinks());
+const logsLinkGenController = async (_, res) => {
+    try {
+        const links = await logFilesService.getLogLinks();
+        res.send(links);
+    } catch (err) {
+        res.status(500).send({error: err.message});
+    }
+}
 
 const recentLogsController = (_, res) => res.status(200).json({
     "logs" : getRecents()

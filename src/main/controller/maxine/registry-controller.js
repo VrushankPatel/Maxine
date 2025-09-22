@@ -5,12 +5,13 @@ const { serviceRegistry } = require('../../entity/service-registry');
 const { metricsService } = require('../../service/metrics-service');
 const { discoveryService } = require('../../service/discovery-service');
 const axios = require('axios');
+const _ = require('lodash');
 const httpProxy = require('http-proxy');
 const http = require('http');
 const https = require('https');
 const proxy = httpProxy.createProxyServer({
-    agent: new http.Agent({ keepAlive: true, maxSockets: 5000, maxFreeSockets: 2560, timeout: 60000 }),
-    httpsAgent: new https.Agent({ keepAlive: true, maxSockets: 5000, maxFreeSockets: 2560, timeout: 60000 })
+    agent: new http.Agent({ keepAlive: true, maxSockets: 500, maxFreeSockets: 256, timeout: 60000 }),
+    httpsAgent: new https.Agent({ keepAlive: true, maxSockets: 500, maxFreeSockets: 256, timeout: 60000 })
 });
 
 proxy.on('error', (err, req, res) => {
@@ -127,11 +128,12 @@ const filteredDiscoveryController = (req, res) => {
     }
 
     // Filter by tags
-    const filteredNodes = healthyNodeNames.filter(nodeName => {
-        const node = nodes[nodeName];
-        if (!node || !node.metadata.tags) return false;
-        return tags.every(tag => node.metadata.tags.includes(tag));
-    });
+    let filteredNodes = healthyNodeNames;
+    if (tags && tags.length > 0) {
+        const taggedSets = tags.map(tag => serviceRegistry.tagIndex.get(tag) || new Set());
+        const taggedNodes = _.intersection(...taggedSets.map(s => Array.from(s)));
+        filteredNodes = healthyNodeNames.filter(nodeName => taggedNodes.includes(nodeName));
+    }
 
     if (filteredNodes.length === 0) {
         const latency = Date.now() - startTime;

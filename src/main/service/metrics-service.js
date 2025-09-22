@@ -5,11 +5,13 @@ class MetricsService {
             successfulRequests: 0,
             failedRequests: 0,
             averageLatency: 0,
-            latencies: [],
+            latencies: new Array(1000),
             latencySum: 0,
             serviceRequests: {},
             errors: {}
         };
+        this.latencyCount = 0;
+        this.latencyIndex = 0;
     }
 
     recordRequest(serviceName, success, latency) {
@@ -19,12 +21,16 @@ class MetricsService {
         } else {
             this.metrics.failedRequests++;
         }
-        this.metrics.latencies.push(latency);
-        this.metrics.latencySum += latency;
-        if (this.metrics.latencies.length > 1000) {
-            this.metrics.latencySum -= this.metrics.latencies.shift(); // keep last 1000
+        // Update circular buffer for latencies
+        if (this.latencyCount < 1000) {
+            this.latencyCount++;
+        } else {
+            this.metrics.latencySum -= this.metrics.latencies[this.latencyIndex];
         }
-        this.metrics.averageLatency = this.metrics.latencySum / this.metrics.latencies.length;
+        this.metrics.latencies[this.latencyIndex] = latency;
+        this.metrics.latencySum += latency;
+        this.latencyIndex = (this.latencyIndex + 1) % 1000;
+        this.metrics.averageLatency = this.metrics.latencySum / this.latencyCount;
 
         if (!this.metrics.serviceRequests[serviceName]) {
             this.metrics.serviceRequests[serviceName] = 0;
@@ -40,7 +46,8 @@ class MetricsService {
     }
 
     getMetrics() {
-        const sortedLatencies = [...this.metrics.latencies].sort((a, b) => a - b);
+        const latenciesToSort = this.metrics.latencies.slice(0, this.latencyCount);
+        const sortedLatencies = latenciesToSort.sort((a, b) => a - b);
         const p95 = sortedLatencies[Math.floor(sortedLatencies.length * 0.95)] || 0;
         const p99 = sortedLatencies[Math.floor(sortedLatencies.length * 0.99)] || 0;
         return {
