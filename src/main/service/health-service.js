@@ -10,10 +10,10 @@ class HealthService {
     }
 
     startBackgroundChecks() {
-        // Run health checks every 30 seconds
+        // Run health checks every 60 seconds
         this.intervalId = setInterval(() => {
             this.performHealthChecks();
-        }, 30000);
+        }, 60000);
     }
 
     stopBackgroundChecks() {

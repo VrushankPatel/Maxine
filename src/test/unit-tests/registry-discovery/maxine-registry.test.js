@@ -78,8 +78,9 @@ describe(`${fileName} : API /api/maxine/{registry urls}`, () => {
                 const tempNodeName = serviceSampleRS.nodeName + "-0"; // no weight means 1 server, no replication
                 const body = res.body;
                 body.should.be.a('object');
-                body.should.have.own.property("default:" + serviceSampleRS.serviceName + ":1.0");
-                const service = body[serviceSampleRS.serviceName];
+                const serviceKey = "default:" + serviceSampleRS.serviceName + ":1.0";
+                body.should.have.own.property(serviceKey);
+                const service = body[serviceKey];
                 service.should.have.own.property("offset");
                 service.should.have.own.property("nodes");
 

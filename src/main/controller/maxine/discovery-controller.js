@@ -26,6 +26,8 @@ const discoveryController = (req, res) => {
     const serviceName = req.query.serviceName;
     const version = req.query.version;
     const namespace = req.query.namespace || "default";
+    const region = req.query.region || "default";
+    const zone = req.query.zone || "default";
     const endPoint = req.query.endPoint || "";
     const ip = req.ip
     || req.connection.remoteAddress
@@ -42,7 +44,7 @@ const discoveryController = (req, res) => {
     }
 
     // now, retrieving the serviceNode from the registry
-    const serviceNode = discoveryService.getNode(serviceName, ip, version, namespace);
+    const serviceNode = discoveryService.getNode(serviceName, ip, version, namespace, region, zone);
 
     // no service node is there so, service unavailable is our error response.
     if(_.isEmpty(serviceNode)){
@@ -58,7 +60,9 @@ const discoveryController = (req, res) => {
 
     // Increment active connections
     const { serviceRegistry } = require("../../entity/service-registry");
-    const fullServiceName = version ? `${namespace}:${serviceName}:${version}` : `${namespace}:${serviceName}`;
+    const fullServiceName = (region !== "default" || zone !== "default") ?
+        (version ? `${namespace}:${region}:${zone}:${serviceName}:${version}` : `${namespace}:${region}:${zone}:${serviceName}`) :
+        (version ? `${namespace}:${serviceName}:${version}` : `${namespace}:${serviceName}`);
     serviceRegistry.incrementActiveConnections(fullServiceName, serviceNode.nodeName);
 
     try {

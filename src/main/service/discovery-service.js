@@ -20,6 +20,7 @@ class DiscoveryService{
     lld = new LeastLoadedDiscovery();
     rand = new RandomDiscovery();
     cache = new LRU({ max: 100000, ttl: config.discoveryCacheTTL });
+    serviceKeys = new Map(); // Map serviceName to set of cache keys
 
     /**
      * Get serviceName and IP and based on the serverSelectionStrategy we've selected, It'll call that discoveryService and retrieve the node from it. (Ex. RoundRobin, Rendezvous, ConsistentHashing).
@@ -28,8 +29,10 @@ class DiscoveryService{
      * @param {string} version
      * @returns {object}
      */
-    getNode = (serviceName, ip, version, namespace = "default") => {
-        const fullServiceName = version ? `${namespace}:${serviceName}:${version}` : `${namespace}:${serviceName}`;
+    getNode = (serviceName, ip, version, namespace = "default", region = "default", zone = "default") => {
+        const fullServiceName = (region !== "default" || zone !== "default") ?
+            (version ? `${namespace}:${region}:${zone}:${serviceName}:${version}` : `${namespace}:${region}:${zone}:${serviceName}`) :
+            (version ? `${namespace}:${serviceName}:${version}` : `${namespace}:${serviceName}`);
         const usesIp = [constants.SSS.CH, constants.SSS.RH].includes(config.serverSelectionStrategy);
         const cacheKey = usesIp ? `${fullServiceName}:${ip}` : fullServiceName;
         const cached = this.cache.get(cacheKey);
@@ -77,6 +80,11 @@ class DiscoveryService{
 
         if (node) {
             this.cache.set(cacheKey, node);
+            // Track keys per service
+            if (!this.serviceKeys.has(fullServiceName)) {
+                this.serviceKeys.set(fullServiceName, new Set());
+            }
+            this.serviceKeys.get(fullServiceName).add(cacheKey);
         }
         return node;
     }
@@ -87,13 +95,11 @@ class DiscoveryService{
 
     invalidateServiceCache = (fullServiceName) => {
         // Remove all cache entries for this service
-        const keysToDelete = [];
-        for (const key of this.cache.keys()) {
-            if (key.startsWith(`${fullServiceName}:`) || key === fullServiceName) {
-                keysToDelete.push(key);
-            }
+        if (this.serviceKeys.has(fullServiceName)) {
+            const keys = this.serviceKeys.get(fullServiceName);
+            keys.forEach(key => this.cache.delete(key));
+            this.serviceKeys.delete(fullServiceName);
         }
-        keysToDelete.forEach(key => this.cache.delete(key));
     }
 }
 
