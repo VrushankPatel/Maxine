@@ -113,7 +113,7 @@
 - Aggressive connection pooling for HTTP proxying (500 max sockets, keep-alive) to handle thousands of concurrent requests.
 - Circuit breaker with failure counting automatically isolates unhealthy nodes while allowing recovery.
 - API rate limiting prevents abuse and ensures stability under load.
-- Optimized data structures and algorithms provide lightning-fast service resolution for microservices architectures.
+- Optimized data structures using Maps and Sets for O(1) lookups in healthy nodes and response times tracking, providing lightning-fast service resolution for microservices architectures.
 ### Config control
 - Maxine config control provides interactive way to manage the configuration.
 - the Settings and Logging tab provides options to monitor and manipulate the Maxine configuration.
