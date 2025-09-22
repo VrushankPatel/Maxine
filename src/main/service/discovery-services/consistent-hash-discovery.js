@@ -2,7 +2,7 @@ const { serviceRegistry } = require("../../entity/service-registry");
 
 class ConsistentHashDiscovery{
     /**
-     * Use simple hash and returns the appropriate Node based on hashing the IP.
+     * Use simple hash to return the appropriate Node based on IP.
      * @param {string} serviceName
      * @param {string} ip
      * @param {string} version
@@ -16,8 +16,7 @@ class ConsistentHashDiscovery{
         const hash = ip.split('').reduce((a, b) => a + b.charCodeAt(0), 0);
         const index = hash % sortedNodes.length;
         const nodeName = sortedNodes[index];
-        const node = serviceNodesObj[nodeName];
-        return node;
+        return serviceNodesObj[nodeName];
     }
 }
 

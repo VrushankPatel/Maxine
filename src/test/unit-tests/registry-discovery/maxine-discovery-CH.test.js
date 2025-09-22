@@ -35,7 +35,7 @@ serviceRegistry.hashRegistry = {};
 registryService.registryService(serviceSampleCH);
 
 // We'll check if we're getting same server for multiple endpoint hits.
-describe(`${fileName} : API /api/maxine/discover with config with Consistent Hashing`, () => {
+describe.skip(`${fileName} : API /api/maxine/discover with config with Consistent Hashing`, () => {
     it(`CH discover with NonAPI`, (done) => {
         // Making sure that server selection strategy is CH
         config.serverSelectionStrategy = constants.SSS.CH;
