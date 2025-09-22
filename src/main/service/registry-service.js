@@ -42,6 +42,22 @@ class RegistryService{
             sRegistry.addToHealthyNodes(fullServiceName, subNodeName);
 
             const timeResetter = setTimeout(() => {
+                // Check self-preservation mode
+                const { healthService } = require("../service/health-service");
+                if (healthService.selfPreservationMode) {
+                    // In self-preservation mode, renew the timeout instead of deregistering
+                    setTimeout(() => {
+                        delete sRegistry.registry[fullServiceName]["nodes"][subNodeName];
+                        if(Object.keys(sRegistry.registry[fullServiceName]["nodes"]).length === 0){
+                            delete sRegistry.registry[fullServiceName];
+                        }
+                        sRegistry.removeNodeFromRegistry(fullServiceName, subNodeName);
+                        if(Object.keys(sRegistry.hashRegistry[fullServiceName]["nodes"]).length === 0){
+                            delete sRegistry.hashRegistry[fullServiceName];
+                        }
+                    }, ((timeOut)*1000)+500);
+                    return;
+                }
                 delete sRegistry.registry[fullServiceName]["nodes"][subNodeName];
                 if(Object.keys(sRegistry.registry[fullServiceName]["nodes"]).length === 0){
                     delete sRegistry.registry[fullServiceName];

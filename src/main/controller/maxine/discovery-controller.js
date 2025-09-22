@@ -50,15 +50,15 @@ const discoveryController = (req, res) => {
     || req.connection.socket.remoteAddress);
 
     // if serviceName is not there, responding with error
-    if(!serviceName) {
-        if (config.metricsEnabled) {
-            const latency = Date.now() - startTime;
-            metricsService.recordRequest(serviceName, false, latency);
-            metricsService.recordError('missing_service_name');
-        }
-        res.status(statusAndMsgs.STATUS_GENERIC_ERROR).json({"message" : statusAndMsgs.MSG_DISCOVER_MISSING_DATA});
-        return;
-    }
+     if(!serviceName) {
+         if (config.metricsEnabled && !config.highPerformanceMode) {
+             const latency = Date.now() - startTime;
+             metricsService.recordRequest(serviceName, false, latency);
+             metricsService.recordError('missing_service_name');
+         }
+         res.status(statusAndMsgs.STATUS_GENERIC_ERROR).json({"message" : statusAndMsgs.MSG_DISCOVER_MISSING_DATA});
+         return;
+     }
 
     // now, retrieving the serviceNode from the registry
     const fullServiceName = (region !== "default" || zone !== "default") ?
@@ -67,28 +67,28 @@ const discoveryController = (req, res) => {
     const serviceNode = discoveryService.getNode(fullServiceName, ip);
 
     // no service node is there so, service unavailable is our error response.
-    if(_.isEmpty(serviceNode)){
-        if (config.metricsEnabled) {
-            const latency = Date.now() - startTime;
-            metricsService.recordRequest(serviceName, false, latency);
-            metricsService.recordError('service_unavailable');
-        }
-        res.status(statusAndMsgs.SERVICE_UNAVAILABLE).json({
-            "message" : statusAndMsgs.MSG_SERVICE_UNAVAILABLE
-        });
-        return;
-    }
+     if(_.isEmpty(serviceNode)){
+         if (config.metricsEnabled && !config.highPerformanceMode) {
+             const latency = Date.now() - startTime;
+             metricsService.recordRequest(serviceName, false, latency);
+             metricsService.recordError('service_unavailable');
+         }
+         res.status(statusAndMsgs.SERVICE_UNAVAILABLE).json({
+             "message" : statusAndMsgs.MSG_SERVICE_UNAVAILABLE
+         });
+         return;
+     }
     const addressToRedirect = serviceNode.address + (endPoint.length > 0 ? (endPoint[0] == "/" ? endPoint : `/${endPoint}`) : "");
 
     // Check if client wants address only (no proxy)
-    if (req.query.proxy === 'false') {
-        if (config.metricsEnabled) {
-            const latency = Date.now() - startTime;
-            metricsService.recordRequest(serviceName, true, latency);
-        }
-        res.json({ address: addressToRedirect, nodeName: serviceNode.nodeName });
-        return;
-    }
+     if (req.query.proxy === 'false') {
+         if (config.metricsEnabled && !config.highPerformanceMode) {
+             const latency = Date.now() - startTime;
+             metricsService.recordRequest(serviceName, true, latency);
+         }
+         res.json({ address: addressToRedirect, nodeName: serviceNode.nodeName });
+         return;
+     }
 
     // Increment active connections
     const { serviceRegistry } = require("../../entity/service-registry");
@@ -97,31 +97,31 @@ const discoveryController = (req, res) => {
     try {
         proxy.web(req, res, { target: addressToRedirect, changeOrigin: true });
     } catch (err) {
-        console.error('Proxy setup error:', err);
-        if (config.metricsEnabled) {
-            const latency = Date.now() - startTime;
-            metricsService.recordRequest(serviceName, false, latency);
-            metricsService.recordError('proxy_error');
-        }
-        serviceRegistry.decrementActiveConnections(fullServiceName, serviceNode.nodeName);
-        res.status(500).json({ message: 'Proxy Error' });
-        return;
-    }
+         console.error('Proxy setup error:', err);
+         if (config.metricsEnabled && !config.highPerformanceMode) {
+             const latency = Date.now() - startTime;
+             metricsService.recordRequest(serviceName, false, latency);
+             metricsService.recordError('proxy_error');
+         }
+         serviceRegistry.decrementActiveConnections(fullServiceName, serviceNode.nodeName);
+         res.status(500).json({ message: 'Proxy Error' });
+         return;
+     }
 
     // Record metrics and response time on response finish
-    res.on('finish', () => {
-        const latency = Date.now() - startTime;
-        const success = res.statusCode >= 200 && res.statusCode < 300;
-        if (config.metricsEnabled) {
-            metricsService.recordRequest(serviceName, success, latency);
-        }
-        if (success) {
-            // Record response time for LRT algorithm
-            const { serviceRegistry } = require("../../entity/service-registry");
-            serviceRegistry.recordResponseTime(fullServiceName, serviceNode.nodeName, latency);
-        }
-        serviceRegistry.decrementActiveConnections(fullServiceName, serviceNode.nodeName);
-    });
+     res.on('finish', () => {
+         const latency = Date.now() - startTime;
+         const success = res.statusCode >= 200 && res.statusCode < 300;
+         if (config.metricsEnabled && !config.highPerformanceMode) {
+             metricsService.recordRequest(serviceName, success, latency);
+         }
+         if (success) {
+             // Record response time for LRT algorithm
+             const { serviceRegistry } = require("../../entity/service-registry");
+             serviceRegistry.recordResponseTime(fullServiceName, serviceNode.nodeName, latency);
+         }
+         serviceRegistry.decrementActiveConnections(fullServiceName, serviceNode.nodeName);
+     });
     res.on('close', () => {
         serviceRegistry.decrementActiveConnections(fullServiceName, serviceNode.nodeName);
     });
