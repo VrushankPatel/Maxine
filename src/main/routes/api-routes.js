@@ -2,6 +2,7 @@ const RouteBuilder = require('../builders/route-builder');
 const bodyParser = require('body-parser');
 const rateLimit = require('express-rate-limit');
 const { serverListController, registryController, deregisterController, healthController, metricsController, filteredDiscoveryController, discoveryInfoController, changesController, bulkRegisterController, bulkDeregisterController } = require('../controller/maxine/registry-controller');
+const { setConfig, getConfig, getAllConfig, deleteConfig } = require('../controller/config-control/config-controller');
 const discoveryController = require('../controller/maxine/discovery-controller');
 const { signInController } = require('../controller/uac/signin-controller');
 const { logsLinkGenController, recentLogsController, recentLogsClearController } = require('../controller/log-control/logs-controller');
@@ -35,9 +36,13 @@ let maxineApiRoutes = RouteBuilder.createNewRoute()
                                   .get("discover", authenticationController, discoveryController)
                                   .get("discover/info", authenticationController, discoveryInfoController)
                                   .get("discover/filtered", authenticationController, filteredDiscoveryController)
-                                   .get("health", authenticationController, healthController)
-                                  .get("metrics", authenticationController, metricsController)
-                                  .get("changes", authenticationController, changesController)
+                                  .get("health", authenticationController, healthController)
+                                   .get("metrics", authenticationController, metricsController)
+                                   .get("changes", authenticationController, changesController)
+                                   .post("config/set", authenticationController, bodyParser.json(), setConfig)
+                                   .get("config/get", authenticationController, getConfig)
+                                   .get("config/all", authenticationController, getAllConfig)
+                                   .delete("config/delete", authenticationController, bodyParser.json(), deleteConfig)
                             .stepBack()
                             .post("signin", bodyParser.json(), signInController)
                             .put("change-password", bodyParser.json(), changePwdController)

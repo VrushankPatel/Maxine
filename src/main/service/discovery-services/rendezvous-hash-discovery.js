@@ -40,18 +40,12 @@ class RendezvousHashDiscovery{
     }
 
     /**
-     * Returns rank by hashing nodeId and ip with hash algo defined in constants.
+     * Returns rank by simple hash of nodeId and ip.
      * @param {string} nodeId
      * @param {string} ip
-     * @returns {number} return rank by hashing nodeId and ip with hash algo defined in constants.
+     * @returns {number} return rank by simple hash of nodeId and ip.
      */
-    rank = (nodeId, ip)  => crypto
-                                .createHash(constants.RENDEZVOUS_HASH_ALGO)
-                                .update(nodeId)
-                                .update(separator)
-                                .update(ip)
-                                .digest()
-                                .readUInt32LE(0, true);
+    rank = (nodeId, ip) => nodeId.split('').reduce((a, b) => a + b.charCodeAt(0), 0) + ip.split('').reduce((a, b) => a + b.charCodeAt(0), 0);
 }
 
 module.exports = {

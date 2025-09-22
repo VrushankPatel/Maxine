@@ -1,4 +1,4 @@
-const ConsistentHashing = require('consistent-hashing');
+const HashRing = require('hashring');
 const { constants } = require('../util/constants/constants');
 const fs = require('fs');
 const path = require('path');
@@ -43,7 +43,7 @@ class ServiceRegistry{
 
     initHashRegistry = (serviceName) => {
         if(!this.hashRegistry[serviceName]){
-            this.hashRegistry[serviceName] = new ConsistentHashing({}, constants.CONSISTENT_HASHING_OPTIONS);
+            this.hashRegistry[serviceName] = new HashRing();
         }
     }
 
@@ -106,15 +106,25 @@ class ServiceRegistry{
 
     addNodeToHashRegistry = (serviceName, nodeName) => {
         this.initHashRegistry(serviceName);
-        if(Object.values(this.hashRegistry[serviceName]["nodes"]).includes(nodeName)) return;
-        this.hashRegistry[serviceName].addNode(nodeName);
+        if(this.hashRegistry[serviceName].servers.includes(nodeName)) return;
+        this.hashRegistry[serviceName].add(nodeName);
         this.debounceSave();
     }
 
-    removeNodeFromRegistry = (serviceName, nodeName) => {
+    addToHashRegistry = (serviceName, nodeName) => {
+        this.initHashRegistry(serviceName);
+        if(this.hashRegistry[serviceName].servers.includes(nodeName)) return;
+        this.hashRegistry[serviceName].add(nodeName);
+    }
+
+    removeFromHashRegistry = (serviceName, nodeName) => {
         if (this.hashRegistry[serviceName]) {
-            this.hashRegistry[serviceName].removeNode(nodeName);
+            this.hashRegistry[serviceName].remove(nodeName);
         }
+    }
+
+    removeNodeFromRegistry = (serviceName, nodeName) => {
+        this.removeFromHashRegistry(serviceName, nodeName);
         this.removeFromHealthyNodes(serviceName, nodeName);
         this.debounceSave();
     }
@@ -156,6 +166,7 @@ class ServiceRegistry{
                             this.addNodeToHashRegistry(serviceName, nodeName);
                             if (nodes[nodeName].healthy !== false) { // assuming healthy is true by default
                                 this.addToHealthyNodes(serviceName, nodeName);
+                                this.addToHashRegistry(serviceName, nodeName);
                             }
                         }
                     }
