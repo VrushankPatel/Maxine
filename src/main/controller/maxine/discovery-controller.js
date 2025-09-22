@@ -9,8 +9,8 @@ const rateLimit = require('express-rate-limit');
 const http = require('http');
 const https = require('https');
 const proxy = httpProxy.createProxyServer({
-    agent: new http.Agent({ keepAlive: true, maxSockets: 5000, maxFreeSockets: 2560, timeout: 30000 }),
-    httpsAgent: new https.Agent({ keepAlive: true, maxSockets: 5000, maxFreeSockets: 2560, timeout: 30000 })
+    agent: new http.Agent({ keepAlive: true, maxSockets: 10000, maxFreeSockets: 5120, timeout: 60000 }),
+    httpsAgent: new https.Agent({ keepAlive: true, maxSockets: 10000, maxFreeSockets: 5120, timeout: 60000 })
 });
 
 proxy.on('error', (err, req, res) => {

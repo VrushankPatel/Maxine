@@ -19,7 +19,7 @@ class DiscoveryService{
     lcd = new LeastConnectionsDiscovery();
     lld = new LeastLoadedDiscovery();
     rand = new RandomDiscovery();
-    cache = new LRU({ max: 100000, ttl: config.discoveryCacheTTL });
+    cache = new LRU({ max: 500000, ttl: config.discoveryCacheTTL });
     serviceKeys = new Map(); // Map serviceName to set of cache keys
 
     /**

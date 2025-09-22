@@ -2,6 +2,11 @@ const HashRing = require('hashring');
 const { constants } = require('../util/constants/constants');
 const fs = require('fs');
 const path = require('path');
+const config = require('../config/config');
+let redis;
+if (config.redisEnabled) {
+    redis = require('redis');
+}
 
 class ServiceRegistry{
     registry = {};
@@ -18,7 +23,17 @@ class ServiceRegistry{
     tagIndex = new Map(); // tag -> Set of nodeNames
 
     constructor() {
-        this.loadFromFile();
+        if (config.redisEnabled) {
+            this.redisClient = redis.createClient({
+                host: config.redisHost,
+                port: config.redisPort,
+                password: config.redisPassword
+            });
+            this.redisClient.on('error', (err) => console.error('Redis error:', err));
+            this.redisClient.connect().then(() => this.loadFromRedis()).catch(err => console.error('Redis connect error:', err));
+        } else {
+            this.loadFromFile();
+        }
     }
 
     getRegServers = () => this.registry;
@@ -221,13 +236,55 @@ class ServiceRegistry{
         }
     }
 
+    saveToRedis = async () => {
+        if (!config.redisEnabled) return;
+        try {
+            const data = {
+                registry: this.registry,
+                hashRegistry: Object.keys(this.hashRegistry)
+            };
+            await this.redisClient.set('registry', JSON.stringify(data));
+        } catch (err) {
+            console.error('Failed to save to Redis:', err);
+        }
+    }
+
     debounceSave = () => {
         if (this.saveTimeout) {
             clearTimeout(this.saveTimeout);
         }
         this.saveTimeout = setTimeout(() => {
-            this.saveToFile();
+            if (config.redisEnabled) {
+                this.saveToRedis();
+            } else {
+                this.saveToFile();
+            }
         }, 500); // debounce for 500ms
+    }
+
+    loadFromRedis = async () => {
+        try {
+            const dataStr = await this.redisClient.get('registry');
+            if (dataStr) {
+                const data = JSON.parse(dataStr);
+                this.registry = data.registry || {};
+                // Reinitialize hashRegistry and healthyNodes
+                for (const serviceName of data.hashRegistry || []) {
+                    this.initHashRegistry(serviceName);
+                    const nodes = this.getNodes(serviceName);
+                    for (const nodeName of Object.keys(nodes || {})) {
+                        this.addNodeToHashRegistry(serviceName, nodeName);
+                        if (nodes[nodeName].healthy !== false) { // assuming healthy is true by default
+                            this.addToHealthyNodes(serviceName, nodeName);
+                            this.addToHashRegistry(serviceName, nodeName);
+                        }
+                        this.addToTagIndex(nodeName, nodes[nodeName].metadata.tags);
+                    }
+                }
+            }
+        } catch (err) {
+            console.error('Failed to load from Redis:', err);
+        }
     }
 
     loadFromFile = () => {
