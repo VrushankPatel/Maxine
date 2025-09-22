@@ -26,13 +26,14 @@
 - Circuit breaker includes automatic recovery when services become healthy again, improving overall system reliability and performance.
 ### Metrics
 - Maxine provides comprehensive metrics collection for monitoring performance and usage.
- - The metrics endpoint `/api/maxine/serviceops/metrics` returns real-time statistics including:
+  - The metrics endpoint `/api/maxine/serviceops/metrics` returns real-time statistics including:
     - Total requests, successful requests, failed requests
     - Average latency and recent latency history
     - Per-service request counts
     - Error type breakdowns
- - Prometheus-compatible metrics are available at `/api/maxine/serviceops/metrics/prometheus` for integration with monitoring systems.
- - Metrics are collected automatically for all discovery operations.
+  - Prometheus-compatible metrics are available at `/api/maxine/serviceops/metrics/prometheus` for integration with monitoring systems.
+  - Cache statistics are available at `/api/maxine/serviceops/cache/stats` showing cache size, max size, TTL, and service key count.
+  - Metrics are collected automatically for all discovery operations.
 ### Service Changes Watch API
 - Maxine provides a watch API for real-time monitoring of registry changes.
 - The changes endpoint `/api/maxine/serviceops/changes?since=<timestamp>` returns all registry events (register, deregister, health status changes) that occurred after the specified timestamp.
@@ -53,10 +54,11 @@
 - If there are multiple nodes of that service available in the registry, then the discovery needs to distribute the load across those nodes.
 - Choosing the right server is a very important thing here because if we're using the server-side and server-specific cache, then choosing the wrong node or server might cost us (High latency especially).
 - Maxine implements health-aware load balancing, automatically excluding unhealthy nodes from selection.
- - Here, the Maxine discovery comes with eight server-selection strategies.
+  - Here, the Maxine discovery comes with nine server-selection strategies.
     - Round robin: This strategy is very simple, discovery will start forwarding the request to the next healthy server each server in turn and in order. Note that the requests to the same service name can be redirected to different nodes each time.
     - Weighted Round Robin: Distributes load based on node weights, preferring higher-weight nodes for better resource utilization.
     - Least Response Time: Routes requests to the node with the lowest average response time for optimal performance.
+    - Fastest Node: Always routes to the node with the lowest average response time, with caching for performance.
     - Hashing-based: In this strategy, the discovery hashes the IP of the client and based on that hash, It'll come up with the number and that numbered healthy node will be the chosen server. In Maxine, there are two hashing-based strategies are developed.
         - <a href="https://medium.com/swlh/load-balancing-and-consistent-hashing-5fe0156035e1">Consistent hashing</a>
         - <a href="https://randorithms.com/2020/12/26/rendezvous-hashing.html">Rendezvous hashing</a>
@@ -128,16 +130,17 @@
 - All service operations (register, deregister, discover, health, metrics) require valid JWT tokens.
 - Authentication is handled via the `/api/maxine/signin` endpoint with admin credentials.
 ### Performance Optimizations
- - In-memory caching for discovery operations with configurable TTL (5min) to reduce lookup times and support high-throughput scenarios.
- - Healthy nodes cache eliminates filtering overhead, ensuring sub-millisecond service discovery lookups.
- - Debounced asynchronous file saves to minimize I/O blocking during high-frequency registrations with persistence across restarts.
- - Background parallel health checks with configurable interval (default 60 seconds) and concurrency (default 1000) maintain service status without request latency impact.
- - Aggressive connection pooling for HTTP proxying (50,000 max sockets, keep-alive) to handle thousands of concurrent requests.
- - Circuit breaker with failure counting automatically isolates unhealthy nodes while allowing recovery.
- - Configurable API rate limiting (default 10,000 requests per 15 minutes per IP) prevents abuse and ensures stability under load.
- - High performance mode disables logging for discovery endpoints to reduce overhead under extreme load.
- - Conditional metrics collection can be disabled for maximum performance.
- - Optimized data structures using Maps and Sets for O(1) lookups in healthy nodes and response times tracking, providing lightning-fast service resolution for microservices architectures.
+  - In-memory LRU caching for discovery operations with configurable TTL (5min) and increased size (1M entries) to reduce lookup times and support high-throughput scenarios.
+  - Healthy nodes cache eliminates filtering overhead, ensuring sub-millisecond service discovery lookups.
+  - Debounced asynchronous file saves to minimize I/O blocking during high-frequency registrations with persistence across restarts.
+  - Background parallel health checks with configurable interval (default 60 seconds) and concurrency (default 1000) maintain service status without request latency impact.
+  - Aggressive connection pooling for HTTP proxying (50,000 max sockets, keep-alive) to handle thousands of concurrent requests.
+  - Circuit breaker with failure counting automatically isolates unhealthy nodes while allowing recovery.
+  - Configurable API rate limiting (default 10,000 requests per 15 minutes per IP) prevents abuse and ensures stability under load.
+  - High performance mode disables logging for discovery endpoints to reduce overhead under extreme load.
+  - Conditional metrics collection can be disabled for maximum performance.
+  - Optimized data structures using Maps and Sets for O(1) lookups in healthy nodes and response times tracking, providing lightning-fast service resolution for microservices architectures.
+  - Caching in load balancing strategies (e.g., Least Response Time, Fastest) for reduced computation overhead.
 ### Config control
 - Maxine config control provides interactive way to manage the configuration.
 - the Settings and Logging tab provides options to monitor and manipulate the Maxine configuration.
