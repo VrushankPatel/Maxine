@@ -16,8 +16,9 @@
 - If there are multiple nodes of the same service in the registry, then discovery has to distribute the traffic across all of them, that's where Maxine's load balancer comes to rescue.
 ### Health checks
 - Maxine provides a health check API to verify the availability of registered services.
-- The health check endpoint `/api/maxine/serviceops/health?serviceName=<name>` performs HTTP requests to all nodes of the specified service and reports their status.
-- This allows for proactive monitoring and can be used to trigger deregistration or alerts for unhealthy services.
+- The health check endpoint `/api/maxine/serviceops/health?serviceName=<name>` performs parallel HTTP requests to all nodes of the specified service and reports their status.
+- Health status is cached in the registry, enabling circuit breaker functionality that automatically skips unhealthy nodes during discovery.
+- This allows for proactive monitoring and improves reliability by routing traffic only to healthy services.
 ### Metrics
 - Maxine provides comprehensive metrics collection for monitoring performance and usage.
 - The metrics endpoint `/api/maxine/serviceops/metrics` returns real-time statistics including:
@@ -29,13 +30,14 @@
 ### Load Balancing
 - If there are multiple nodes of that service available in the registry, then the discovery needs to distribute the load across those nodes.
 - Choosing the right server is a very important thing here because if we're using the server-side and server-specific cache, then choosing the wrong node or server might cost us (High latency especially).
+- Maxine implements health-aware load balancing, automatically excluding unhealthy nodes from selection.
 - Here, the Maxine discovery comes with five server-selection strategies.
-    - Round robin: This strategy is very simple, discovery will start forwarding the request to the next server each server in turn and in order so, it's fairly simple. Note that the requests to the same service name can be redirected to different nodes each time.
-    - Hashing-based: In this strategy, the discovery hashes the IP of the client and based on that hash, It'll come up with the number and that numbered node will be the chosen server. In Maxine, there are two hashing-based strategies are developed.
+    - Round robin: This strategy is very simple, discovery will start forwarding the request to the next healthy server each server in turn and in order. Note that the requests to the same service name can be redirected to different nodes each time.
+    - Hashing-based: In this strategy, the discovery hashes the IP of the client and based on that hash, It'll come up with the number and that numbered healthy node will be the chosen server. In Maxine, there are two hashing-based strategies are developed.
         - <a href="https://medium.com/swlh/load-balancing-and-consistent-hashing-5fe0156035e1">Consistent hashing</a>
         - <a href="https://randorithms.com/2020/12/26/rendezvous-hashing.html">Rendezvous hashing</a>
-    - Least Connections: Distributes load based on current connection counts (simplified to round-robin in current implementation).
-    - Random: Randomly selects a node for each request.
+    - Least Connections: Distributes load based on current connection counts among healthy nodes (simplified to round-robin in current implementation).
+    - Random: Randomly selects a healthy node for each request.
 ### HeartBeat
 - As we know that in order to let the service registry know that the service is alive, service has to send the heartbeat to the registry and after certain period of time (timeout), that service will be removed from the registry automatically so becore that service gets deregistered from registry, the service has to send the heartbeat again, That's why we call it a heart beat because it literally keeps beating in a period of time, Let's understand what is this heartbeat.
 - Heartbeat in maxine is a special kind of request that contains all the meta data about the service.
@@ -96,8 +98,12 @@
 - All service operations (register, deregister, discover, health, metrics) require valid JWT tokens.
 - Authentication is handled via the `/api/maxine/signin` endpoint with admin credentials.
 ### Performance Optimizations
-- In-memory caching for discovery operations to reduce lookup times.
+- In-memory caching for discovery operations with configurable TTL to reduce lookup times.
 - Debounced asynchronous file saves to minimize I/O blocking during high-frequency registrations.
+- Parallel health checks to avoid blocking operations.
+- Connection pooling for HTTP proxying to improve concurrent request handling.
+- Circuit breaker functionality to skip unhealthy nodes, improving overall reliability.
+- API rate limiting to prevent abuse and ensure stability.
 - Efficient data structures and algorithms for fast service resolution.
 ### Config control
 - Maxine config control provides interactive way to manage the configuration.
