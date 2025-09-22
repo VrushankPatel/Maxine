@@ -9,32 +9,12 @@ class WeightedRoundRobinDiscovery {
      */
     getNode = (fullServiceName) => {
         const nodes = serviceRegistry.getNodes(fullServiceName) || {};
-        const healthyNodeNames = serviceRegistry.getHealthyNodes(fullServiceName);
-        if (healthyNodeNames.length === 0) return null;
+        const expanded = serviceRegistry.expandedHealthy.get(fullServiceName) || [];
+        if (expanded.length === 0) return null;
 
-        const currentWeight = this.getCurrentWeight(fullServiceName);
-        let selectedNode = null;
-        let maxWeight = 0;
-
-        for (const nodeName of healthyNodeNames) {
-            const node = nodes[nodeName];
-            if (node && node.weight) {
-                const weight = parseInt(node.weight) || 1;
-                if (weight > maxWeight) {
-                    maxWeight = weight;
-                    selectedNode = node;
-                }
-            }
-        }
-
-        // If no weights, fall back to regular RR
-        if (!selectedNode) {
-            const offset = this.getOffsetAndIncrement(fullServiceName);
-            const key = healthyNodeNames[offset % healthyNodeNames.length];
-            selectedNode = nodes[key];
-        }
-
-        return selectedNode;
+        const offset = this.getOffsetAndIncrement(fullServiceName);
+        const nodeName = expanded[offset % expanded.length];
+        return nodes[nodeName];
     }
 
     /**

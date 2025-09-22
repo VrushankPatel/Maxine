@@ -12,7 +12,11 @@ const config = {
     failureThreshold: process.env.FAILURE_THRESHOLD ? parseInt(process.env.FAILURE_THRESHOLD) : 3,
     clusteringEnabled: process.env.CLUSTERING_ENABLED === 'true' || false,
     numWorkers: process.env.NUM_WORKERS ? parseInt(process.env.NUM_WORKERS) : require('os').cpus().length,
-    healthCheckEnabled: process.env.HEALTH_CHECK_ENABLED !== 'false'
+    healthCheckEnabled: process.env.HEALTH_CHECK_ENABLED !== 'false',
+    redisEnabled: process.env.REDIS_ENABLED === 'true' || false,
+    redisHost: process.env.REDIS_HOST || 'localhost',
+    redisPort: process.env.REDIS_PORT ? parseInt(process.env.REDIS_PORT) : 6379,
+    redisPassword: process.env.REDIS_PASSWORD || null
 }
 
 Object.defineProperty(config, "profile", {
