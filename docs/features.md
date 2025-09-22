@@ -19,7 +19,7 @@
 ### Health checks
 - Maxine provides comprehensive health monitoring for registered services with both on-demand and background checks.
 - The health check endpoint `/api/maxine/serviceops/health?serviceName=<name>` performs parallel HTTP requests to all nodes of the specified service and reports their status.
-- Background health checks run continuously every 60 seconds to maintain up-to-date service status without impacting request latency.
+- Background health checks run continuously every 30 seconds to maintain up-to-date service status without impacting request latency.
 - Health status is cached in optimized data structures, enabling circuit breaker functionality with failure counting that automatically skips unhealthy nodes during discovery.
 - Circuit breaker includes automatic recovery when services become healthy again, improving overall system reliability and performance.
 ### Metrics
@@ -116,10 +116,10 @@
 - All service operations (register, deregister, discover, health, metrics) require valid JWT tokens.
 - Authentication is handled via the `/api/maxine/signin` endpoint with admin credentials.
 ### Performance Optimizations
-- In-memory caching for discovery operations with configurable TTL (5min) to reduce lookup times and support high-throughput scenarios.
+- In-memory caching for discovery operations with configurable TTL (1min) to reduce lookup times and support high-throughput scenarios.
 - Healthy nodes cache eliminates filtering overhead, ensuring sub-millisecond service discovery lookups.
 - Debounced asynchronous file saves to minimize I/O blocking during high-frequency registrations with persistence across restarts.
-- Background parallel health checks every 60 seconds maintain service status without request latency impact.
+- Background parallel health checks every 30 seconds maintain service status without request latency impact.
 - Aggressive connection pooling for HTTP proxying (500 max sockets, keep-alive) to handle thousands of concurrent requests.
 - Circuit breaker with failure counting automatically isolates unhealthy nodes while allowing recovery.
 - API rate limiting prevents abuse and ensures stability under load.
