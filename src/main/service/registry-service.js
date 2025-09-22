@@ -38,6 +38,7 @@ class RegistryService{
                 "metadata" : metadata
             }
 
+            sRegistry.addToTagIndex(subNodeName, metadata.tags);
             sRegistry.addToHealthyNodes(fullServiceName, subNodeName);
 
             const timeResetter = setTimeout(() => {

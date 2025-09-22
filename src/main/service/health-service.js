@@ -2,6 +2,7 @@ const { serviceRegistry } = require('../entity/service-registry');
 const { discoveryService } = require('../service/discovery-service');
 const config = require('../config/config');
 const axios = require('axios');
+const pLimit = require('p-limit');
 
 class HealthService {
     constructor() {
@@ -26,6 +27,7 @@ class HealthService {
     }
 
     async performHealthChecks() {
+        const limit = pLimit(50);
         const services = Object.keys(serviceRegistry.registry);
         const allHealthPromises = [];
 
@@ -33,7 +35,7 @@ class HealthService {
             const nodes = serviceRegistry.getNodes(serviceName);
             if (!nodes) continue;
 
-            const healthPromises = Object.entries(nodes).map(async ([nodeName, node]) => {
+            const healthPromises = Object.entries(nodes).map(([nodeName, node]) => limit(async () => {
                 try {
                     const healthUrl = node.address + (node.metadata.healthEndpoint || '');
                     const response = await axios.get(healthUrl, { timeout: 3000 });
@@ -62,8 +64,8 @@ class HealthService {
                              discoveryService.invalidateServiceCache(serviceName);
                          }
                      }
-                }
-            });
+                 }
+            } ) );
             allHealthPromises.push(...healthPromises);
         }
 

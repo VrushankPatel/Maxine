@@ -13,6 +13,7 @@ class ServiceRegistry{
     saveTimeout = null;
     changes = [];
     webhooks = new Map(); // serviceName -> set of webhook URLs
+    tagIndex = new Map(); // tag -> Set of nodeNames
 
     constructor() {
         this.loadFromFile();
@@ -46,6 +47,25 @@ class ServiceRegistry{
                 console.error('Webhook notification failed:', url, err.message);
             });
         });
+    }
+
+    addToTagIndex = (nodeName, tags) => {
+        if (!tags || !Array.isArray(tags)) return;
+        for (const tag of tags) {
+            if (!this.tagIndex.has(tag)) this.tagIndex.set(tag, new Set());
+            this.tagIndex.get(tag).add(nodeName);
+        }
+    }
+
+    removeFromTagIndex = (nodeName, tags) => {
+        if (!tags || !Array.isArray(tags)) return;
+        for (const tag of tags) {
+            const set = this.tagIndex.get(tag);
+            if (set) {
+                set.delete(nodeName);
+                if (set.size === 0) this.tagIndex.delete(tag);
+            }
+        }
     }
 
     getChangesSince = (since) => {
@@ -156,6 +176,8 @@ class ServiceRegistry{
     }
 
     removeNodeFromRegistry = (serviceName, nodeName) => {
+        const node = this.getNode(serviceName, nodeName);
+        if (node) this.removeFromTagIndex(nodeName, node.metadata.tags);
         this.removeFromHashRegistry(serviceName, nodeName);
         this.removeFromHealthyNodes(serviceName, nodeName);
         this.debounceSave();
@@ -196,10 +218,11 @@ class ServiceRegistry{
                         const nodes = this.getNodes(serviceName);
                         for (const nodeName of Object.keys(nodes || {})) {
                             this.addNodeToHashRegistry(serviceName, nodeName);
-                            if (nodes[nodeName].healthy !== false) { // assuming healthy is true by default
-                                this.addToHealthyNodes(serviceName, nodeName);
-                                this.addToHashRegistry(serviceName, nodeName);
-                            }
+                        if (nodes[nodeName].healthy !== false) { // assuming healthy is true by default
+                            this.addToHealthyNodes(serviceName, nodeName);
+                            this.addToHashRegistry(serviceName, nodeName);
+                        }
+                        this.addToTagIndex(nodeName, nodes[nodeName].metadata.tags);
                         }
                     }
                 }

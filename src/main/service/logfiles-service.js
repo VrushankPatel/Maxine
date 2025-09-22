@@ -1,12 +1,17 @@
-const fs = require('fs');
+const fs = require('fs').promises;
 const { constants } = require('../util/constants/constants');
 
 class LogFilesService{
-    getLogLinks = () => {
+    getLogLinks = async () => {
         let linksResponse = {}
-        fs.readdirSync(constants.LOGDIR).forEach(file => {
-            linksResponse[file] = `/logs/${file}`;
-        });
+        try {
+            const files = await fs.readdir(constants.LOGDIR);
+            files.forEach(file => {
+                linksResponse[file] = `/logs/${file}`;
+            });
+        } catch (err) {
+            // handle error
+        }
         return linksResponse;
     }
 }
