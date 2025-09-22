@@ -123,7 +123,7 @@ Maxine can be configured via environment variables:
  - `REDIS_PORT`: Redis port (default: 6379)
  - `REDIS_PASSWORD`: Redis password (default: null)
  - `METRICS_ENABLED`: Enable metrics collection (default: true)
- - `HIGH_PERFORMANCE_MODE`: Disable logging for discovery endpoints to improve performance (default: false)
+ - `HIGH_PERFORMANCE_MODE`: Disable logging for discovery endpoints to improve performance (default: true)
  - `RATE_LIMIT_MAX`: Maximum requests per IP per window (default: 10000)
  - `RATE_LIMIT_WINDOW_MS`: Rate limit window in milliseconds (default: 900000)
  - `HEALTH_CHECK_INTERVAL`: Health check interval in milliseconds (default: 60000)
