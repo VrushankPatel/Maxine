@@ -7,9 +7,9 @@ class ServiceRegistry{
     registry = {};
     timeResetters = {};
     hashRegistry = {};
-    healthyNodes = {};
+    healthyNodes = new Map();
     activeConnections = {};
-    responseTimes = {};
+    responseTimes = new Map();
     saveTimeout = null;
 
     constructor() {
@@ -20,7 +20,7 @@ class ServiceRegistry{
 
     getNodes = (serviceName) => (this.registry[serviceName] || {})["nodes"];
 
-    getHealthyNodes = (serviceName) => this.healthyNodes[serviceName] || [];
+    getHealthyNodes = (serviceName) => this.healthyNodes.has(serviceName) ? Array.from(this.healthyNodes.get(serviceName)) : [];
 
     initHashRegistry = (serviceName) => {
         if(!this.hashRegistry[serviceName]){
@@ -29,17 +29,15 @@ class ServiceRegistry{
     }
 
     addToHealthyNodes = (serviceName, nodeName) => {
-        if (!this.healthyNodes[serviceName]) {
-            this.healthyNodes[serviceName] = [];
+        if (!this.healthyNodes.has(serviceName)) {
+            this.healthyNodes.set(serviceName, new Set());
         }
-        if (!this.healthyNodes[serviceName].includes(nodeName)) {
-            this.healthyNodes[serviceName].push(nodeName);
-        }
+        this.healthyNodes.get(serviceName).add(nodeName);
     }
 
     removeFromHealthyNodes = (serviceName, nodeName) => {
-        if (this.healthyNodes[serviceName]) {
-            this.healthyNodes[serviceName] = this.healthyNodes[serviceName].filter(n => n !== nodeName);
+        if (this.healthyNodes.has(serviceName)) {
+            this.healthyNodes.get(serviceName).delete(nodeName);
         }
     }
 
@@ -61,21 +59,26 @@ class ServiceRegistry{
     }
 
     recordResponseTime = (serviceName, nodeName, responseTime) => {
-        if (!this.responseTimes[serviceName]) {
-            this.responseTimes[serviceName] = {};
+        if (!this.responseTimes.has(serviceName)) {
+            this.responseTimes.set(serviceName, new Map());
         }
-        if (!this.responseTimes[serviceName][nodeName]) {
-            this.responseTimes[serviceName][nodeName] = [];
+        const serviceTimes = this.responseTimes.get(serviceName);
+        if (!serviceTimes.has(nodeName)) {
+            serviceTimes.set(nodeName, []);
         }
-        this.responseTimes[serviceName][nodeName].push(responseTime);
+        const times = serviceTimes.get(nodeName);
+        times.push(responseTime);
         // Keep only last 10 response times
-        if (this.responseTimes[serviceName][nodeName].length > 10) {
-            this.responseTimes[serviceName][nodeName].shift();
+        if (times.length > 10) {
+            times.shift();
         }
     }
 
     getAverageResponseTime = (serviceName, nodeName) => {
-        const times = this.responseTimes[serviceName] ? this.responseTimes[serviceName][nodeName] : [];
+        if (!this.responseTimes.has(serviceName)) return 0;
+        const serviceTimes = this.responseTimes.get(serviceName);
+        if (!serviceTimes.has(nodeName)) return 0;
+        const times = serviceTimes.get(nodeName);
         if (times.length === 0) return 0;
         return times.reduce((a, b) => a + b, 0) / times.length;
     }
@@ -130,7 +133,7 @@ class ServiceRegistry{
                         const nodes = this.getNodes(serviceName);
                         for (const nodeName of Object.keys(nodes || {})) {
                             this.addNodeToHashRegistry(serviceName, nodeName);
-                            if (nodes[nodeName].healthy) {
+                            if (nodes[nodeName].healthy !== false) { // assuming healthy is true by default
                                 this.addToHealthyNodes(serviceName, nodeName);
                             }
                         }
