@@ -81,7 +81,8 @@ As we can see, maxine SRD is working as a true reverse proxy for each servers, a
   * **Service Configuration Management**: Added endpoints for setting, getting, and deleting service-specific configurations at `/api/maxine/serviceops/config/*`.
   * **Webhook Notifications**: Added webhook support for real-time notifications on service registry changes. Register webhooks via `/api/maxine/serviceops/webhooks/add` and receive POST notifications for register, deregister, and health status changes.
   * **Redis Support**: Added Redis integration for distributed registry storage, enabling multiple Maxine instances to share the same registry data for high availability and scalability.
-  * **Service Aliases**: Services can now register with multiple aliases, allowing a single service to be discoverable under different names. Use the `/api/maxine/serviceops/aliases/*` endpoints to manage aliases.
+   * **Service Aliases**: Services can now register with multiple aliases, allowing a single service to be discoverable under different names. Use the `/api/maxine/serviceops/aliases/*` endpoints to manage aliases.
+   * **Service Maintenance Mode**: Services can be put into maintenance mode to temporarily exclude them from discovery without deregistering. Use the `/api/maxine/serviceops/maintenance` endpoint to set maintenance mode.
 
 ## Setup for development
 
@@ -119,6 +120,10 @@ Maxine can be configured via environment variables:
  - `REDIS_PASSWORD`: Redis password (default: null)
  - `METRICS_ENABLED`: Enable metrics collection (default: true)
  - `HIGH_PERFORMANCE_MODE`: Disable logging for discovery endpoints to improve performance (default: false)
+ - `RATE_LIMIT_MAX`: Maximum requests per IP per window (default: 10000)
+ - `RATE_LIMIT_WINDOW_MS`: Rate limit window in milliseconds (default: 900000)
+ - `HEALTH_CHECK_INTERVAL`: Health check interval in milliseconds (default: 60000)
+ - `HEALTH_CHECK_CONCURRENCY`: Maximum concurrent health checks (default: 1000)
 
 ### Run maxine on production.
 

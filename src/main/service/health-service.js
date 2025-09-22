@@ -13,10 +13,10 @@ class HealthService {
     }
 
     startBackgroundChecks() {
-        // Run health checks every 60 seconds for better performance
+        // Run health checks at configurable interval for better performance
         this.intervalId = setInterval(() => {
             this.performHealthChecks();
-        }, 60000);
+        }, config.healthCheckInterval);
     }
 
     stopBackgroundChecks() {
@@ -27,7 +27,7 @@ class HealthService {
     }
 
     async performHealthChecks() {
-        const limit = pLimit(1000); // Increased concurrency for faster health checks
+        const limit = pLimit(config.healthCheckConcurrency); // Configurable concurrency for health checks
         const services = Object.keys(serviceRegistry.registry);
         const allHealthPromises = [];
 

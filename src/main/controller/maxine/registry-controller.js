@@ -295,6 +295,18 @@ const bulkDeregisterController = (req, res) => {
     res.status(statusAndMsgs.STATUS_SUCCESS).json({ results });
 }
 
+const setMaintenanceController = (req, res) => {
+    const { serviceName, nodeName, namespace, maintenance } = req.body;
+    if (!serviceName || !nodeName) {
+        res.status(statusAndMsgs.STATUS_GENERIC_ERROR).json({ message: "Missing serviceName or nodeName" });
+        return;
+    }
+    const fullServiceName = namespace ? `${namespace}:${serviceName}` : serviceName;
+    serviceRegistry.setMaintenanceMode(fullServiceName, nodeName, maintenance === true);
+    discoveryService.invalidateServiceCache(fullServiceName);
+    res.status(statusAndMsgs.STATUS_SUCCESS).json({ message: "Maintenance mode updated" });
+}
+
 module.exports = {
     registryController,
     serverListController,
@@ -306,5 +318,6 @@ module.exports = {
     discoveryInfoController,
     changesController,
     bulkRegisterController,
-    bulkDeregisterController
+    bulkDeregisterController,
+    setMaintenanceController
 };

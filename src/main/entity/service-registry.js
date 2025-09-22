@@ -15,6 +15,7 @@ class ServiceRegistry{
     healthyNodes = new Map();
     healthyCache = new Map(); // serviceName -> array of healthy node names
     expandedHealthy = new Map(); // serviceName -> array of nodeNames repeated by weight
+    maintenanceNodes = new Map(); // serviceName -> Set of nodeNames in maintenance
     activeConnections = {};
     responseTimes = new Map();
     saveTimeout = null;
@@ -134,11 +135,38 @@ class ServiceRegistry{
         return aliases;
     }
 
+    // Maintenance mode management
+    setMaintenanceMode = (serviceName, nodeName, inMaintenance) => {
+        if (inMaintenance) {
+            if (!this.maintenanceNodes.has(serviceName)) {
+                this.maintenanceNodes.set(serviceName, new Set());
+            }
+            this.maintenanceNodes.get(serviceName).add(nodeName);
+        } else {
+            if (this.maintenanceNodes.has(serviceName)) {
+                this.maintenanceNodes.get(serviceName).delete(nodeName);
+                if (this.maintenanceNodes.get(serviceName).size === 0) {
+                    this.maintenanceNodes.delete(serviceName);
+                }
+            }
+        }
+        this.healthyCache.delete(serviceName); // invalidate cache
+        this.buildExpandedHealthy(serviceName);
+        this.debounceSave();
+    }
+
+    isInMaintenance = (serviceName, nodeName) => {
+        return this.maintenanceNodes.has(serviceName) && this.maintenanceNodes.get(serviceName).has(nodeName);
+    }
+
     getNodes = (serviceName) => (this.registry[serviceName] || {})["nodes"];
 
     getHealthyNodes = (serviceName) => {
         if (!this.healthyCache.has(serviceName)) {
-            this.healthyCache.set(serviceName, this.healthyNodes.has(serviceName) ? Array.from(this.healthyNodes.get(serviceName)) : []);
+            const healthy = this.healthyNodes.has(serviceName) ? Array.from(this.healthyNodes.get(serviceName)) : [];
+            const maintenance = this.maintenanceNodes.has(serviceName) ? this.maintenanceNodes.get(serviceName) : new Set();
+            const filtered = healthy.filter(nodeName => !maintenance.has(nodeName));
+            this.healthyCache.set(serviceName, filtered);
         }
         return this.healthyCache.get(serviceName);
     }
