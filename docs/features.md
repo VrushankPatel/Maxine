@@ -8,11 +8,16 @@
 - Also, the SRD replicates the more weighted services (The service that sends a weight of more than one).
 - After registering the Service, the SRD will run a thread asynchronously that'll remove that service from the registry once the timeout exceeds and that Service is not re-registered.
 - If the service sends the heartbeat before the timeout passes since it was registered, then the thread that was executed earlier will be suspended and a new thread will start doing the same again.
+- The registry now persists to disk, allowing services to survive server restarts.
 ### Service discovery
 - The service discovery discovers the service that is registered in the registry.
 - When the service discovery receives the request, it extracts the serviceName from the request and discovers the service with that service name.
 - If discovery finds the single service node with that serviceName, then It'll simply redirect that request to that service's URL.
 - If there are multiple nodes of the same service in the registry, then discovery has to distribute the traffic across all of them, that's where Maxine's load balancer comes to rescue.
+### Health checks
+- Maxine provides a health check API to verify the availability of registered services.
+- The health check endpoint `/api/maxine/serviceops/health?serviceName=<name>` performs HTTP requests to all nodes of the specified service and reports their status.
+- This allows for proactive monitoring and can be used to trigger deregistration or alerts for unhealthy services.
 ### Load Balancing
 - If there are multiple nodes of that service available in the registry, then the discovery needs to distribute the load across those nodes.
 - Choosing the right server is a very important thing here because if we're using the server-side and server-specific cache, then choosing the wrong node or server might cost us (High latency especially).

@@ -14,7 +14,6 @@ const { loadSwaggerYAML } = require('./src/main/util/util');
 const swaggerDocument = loadSwaggerYAML();
 const path = require("path");
 const currDir = require('./conf');
-
 const app = ExpressAppBuilder.createNewApp()
                 .addCors()
                 .ifPropertyOnce("statusMonitorEnabled")

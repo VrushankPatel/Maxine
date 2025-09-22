@@ -2,9 +2,16 @@ const { statusAndMsgs } = require("../../util/constants/constants");
 const { discoveryService } = require("../../service/discovery-service");
 const _ = require('lodash');
 const { info } = require("../../util/logging/logging-util");
-const { URL } = require('url');
-const http = require('http');
-const https = require('https');
+const httpProxy = require('http-proxy');
+
+const proxy = httpProxy.createProxyServer({});
+
+proxy.on('error', (err, req, res) => {
+    console.error('Proxy error:', err);
+    if (!res.headersSent) {
+        res.status(502).json({ message: 'Bad Gateway' });
+    }
+});
 
 const discoveryController = (req, res) => {
     // Retrieving the serviceName from query params
@@ -23,7 +30,7 @@ const discoveryController = (req, res) => {
 
     // now, retrieving the serviceNode from the registry
     const serviceNode = discoveryService.getNode(serviceName, ip);
-  
+
     // no service node is there so, service unavailable is our error response.
     if(_.isEmpty(serviceNode)){
         res.status(statusAndMsgs.SERVICE_UNAVAILABLE).json({
@@ -35,32 +42,10 @@ const discoveryController = (req, res) => {
     info(`Proxying to ${addressToRedirect}`);
 
     try {
-        const targetUrl = new URL(addressToRedirect);
-        const options = {
-            hostname: targetUrl.hostname,
-            port: targetUrl.port || (targetUrl.protocol === 'https:' ? 443 : 80),
-            path: targetUrl.pathname + targetUrl.search,
-            method: req.method,
-            headers: { ...req.headers, host: targetUrl.host }
-        };
-        // Remove content-length to let it recalculate
-        delete options.headers['content-length'];
-
-        const client = targetUrl.protocol === 'https:' ? https : http;
-        const proxyReq = client.request(options, (proxyRes) => {
-            res.writeHead(proxyRes.statusCode, proxyRes.headers);
-            proxyRes.pipe(res);
-        });
-
-        req.pipe(proxyReq);
-
-        proxyReq.on('error', (err) => {
-            console.error('Proxy error:', err);
-            res.status(502).json({ message: 'Bad Gateway' });
-        });
+        proxy.web(req, res, { target: addressToRedirect, changeOrigin: true });
     } catch (err) {
-        console.error('URL parse error:', err);
-        res.status(500).json({ message: 'Invalid URL' });
+        console.error('Proxy setup error:', err);
+        res.status(500).json({ message: 'Proxy Error' });
     }
 }
 

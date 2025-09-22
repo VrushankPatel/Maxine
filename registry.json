@@ -1,0 +1,303 @@
+{
+  "registry": {
+    "dbservice-ch": {
+      "offset": 0,
+      "nodes": {
+        "node-x-10-0": {
+          "nodeName": "node-x-10-0",
+          "parentNode": "node-x-10",
+          "address": "https://xx.xxx.xx.xx:8082",
+          "timeOut": 5,
+          "registeredAt": 1758561886700
+        },
+        "node-x-10-1": {
+          "nodeName": "node-x-10-1",
+          "parentNode": "node-x-10",
+          "address": "https://xx.xxx.xx.xx:8082",
+          "timeOut": 5,
+          "registeredAt": 1758561886700
+        },
+        "node-x-10-2": {
+          "nodeName": "node-x-10-2",
+          "parentNode": "node-x-10",
+          "address": "https://xx.xxx.xx.xx:8082",
+          "timeOut": 5,
+          "registeredAt": 1758561886700
+        },
+        "node-x-10-3": {
+          "nodeName": "node-x-10-3",
+          "parentNode": "node-x-10",
+          "address": "https://xx.xxx.xx.xx:8082",
+          "timeOut": 5,
+          "registeredAt": 1758561886700
+        },
+        "node-x-10-4": {
+          "nodeName": "node-x-10-4",
+          "parentNode": "node-x-10",
+          "address": "https://xx.xxx.xx.xx:8082",
+          "timeOut": 5,
+          "registeredAt": 1758561886700
+        },
+        "node-x-10-5": {
+          "nodeName": "node-x-10-5",
+          "parentNode": "node-x-10",
+          "address": "https://xx.xxx.xx.xx:8082",
+          "timeOut": 5,
+          "registeredAt": 1758561886700
+        },
+        "node-x-10-6": {
+          "nodeName": "node-x-10-6",
+          "parentNode": "node-x-10",
+          "address": "https://xx.xxx.xx.xx:8082",
+          "timeOut": 5,
+          "registeredAt": 1758561886700
+        },
+        "node-x-10-7": {
+          "nodeName": "node-x-10-7",
+          "parentNode": "node-x-10",
+          "address": "https://xx.xxx.xx.xx:8082",
+          "timeOut": 5,
+          "registeredAt": 1758561886700
+        },
+        "node-x-10-8": {
+          "nodeName": "node-x-10-8",
+          "parentNode": "node-x-10",
+          "address": "https://xx.xxx.xx.xx:8082",
+          "timeOut": 5,
+          "registeredAt": 1758561886700
+        },
+        "node-x-10-9": {
+          "nodeName": "node-x-10-9",
+          "parentNode": "node-x-10",
+          "address": "https://xx.xxx.xx.xx:8082",
+          "timeOut": 5,
+          "registeredAt": 1758561886700
+        }
+      }
+    },
+    "dbservice-rh": {
+      "offset": 0,
+      "nodes": {
+        "node-x-10-0": {
+          "nodeName": "node-x-10-0",
+          "parentNode": "node-x-10",
+          "address": "https://xx.xxx.xx.xx:8082",
+          "timeOut": 5,
+          "registeredAt": 1758561886700
+        },
+        "node-x-10-1": {
+          "nodeName": "node-x-10-1",
+          "parentNode": "node-x-10",
+          "address": "https://xx.xxx.xx.xx:8082",
+          "timeOut": 5,
+          "registeredAt": 1758561886700
+        },
+        "node-x-10-2": {
+          "nodeName": "node-x-10-2",
+          "parentNode": "node-x-10",
+          "address": "https://xx.xxx.xx.xx:8082",
+          "timeOut": 5,
+          "registeredAt": 1758561886700
+        },
+        "node-x-10-3": {
+          "nodeName": "node-x-10-3",
+          "parentNode": "node-x-10",
+          "address": "https://xx.xxx.xx.xx:8082",
+          "timeOut": 5,
+          "registeredAt": 1758561886700
+        },
+        "node-x-10-4": {
+          "nodeName": "node-x-10-4",
+          "parentNode": "node-x-10",
+          "address": "https://xx.xxx.xx.xx:8082",
+          "timeOut": 5,
+          "registeredAt": 1758561886700
+        },
+        "node-x-10-5": {
+          "nodeName": "node-x-10-5",
+          "parentNode": "node-x-10",
+          "address": "https://xx.xxx.xx.xx:8082",
+          "timeOut": 5,
+          "registeredAt": 1758561886700
+        },
+        "node-x-10-6": {
+          "nodeName": "node-x-10-6",
+          "parentNode": "node-x-10",
+          "address": "https://xx.xxx.xx.xx:8082",
+          "timeOut": 5,
+          "registeredAt": 1758561886700
+        },
+        "node-x-10-7": {
+          "nodeName": "node-x-10-7",
+          "parentNode": "node-x-10",
+          "address": "https://xx.xxx.xx.xx:8082",
+          "timeOut": 5,
+          "registeredAt": 1758561886700
+        },
+        "node-x-10-8": {
+          "nodeName": "node-x-10-8",
+          "parentNode": "node-x-10",
+          "address": "https://xx.xxx.xx.xx:8082",
+          "timeOut": 5,
+          "registeredAt": 1758561886700
+        },
+        "node-x-10-9": {
+          "nodeName": "node-x-10-9",
+          "parentNode": "node-x-10",
+          "address": "https://xx.xxx.xx.xx:8082",
+          "timeOut": 5,
+          "registeredAt": 1758561886700
+        }
+      }
+    },
+    "dbservice-rr": {
+      "offset": 1,
+      "nodes": {
+        "node-x-10-0": {
+          "nodeName": "node-x-10-0",
+          "parentNode": "node-x-10",
+          "address": "https://xx.xxx.xx.xx:8082",
+          "timeOut": 5,
+          "registeredAt": 1758561886701
+        },
+        "node-x-10-1": {
+          "nodeName": "node-x-10-1",
+          "parentNode": "node-x-10",
+          "address": "https://xx.xxx.xx.xx:8082",
+          "timeOut": 5,
+          "registeredAt": 1758561886701
+        },
+        "node-x-10-2": {
+          "nodeName": "node-x-10-2",
+          "parentNode": "node-x-10",
+          "address": "https://xx.xxx.xx.xx:8082",
+          "timeOut": 5,
+          "registeredAt": 1758561886701
+        },
+        "node-x-10-3": {
+          "nodeName": "node-x-10-3",
+          "parentNode": "node-x-10",
+          "address": "https://xx.xxx.xx.xx:8082",
+          "timeOut": 5,
+          "registeredAt": 1758561886701
+        },
+        "node-x-10-4": {
+          "nodeName": "node-x-10-4",
+          "parentNode": "node-x-10",
+          "address": "https://xx.xxx.xx.xx:8082",
+          "timeOut": 5,
+          "registeredAt": 1758561886702
+        },
+        "node-x-10-5": {
+          "nodeName": "node-x-10-5",
+          "parentNode": "node-x-10",
+          "address": "https://xx.xxx.xx.xx:8082",
+          "timeOut": 5,
+          "registeredAt": 1758561886702
+        },
+        "node-x-10-6": {
+          "nodeName": "node-x-10-6",
+          "parentNode": "node-x-10",
+          "address": "https://xx.xxx.xx.xx:8082",
+          "timeOut": 5,
+          "registeredAt": 1758561886702
+        },
+        "node-x-10-7": {
+          "nodeName": "node-x-10-7",
+          "parentNode": "node-x-10",
+          "address": "https://xx.xxx.xx.xx:8082",
+          "timeOut": 5,
+          "registeredAt": 1758561886702
+        },
+        "node-x-10-8": {
+          "nodeName": "node-x-10-8",
+          "parentNode": "node-x-10",
+          "address": "https://xx.xxx.xx.xx:8082",
+          "timeOut": 5,
+          "registeredAt": 1758561886703
+        },
+        "node-x-10-9": {
+          "nodeName": "node-x-10-9",
+          "parentNode": "node-x-10",
+          "address": "https://xx.xxx.xx.xx:8082",
+          "timeOut": 5,
+          "registeredAt": 1758561886703
+        }
+      }
+    },
+    "dbservice-rs": {
+      "offset": 0,
+      "nodes": {
+        "node-x-10-0": {
+          "nodeName": "node-x-10-0",
+          "parentNode": "node-x-10",
+          "address": "https://xx.xxx.xx.xx:8082",
+          "timeOut": 5,
+          "registeredAt": 1758561886746
+        },
+        "node-x-10-1": {
+          "nodeName": "node-x-10-1",
+          "parentNode": "node-x-10",
+          "address": "https://xx.xxx.xx.xx:8082",
+          "timeOut": 5,
+          "registeredAt": 1758561886746
+        },
+        "node-x-10-2": {
+          "nodeName": "node-x-10-2",
+          "parentNode": "node-x-10",
+          "address": "https://xx.xxx.xx.xx:8082",
+          "timeOut": 5,
+          "registeredAt": 1758561886746
+        },
+        "node-x-10-3": {
+          "nodeName": "node-x-10-3",
+          "parentNode": "node-x-10",
+          "address": "https://xx.xxx.xx.xx:8082",
+          "timeOut": 5,
+          "registeredAt": 1758561886746
+        },
+        "node-x-10-4": {
+          "nodeName": "node-x-10-4",
+          "parentNode": "node-x-10",
+          "address": "https://xx.xxx.xx.xx:8082",
+          "timeOut": 5,
+          "registeredAt": 1758561886746
+        },
+        "node-x-10-5": {
+          "nodeName": "node-x-10-5",
+          "parentNode": "node-x-10",
+          "address": "https://xx.xxx.xx.xx:8082",
+          "timeOut": 5,
+          "registeredAt": 1758561886747
+        },
+        "node-x-10-6": {
+          "nodeName": "node-x-10-6",
+          "parentNode": "node-x-10",
+          "address": "https://xx.xxx.xx.xx:8082",
+          "timeOut": 5,
+          "registeredAt": 1758561886747
+        },
+        "node-x-10-7": {
+          "nodeName": "node-x-10-7",
+          "parentNode": "node-x-10",
+          "address": "https://xx.xxx.xx.xx:8082",
+          "timeOut": 5,
+          "registeredAt": 1758561886747
+        },
+        "node-x-10-8": {
+          "nodeName": "node-x-10-8",
+          "parentNode": "node-x-10",
+          "address": "https://xx.xxx.xx.xx:8082",
+          "timeOut": 5,
+          "registeredAt": 1758561886747
+        }
+      }
+    }
+  },
+  "hashRegistry": [
+    "dbservice-ch",
+    "dbservice-rh",
+    "dbservice-rr",
+    "dbservice-rs"
+  ]
+}

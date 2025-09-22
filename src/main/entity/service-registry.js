@@ -1,10 +1,16 @@
 const ConsistentHashing = require('consistent-hashing');
 const { constants } = require('../util/constants/constants');
+const fs = require('fs');
+const path = require('path');
 
 class ServiceRegistry{
     registry = {};
     timeResetters = {};
     hashRegistry = {};
+
+    constructor() {
+        this.loadFromFile();
+    }
 
     getRegServers = () => this.registry;
 
@@ -20,10 +26,49 @@ class ServiceRegistry{
         this.initHashRegistry(serviceName);
         if(Object.values(this.hashRegistry[serviceName]["nodes"]).includes(nodeName)) return;
         this.hashRegistry[serviceName].addNode(nodeName);
+        this.saveToFile();
     }
 
     removeNodeFromRegistry = (serviceName, nodeName) => {
-        this.hashRegistry[serviceName].removeNode(nodeName);
+        if (this.hashRegistry[serviceName]) {
+            this.hashRegistry[serviceName].removeNode(nodeName);
+        }
+        this.saveToFile();
+    }
+
+    saveToFile = () => {
+        try {
+            const data = {
+                registry: this.registry,
+                hashRegistry: Object.keys(this.hashRegistry)
+            };
+            fs.writeFileSync(path.join(__dirname, '../../../registry.json'), JSON.stringify(data, null, 2));
+        } catch (err) {
+            console.error('Failed to save registry:', err);
+        }
+    }
+
+    loadFromFile = () => {
+        try {
+            const filePath = path.join(__dirname, '../../../registry.json');
+            if (fs.existsSync(filePath)) {
+                const content = fs.readFileSync(filePath, 'utf8').trim();
+                if (content) {
+                    const data = JSON.parse(content);
+                    this.registry = data.registry || {};
+                    // Reinitialize hashRegistry
+                    for (const serviceName of data.hashRegistry || []) {
+                        this.initHashRegistry(serviceName);
+                        const nodes = this.getNodes(serviceName);
+                        for (const nodeName of Object.keys(nodes || {})) {
+                            this.addNodeToHashRegistry(serviceName, nodeName);
+                        }
+                    }
+                }
+            }
+        } catch (err) {
+            console.error('Failed to load registry:', err);
+        }
     }
 }
 
