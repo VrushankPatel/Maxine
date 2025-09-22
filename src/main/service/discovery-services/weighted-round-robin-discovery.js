@@ -7,15 +7,12 @@ class WeightedRoundRobinDiscovery {
      * @param {string} version
      * @returns {object}
      */
-    getNode = (serviceName, version) => {
-        const nodes = serviceRegistry.getNodes(serviceName) || {};
-        let healthyNodeNames = serviceRegistry.getHealthyNodes(serviceName);
-        if (version) {
-            healthyNodeNames = healthyNodeNames.filter(nodeName => nodes[nodeName] && nodes[nodeName].version === version);
-        }
+    getNode = (fullServiceName) => {
+        const nodes = serviceRegistry.getNodes(fullServiceName) || {};
+        const healthyNodeNames = serviceRegistry.getHealthyNodes(fullServiceName);
         if (healthyNodeNames.length === 0) return null;
 
-        const currentWeight = this.getCurrentWeight(serviceName);
+        const currentWeight = this.getCurrentWeight(fullServiceName);
         let selectedNode = null;
         let maxWeight = 0;
 
@@ -32,7 +29,7 @@ class WeightedRoundRobinDiscovery {
 
         // If no weights, fall back to regular RR
         if (!selectedNode) {
-            const offset = this.getOffsetAndIncrement(serviceName);
+            const offset = this.getOffsetAndIncrement(fullServiceName);
             const key = healthyNodeNames[offset % healthyNodeNames.length];
             selectedNode = nodes[key];
         }
@@ -45,19 +42,19 @@ class WeightedRoundRobinDiscovery {
      * @param {string} serviceName
      * @returns {number}
      */
-    getCurrentWeight = (serviceName) => {
-        const service = serviceRegistry.registry[serviceName];
+    getCurrentWeight = (fullServiceName) => {
+        const service = serviceRegistry.registry[fullServiceName];
         if (!service) return 0;
         return service.currentWeight || 0;
     }
 
     /**
      * Increment offset for fallback
-     * @param {string} serviceName
+     * @param {string} fullServiceName
      * @returns {number}
      */
-    getOffsetAndIncrement = (serviceName) => {
-        const service = serviceRegistry.registry[serviceName];
+    getOffsetAndIncrement = (fullServiceName) => {
+        const service = serviceRegistry.registry[fullServiceName];
         if (!service) return 0;
         const currentOffset = service.offset || 0;
         service.offset = currentOffset + 1;

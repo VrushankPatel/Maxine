@@ -19,7 +19,7 @@ class DiscoveryService{
     lcd = new LeastConnectionsDiscovery();
     lld = new LeastLoadedDiscovery();
     rand = new RandomDiscovery();
-    cache = new LRU({ max: 10000, ttl: config.discoveryCacheTTL });
+    cache = new LRU({ max: 100000, ttl: config.discoveryCacheTTL });
 
     /**
      * Get serviceName and IP and based on the serverSelectionStrategy we've selected, It'll call that discoveryService and retrieve the node from it. (Ex. RoundRobin, Rendezvous, ConsistentHashing).
@@ -28,9 +28,10 @@ class DiscoveryService{
      * @param {string} version
      * @returns {object}
      */
-    getNode = (serviceName, ip, version) => {
+    getNode = (serviceName, ip, version, namespace = "default") => {
+        const fullServiceName = version ? `${namespace}:${serviceName}:${version}` : `${namespace}:${serviceName}`;
         const usesIp = [constants.SSS.CH, constants.SSS.RH].includes(config.serverSelectionStrategy);
-        const cacheKey = usesIp ? `${serviceName}:${version || ''}:${ip}` : `${serviceName}:${version || ''}`;
+        const cacheKey = usesIp ? `${fullServiceName}:${ip}` : fullServiceName;
         const cached = this.cache.get(cacheKey);
         if (cached) {
             return cached;
@@ -39,39 +40,39 @@ class DiscoveryService{
         let node;
         switch(config.serverSelectionStrategy){
             case constants.SSS.RR:
-            node = this.rrd.getNode(serviceName, version);
+            node = this.rrd.getNode(fullServiceName);
             break;
 
             case constants.SSS.WRR:
-            node = this.wrrd.getNode(serviceName, version);
+            node = this.wrrd.getNode(fullServiceName);
             break;
 
             case constants.SSS.LRT:
-            node = this.lrtd.getNode(serviceName, version);
+            node = this.lrtd.getNode(fullServiceName);
             break;
 
             case constants.SSS.CH:
-            node = this.chd.getNode(serviceName, ip, version);
+            node = this.chd.getNode(fullServiceName, ip);
             break;
 
             case constants.SSS.RH:
-            node = this.rhd.getNode(serviceName, ip, version);
+            node = this.rhd.getNode(fullServiceName, ip);
             break;
 
             case constants.SSS.LC:
-            node = this.lcd.getNode(serviceName, version);
+            node = this.lcd.getNode(fullServiceName);
             break;
 
             case constants.SSS.LL:
-            node = this.lld.getNode(serviceName, version);
+            node = this.lld.getNode(fullServiceName);
             break;
 
             case constants.SSS.RANDOM:
-            node = this.rand.getNode(serviceName, version);
+            node = this.rand.getNode(fullServiceName);
             break;
 
             default:
-            node = this.rrd.getNode(serviceName, version);
+            node = this.rrd.getNode(fullServiceName);
         }
 
         if (node) {
@@ -82,6 +83,17 @@ class DiscoveryService{
 
     clearCache = () => {
         this.cache.clear();
+    }
+
+    invalidateServiceCache = (fullServiceName) => {
+        // Remove all cache entries for this service
+        const keysToDelete = [];
+        for (const key of this.cache.keys()) {
+            if (key.startsWith(`${fullServiceName}:`) || key === fullServiceName) {
+                keysToDelete.push(key);
+            }
+        }
+        keysToDelete.forEach(key => this.cache.delete(key));
     }
 }
 

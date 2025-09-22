@@ -7,14 +7,11 @@ class RoundRobinDiscovery{
      * @param {string} version
      * @returns {object}
      */
-    getNode = (serviceName, version) => {
-        const nodes = serviceRegistry.getNodes(serviceName) || {};
-        let healthyNodeNames = serviceRegistry.getHealthyNodes(serviceName);
-        if (version) {
-            healthyNodeNames = healthyNodeNames.filter(nodeName => nodes[nodeName] && nodes[nodeName].version === version);
-        }
+    getNode = (fullServiceName) => {
+        const nodes = serviceRegistry.getNodes(fullServiceName) || {};
+        const healthyNodeNames = serviceRegistry.getHealthyNodes(fullServiceName);
         if (healthyNodeNames.length === 0) return null;
-        const offset = this.getOffsetAndIncrement(serviceName) || 0;
+        const offset = this.getOffsetAndIncrement(fullServiceName) || 0;
         const key = healthyNodeNames[offset % healthyNodeNames.length];
         return nodes[key];
     }
@@ -24,8 +21,8 @@ class RoundRobinDiscovery{
      * @param {string} serviceName
      * @returns {number}
      */
-    getOffsetAndIncrement = (serviceName) => {
-        const service = serviceRegistry.registry[serviceName];
+    getOffsetAndIncrement = (fullServiceName) => {
+        const service = serviceRegistry.registry[fullServiceName];
         if (!service) return 0;
         const currentOffset = service.offset || 0;
         service.offset = currentOffset + 1;

@@ -7,17 +7,14 @@ class LeastConnectionsDiscovery{
      * @param {string} version
      * @returns {object}
      */
-    getNode = (serviceName, version) => {
-        const nodes = serviceRegistry.getNodes(serviceName) || {};
-        let healthyNodeNames = serviceRegistry.getHealthyNodes(serviceName);
-        if (version) {
-            healthyNodeNames = healthyNodeNames.filter(nodeName => nodes[nodeName] && nodes[nodeName].version === version);
-        }
+    getNode = (fullServiceName) => {
+        const nodes = serviceRegistry.getNodes(fullServiceName) || {};
+        const healthyNodeNames = serviceRegistry.getHealthyNodes(fullServiceName);
         if (healthyNodeNames.length === 0) return null;
         let minConnections = Infinity;
         let selectedNodeName = null;
         for (const nodeName of healthyNodeNames) {
-            const connections = serviceRegistry.getActiveConnections(serviceName, nodeName);
+            const connections = serviceRegistry.getActiveConnections(fullServiceName, nodeName);
             if (connections < minConnections) {
                 minConnections = connections;
                 selectedNodeName = nodeName;

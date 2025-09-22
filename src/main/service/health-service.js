@@ -1,4 +1,5 @@
 const { serviceRegistry } = require('../entity/service-registry');
+const { discoveryService } = require('../service/discovery-service');
 const config = require('../config/config');
 const axios = require('axios');
 
@@ -9,10 +10,10 @@ class HealthService {
     }
 
     startBackgroundChecks() {
-        // Run health checks every 60 seconds
+        // Run health checks every 30 seconds
         this.intervalId = setInterval(() => {
             this.performHealthChecks();
-        }, 60000);
+        }, 30000);
     }
 
     stopBackgroundChecks() {
@@ -33,7 +34,7 @@ class HealthService {
             const healthPromises = Object.entries(nodes).map(async ([nodeName, node]) => {
                 try {
                     const healthUrl = node.address + (node.metadata.healthEndpoint || '');
-                    const response = await axios.get(healthUrl, { timeout: 5000 });
+                    const response = await axios.get(healthUrl, { timeout: 3000 });
                     // Update registry with healthy status
                     const nodeObj = serviceRegistry.registry[serviceName].nodes[nodeName];
                     if (nodeObj) {
@@ -42,6 +43,7 @@ class HealthService {
                         nodeObj.lastFailureTime = null;
                         serviceRegistry.addToHealthyNodes(serviceName, nodeName);
                         serviceRegistry.debounceSave();
+                        discoveryService.invalidateServiceCache(serviceName);
                     }
                 } catch (error) {
                     // Update registry with unhealthy status
@@ -53,6 +55,7 @@ class HealthService {
                             nodeObj.healthy = false;
                             serviceRegistry.removeFromHealthyNodes(serviceName, nodeName);
                             serviceRegistry.debounceSave();
+                            discoveryService.invalidateServiceCache(serviceName);
                         }
                     }
                 }

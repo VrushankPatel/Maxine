@@ -20,6 +20,19 @@ const serviceSampleRS = {
 };
 
 describe(`${fileName} : API /api/maxine/{registry urls}`, () => {
+    before(() => {
+        // Clear registry for clean test
+        const { serviceRegistry } = require('../../../main/entity/service-registry');
+        const fs = require('fs');
+        const path = require('path');
+        const registryPath = path.join(__dirname, '../../../registry.json');
+        if (fs.existsSync(registryPath)) {
+            fs.unlinkSync(registryPath);
+        }
+        serviceRegistry.registry = {};
+        serviceRegistry.healthyNodes = new Map();
+        serviceRegistry.hashRegistry = {};
+    });
 
     it('POST /register (without passing necessary parameters) -> 400 & should return error', (done) => {
         chai.request(app)
@@ -65,7 +78,7 @@ describe(`${fileName} : API /api/maxine/{registry urls}`, () => {
                 const tempNodeName = serviceSampleRS.nodeName + "-0"; // no weight means 1 server, no replication
                 const body = res.body;
                 body.should.be.a('object');
-                body.should.have.own.property(serviceSampleRS.serviceName);
+                body.should.have.own.property("default:" + serviceSampleRS.serviceName + ":1.0");
                 const service = body[serviceSampleRS.serviceName];
                 service.should.have.own.property("offset");
                 service.should.have.own.property("nodes");
