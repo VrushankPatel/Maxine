@@ -24,6 +24,7 @@ const discoveryController = (req, res) => {
     const startTime = Date.now();
     // Retrieving the serviceName from query params
     const serviceName = req.query.serviceName;
+    const version = req.query.version;
     const endPoint = req.query.endPoint || "";
     const ip = req.ip
     || req.connection.remoteAddress
@@ -40,7 +41,7 @@ const discoveryController = (req, res) => {
     }
 
     // now, retrieving the serviceNode from the registry
-    const serviceNode = discoveryService.getNode(serviceName, ip);
+    const serviceNode = discoveryService.getNode(serviceName, ip, version);
 
     // no service node is there so, service unavailable is our error response.
     if(_.isEmpty(serviceNode)){
@@ -53,7 +54,6 @@ const discoveryController = (req, res) => {
         return;
     }
     const addressToRedirect = serviceNode.address + (endPoint.length > 0 ? (endPoint[0] == "/" ? endPoint : `/${endPoint}`) : "");
-    info(`Proxying to ${addressToRedirect}`);
 
     // Increment active connections
     const { serviceRegistry } = require("../../entity/service-registry");

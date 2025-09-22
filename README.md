@@ -69,6 +69,7 @@ As we can see, maxine SRD is working as a true reverse proxy for each servers, a
 * **Metrics**: Real-time metrics endpoint at `/api/maxine/serviceops/metrics` providing request counts, latencies, and error statistics.
 * **Health Checks**: Enhanced parallel health monitoring for service nodes with automatic status updates and persistence across restarts.
 * **Service Tagging and Filtering**: Services can be tagged via metadata, and discovery can be filtered by tags using the new `/api/maxine/serviceops/discover/filtered` endpoint.
+* **Service Versioning**: Discovery supports version-specific routing via the `version` query parameter, allowing clients to target specific service versions.
 
 ## Setup for development
 

@@ -12,6 +12,7 @@
 ### Service discovery
 - The service discovery discovers the service that is registered in the registry.
 - When the service discovery receives the request, it extracts the serviceName from the request and discovers the service with that service name.
+- Discovery supports version-specific routing via the optional `version` query parameter, allowing clients to target specific service versions (defaults to any version if not specified).
 - If discovery finds the single service node with that serviceName, then It'll simply redirect that request to that service's URL.
 - If there are multiple nodes of the same service in the registry, then discovery has to distribute the traffic across all of them, that's where Maxine's load balancer comes to rescue.
 - Filtered discovery allows routing to services based on tags, enabling environment-specific or feature-specific routing via `/api/maxine/serviceops/discover/filtered?serviceName=<name>&tags=<tag1>,<tag2>`.

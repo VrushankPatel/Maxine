@@ -4,11 +4,15 @@ class WeightedRoundRobinDiscovery {
     /**
      * Retrieve the node based on the serviceName passed, using weighted round-robin algorithm
      * @param {string} serviceName
+     * @param {string} version
      * @returns {object}
      */
-    getNode = (serviceName) => {
+    getNode = (serviceName, version) => {
         const nodes = serviceRegistry.getNodes(serviceName) || {};
-        const healthyNodeNames = serviceRegistry.getHealthyNodes(serviceName);
+        let healthyNodeNames = serviceRegistry.getHealthyNodes(serviceName);
+        if (version) {
+            healthyNodeNames = healthyNodeNames.filter(nodeName => nodes[nodeName] && nodes[nodeName].version === version);
+        }
         if (healthyNodeNames.length === 0) return null;
 
         const currentWeight = this.getCurrentWeight(serviceName);
@@ -17,8 +21,8 @@ class WeightedRoundRobinDiscovery {
 
         for (const nodeName of healthyNodeNames) {
             const node = nodes[nodeName];
-            if (node && node.metadata && node.metadata.weight) {
-                const weight = parseInt(node.metadata.weight) || 1;
+            if (node && node.weight) {
+                const weight = parseInt(node.weight) || 1;
                 if (weight > maxWeight) {
                     maxWeight = weight;
                     selectedNode = node;
