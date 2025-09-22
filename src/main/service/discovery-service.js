@@ -13,7 +13,6 @@ class DiscoveryService{
     lcd = new LeastConnectionsDiscovery();
     rand = new RandomDiscovery();
     cache = new Map();
-    cacheTTL = 1000; // 1 second
 
     /**
      * Get serviceName and IP and based on the serverSelectionStrategy we've selected, It'll call that discoveryService and retrieve the node from it. (Ex. RoundRobin, Rendezvous, ConsistentHashing).
@@ -24,7 +23,7 @@ class DiscoveryService{
     getNode = (serviceName, ip) => {
         const cacheKey = `${serviceName}:${ip}`;
         const cached = this.cache.get(cacheKey);
-        if (cached && (Date.now() - cached.timestamp) < this.cacheTTL) {
+        if (cached && (Date.now() - cached.timestamp) < config.discoveryCacheTTL) {
             return cached.node;
         }
 

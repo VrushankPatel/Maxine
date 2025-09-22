@@ -1,5 +1,6 @@
 const RouteBuilder = require('../builders/route-builder');
 const bodyParser = require('body-parser');
+const rateLimit = require('express-rate-limit');
 const { serverListController, registryController, deregisterController, healthController, metricsController } = require('../controller/maxine/registry-controller');
 const discoveryController = require('../controller/maxine/discovery-controller');
 const { signInController } = require('../controller/uac/signin-controller');
@@ -7,6 +8,12 @@ const { logsLinkGenController, recentLogsController, recentLogsClearController }
 const { configuratorController, configurationController } = require('../controller/config-control/configurator-controller');
 const { changePwdController } = require('../controller/security/changepwd-controller');
 const { authenticationController } = require('../controller/security/authentication-controller');
+
+const limiter = rateLimit({
+    windowMs: 15 * 60 * 1000, // 15 minutes
+    max: 100, // limit each IP to 100 requests per windowMs
+    message: 'Too many requests from this IP, please try again later.'
+});
 
 
 let maxineApiRoutes = RouteBuilder.createNewRoute()

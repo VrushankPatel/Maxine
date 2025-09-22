@@ -27,7 +27,8 @@ class RegistryService{
                 "parentNode" : nodeName,
                 "address" : address,
                 "timeOut" : timeOut,
-                "registeredAt" : Date.now()
+                "registeredAt" : Date.now(),
+                "healthy" : true
             }
 
             const timeResetter = setTimeout(() => {
