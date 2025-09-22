@@ -55,6 +55,17 @@ As we can see, maxine SRD is working as a true reverse proxy for each servers, a
 * Also, based on the service's performance diagnostics (If it's down or not working properly), we can stop its registration to the SRD. The client provides functions that can stop sending the heartbeat to the SRD so that the service can be deregistered.
 * Also, If any of the services are hosted on more powerful hardware, then we can make SRD distribute more traffic on that service's nodes than the others. All we have to do is to provide weight property to that service's client. the weight means how much power that service has compared to others. Based on weight property, the SRD will register that service will replications, and traffic will be distributed accordingly.
 * Maxine now includes health check capabilities to monitor service availability and persistence to survive restarts.
+* Maxine is optimized for high performance with in-memory caching, debounced file saves, and efficient load balancing algorithms including Round Robin, Consistent Hashing, Rendezvous Hashing, Least Connections, and Random.
+* Security is enhanced with JWT authentication for all registry operations.
+* Comprehensive metrics collection provides insights into request counts, latencies, and error rates.
+
+## New Features
+
+* **Performance Optimizations**: In-memory caching for discovery operations, debounced asynchronous file saves for persistence, reducing I/O blocking.
+* **Load Balancing Strategies**: Supports Round Robin (RR), Consistent Hashing (CH), Rendezvous Hashing (RH), Least Connections (LC), and Random selection.
+* **Security**: JWT-based authentication for registry operations (register, deregister, discover, health, metrics).
+* **Metrics**: Real-time metrics endpoint at `/api/maxine/serviceops/metrics` providing request counts, latencies, and error statistics.
+* **Health Checks**: Enhanced health monitoring for service nodes.
 
 ## Setup for development
 

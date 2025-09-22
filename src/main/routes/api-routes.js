@@ -1,11 +1,12 @@
 const RouteBuilder = require('../builders/route-builder');
 const bodyParser = require('body-parser');
-const { serverListController, registryController, deregisterController, healthController } = require('../controller/maxine/registry-controller');
+const { serverListController, registryController, deregisterController, healthController, metricsController } = require('../controller/maxine/registry-controller');
 const discoveryController = require('../controller/maxine/discovery-controller');
 const { signInController } = require('../controller/uac/signin-controller');
 const { logsLinkGenController, recentLogsController, recentLogsClearController } = require('../controller/log-control/logs-controller');
 const { configuratorController, configurationController } = require('../controller/config-control/configurator-controller');
 const { changePwdController } = require('../controller/security/changepwd-controller');
+const { authenticationController } = require('../controller/security/authentication-controller');
 
 
 let maxineApiRoutes = RouteBuilder.createNewRoute()
@@ -17,13 +18,14 @@ let maxineApiRoutes = RouteBuilder.createNewRoute()
                                 .get("/", recentLogsController)
                                 .get("/clear", recentLogsClearController)
                         .stepToRoot()
-                        .from("maxine")
-                            .from("serviceops")
-                                .get("servers", serverListController)
-                                .post("register", bodyParser.json(), registryController)
-                                .delete("deregister", bodyParser.json(), deregisterController)
-                                .get("discover", discoveryController)
-                                .get("health", healthController)
+                         .from("maxine")
+                             .from("serviceops")
+                                 .get("servers", authenticationController, serverListController)
+                                 .post("register", authenticationController, bodyParser.json(), registryController)
+                                 .delete("deregister", authenticationController, bodyParser.json(), deregisterController)
+                                 .get("discover", authenticationController, discoveryController)
+                                 .get("health", authenticationController, healthController)
+                                 .get("metrics", authenticationController, metricsController)
                             .stepBack()
                             .post("signin", bodyParser.json(), signInController)
                             .put("change-password", bodyParser.json(), changePwdController)

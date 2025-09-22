@@ -18,14 +18,24 @@
 - Maxine provides a health check API to verify the availability of registered services.
 - The health check endpoint `/api/maxine/serviceops/health?serviceName=<name>` performs HTTP requests to all nodes of the specified service and reports their status.
 - This allows for proactive monitoring and can be used to trigger deregistration or alerts for unhealthy services.
+### Metrics
+- Maxine provides comprehensive metrics collection for monitoring performance and usage.
+- The metrics endpoint `/api/maxine/serviceops/metrics` returns real-time statistics including:
+    - Total requests, successful requests, failed requests
+    - Average latency and recent latency history
+    - Per-service request counts
+    - Error type breakdowns
+- Metrics are collected automatically for all discovery operations.
 ### Load Balancing
 - If there are multiple nodes of that service available in the registry, then the discovery needs to distribute the load across those nodes.
 - Choosing the right server is a very important thing here because if we're using the server-side and server-specific cache, then choosing the wrong node or server might cost us (High latency especially).
-- Here, the Maxine discovery comes with three server-selection strategies.
+- Here, the Maxine discovery comes with five server-selection strategies.
     - Round robin: This strategy is very simple, discovery will start forwarding the request to the next server each server in turn and in order so, it's fairly simple. Note that the requests to the same service name can be redirected to different nodes each time.
     - Hashing-based: In this strategy, the discovery hashes the IP of the client and based on that hash, It'll come up with the number and that numbered node will be the chosen server. In Maxine, there are two hashing-based strategies are developed.
         - <a href="https://medium.com/swlh/load-balancing-and-consistent-hashing-5fe0156035e1">Consistent hashing</a>
         - <a href="https://randorithms.com/2020/12/26/rendezvous-hashing.html">Rendezvous hashing</a>
+    - Least Connections: Distributes load based on current connection counts (simplified to round-robin in current implementation).
+    - Random: Randomly selects a node for each request.
 ### HeartBeat
 - As we know that in order to let the service registry know that the service is alive, service has to send the heartbeat to the registry and after certain period of time (timeout), that service will be removed from the registry automatically so becore that service gets deregistered from registry, the service has to send the heartbeat again, That's why we call it a heart beat because it literally keeps beating in a period of time, Let's understand what is this heartbeat.
 - Heartbeat in maxine is a special kind of request that contains all the meta data about the service.
@@ -81,6 +91,14 @@
 - Also, if you notice in the given picture, maxine supports the asyncronous logging, you can turn off and on it from the logging panel of the UI. It's recommended to keep the async logging on because it can significantly reduce the latency to serve requests.
 <br>
 <img src="/en/latest/img/maxine-logging.png" />
+### Security
+- Maxine implements JWT-based authentication for secure access to registry operations.
+- All service operations (register, deregister, discover, health, metrics) require valid JWT tokens.
+- Authentication is handled via the `/api/maxine/signin` endpoint with admin credentials.
+### Performance Optimizations
+- In-memory caching for discovery operations to reduce lookup times.
+- Debounced asynchronous file saves to minimize I/O blocking during high-frequency registrations.
+- Efficient data structures and algorithms for fast service resolution.
 ### Config control
 - Maxine config control provides interactive way to manage the configuration.
 - the Settings and Logging tab provides options to monitor and manipulate the Maxine configuration.
@@ -90,5 +108,5 @@
     - JSONified Logging : To Jsonify the logs, Logs console will show plain logs if turned off.
     - Prettify Logs : To pretify the JSONified logs (Works only if JSOnified logging is turned on).
     - Default heartbeat : To modify the default heartbeat timeout if the heartbeat is not bringing the timeout parameter from service.
-    - Server selection strategy : To change the load balancer's server selection strategy. By default, it's Round robin but can be changed to consistent hashing or randezvouz hashing.
+    - Server selection strategy : To change the load balancer's server selection strategy. By default, it's Round robin but can be changed to consistent hashing, rendezvous hashing, least connections, or random.
     - Status monitor : To turn on and off the status monitor.

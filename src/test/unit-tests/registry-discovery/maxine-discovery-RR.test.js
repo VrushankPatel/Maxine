@@ -25,11 +25,17 @@ registryService.registryService(serviceSampleRR);
 
 describe(`${fileName} : NON API discover with config with Round Robin`, () => {
     it(`RR discover with NonAPI`, (done) => {
-        // Making sure that server selection strategy is CH
+        // Making sure that server selection strategy is RR
         config.serverSelectionStrategy = constants.SSS.RR;
+        // Reset offset and cache for test
+        const { serviceRegistry } = require('../../../main/entity/service-registry');
+        if (serviceRegistry.registry[serviceSampleRR.serviceName]) {
+            serviceRegistry.registry[serviceSampleRR.serviceName].offset = 0;
+        }
+        discoveryService.clearCache();
         const response1 = discoveryService.getNode(serviceSampleRR.serviceName,serviceSampleRR.hostName);
         response1.should.be.a('object');
-        // by default, Round robin will return node with name lke nodename + '-0', w'll test it.
+        // by default, Round robin will return node with name like nodename + '-0', we'll test it.
         response1.should.have.own.property("nodeName", `${serviceSampleRR.nodeName}-0`);
         response1.should.have.own.property("parentNode", serviceSampleRR.nodeName);
         response1.should.have.own.property("address");

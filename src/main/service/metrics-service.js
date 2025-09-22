@@ -1,0 +1,49 @@
+class MetricsService {
+    constructor() {
+        this.metrics = {
+            totalRequests: 0,
+            successfulRequests: 0,
+            failedRequests: 0,
+            averageLatency: 0,
+            latencies: [],
+            serviceRequests: {},
+            errors: {}
+        };
+    }
+
+    recordRequest(serviceName, success, latency) {
+        this.metrics.totalRequests++;
+        if (success) {
+            this.metrics.successfulRequests++;
+        } else {
+            this.metrics.failedRequests++;
+        }
+        this.metrics.latencies.push(latency);
+        if (this.metrics.latencies.length > 1000) {
+            this.metrics.latencies.shift(); // keep last 1000
+        }
+        this.metrics.averageLatency = this.metrics.latencies.reduce((a, b) => a + b, 0) / this.metrics.latencies.length;
+
+        if (!this.metrics.serviceRequests[serviceName]) {
+            this.metrics.serviceRequests[serviceName] = 0;
+        }
+        this.metrics.serviceRequests[serviceName]++;
+    }
+
+    recordError(errorType) {
+        if (!this.metrics.errors[errorType]) {
+            this.metrics.errors[errorType] = 0;
+        }
+        this.metrics.errors[errorType]++;
+    }
+
+    getMetrics() {
+        return { ...this.metrics };
+    }
+}
+
+const metricsService = new MetricsService();
+
+module.exports = {
+    metricsService
+};
