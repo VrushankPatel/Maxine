@@ -9,19 +9,23 @@ class Service{
     serviceName;
     version;
     namespace;
+    region;
+    zone;
     timeOut;
     weight;
     address;
     metadata;
 
     static buildByObj(obj){
-        let {hostName, nodeName, port, serviceName, version, namespace, timeOut, weight, ssl, path, metadata} = obj;
+        let {hostName, nodeName, port, serviceName, version, namespace, region, zone, timeOut, weight, ssl, path, metadata} = obj;
         const service = new Service();
         service.hostName = hostName;
         service.nodeName = nodeName;
         service.serviceName = serviceName;
         service.version = version || "1.0";
         service.namespace = namespace || "default";
+        service.region = region || "default";
+        service.zone = zone || "default";
         service.timeOut = Math.abs(parseInt(timeOut)) || config.heartBeatTimeout;
         service.weight = Math.abs(parseInt(weight)) || 1;
         service.metadata = metadata || {};

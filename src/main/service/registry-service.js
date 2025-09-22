@@ -5,8 +5,10 @@ const _ = require('lodash');
 class RegistryService{
 
     registerService = (serviceObj) => {
-        const {serviceName, version, namespace, nodeName, address, timeOut, weight, metadata} = serviceObj;
-        const fullServiceName = version ? `${namespace}:${serviceName}:${version}` : `${namespace}:${serviceName}`;
+        const {serviceName, version, namespace, region = "default", zone = "default", nodeName, address, timeOut, weight, metadata} = serviceObj;
+        const fullServiceName = (region !== "default" || zone !== "default") ?
+            (version ? `${namespace}:${region}:${zone}:${serviceName}:${version}` : `${namespace}:${region}:${zone}:${serviceName}`) :
+            (version ? `${namespace}:${serviceName}:${version}` : `${namespace}:${serviceName}`);
 
         if (!sRegistry.registry[fullServiceName]){
             sRegistry.registry[fullServiceName] = {offset: 0, nodes: {}};
@@ -63,8 +65,10 @@ class RegistryService{
         return service;
     }
 
-    deregisterService = (serviceName, nodeName, namespace = "default") => {
-        const fullServiceName = `${namespace}:${serviceName}`;
+    deregisterService = (serviceName, nodeName, namespace = "default", region = "default", zone = "default") => {
+        const fullServiceName = (region !== "default" || zone !== "default") ?
+            `${namespace}:${region}:${zone}:${serviceName}` :
+            `${namespace}:${serviceName}`;
         if (!sRegistry.registry[fullServiceName]) return false;
         const nodes = sRegistry.registry[fullServiceName].nodes;
         const toRemove = Object.keys(nodes).filter(key => nodes[key].parentNode === nodeName);
