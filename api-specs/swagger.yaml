@@ -274,8 +274,45 @@ paths:
             content:
               application/json:
                 example: '{"message": "Bad Gateway"}'
-        x-codegen-request-body-name: service
-  /api/maxine/serviceops/servers:
+         x-codegen-request-body-name: service
+     /api/maxine/serviceops/discover/info:
+       get:
+         summary: >-
+           Get the service node information without proxying the request.
+         tags:
+           - "ServiceOps"
+         operationId: Maxine service discover info
+         parameters:
+           - in: query
+             name: serviceName
+             schema:
+               type: string
+               example: db-service
+             required: true
+           - in: query
+             name: version
+             schema:
+               type: string
+               example: 1.0
+             required: false
+         responses:
+           '200':
+             description: OK
+             content:
+               application/json:
+                 example: '{"serviceName":"db-service","node":{"nodeName":"node-x-1-0","address":"http://192.168.0.1:8080","metadata":{}}}'
+           '503':
+             description: Service Unavailable
+             content:
+               application/json:
+                 example: '{"message": "Service Unavailable"}'
+           '400':
+             description: Bad Request
+             content:
+               application/json:
+                 example: '{"message": "Missing serviceName"}'
+         x-codegen-request-body-name: service
+   /api/maxine/serviceops/servers:
     get:
       summary: >-
         Get all the registered servers in Maxine service registry if there are
