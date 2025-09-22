@@ -60,7 +60,7 @@ As we can see, maxine SRD is working as a true reverse proxy for each servers, a
 
 ## New Features
 
-* **Performance Optimizations**: In-memory caching for discovery operations with configurable TTL (60s), debounced asynchronous file saves for persistence, parallel health checks, aggressive connection pooling for proxying (5000 max sockets), and API rate limiting. Discovery cache now intelligently uses IP-based keys only for strategies that require it (CH/RH), eliminating unnecessary cache misses. Optimized data structures using Maps and Sets for O(1) lookups in healthy nodes and response times tracking.
+* **Performance Optimizations**: In-memory caching for discovery operations with configurable TTL (60s), debounced asynchronous file saves for persistence, parallel health checks, aggressive connection pooling for proxying (5000 max sockets), and API rate limiting. Discovery cache now intelligently uses IP-based keys only for strategies that require it (CH/RH), eliminating unnecessary cache misses. Optimized data structures using Maps and Sets for O(1) lookups in healthy nodes and response times tracking. Fixed metrics latency recording to accurately measure full request response times.
 * **Circuit Breaker**: Automatically skips unhealthy service nodes during discovery with failure counting and automatic recovery to improve reliability.
 * **Background Health Monitoring**: Continuous health checks every 30 seconds to maintain up-to-date service status without impacting request latency. Supports custom health endpoints via service metadata.
 * **Optimized Discovery**: Healthy nodes cache eliminates filtering overhead on each discovery request, ensuring lightning-fast service lookups.
@@ -70,6 +70,7 @@ As we can see, maxine SRD is working as a true reverse proxy for each servers, a
 * **Health Checks**: Enhanced parallel health monitoring for service nodes with automatic status updates and persistence across restarts.
 * **Service Tagging and Filtering**: Services can be tagged via metadata, and discovery can be filtered by tags using the new `/api/maxine/serviceops/discover/filtered` endpoint.
 * **Service Versioning**: Discovery supports version-specific routing via the `version` query parameter, allowing clients to target specific service versions.
+* **Non-Proxy Discovery**: Added `/api/maxine/serviceops/discover/info` endpoint to retrieve service node information without proxying, useful for clients that need the address directly.
 
 ## Setup for development
 
