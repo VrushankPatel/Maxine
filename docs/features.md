@@ -14,6 +14,7 @@
 - When the service discovery receives the request, it extracts the serviceName from the request and discovers the service with that service name.
 - If discovery finds the single service node with that serviceName, then It'll simply redirect that request to that service's URL.
 - If there are multiple nodes of the same service in the registry, then discovery has to distribute the traffic across all of them, that's where Maxine's load balancer comes to rescue.
+- Filtered discovery allows routing to services based on tags, enabling environment-specific or feature-specific routing via `/api/maxine/serviceops/discover/filtered?serviceName=<name>&tags=<tag1>,<tag2>`.
 ### Health checks
 - Maxine provides comprehensive health monitoring for registered services with both on-demand and background checks.
 - The health check endpoint `/api/maxine/serviceops/health?serviceName=<name>` performs parallel HTTP requests to all nodes of the specified service and reports their status.
@@ -37,7 +38,7 @@
     - Hashing-based: In this strategy, the discovery hashes the IP of the client and based on that hash, It'll come up with the number and that numbered healthy node will be the chosen server. In Maxine, there are two hashing-based strategies are developed.
         - <a href="https://medium.com/swlh/load-balancing-and-consistent-hashing-5fe0156035e1">Consistent hashing</a>
         - <a href="https://randorithms.com/2020/12/26/rendezvous-hashing.html">Rendezvous hashing</a>
-    - Least Connections: Distributes load based on current connection counts among healthy nodes (simplified to round-robin in current implementation).
+    - Least Connections: Distributes load to the node with the fewest active connections among healthy nodes.
     - Random: Randomly selects a healthy node for each request.
 ### HeartBeat
 - As we know that in order to let the service registry know that the service is alive, service has to send the heartbeat to the registry and after certain period of time (timeout), that service will be removed from the registry automatically so becore that service gets deregistered from registry, the service has to send the heartbeat again, That's why we call it a heart beat because it literally keeps beating in a period of time, Let's understand what is this heartbeat.
@@ -56,7 +57,10 @@
     Once the service sends the heartBeat again in the given timeout then the tineout will be reset.
     - **weight** (Default 1): If the service is replicated with multiple nodes and if any of those nodes is deployed on more powerful machine and configuration, it is acceptable that that particular node has more computational power and ability to serve more number of request in the less or the same amount of time.
     So, weight property will replicate that node into registry that many times. Note that the limit of weight property is 10, meaning that a node can be 10x more powerful than the rest of the nodes.
-    - **path**: URL path like /api/v1 or somethings, defines the default path after IP where discovery will redirect the request to.
+     - **path**: URL path like /api/v1 or somethings, defines the default path after IP where discovery will redirect the request to.
+     - **metadata**: Additional service metadata including custom health endpoints and tags for filtering.
+         - **healthEndpoint**: Custom health check path (e.g., "/health"), defaults to root if not specified.
+         - **tags**: Array of tags for service categorization and filtered discovery (e.g., ["prod", "api"]).
     #### Example:
     ##### Heartbeat Request
         {

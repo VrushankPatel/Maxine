@@ -195,43 +195,86 @@ paths:
              application/json:
                example: '{"message": "Missing serviceName or nodeName"}'
        x-codegen-request-body-name: deregister
-   /api/maxine/serviceops/discover:
-     get:
-       summary: >-
-         Proxy the request to the registered service based on service name and load balancing strategy.
-       tags:
-         - "ServiceOps"
-       operationId: Maxine service discover
-       parameters:
-         - in: query
-           name: serviceName
-           schema:
-             type: string
-             example: db-service
-           required: true
-         - in: query
-           name: endPoint
-           schema:
-             type: string
-             example: /info
-           required: false
-       responses:
-         '200':
-           description: OK
-           content:
-             '*/*':
-               example: Response from the proxied service.
-         '503':
-           description: Service Unavailable
-           content:
-             application/json:
-               example: '{"message": "Service Unavailable"}'
-         '502':
-           description: Bad Gateway
-           content:
-             application/json:
-               example: '{"message": "Bad Gateway"}'
-       x-codegen-request-body-name: service
+    /api/maxine/serviceops/discover:
+      get:
+        summary: >-
+          Proxy the request to the registered service based on service name and load balancing strategy.
+        tags:
+          - "ServiceOps"
+        operationId: Maxine service discover
+        parameters:
+          - in: query
+            name: serviceName
+            schema:
+              type: string
+              example: db-service
+            required: true
+          - in: query
+            name: endPoint
+            schema:
+              type: string
+              example: /info
+            required: false
+        responses:
+          '200':
+            description: OK
+            content:
+              '*/*':
+                example: Response from the proxied service.
+          '503':
+            description: Service Unavailable
+            content:
+              application/json:
+                example: '{"message": "Service Unavailable"}'
+          '502':
+            description: Bad Gateway
+            content:
+              application/json:
+                example: '{"message": "Bad Gateway"}'
+        x-codegen-request-body-name: service
+    /api/maxine/serviceops/discover/filtered:
+      get:
+        summary: >-
+          Proxy the request to the registered service based on service name, tags, and load balancing strategy.
+        tags:
+          - "ServiceOps"
+        operationId: Maxine service filtered discover
+        parameters:
+          - in: query
+            name: serviceName
+            schema:
+              type: string
+              example: db-service
+            required: true
+          - in: query
+            name: tags
+            schema:
+              type: string
+              example: prod,api
+            required: false
+          - in: query
+            name: endPoint
+            schema:
+              type: string
+              example: /info
+            required: false
+        responses:
+          '200':
+            description: OK
+            content:
+              '*/*':
+                example: Response from the proxied service.
+          '503':
+            description: Service Unavailable
+            content:
+              application/json:
+                example: '{"message": "No nodes match the specified tags"}'
+          '502':
+            description: Bad Gateway
+            content:
+              application/json:
+                example: '{"message": "Bad Gateway"}'
+        x-codegen-request-body-name: service
   /api/maxine/serviceops/servers:
     get:
       summary: >-
@@ -325,41 +368,52 @@ paths:
               example: '{"message":"Forbidden"}'
 components:
   schemas:
-    Service:
-      required:
-        - hostName
-        - nodeName
-        - serviceName
-      type: object
-      properties:
-        hostName:
-          type: string
-          example: 192.168.0.1
-        nodeName:
-          type: string
-          example: node-x-1
-        port:
-          maximum: 65353
-          type: integer
-          example: 8080
-        serviceName:
-          type: string
-          example: db-service
-        ssl:
-          type: boolean
-          example: false
-        timeOut:
-          minimum: 1
-          type: integer
-          example: 5
-        weight:
-          maximum: 10
-          minimum: 1
-          type: integer
-          example: 5
-        path:
-          type: string
-          example: /api/actuator
+     Service:
+       required:
+         - hostName
+         - nodeName
+         - serviceName
+       type: object
+       properties:
+         hostName:
+           type: string
+           example: 192.168.0.1
+         nodeName:
+           type: string
+           example: node-x-1
+         port:
+           maximum: 65353
+           type: integer
+           example: 8080
+         serviceName:
+           type: string
+           example: db-service
+         ssl:
+           type: boolean
+           example: false
+         timeOut:
+           minimum: 1
+           type: integer
+           example: 5
+         weight:
+           maximum: 10
+           minimum: 1
+           type: integer
+           example: 5
+         path:
+           type: string
+           example: /api/actuator
+         metadata:
+           type: object
+           properties:
+             healthEndpoint:
+               type: string
+               example: /health
+             tags:
+               type: array
+               items:
+                 type: string
+               example: ["prod", "api"]
     Config:
       type: object
       properties:

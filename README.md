@@ -7,8 +7,7 @@
 <a target="_blank" href="https://github.com/VrushankPatel/Gargantua-Maxine-Server/actions/workflows/codeql.yml"><img src="https://github.com/VrushankPatel/Gargantua-Maxine-Server/actions/workflows/codeql.yml/badge.svg"/></a>
 <a target="_blank" href="https://github.com/VrushankPatel/Maxine-Server/actions/workflows/node.js.yml"><img src="https://github.com/VrushankPatel/Maxine-Server/actions/workflows/node.js.yml/badge.svg?branch=master"/></a>
 <a target="_blank" href="https://codecov.io/gh/VrushankPatel/Maxine"><img src="https://codecov.io/gh/VrushankPatel/Maxine/branch/master/graph/badge.svg?token=SONYL0TJKT"/></a>
-<a target="_blank" href="https://app.k6.io/runs/public/23fbf58304af4024aae52f7c3a0c9ea1"><img src="https://img.shields.io/badge/k6 cloud-Performance-blue"/></a>
-<a target="_blank" href="https://maxine-x.herokuapp.com/api/actuator/performance"><img src="https://img.shields.io/badge/k6-Load Test Report-blue"/></a>
+ <a target="_blank" href="https://app.k6.io/runs/public/23fbf58304af4024aae52f7c3a0c9ea1"><img src="https://img.shields.io/badge/k6 cloud-Performance-blue"/></a>
 <a target="_blank" href="https://dl.circleci.com/status-badge/redirect/gh/VrushankPatel/Maxine/tree/master"><img src="https://dl.circleci.com/status-badge/img/gh/VrushankPatel/Maxine/tree/master.svg?style=svg"></a>
 <a target="_blank" href="https://opensource.org/licenses/MIT"><img src="https://img.shields.io/badge/License-MIT-teal.svg"/></a>
 <a target="_blank" href="https://www.javascript.com"><img src="https://img.shields.io/badge/Made%20with-JavaScript-1f425f.svg"/></a>
@@ -61,14 +60,15 @@ As we can see, maxine SRD is working as a true reverse proxy for each servers, a
 
 ## New Features
 
-* **Performance Optimizations**: In-memory caching for discovery operations with configurable TTL (60s), debounced asynchronous file saves for persistence, parallel health checks, aggressive connection pooling for proxying (500 max sockets), and API rate limiting.
+* **Performance Optimizations**: In-memory caching for discovery operations with configurable TTL (60s), debounced asynchronous file saves for persistence, parallel health checks, aggressive connection pooling for proxying (5000 max sockets), and API rate limiting. Discovery cache now intelligently uses IP-based keys only for strategies that require it (CH/RH), eliminating unnecessary cache misses.
 * **Circuit Breaker**: Automatically skips unhealthy service nodes during discovery with failure counting and automatic recovery to improve reliability.
-* **Background Health Monitoring**: Continuous health checks every 30 seconds to maintain up-to-date service status without impacting request latency.
+* **Background Health Monitoring**: Continuous health checks every 30 seconds to maintain up-to-date service status without impacting request latency. Supports custom health endpoints via service metadata.
 * **Optimized Discovery**: Healthy nodes cache eliminates filtering overhead on each discovery request, ensuring lightning-fast service lookups.
-* **Load Balancing Strategies**: Supports Round Robin (RR), Consistent Hashing (CH), Rendezvous Hashing (RH), Least Connections (LC), and Random selection with health-aware routing.
+* **Load Balancing Strategies**: Supports Round Robin (RR), Consistent Hashing (CH), Rendezvous Hashing (RH), Least Connections (LC) with real connection tracking, and Random selection with health-aware routing.
 * **Security**: JWT-based authentication for registry operations (register, deregister, discover, health, metrics).
 * **Metrics**: Real-time metrics endpoint at `/api/maxine/serviceops/metrics` providing request counts, latencies, and error statistics.
 * **Health Checks**: Enhanced parallel health monitoring for service nodes with automatic status updates and persistence across restarts.
+* **Service Tagging and Filtering**: Services can be tagged via metadata, and discovery can be filtered by tags using the new `/api/maxine/serviceops/discover/filtered` endpoint.
 
 ## Setup for development
 
