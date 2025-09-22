@@ -62,7 +62,7 @@ As we can see, maxine SRD is working as a true reverse proxy for each servers, a
 
 ## New Features
 
- * **Performance Optimizations**: In-memory caching for discovery operations with configurable TTL (5min), debounced asynchronous file/Redis saves for persistence, parallel health checks, aggressive connection pooling for proxying (10000 max sockets), and API rate limiting. Discovery cache now intelligently uses IP-based keys only for strategies that require it (CH/RH), eliminating unnecessary cache misses. Optimized data structures using Maps and Sets for O(1) lookups in healthy nodes and response times tracking. Fixed metrics latency recording to accurately measure full request response times. Consistent Hashing now uses the hashring library for O(1) hash lookups. Healthy nodes array is cached to avoid repeated Array.from() calls. Weighted Round Robin implemented properly using expanded node lists based on weights. Increased LRU cache size to 500,000 entries for better performance under high load.
+  * **Performance Optimizations**: In-memory caching for discovery operations with configurable TTL (5min), debounced asynchronous file/Redis saves for persistence, parallel health checks, aggressive connection pooling for proxying (10000 max sockets), and API rate limiting. Discovery cache now intelligently uses IP-based keys only for strategies that require it (CH/RH), eliminating unnecessary cache misses. Optimized data structures using Maps and Sets for O(1) lookups in healthy nodes and response times tracking. Fixed metrics latency recording to accurately measure full request response times. Consistent Hashing now uses the hashring library for O(1) hash lookups. Healthy nodes array is cached to avoid repeated Array.from() calls. Weighted Round Robin implemented properly using expanded node lists based on weights. Increased LRU cache size to 500,000 entries for better performance under high load. High performance mode enabled by default, disabling logging and metrics for discovery endpoints to improve throughput.
 * **Circuit Breaker**: Automatically skips unhealthy service nodes during discovery with failure counting and automatic recovery to improve reliability.
  * **Background Health Monitoring**: Continuous health checks every 60 seconds to maintain up-to-date service status without impacting request latency. Supports custom health endpoints via service metadata.
 * **Optimized Discovery**: Healthy nodes cache eliminates filtering overhead on each discovery request, ensuring lightning-fast service lookups.
@@ -73,18 +73,20 @@ As we can see, maxine SRD is working as a true reverse proxy for each servers, a
 * **Service Tagging and Filtering**: Services can be tagged via metadata, and discovery can be filtered by tags using the new `/api/maxine/serviceops/discover/filtered` endpoint.
 * **Service Versioning**: Discovery supports version-specific routing via the `version` query parameter, allowing clients to target specific service versions.
 * **Non-Proxy Discovery**: Added `/api/maxine/serviceops/discover/info` endpoint to retrieve service node information without proxying, useful for clients that need the address directly.
-     * **Service Changes Watch API**: Added `/api/maxine/serviceops/changes` endpoint to poll for real-time registry changes (register, deregister, health status updates) since a given timestamp.
-     * **Least Loaded Load Balancing**: New LL strategy that routes requests to the service node with the least active connections.
-     * **Clustering Support**: Enable multi-worker clustering for better CPU utilization by setting `CLUSTERING_ENABLED=true`.
-     * **Environment Configuration**: All configuration options can now be set via environment variables for easier deployment and management.
-     * **Service Regions and Zones**: Support for multi-datacenter deployments with region and zone parameters in service registration and discovery.
-     * **Service Configuration Management**: Added endpoints for setting, getting, and deleting service-specific configurations at `/api/maxine/serviceops/config/*`.
-     * **Webhook Notifications**: Added webhook support for real-time notifications on service registry changes. Register webhooks via `/api/maxine/serviceops/webhooks/add` and receive POST notifications for register, deregister, and health status changes.
-     * **Redis Support**: Added Redis integration for distributed registry storage, enabling multiple Maxine instances to share the same registry data for high availability and scalability.
-     * **Service Aliases**: Services can now register with multiple aliases, allowing a single service to be discoverable under different names. Use the `/api/maxine/serviceops/aliases/*` endpoints to manage aliases.
-     * **Service Maintenance Mode**: Services can be put into maintenance mode to temporarily exclude them from discovery without deregistering. Use the `/api/maxine/serviceops/maintenance` endpoint to set maintenance mode.
-     * **Key-Value Store**: Added key-value store functionality for storing and retrieving arbitrary data. Use the `/api/maxine/serviceops/kv/*` endpoints to set, get, and delete key-value pairs.
-     * **Client-side Proxy Mode**: Discovery endpoint supports `proxy=false` query parameter to return service address instead of proxying, allowing clients to handle proxying for better performance and flexibility.
+ * **Service Changes Watch API**: Added `/api/maxine/serviceops/changes` endpoint to poll for real-time registry changes (register, deregister, health status updates) since a given timestamp.
+      * **Least Loaded Load Balancing**: New LL strategy that routes requests to the service node with the least active connections.
+      * **Clustering Support**: Enable multi-worker clustering for better CPU utilization by setting `CLUSTERING_ENABLED=true`.
+      * **Environment Configuration**: All configuration options can now be set via environment variables for easier deployment and management.
+      * **Service Regions and Zones**: Support for multi-datacenter deployments with region and zone parameters in service registration and discovery.
+      * **Service Configuration Management**: Added endpoints for setting, getting, and deleting service-specific configurations at `/api/maxine/serviceops/config/*`.
+      * **Webhook Notifications**: Added webhook support for real-time notifications on service registry changes. Register webhooks via `/api/maxine/serviceops/webhooks/add` and receive POST notifications for register, deregister, and health status changes.
+      * **Redis Support**: Added Redis integration for distributed registry storage, enabling multiple Maxine instances to share the same registry data for high availability and scalability.
+      * **Service Aliases**: Services can now register with multiple aliases, allowing a single service to be discoverable under different names. Use the `/api/maxine/serviceops/aliases/*` endpoints to manage aliases.
+      * **Service Maintenance Mode**: Services can be put into maintenance mode to temporarily exclude them from discovery without deregistering. Use the `/api/maxine/serviceops/maintenance` endpoint to set maintenance mode.
+      * **Key-Value Store**: Added key-value store functionality for storing and retrieving arbitrary data. Use the `/api/maxine/serviceops/kv/*` endpoints to set, get, and delete key-value pairs.
+      * **Client-side Proxy Mode**: Discovery endpoint supports `proxy=false` query parameter to return service address instead of proxying, allowing clients to handle proxying for better performance and flexibility.
+      * **Self-Preservation Mode**: Automatically enters self-preservation mode when more than 85% of services fail health checks, preventing cascade failures by not evicting healthy services.
+      * **Service Priority Support**: Services can specify priority in metadata, and load balancing strategies prefer higher priority nodes for better resource allocation.
 
 ## Setup for development
 
