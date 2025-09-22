@@ -14,6 +14,7 @@
 - When the service discovery receives the request, it extracts the serviceName from the request and discovers the service with that service name.
 - Discovery supports version-specific routing via the optional `version` query parameter, allowing clients to target specific service versions (defaults to any version if not specified).
 - Service aliases allow services to be discoverable under multiple names, providing flexibility in service naming and migration scenarios.
+- Service maintenance mode allows temporary exclusion of service nodes from discovery without deregistration, useful for planned maintenance or upgrades via `/api/maxine/serviceops/maintenance`.
 - If discovery finds the single service node with that serviceName, then It'll simply redirect that request to that service's URL.
 - If there are multiple nodes of the same service in the registry, then discovery has to distribute the traffic across all of them, that's where Maxine's load balancer comes to rescue.
 - Filtered discovery allows routing to services based on tags, enabling environment-specific or feature-specific routing via `/api/maxine/serviceops/discover/filtered?serviceName=<name>&tags=<tag1>,<tag2>`.
@@ -124,10 +125,10 @@
  - In-memory caching for discovery operations with configurable TTL (5min) to reduce lookup times and support high-throughput scenarios.
  - Healthy nodes cache eliminates filtering overhead, ensuring sub-millisecond service discovery lookups.
  - Debounced asynchronous file saves to minimize I/O blocking during high-frequency registrations with persistence across restarts.
- - Background parallel health checks every 60 seconds maintain service status without request latency impact.
+ - Background parallel health checks with configurable interval (default 60 seconds) and concurrency (default 1000) maintain service status without request latency impact.
  - Aggressive connection pooling for HTTP proxying (50,000 max sockets, keep-alive) to handle thousands of concurrent requests.
  - Circuit breaker with failure counting automatically isolates unhealthy nodes while allowing recovery.
- - API rate limiting prevents abuse and ensures stability under load.
+ - Configurable API rate limiting (default 10,000 requests per 15 minutes per IP) prevents abuse and ensures stability under load.
  - High performance mode disables logging for discovery endpoints to reduce overhead under extreme load.
  - Conditional metrics collection can be disabled for maximum performance.
  - Optimized data structures using Maps and Sets for O(1) lookups in healthy nodes and response times tracking, providing lightning-fast service resolution for microservices architectures.
