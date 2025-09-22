@@ -62,7 +62,7 @@ As we can see, maxine SRD is working as a true reverse proxy for each servers, a
 
 ## New Features
 
-* **Performance Optimizations**: In-memory caching for discovery operations with configurable TTL (60s), debounced asynchronous file saves for persistence, parallel health checks, aggressive connection pooling for proxying (5000 max sockets), and API rate limiting. Discovery cache now intelligently uses IP-based keys only for strategies that require it (CH/RH), eliminating unnecessary cache misses. Optimized data structures using Maps and Sets for O(1) lookups in healthy nodes and response times tracking. Fixed metrics latency recording to accurately measure full request response times. Consistent Hashing now uses the hashring library for O(1) hash lookups. Healthy nodes array is cached to avoid repeated Array.from() calls. Weighted Round Robin implemented properly using expanded node lists based on weights.
+ * **Performance Optimizations**: In-memory caching for discovery operations with configurable TTL (5min), debounced asynchronous file/Redis saves for persistence, parallel health checks, aggressive connection pooling for proxying (10000 max sockets), and API rate limiting. Discovery cache now intelligently uses IP-based keys only for strategies that require it (CH/RH), eliminating unnecessary cache misses. Optimized data structures using Maps and Sets for O(1) lookups in healthy nodes and response times tracking. Fixed metrics latency recording to accurately measure full request response times. Consistent Hashing now uses the hashring library for O(1) hash lookups. Healthy nodes array is cached to avoid repeated Array.from() calls. Weighted Round Robin implemented properly using expanded node lists based on weights. Increased LRU cache size to 500,000 entries for better performance under high load.
 * **Circuit Breaker**: Automatically skips unhealthy service nodes during discovery with failure counting and automatic recovery to improve reliability.
 * **Background Health Monitoring**: Continuous health checks every 30 seconds to maintain up-to-date service status without impacting request latency. Supports custom health endpoints via service metadata.
 * **Optimized Discovery**: Healthy nodes cache eliminates filtering overhead on each discovery request, ensuring lightning-fast service lookups.
@@ -78,8 +78,9 @@ As we can see, maxine SRD is working as a true reverse proxy for each servers, a
 * **Clustering Support**: Enable multi-worker clustering for better CPU utilization by setting `CLUSTERING_ENABLED=true`.
 * **Environment Configuration**: All configuration options can now be set via environment variables for easier deployment and management.
 * **Service Regions and Zones**: Support for multi-datacenter deployments with region and zone parameters in service registration and discovery.
-* **Service Configuration Management**: Added endpoints for setting, getting, and deleting service-specific configurations at `/api/maxine/serviceops/config/*`.
-* **Webhook Notifications**: Added webhook support for real-time notifications on service registry changes. Register webhooks via `/api/maxine/serviceops/webhooks/add` and receive POST notifications for register, deregister, and health status changes.
+ * **Service Configuration Management**: Added endpoints for setting, getting, and deleting service-specific configurations at `/api/maxine/serviceops/config/*`.
+ * **Webhook Notifications**: Added webhook support for real-time notifications on service registry changes. Register webhooks via `/api/maxine/serviceops/webhooks/add` and receive POST notifications for register, deregister, and health status changes.
+ * **Redis Support**: Added Redis integration for distributed registry storage, enabling multiple Maxine instances to share the same registry data for high availability and scalability.
 
 ## Setup for development
 
@@ -109,8 +110,12 @@ Maxine can be configured via environment variables:
 - `STATUS_MONITOR_ENABLED`: Enable status monitor (default: true)
 - `SERVER_SELECTION_STRATEGY`: Load balancing strategy (RR, WRR, LRT, CH, RH, LC, LL, RANDOM) (default: RR)
 - `LOG_FORMAT`: Log format (JSON or PLAIN) (default: JSON)
-- `DISCOVERY_CACHE_TTL`: Discovery cache TTL in ms (default: 60000)
-- `FAILURE_THRESHOLD`: Health check failure threshold (default: 3)
+ - `DISCOVERY_CACHE_TTL`: Discovery cache TTL in ms (default: 300000)
+ - `FAILURE_THRESHOLD`: Health check failure threshold (default: 3)
+ - `REDIS_ENABLED`: Enable Redis for distributed registry (default: false)
+ - `REDIS_HOST`: Redis host (default: localhost)
+ - `REDIS_PORT`: Redis port (default: 6379)
+ - `REDIS_PASSWORD`: Redis password (default: null)
 
 ### Run maxine on production.
 
