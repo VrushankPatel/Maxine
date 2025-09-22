@@ -1,5 +1,6 @@
 const { statusAndMsgs } = require("../../util/constants/constants");
 const { discoveryService } = require("../../service/discovery-service");
+const { metricsService } = require("../../service/metrics-service");
 const _ = require('lodash');
 const { info } = require("../../util/logging/logging-util");
 const httpProxy = require('http-proxy');
@@ -14,6 +15,7 @@ proxy.on('error', (err, req, res) => {
 });
 
 const discoveryController = (req, res) => {
+    const startTime = Date.now();
     // Retrieving the serviceName from query params
     const serviceName = req.query.serviceName;
     const endPoint = req.query.endPoint || "";
@@ -24,6 +26,9 @@ const discoveryController = (req, res) => {
 
     // if serviceName is not there, responding with error
     if(!serviceName) {
+        const latency = Date.now() - startTime;
+        metricsService.recordRequest(serviceName, false, latency);
+        metricsService.recordError('missing_service_name');
         res.status(statusAndMsgs.STATUS_GENERIC_ERROR).json({"message" : statusAndMsgs.MSG_DISCOVER_MISSING_DATA});
         return;
     }
@@ -33,6 +38,9 @@ const discoveryController = (req, res) => {
 
     // no service node is there so, service unavailable is our error response.
     if(_.isEmpty(serviceNode)){
+        const latency = Date.now() - startTime;
+        metricsService.recordRequest(serviceName, false, latency);
+        metricsService.recordError('service_unavailable');
         res.status(statusAndMsgs.SERVICE_UNAVAILABLE).json({
             "message" : statusAndMsgs.MSG_SERVICE_UNAVAILABLE
         });
@@ -43,8 +51,13 @@ const discoveryController = (req, res) => {
 
     try {
         proxy.web(req, res, { target: addressToRedirect, changeOrigin: true });
+        const latency = Date.now() - startTime;
+        metricsService.recordRequest(serviceName, true, latency);
     } catch (err) {
         console.error('Proxy setup error:', err);
+        const latency = Date.now() - startTime;
+        metricsService.recordRequest(serviceName, false, latency);
+        metricsService.recordError('proxy_error');
         res.status(500).json({ message: 'Proxy Error' });
     }
 }

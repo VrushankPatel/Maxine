@@ -2,6 +2,7 @@ const { info } = require('../../util/logging/logging-util');
 const { statusAndMsgs } = require('../../util/constants/constants');
 const { registryService } = require('../../service/registry-service');
 const { serviceRegistry } = require('../../entity/service-registry');
+const { metricsService } = require('../../service/metrics-service');
 const axios = require('axios');
 
 const registryController = (req, res) => {
@@ -56,9 +57,14 @@ const healthController = async (req, res) => {
     res.status(statusAndMsgs.STATUS_SUCCESS).json({ serviceName, health: healthResults });
 }
 
+const metricsController = (req, res) => {
+    res.status(statusAndMsgs.STATUS_SUCCESS).json(metricsService.getMetrics());
+}
+
 module.exports = {
     registryController,
     serverListController,
     deregisterController,
-    healthController
+    healthController,
+    metricsController
 };
