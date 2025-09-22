@@ -61,10 +61,6 @@ const discoveryController = (req, res) => {
 
     try {
         proxy.web(req, res, { target: addressToRedirect, changeOrigin: true });
-        const latency = Date.now() - startTime;
-        metricsService.recordRequest(serviceName, true, latency);
-        // Record response time for LRT algorithm
-        serviceRegistry.recordResponseTime(serviceName, serviceNode.nodeName, latency);
     } catch (err) {
         console.error('Proxy setup error:', err);
         const latency = Date.now() - startTime;
@@ -72,10 +68,18 @@ const discoveryController = (req, res) => {
         metricsService.recordError('proxy_error');
         serviceRegistry.decrementActiveConnections(serviceName, serviceNode.nodeName);
         res.status(500).json({ message: 'Proxy Error' });
+        return;
     }
 
-    // Decrement on response finish
+    // Record metrics and response time on response finish
     res.on('finish', () => {
+        const latency = Date.now() - startTime;
+        const success = res.statusCode >= 200 && res.statusCode < 300;
+        metricsService.recordRequest(serviceName, success, latency);
+        if (success) {
+            // Record response time for LRT algorithm
+            serviceRegistry.recordResponseTime(serviceName, serviceNode.nodeName, latency);
+        }
         serviceRegistry.decrementActiveConnections(serviceName, serviceNode.nodeName);
     });
     res.on('close', () => {
