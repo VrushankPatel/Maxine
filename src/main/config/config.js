@@ -8,7 +8,7 @@ const config = {
     statusMonitorEnabled: true,
     serverSelectionStrategy: constants.SSS.RR,
     logFormat: constants.LOG_FORMATS.JSON,
-    discoveryCacheTTL: 5000 // 5 seconds
+    discoveryCacheTTL: 60000 // 60 seconds
 }
 
 Object.defineProperty(config, "profile", {

@@ -28,8 +28,12 @@ class RegistryService{
                 "address" : address,
                 "timeOut" : timeOut,
                 "registeredAt" : Date.now(),
-                "healthy" : true
+                "healthy" : true,
+                "failureCount" : 0,
+                "lastFailureTime" : null
             }
+
+            sRegistry.addToHealthyNodes(serviceName, subNodeName);
 
             const timeResetter = setTimeout(() => {
                 delete sRegistry.registry[serviceName]["nodes"][subNodeName];

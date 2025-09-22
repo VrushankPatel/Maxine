@@ -7,6 +7,7 @@ class ServiceRegistry{
     registry = {};
     timeResetters = {};
     hashRegistry = {};
+    healthyNodes = {};
     saveTimeout = null;
 
     constructor() {
@@ -17,9 +18,26 @@ class ServiceRegistry{
 
     getNodes = (serviceName) => (this.registry[serviceName] || {})["nodes"];
 
+    getHealthyNodes = (serviceName) => this.healthyNodes[serviceName] || [];
+
     initHashRegistry = (serviceName) => {
         if(!this.hashRegistry[serviceName]){
             this.hashRegistry[serviceName] = new ConsistentHashing({}, constants.CONSISTENT_HASHING_OPTIONS);
+        }
+    }
+
+    addToHealthyNodes = (serviceName, nodeName) => {
+        if (!this.healthyNodes[serviceName]) {
+            this.healthyNodes[serviceName] = [];
+        }
+        if (!this.healthyNodes[serviceName].includes(nodeName)) {
+            this.healthyNodes[serviceName].push(nodeName);
+        }
+    }
+
+    removeFromHealthyNodes = (serviceName, nodeName) => {
+        if (this.healthyNodes[serviceName]) {
+            this.healthyNodes[serviceName] = this.healthyNodes[serviceName].filter(n => n !== nodeName);
         }
     }
 
@@ -34,6 +52,7 @@ class ServiceRegistry{
         if (this.hashRegistry[serviceName]) {
             this.hashRegistry[serviceName].removeNode(nodeName);
         }
+        this.removeFromHealthyNodes(serviceName, nodeName);
         this.debounceSave();
     }
 
@@ -66,12 +85,15 @@ class ServiceRegistry{
                 if (content) {
                     const data = JSON.parse(content);
                     this.registry = data.registry || {};
-                    // Reinitialize hashRegistry
+                    // Reinitialize hashRegistry and healthyNodes
                     for (const serviceName of data.hashRegistry || []) {
                         this.initHashRegistry(serviceName);
                         const nodes = this.getNodes(serviceName);
                         for (const nodeName of Object.keys(nodes || {})) {
                             this.addNodeToHashRegistry(serviceName, nodeName);
+                            if (nodes[nodeName].healthy) {
+                                this.addToHealthyNodes(serviceName, nodeName);
+                            }
                         }
                     }
                 }
