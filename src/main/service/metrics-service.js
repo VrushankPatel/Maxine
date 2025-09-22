@@ -38,7 +38,16 @@ class MetricsService {
     }
 
     getMetrics() {
-        return { ...this.metrics };
+        const sortedLatencies = [...this.metrics.latencies].sort((a, b) => a - b);
+        const p95 = sortedLatencies[Math.floor(sortedLatencies.length * 0.95)] || 0;
+        const p99 = sortedLatencies[Math.floor(sortedLatencies.length * 0.99)] || 0;
+        return {
+            ...this.metrics,
+            p95Latency: p95,
+            p99Latency: p99,
+            uptime: process.uptime(),
+            memoryUsage: process.memoryUsage()
+        };
     }
 }
 

@@ -8,6 +8,7 @@ class ServiceRegistry{
     timeResetters = {};
     hashRegistry = {};
     healthyNodes = {};
+    activeConnections = {};
     saveTimeout = null;
 
     constructor() {
@@ -39,6 +40,23 @@ class ServiceRegistry{
         if (this.healthyNodes[serviceName]) {
             this.healthyNodes[serviceName] = this.healthyNodes[serviceName].filter(n => n !== nodeName);
         }
+    }
+
+    incrementActiveConnections = (serviceName, nodeName) => {
+        if (!this.activeConnections[serviceName]) {
+            this.activeConnections[serviceName] = {};
+        }
+        this.activeConnections[serviceName][nodeName] = (this.activeConnections[serviceName][nodeName] || 0) + 1;
+    }
+
+    decrementActiveConnections = (serviceName, nodeName) => {
+        if (this.activeConnections[serviceName] && this.activeConnections[serviceName][nodeName] > 0) {
+            this.activeConnections[serviceName][nodeName]--;
+        }
+    }
+
+    getActiveConnections = (serviceName, nodeName) => {
+        return this.activeConnections[serviceName] ? this.activeConnections[serviceName][nodeName] || 0 : 0;
     }
 
     addNodeToHashRegistry = (serviceName, nodeName) => {
@@ -74,7 +92,7 @@ class ServiceRegistry{
         }
         this.saveTimeout = setTimeout(() => {
             this.saveToFile();
-        }, 100); // debounce for 100ms
+        }, 500); // debounce for 500ms
     }
 
     loadFromFile = () => {

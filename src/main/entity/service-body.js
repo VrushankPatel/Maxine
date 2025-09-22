@@ -7,18 +7,22 @@ class Service{
     hostName;
     nodeName;
     serviceName;
+    version;
     timeOut;
     weight;
     address;
+    metadata;
 
     static buildByObj(obj){
-        let {hostName, nodeName, port, serviceName, timeOut, weight, ssl, path} = obj;
+        let {hostName, nodeName, port, serviceName, version, timeOut, weight, ssl, path, metadata} = obj;
         const service = new Service();
         service.hostName = hostName;
         service.nodeName = nodeName;
         service.serviceName = serviceName;
+        service.version = version || "1.0";
         service.timeOut = Math.abs(parseInt(timeOut)) || config.heartBeatTimeout;
         service.weight = Math.abs(parseInt(weight)) || 1;
+        service.metadata = metadata || {};
         hostName = hostName || "";
         port = _.isUndefined(port) || _.isString(port) && _.isEmpty(port) ? "" : `:${port}`;
         path = path || "";

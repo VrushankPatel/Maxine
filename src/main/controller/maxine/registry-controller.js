@@ -4,6 +4,20 @@ const { registryService } = require('../../service/registry-service');
 const { serviceRegistry } = require('../../entity/service-registry');
 const { metricsService } = require('../../service/metrics-service');
 const axios = require('axios');
+const httpProxy = require('http-proxy');
+const http = require('http');
+const https = require('https');
+const proxy = httpProxy.createProxyServer({
+    agent: new http.Agent({ keepAlive: true, maxSockets: 5000, maxFreeSockets: 2560, timeout: 60000 }),
+    httpsAgent: new https.Agent({ keepAlive: true, maxSockets: 5000, maxFreeSockets: 2560, timeout: 60000 })
+});
+
+proxy.on('error', (err, req, res) => {
+    console.error('Proxy error:', err);
+    if (!res.headersSent) {
+        res.status(502).json({ message: 'Bad Gateway' });
+    }
+});
 
 const registryController = (req, res) => {
     const serviceResponse = registryService.registryService(req.body);
@@ -47,7 +61,8 @@ const healthController = async (req, res) => {
     }
     const healthPromises = Object.entries(nodes).map(async ([nodeName, node]) => {
         try {
-            const response = await axios.get(node.address, { timeout: 5000 });
+            const healthUrl = node.address + (node.metadata.healthEndpoint || '');
+            const response = await axios.get(healthUrl, { timeout: 5000 });
             // Update registry with healthy status
             if (serviceRegistry.registry[serviceName] && serviceRegistry.registry[serviceName].nodes[nodeName]) {
                 const nodeObj = serviceRegistry.registry[serviceName].nodes[nodeName];
@@ -55,6 +70,7 @@ const healthController = async (req, res) => {
                 nodeObj.failureCount = 0;
                 nodeObj.lastFailureTime = null;
                 serviceRegistry.addToHealthyNodes(serviceName, nodeName);
+                serviceRegistry.debounceSave();
             }
             return [nodeName, { status: 'healthy', code: response.status }];
         } catch (error) {
@@ -65,6 +81,7 @@ const healthController = async (req, res) => {
                 nodeObj.failureCount = (nodeObj.failureCount || 0) + 1;
                 nodeObj.lastFailureTime = Date.now();
                 serviceRegistry.removeFromHealthyNodes(serviceName, nodeName);
+                serviceRegistry.debounceSave();
             }
             return [nodeName, { status: 'unhealthy', error: error.message }];
         }
@@ -72,6 +89,86 @@ const healthController = async (req, res) => {
     const healthResultsArray = await Promise.all(healthPromises);
     const healthResults = Object.fromEntries(healthResultsArray);
     res.status(statusAndMsgs.STATUS_SUCCESS).json({ serviceName, health: healthResults });
+}
+
+const filteredDiscoveryController = (req, res) => {
+    const startTime = Date.now();
+    const serviceName = req.query.serviceName;
+    const tags = req.query.tags ? req.query.tags.split(',') : [];
+    const endPoint = req.query.endPoint || "";
+    const ip = req.ip
+    || req.connection.remoteAddress
+    || req.socket.remoteAddress
+    || req.connection.socket.remoteAddress;
+
+    if(!serviceName) {
+        const latency = Date.now() - startTime;
+        metricsService.recordRequest(serviceName, false, latency);
+        metricsService.recordError('missing_service_name');
+        res.status(statusAndMsgs.STATUS_GENERIC_ERROR).json({"message" : statusAndMsgs.MSG_DISCOVER_MISSING_DATA});
+        return;
+    }
+
+    const nodes = serviceRegistry.getNodes(serviceName);
+    const healthyNodeNames = serviceRegistry.getHealthyNodes(serviceName);
+    if (healthyNodeNames.length === 0) {
+        const latency = Date.now() - startTime;
+        metricsService.recordRequest(serviceName, false, latency);
+        metricsService.recordError('service_unavailable');
+        res.status(statusAndMsgs.SERVICE_UNAVAILABLE).json({
+            "message" : statusAndMsgs.MSG_SERVICE_UNAVAILABLE
+        });
+        return;
+    }
+
+    // Filter by tags
+    const filteredNodes = healthyNodeNames.filter(nodeName => {
+        const node = nodes[nodeName];
+        if (!node || !node.metadata.tags) return false;
+        return tags.every(tag => node.metadata.tags.includes(tag));
+    });
+
+    if (filteredNodes.length === 0) {
+        const latency = Date.now() - startTime;
+        metricsService.recordRequest(serviceName, false, latency);
+        metricsService.recordError('no_matching_nodes');
+        res.status(statusAndMsgs.SERVICE_UNAVAILABLE).json({
+            "message" : "No nodes match the specified tags"
+        });
+        return;
+    }
+
+    // Simple round-robin for filtered
+    const offset = (serviceRegistry.registry[serviceName] || {}).filteredOffset || 0;
+    serviceRegistry.registry[serviceName].filteredOffset = (offset + 1) % filteredNodes.length;
+    const selectedNodeName = filteredNodes[offset];
+    const serviceNode = nodes[selectedNodeName];
+
+    const addressToRedirect = serviceNode.address + (endPoint.length > 0 ? (endPoint[0] == "/" ? endPoint : `/${endPoint}`) : "");
+    info(`Filtered proxying to ${addressToRedirect}`);
+
+    // Increment active connections
+    serviceRegistry.incrementActiveConnections(serviceName, serviceNode.nodeName);
+
+    try {
+        proxy.web(req, res, { target: addressToRedirect, changeOrigin: true });
+        const latency = Date.now() - startTime;
+        metricsService.recordRequest(serviceName, true, latency);
+    } catch (err) {
+        console.error('Proxy setup error:', err);
+        const latency = Date.now() - startTime;
+        metricsService.recordRequest(serviceName, false, latency);
+        metricsService.recordError('proxy_error');
+        serviceRegistry.decrementActiveConnections(serviceName, serviceNode.nodeName);
+        res.status(500).json({ message: 'Proxy Error' });
+    }
+
+    res.on('finish', () => {
+        serviceRegistry.decrementActiveConnections(serviceName, serviceNode.nodeName);
+    });
+    res.on('close', () => {
+        serviceRegistry.decrementActiveConnections(serviceName, serviceNode.nodeName);
+    });
 }
 
 const metricsController = (req, res) => {
@@ -83,5 +180,6 @@ module.exports = {
     serverListController,
     deregisterController,
     healthController,
-    metricsController
+    metricsController,
+    filteredDiscoveryController
 };

@@ -1,7 +1,7 @@
 const RouteBuilder = require('../builders/route-builder');
 const bodyParser = require('body-parser');
 const rateLimit = require('express-rate-limit');
-const { serverListController, registryController, deregisterController, healthController, metricsController } = require('../controller/maxine/registry-controller');
+const { serverListController, registryController, deregisterController, healthController, metricsController, filteredDiscoveryController } = require('../controller/maxine/registry-controller');
 const discoveryController = require('../controller/maxine/discovery-controller');
 const { signInController } = require('../controller/uac/signin-controller');
 const { logsLinkGenController, recentLogsController, recentLogsClearController } = require('../controller/log-control/logs-controller');
@@ -30,8 +30,9 @@ let maxineApiRoutes = RouteBuilder.createNewRoute()
                                  .get("servers", authenticationController, serverListController)
                                  .post("register", authenticationController, bodyParser.json(), registryController)
                                  .delete("deregister", authenticationController, bodyParser.json(), deregisterController)
-                                 .get("discover", authenticationController, discoveryController)
-                                 .get("health", authenticationController, healthController)
+                                  .get("discover", authenticationController, discoveryController)
+                                  .get("discover/filtered", authenticationController, filteredDiscoveryController)
+                                  .get("health", authenticationController, healthController)
                                  .get("metrics", authenticationController, metricsController)
                             .stepBack()
                             .post("signin", bodyParser.json(), signInController)
