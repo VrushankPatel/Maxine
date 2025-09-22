@@ -134,70 +134,104 @@ paths:
           content:
             application/json:
               example: '{"message":"File not found"}'
-  /api/maxine/serviceops/register:
-    post:
-      summary: >-
-        Register the server with it's data (ServiceName, NodeName, Host, Port,
-        Weight, ssl, timeOut, weight, path).
-      tags:
-        - "ServiceOps"
-      operationId: Maxine service register
-      requestBody:
-        description: The service to register.
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/Service'
-        required: false
-      responses:
-        '200':
-          description: OK
-          content:
-            application/json:
-              example: >-
-                {"serviceName":"MAXINE-123","nodeName":"NODE-4","address":"http://192.168.23.11:8080","timeOut":50,"weight":5,"registeredAt":"5/4/2022,
-                10:00:56 am"}
-        '400':
-          description: Error, Bad Request
-          content:
-            application/json:
-              example: >-
-                {"message": "Please provide all of these -> hostName, nodeName,
-                port and serviceName"}
-      x-codegen-request-body-name: service
-  /api/maxine/serviceops/discover:
-    get:
-      summary: >-
-        Get the server from registry if there is any registered one by service
-        name.
-      tags:
-        - "ServiceOps"
-      operationId: Maxine service discover
-      parameters:
-        - in: query
-          name: serviceName
-          schema:
-            type: string
-            example: db-service
-          required: true
-        - in: query
-          name: endPoint
-          schema:
-            type: string
-            example: /info
-          required: true
-      responses:
-        '200':
-          description: OK
-          content:
-            redirect:
-              example: Redirect to registered service host:port if it is registered.
-        '503':
-          description: Service Unavailable
-          content:
-            application/json:
-              example: '{"message": "Service Unavailable"}'
-      x-codegen-request-body-name: service
+   /api/maxine/serviceops/register:
+     post:
+       summary: >-
+         Register the server with it's data (ServiceName, NodeName, Host, Port,
+         Weight, ssl, timeOut, weight, path).
+       tags:
+         - "ServiceOps"
+       operationId: Maxine service register
+       requestBody:
+         description: The service to register.
+         content:
+           application/json:
+             schema:
+               $ref: '#/components/schemas/Service'
+         required: false
+       responses:
+         '200':
+           description: OK
+           content:
+             application/json:
+               example: >-
+                 {"serviceName":"MAXINE-123","nodeName":"NODE-4","address":"http://192.168.23.11:8080","timeOut":50,"weight":5,"registeredAt":"5/4/2022,
+                 10:00:56 am"}
+         '400':
+           description: Error, Bad Request
+           content:
+             application/json:
+               example: >-
+                 {"message": "Please provide all of these -> hostName, nodeName,
+                 port and serviceName"}
+       x-codegen-request-body-name: service
+   /api/maxine/serviceops/deregister:
+     delete:
+       summary: Deregister a service node by serviceName and nodeName.
+       tags:
+         - "ServiceOps"
+       operationId: Maxine service deregister
+       requestBody:
+         description: The service to deregister.
+         content:
+           application/json:
+             schema:
+               $ref: '#/components/schemas/Deregister'
+         required: true
+       responses:
+         '200':
+           description: OK
+           content:
+             application/json:
+               example: '{"message": "Deregistered successfully"}'
+         '404':
+           description: Not Found
+           content:
+             application/json:
+               example: '{"message": "Service not found"}'
+         '400':
+           description: Error, Bad Request
+           content:
+             application/json:
+               example: '{"message": "Missing serviceName or nodeName"}'
+       x-codegen-request-body-name: deregister
+   /api/maxine/serviceops/discover:
+     get:
+       summary: >-
+         Proxy the request to the registered service based on service name and load balancing strategy.
+       tags:
+         - "ServiceOps"
+       operationId: Maxine service discover
+       parameters:
+         - in: query
+           name: serviceName
+           schema:
+             type: string
+             example: db-service
+           required: true
+         - in: query
+           name: endPoint
+           schema:
+             type: string
+             example: /info
+           required: false
+       responses:
+         '200':
+           description: OK
+           content:
+             '*/*':
+               example: Response from the proxied service.
+         '503':
+           description: Service Unavailable
+           content:
+             application/json:
+               example: '{"message": "Service Unavailable"}'
+         '502':
+           description: Bad Gateway
+           content:
+             application/json:
+               example: '{"message": "Bad Gateway"}'
+       x-codegen-request-body-name: service
   /api/maxine/serviceops/servers:
     get:
       summary: >-
@@ -367,15 +401,27 @@ components:
         password:
           type: string
           example: "admin"
-    Passwords:
-      type: object
-      properties:
-        password:
-          type: string
-          example: "admin"
-        newPassword:
-          type: string
-          example: "admin2"
+     Passwords:
+       type: object
+       properties:
+         password:
+           type: string
+           example: "admin"
+         newPassword:
+           type: string
+           example: "admin2"
+     Deregister:
+       required:
+         - serviceName
+         - nodeName
+       type: object
+       properties:
+         serviceName:
+           type: string
+           example: db-service
+         nodeName:
+           type: string
+           example: node-x-1
   securitySchemes:
     bearerAuth:
       type: http
