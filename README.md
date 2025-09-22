@@ -82,7 +82,8 @@ As we can see, maxine SRD is working as a true reverse proxy for each servers, a
   * **Webhook Notifications**: Added webhook support for real-time notifications on service registry changes. Register webhooks via `/api/maxine/serviceops/webhooks/add` and receive POST notifications for register, deregister, and health status changes.
   * **Redis Support**: Added Redis integration for distributed registry storage, enabling multiple Maxine instances to share the same registry data for high availability and scalability.
    * **Service Aliases**: Services can now register with multiple aliases, allowing a single service to be discoverable under different names. Use the `/api/maxine/serviceops/aliases/*` endpoints to manage aliases.
-   * **Service Maintenance Mode**: Services can be put into maintenance mode to temporarily exclude them from discovery without deregistering. Use the `/api/maxine/serviceops/maintenance` endpoint to set maintenance mode.
+    * **Service Maintenance Mode**: Services can be put into maintenance mode to temporarily exclude them from discovery without deregistering. Use the `/api/maxine/serviceops/maintenance` endpoint to set maintenance mode.
+    * **Key-Value Store**: Added key-value store functionality for storing and retrieving arbitrary data. Use the `/api/maxine/serviceops/kv/*` endpoints to set, get, and delete key-value pairs.
 
 ## Setup for development
 

@@ -22,6 +22,7 @@ class ServiceRegistry{
     changes = [];
     webhooks = new Map(); // serviceName -> set of webhook URLs
     tagIndex = new Map(); // tag -> Set of nodeNames
+    kvStore = new Map(); // key -> value
 
     constructor() {
         if (config.redisEnabled) {
@@ -41,6 +42,7 @@ class ServiceRegistry{
 
     // Service aliases support
     serviceAliases = new Map(); // alias -> primaryServiceName
+    serviceDependencies = new Map(); // serviceName -> Set of dependent services
 
     addChange = (type, serviceName, nodeName, data) => {
         const change = {
@@ -135,6 +137,56 @@ class ServiceRegistry{
         return aliases;
     }
 
+    // Service dependency management
+    addServiceDependency = (serviceName, dependentService) => {
+        if (!this.serviceDependencies.has(serviceName)) {
+            this.serviceDependencies.set(serviceName, new Set());
+        }
+        this.serviceDependencies.get(serviceName).add(dependentService);
+        this.debounceSave();
+    }
+
+    removeServiceDependency = (serviceName, dependentService) => {
+        if (this.serviceDependencies.has(serviceName)) {
+            this.serviceDependencies.get(serviceName).delete(dependentService);
+            this.debounceSave();
+        }
+    }
+
+    getServiceDependencies = (serviceName) => {
+        return this.serviceDependencies.has(serviceName) ? Array.from(this.serviceDependencies.get(serviceName)) : [];
+    }
+
+    getDependentServices = (serviceName) => {
+        const dependents = [];
+        for (const [svc, deps] of this.serviceDependencies) {
+            if (deps.has(serviceName)) {
+                dependents.push(svc);
+            }
+        }
+        return dependents;
+    }
+
+    // Key-Value store
+    setKv = (key, value) => {
+        this.kvStore.set(key, value);
+        this.debounceSave();
+    }
+
+    getKv = (key) => {
+        return this.kvStore.get(key);
+    }
+
+    deleteKv = (key) => {
+        const deleted = this.kvStore.delete(key);
+        if (deleted) this.debounceSave();
+        return deleted;
+    }
+
+    getAllKv = () => {
+        return Object.fromEntries(this.kvStore);
+    }
+
     // Maintenance mode management
     setMaintenanceMode = (serviceName, nodeName, inMaintenance) => {
         if (inMaintenance) {
@@ -178,9 +230,8 @@ class ServiceRegistry{
             const node = this.registry[serviceName]?.nodes?.[nodeName];
             if (node) {
                 const weight = parseInt(node.weight) || 1;
-                for (let i = 0; i < weight; i++) {
-                    expanded.push(nodeName);
-                }
+                // Use a more efficient way to expand
+                expanded.push(...Array(weight).fill(nodeName));
             }
         }
         this.expandedHealthy.set(serviceName, expanded);
@@ -284,7 +335,12 @@ class ServiceRegistry{
         try {
             const data = {
                 registry: this.registry,
-                hashRegistry: Object.keys(this.hashRegistry)
+                hashRegistry: Object.keys(this.hashRegistry),
+                serviceAliases: Object.fromEntries(this.serviceAliases),
+                serviceDependencies: Object.fromEntries(
+                    Array.from(this.serviceDependencies.entries()).map(([k, v]) => [k, Array.from(v)])
+                ),
+                kvStore: Object.fromEntries(this.kvStore)
             };
             await fs.promises.writeFile(path.join(__dirname, '../../../registry.json'), JSON.stringify(data, null, 2));
         } catch (err) {
@@ -297,7 +353,8 @@ class ServiceRegistry{
         try {
             const data = {
                 registry: this.registry,
-                hashRegistry: Object.keys(this.hashRegistry)
+                hashRegistry: Object.keys(this.hashRegistry),
+                kvStore: Object.fromEntries(this.kvStore)
             };
             await this.redisClient.set('registry', JSON.stringify(data));
         } catch (err) {
@@ -324,6 +381,7 @@ class ServiceRegistry{
             if (dataStr) {
                 const data = JSON.parse(dataStr);
                 this.registry = data.registry || {};
+                this.kvStore = new Map(Object.entries(data.kvStore || {}));
                 // Reinitialize hashRegistry and healthyNodes
                 for (const serviceName of data.hashRegistry || []) {
                     this.initHashRegistry(serviceName);
@@ -351,6 +409,14 @@ class ServiceRegistry{
                 if (content) {
                     const data = JSON.parse(content);
                     this.registry = data.registry || {};
+                    // Load aliases
+                    this.serviceAliases = new Map(Object.entries(data.serviceAliases || {}));
+                    // Load dependencies
+                    this.serviceDependencies = new Map(
+                        Object.entries(data.serviceDependencies || {}).map(([k, v]) => [k, new Set(v)])
+                    );
+                    // Load KV store
+                    this.kvStore = new Map(Object.entries(data.kvStore || {}));
                     // Reinitialize hashRegistry and healthyNodes
                     for (const serviceName of data.hashRegistry || []) {
                         this.initHashRegistry(serviceName);

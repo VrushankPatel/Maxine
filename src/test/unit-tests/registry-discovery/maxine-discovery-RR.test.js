@@ -42,12 +42,12 @@ describe(`${fileName} : NON API discover with config with Round Robin`, () => {
         config.serverSelectionStrategy = constants.SSS.RR;
         // Reset offset and cache for test
         const { serviceRegistry } = require('../../../main/entity/service-registry');
-        const fullServiceName = `default:${serviceSampleRR.serviceName}`;
+        const fullServiceName = `default:${serviceSampleRR.serviceName}:1.0`;
         if (serviceRegistry.registry[fullServiceName]) {
             serviceRegistry.registry[fullServiceName].offset = 0;
         }
         discoveryService.clearCache();
-        const response1 = discoveryService.getNode(serviceSampleRR.serviceName,serviceSampleRR.hostName, "1.0", "default");
+        const response1 = discoveryService.getNode(fullServiceName, serviceSampleRR.hostName);
         response1.should.be.a('object');
         // by default, Round robin will return node with name like nodename + '-0', we'll test it.
         response1.should.have.own.property("nodeName", `${serviceSampleRR.nodeName}-0`);
