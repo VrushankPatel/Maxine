@@ -61,12 +61,14 @@ As we can see, maxine SRD is working as a true reverse proxy for each servers, a
 
 ## New Features
 
-* **Performance Optimizations**: In-memory caching for discovery operations with configurable TTL, debounced asynchronous file saves for persistence, parallel health checks, connection pooling for proxying, and API rate limiting.
-* **Circuit Breaker**: Automatically skips unhealthy service nodes during discovery to improve reliability.
+* **Performance Optimizations**: In-memory caching for discovery operations with configurable TTL (60s), debounced asynchronous file saves for persistence, parallel health checks, aggressive connection pooling for proxying (500 max sockets), and API rate limiting.
+* **Circuit Breaker**: Automatically skips unhealthy service nodes during discovery with failure counting and automatic recovery to improve reliability.
+* **Background Health Monitoring**: Continuous health checks every 30 seconds to maintain up-to-date service status without impacting request latency.
+* **Optimized Discovery**: Healthy nodes cache eliminates filtering overhead on each discovery request, ensuring lightning-fast service lookups.
 * **Load Balancing Strategies**: Supports Round Robin (RR), Consistent Hashing (CH), Rendezvous Hashing (RH), Least Connections (LC), and Random selection with health-aware routing.
 * **Security**: JWT-based authentication for registry operations (register, deregister, discover, health, metrics).
 * **Metrics**: Real-time metrics endpoint at `/api/maxine/serviceops/metrics` providing request counts, latencies, and error statistics.
-* **Health Checks**: Enhanced parallel health monitoring for service nodes with automatic status updates.
+* **Health Checks**: Enhanced parallel health monitoring for service nodes with automatic status updates and persistence across restarts.
 
 ## Setup for development
 
