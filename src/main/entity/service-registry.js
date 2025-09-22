@@ -9,6 +9,7 @@ class ServiceRegistry{
     hashRegistry = {};
     healthyNodes = {};
     activeConnections = {};
+    responseTimes = {};
     saveTimeout = null;
 
     constructor() {
@@ -57,6 +58,26 @@ class ServiceRegistry{
 
     getActiveConnections = (serviceName, nodeName) => {
         return this.activeConnections[serviceName] ? this.activeConnections[serviceName][nodeName] || 0 : 0;
+    }
+
+    recordResponseTime = (serviceName, nodeName, responseTime) => {
+        if (!this.responseTimes[serviceName]) {
+            this.responseTimes[serviceName] = {};
+        }
+        if (!this.responseTimes[serviceName][nodeName]) {
+            this.responseTimes[serviceName][nodeName] = [];
+        }
+        this.responseTimes[serviceName][nodeName].push(responseTime);
+        // Keep only last 10 response times
+        if (this.responseTimes[serviceName][nodeName].length > 10) {
+            this.responseTimes[serviceName][nodeName].shift();
+        }
+    }
+
+    getAverageResponseTime = (serviceName, nodeName) => {
+        const times = this.responseTimes[serviceName] ? this.responseTimes[serviceName][nodeName] : [];
+        if (times.length === 0) return 0;
+        return times.reduce((a, b) => a + b, 0) / times.length;
     }
 
     addNodeToHashRegistry = (serviceName, nodeName) => {

@@ -4,6 +4,7 @@ const { metricsService } = require("../../service/metrics-service");
 const _ = require('lodash');
 const { info } = require("../../util/logging/logging-util");
 const httpProxy = require('http-proxy');
+const rateLimit = require('express-rate-limit');
 
 const http = require('http');
 const https = require('https');
@@ -62,6 +63,8 @@ const discoveryController = (req, res) => {
         proxy.web(req, res, { target: addressToRedirect, changeOrigin: true });
         const latency = Date.now() - startTime;
         metricsService.recordRequest(serviceName, true, latency);
+        // Record response time for LRT algorithm
+        serviceRegistry.recordResponseTime(serviceName, serviceNode.nodeName, latency);
     } catch (err) {
         console.error('Proxy setup error:', err);
         const latency = Date.now() - startTime;
