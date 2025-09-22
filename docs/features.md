@@ -43,6 +43,12 @@
 - Register webhooks via `/api/maxine/serviceops/webhooks/add` with serviceName and URL.
 - Receive HTTP POST notifications to the webhook URL for register, deregister, and health status change events.
 - Webhooks enable external systems to react immediately to service availability changes without polling.
+### Key-Value Store
+- Maxine includes a distributed key-value store for storing and retrieving arbitrary configuration data or shared state.
+- Set key-value pairs via `/api/maxine/serviceops/kv/set` with JSON payload containing key and value.
+- Retrieve values via `/api/maxine/serviceops/kv/get?key=<key>` or get all pairs via `/api/maxine/serviceops/kv/all`.
+- Delete keys via `/api/maxine/serviceops/kv/delete` with JSON payload containing key.
+- Data persists across restarts when using file storage or Redis backend.
 ### Load Balancing
 - If there are multiple nodes of that service available in the registry, then the discovery needs to distribute the load across those nodes.
 - Choosing the right server is a very important thing here because if we're using the server-side and server-specific cache, then choosing the wrong node or server might cost us (High latency especially).
