@@ -20,17 +20,18 @@
 ### Health checks
 - Maxine provides comprehensive health monitoring for registered services with both on-demand and background checks.
 - The health check endpoint `/api/maxine/serviceops/health?serviceName=<name>` performs parallel HTTP requests to all nodes of the specified service and reports their status.
-- Background health checks run continuously every 30 seconds to maintain up-to-date service status without impacting request latency.
+ - Background health checks run continuously every 60 seconds to maintain up-to-date service status without impacting request latency.
 - Health status is cached in optimized data structures, enabling circuit breaker functionality with failure counting that automatically skips unhealthy nodes during discovery.
 - Circuit breaker includes automatic recovery when services become healthy again, improving overall system reliability and performance.
 ### Metrics
 - Maxine provides comprehensive metrics collection for monitoring performance and usage.
-- The metrics endpoint `/api/maxine/serviceops/metrics` returns real-time statistics including:
+ - The metrics endpoint `/api/maxine/serviceops/metrics` returns real-time statistics including:
     - Total requests, successful requests, failed requests
     - Average latency and recent latency history
     - Per-service request counts
     - Error type breakdowns
-- Metrics are collected automatically for all discovery operations.
+ - Prometheus-compatible metrics are available at `/api/maxine/serviceops/metrics/prometheus` for integration with monitoring systems.
+ - Metrics are collected automatically for all discovery operations.
 ### Service Changes Watch API
 - Maxine provides a watch API for real-time monitoring of registry changes.
 - The changes endpoint `/api/maxine/serviceops/changes?since=<timestamp>` returns all registry events (register, deregister, health status changes) that occurred after the specified timestamp.
@@ -52,10 +53,11 @@
     - Hashing-based: In this strategy, the discovery hashes the IP of the client and based on that hash, It'll come up with the number and that numbered healthy node will be the chosen server. In Maxine, there are two hashing-based strategies are developed.
         - <a href="https://medium.com/swlh/load-balancing-and-consistent-hashing-5fe0156035e1">Consistent hashing</a>
         - <a href="https://randorithms.com/2020/12/26/rendezvous-hashing.html">Rendezvous hashing</a>
-     - Least Connections: Distributes load to the node with the fewest active connections among healthy nodes.
-     - Least Loaded: Routes requests to the service node with the least active connections.
-     - Random: Randomly selects a healthy node for each request.
-     - Power of Two Choices: Selects two random healthy nodes and chooses the one with fewer active connections.
+      - Least Connections: Distributes load to the node with the fewest active connections among healthy nodes.
+      - Least Loaded: Routes requests to the service node with the least active connections.
+      - Random: Randomly selects a healthy node for each request.
+      - Power of Two Choices: Selects two random healthy nodes and chooses the one with fewer active connections.
+      - Adaptive: Combines response time and connection metrics to select the optimal node for each request.
 ### HeartBeat
 - As we know that in order to let the service registry know that the service is alive, service has to send the heartbeat to the registry and after certain period of time (timeout), that service will be removed from the registry automatically so becore that service gets deregistered from registry, the service has to send the heartbeat again, That's why we call it a heart beat because it literally keeps beating in a period of time, Let's understand what is this heartbeat.
 - Heartbeat in maxine is a special kind of request that contains all the meta data about the service.
@@ -119,14 +121,16 @@
 - All service operations (register, deregister, discover, health, metrics) require valid JWT tokens.
 - Authentication is handled via the `/api/maxine/signin` endpoint with admin credentials.
 ### Performance Optimizations
-- In-memory caching for discovery operations with configurable TTL (1min) to reduce lookup times and support high-throughput scenarios.
-- Healthy nodes cache eliminates filtering overhead, ensuring sub-millisecond service discovery lookups.
-- Debounced asynchronous file saves to minimize I/O blocking during high-frequency registrations with persistence across restarts.
-- Background parallel health checks every 30 seconds maintain service status without request latency impact.
-- Aggressive connection pooling for HTTP proxying (500 max sockets, keep-alive) to handle thousands of concurrent requests.
-- Circuit breaker with failure counting automatically isolates unhealthy nodes while allowing recovery.
-- API rate limiting prevents abuse and ensures stability under load.
-- Optimized data structures using Maps and Sets for O(1) lookups in healthy nodes and response times tracking, providing lightning-fast service resolution for microservices architectures.
+ - In-memory caching for discovery operations with configurable TTL (5min) to reduce lookup times and support high-throughput scenarios.
+ - Healthy nodes cache eliminates filtering overhead, ensuring sub-millisecond service discovery lookups.
+ - Debounced asynchronous file saves to minimize I/O blocking during high-frequency registrations with persistence across restarts.
+ - Background parallel health checks every 60 seconds maintain service status without request latency impact.
+ - Aggressive connection pooling for HTTP proxying (50,000 max sockets, keep-alive) to handle thousands of concurrent requests.
+ - Circuit breaker with failure counting automatically isolates unhealthy nodes while allowing recovery.
+ - API rate limiting prevents abuse and ensures stability under load.
+ - High performance mode disables logging for discovery endpoints to reduce overhead under extreme load.
+ - Conditional metrics collection can be disabled for maximum performance.
+ - Optimized data structures using Maps and Sets for O(1) lookups in healthy nodes and response times tracking, providing lightning-fast service resolution for microservices architectures.
 ### Config control
 - Maxine config control provides interactive way to manage the configuration.
 - the Settings and Logging tab provides options to monitor and manipulate the Maxine configuration.
