@@ -80,6 +80,16 @@ const discoveryController = (req, res) => {
     }
     const addressToRedirect = serviceNode.address + (endPoint.length > 0 ? (endPoint[0] == "/" ? endPoint : `/${endPoint}`) : "");
 
+    // Check if client wants address only (no proxy)
+    if (req.query.proxy === 'false') {
+        if (config.metricsEnabled) {
+            const latency = Date.now() - startTime;
+            metricsService.recordRequest(serviceName, true, latency);
+        }
+        res.json({ address: addressToRedirect, nodeName: serviceNode.nodeName });
+        return;
+    }
+
     // Increment active connections
     const { serviceRegistry } = require("../../entity/service-registry");
     serviceRegistry.incrementActiveConnections(fullServiceName, serviceNode.nodeName);
