@@ -40,6 +40,8 @@ const CIRCLECI_ARTIFACTS = "https://circleci.com/api/v1.1/project/github/Vrushan
  */
 const SSS = new Enums([
     {name: 'RR', code: '0', message: 'Round Robin'},
+    {name: 'WRR', code: '5', message: 'Weighted Round Robin'},
+    {name: 'LRT', code: '6', message: 'Least Response Time'},
     {name: 'CH', code: '1', message: 'Consistent Hashing'},
     {name: 'RH', code: '2', message: 'Rendezvous Hashing'},
     {name: 'LC', code: '3', message: 'Least Connections'},

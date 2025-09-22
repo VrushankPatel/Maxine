@@ -21,7 +21,11 @@ class RoundRobinDiscovery{
      * @returns {number}
      */
     getOffsetAndIncrement = (serviceName) => {
-        return (serviceRegistry.registry[serviceName] || {})["offset"]++;
+        const service = serviceRegistry.registry[serviceName];
+        if (!service) return 0;
+        const currentOffset = service.offset || 0;
+        service.offset = currentOffset + 1;
+        return currentOffset;
     }
 }
 

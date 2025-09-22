@@ -1,6 +1,8 @@
 const { ConsistentHashDiscovery } = require("./discovery-services/consistent-hash-discovery");
 const { RendezvousHashDiscovery } = require("./discovery-services/rendezvous-hash-discovery");
 const { RoundRobinDiscovery } = require("./discovery-services/round-robin-discovery");
+const { WeightedRoundRobinDiscovery } = require("./discovery-services/weighted-round-robin-discovery");
+const { LeastResponseTimeDiscovery } = require("./discovery-services/least-response-time-discovery");
 const { LeastConnectionsDiscovery } = require("./discovery-services/least-connections-discovery");
 const { RandomDiscovery } = require("./discovery-services/random-discovery");
 const config = require("../config/config");
@@ -8,6 +10,8 @@ const { constants } = require("../util/constants/constants");
 
 class DiscoveryService{
     rrd = new RoundRobinDiscovery();
+    wrrd = new WeightedRoundRobinDiscovery();
+    lrtd = new LeastResponseTimeDiscovery();
     chd = new ConsistentHashDiscovery();
     rhd = new RendezvousHashDiscovery();
     lcd = new LeastConnectionsDiscovery();
@@ -32,6 +36,14 @@ class DiscoveryService{
         switch(config.serverSelectionStrategy){
             case constants.SSS.RR:
             node = this.rrd.getNode(serviceName);
+            break;
+
+            case constants.SSS.WRR:
+            node = this.wrrd.getNode(serviceName);
+            break;
+
+            case constants.SSS.LRT:
+            node = this.lrtd.getNode(serviceName);
             break;
 
             case constants.SSS.CH:
