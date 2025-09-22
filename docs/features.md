@@ -33,8 +33,10 @@
 - If there are multiple nodes of that service available in the registry, then the discovery needs to distribute the load across those nodes.
 - Choosing the right server is a very important thing here because if we're using the server-side and server-specific cache, then choosing the wrong node or server might cost us (High latency especially).
 - Maxine implements health-aware load balancing, automatically excluding unhealthy nodes from selection.
-- Here, the Maxine discovery comes with five server-selection strategies.
+- Here, the Maxine discovery comes with seven server-selection strategies.
     - Round robin: This strategy is very simple, discovery will start forwarding the request to the next healthy server each server in turn and in order. Note that the requests to the same service name can be redirected to different nodes each time.
+    - Weighted Round Robin: Distributes load based on node weights, preferring higher-weight nodes for better resource utilization.
+    - Least Response Time: Routes requests to the node with the lowest average response time for optimal performance.
     - Hashing-based: In this strategy, the discovery hashes the IP of the client and based on that hash, It'll come up with the number and that numbered healthy node will be the chosen server. In Maxine, there are two hashing-based strategies are developed.
         - <a href="https://medium.com/swlh/load-balancing-and-consistent-hashing-5fe0156035e1">Consistent hashing</a>
         - <a href="https://randorithms.com/2020/12/26/rendezvous-hashing.html">Rendezvous hashing</a>
@@ -120,5 +122,5 @@
     - JSONified Logging : To Jsonify the logs, Logs console will show plain logs if turned off.
     - Prettify Logs : To pretify the JSONified logs (Works only if JSOnified logging is turned on).
     - Default heartbeat : To modify the default heartbeat timeout if the heartbeat is not bringing the timeout parameter from service.
-    - Server selection strategy : To change the load balancer's server selection strategy. By default, it's Round robin but can be changed to consistent hashing, rendezvous hashing, least connections, or random.
+    - Server selection strategy : To change the load balancer's server selection strategy. By default, it's Round robin but can be changed to weighted round robin, least response time, consistent hashing, rendezvous hashing, least connections, or random.
     - Status monitor : To turn on and off the status monitor.
