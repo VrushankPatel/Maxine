@@ -47,7 +47,8 @@ const SSS = new Enums([
     {name: 'RH', code: '2', message: 'Rendezvous Hashing'},
     {name: 'LC', code: '3', message: 'Least Connections'},
     {name: 'LL', code: '7', message: 'Least Loaded'},
-    {name: 'RANDOM', code: '4', message: 'Random'}
+    {name: 'RANDOM', code: '4', message: 'Random'},
+    {name: 'P2', code: '8', message: 'Power of Two Choices'}
 ]);
 
 const LOG_FORMATS = new Enums([

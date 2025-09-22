@@ -14,6 +14,7 @@ const swaggerUi = require('swagger-ui-express');
 const { statusMonitorConfig, actuatorConfig } = require('./src/main/config/actuator/actuator-config');
 const { loadSwaggerYAML } = require('./src/main/util/util');
 const rateLimit = require('express-rate-limit');
+const compression = require('compression');
 const swaggerDocument = loadSwaggerYAML();
 const { healthService } = require('./src/main/service/health-service');
 const config = require('./src/main/config/config');
@@ -41,6 +42,7 @@ if (config.clusteringEnabled && cluster.isMaster) {
     });
     const app = ExpressAppBuilder.createNewApp()
                     .addCors()
+                    .use(compression())
                     .ifPropertyOnce("statusMonitorEnabled")
                         .use(expressStatusMonitor(statusMonitorConfig))
                     .use(logRequest)
