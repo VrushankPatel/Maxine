@@ -3,6 +3,7 @@ const { statusAndMsgs } = require('../../util/constants/constants');
 const { registryService } = require('../../service/registry-service');
 const { serviceRegistry } = require('../../entity/service-registry');
 const { metricsService } = require('../../service/metrics-service');
+const { discoveryService } = require('../../service/discovery-service');
 const axios = require('axios');
 const httpProxy = require('http-proxy');
 const http = require('http');
@@ -218,6 +219,12 @@ const discoveryInfoController = (req, res) => {
     });
 }
 
+const changesController = (req, res) => {
+    const since = parseInt(req.query.since) || 0;
+    const changes = serviceRegistry.getChangesSince(since);
+    res.status(statusAndMsgs.STATUS_SUCCESS).json({ changes });
+}
+
 module.exports = {
     registryController,
     serverListController,
@@ -225,5 +232,6 @@ module.exports = {
     healthController,
     metricsController,
     filteredDiscoveryController,
-    discoveryInfoController
+    discoveryInfoController,
+    changesController
 };

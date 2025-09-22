@@ -50,6 +50,7 @@ class RegistryService{
 
             sRegistry.timeResetters[subNodeName] = timeResetter;
         });
+        sRegistry.addChange('register', fullServiceName, nodeName, { address, metadata });
     }
 
     registryService = (serviceObj) => {
@@ -76,6 +77,7 @@ class RegistryService{
             delete sRegistry.registry[serviceName];
             delete sRegistry.hashRegistry[serviceName];
         }
+        sRegistry.addChange('deregister', serviceName, nodeName, {});
         return true;
     }
 }
