@@ -7,6 +7,14 @@ let redis;
 if (config.redisEnabled) {
     redis = require('redis');
 }
+let etcd3;
+if (config.etcdEnabled) {
+    etcd3 = require('etcd3');
+}
+let { Kafka } = require('kafkajs');
+if (config.kafkaEnabled) {
+    Kafka = require('kafkajs').Kafka;
+}
 
 class ServiceRegistry{
     registry = new Map();
@@ -27,7 +35,18 @@ class ServiceRegistry{
     healthHistory = new Map(); // serviceName -> nodeName -> array of {timestamp, status}
 
     constructor() {
-        if (config.redisEnabled) {
+        if (config.kafkaEnabled) {
+            this.kafka = new Kafka({
+                clientId: 'maxine-registry',
+                brokers: config.kafkaBrokers
+            });
+            this.producer = this.kafka.producer();
+            this.producer.connect().catch(err => console.error('Kafka producer connect error:', err));
+        }
+        if (config.etcdEnabled) {
+            this.etcdClient = new etcd3.Etcd3({ hosts: `${config.etcdHost}:${config.etcdPort}` });
+            this.loadFromEtcd().catch(err => console.error('Etcd load error:', err));
+        } else if (config.redisEnabled) {
             this.redisClient = redis.createClient({
                 host: config.redisHost,
                 port: config.redisPort,
@@ -61,6 +80,13 @@ class ServiceRegistry{
         }
         // Notify webhooks asynchronously
         this.notifyWebhooks(serviceName, change);
+        // Send to Kafka
+        if (config.kafkaEnabled && this.producer) {
+            this.producer.send({
+                topic: 'maxine-registry-events',
+                messages: [{ value: JSON.stringify(change) }]
+            }).catch(err => console.error('Kafka send error:', err));
+        }
     }
 
     notifyWebhooks = (serviceName, change) => {
@@ -485,12 +511,45 @@ class ServiceRegistry{
         }
     }
 
+    saveToEtcd = async () => {
+        if (!config.etcdEnabled) return;
+        try {
+            const data = {
+                registry: Object.fromEntries(this.registry),
+                hashRegistry: Array.from(this.hashRegistry.keys()),
+                serviceAliases: Object.fromEntries(this.serviceAliases),
+                serviceDependencies: Object.fromEntries(
+                    Array.from(this.serviceDependencies.entries()).map(([k, v]) => [k, Array.from(v)])
+                ),
+                kvStore: Object.fromEntries(this.kvStore),
+                trafficSplit: Object.fromEntries(this.trafficSplit),
+                healthHistory: Object.fromEntries(
+                    Array.from(this.healthHistory.entries()).map(([k, v]) => [k, Object.fromEntries(v)])
+                ),
+                maintenanceNodes: Object.fromEntries(
+                    Array.from(this.maintenanceNodes.entries()).map(([k, v]) => [k, Array.from(v)])
+                ),
+                webhooks: Object.fromEntries(
+                    Array.from(this.webhooks.entries()).map(([k, v]) => [k, Array.from(v)])
+                ),
+                tagIndex: Object.fromEntries(
+                    Array.from(this.tagIndex.entries()).map(([k, v]) => [k, Array.from(v)])
+                )
+            };
+            await this.etcdClient.put('registry').value(JSON.stringify(data));
+        } catch (err) {
+            console.error('Failed to save to etcd:', err);
+        }
+    }
+
     debounceSave = () => {
         if (this.saveTimeout) {
             clearTimeout(this.saveTimeout);
         }
         this.saveTimeout = setTimeout(() => {
-            if (config.redisEnabled) {
+            if (config.etcdEnabled) {
+                this.saveToEtcd();
+            } else if (config.redisEnabled) {
                 this.saveToRedis();
             } else {
                 this.saveToFile();
@@ -534,6 +593,56 @@ class ServiceRegistry{
             }
         } catch (err) {
             console.error('Failed to load from Redis:', err);
+        }
+    }
+
+    loadFromEtcd = async () => {
+        try {
+            const dataStr = await this.etcdClient.get('registry').string();
+            if (dataStr) {
+                const data = JSON.parse(dataStr);
+                this.registry = new Map(Object.entries(data.registry || {}));
+                // Load aliases
+                this.serviceAliases = new Map(Object.entries(data.serviceAliases || {}));
+                // Load dependencies
+                this.serviceDependencies = new Map(
+                    Object.entries(data.serviceDependencies || {}).map(([k, v]) => [k, new Set(v)])
+                );
+                // Load KV store
+                this.kvStore = new Map(Object.entries(data.kvStore || {}));
+                // Load traffic split
+                this.trafficSplit = new Map(Object.entries(data.trafficSplit || {}));
+                // Load health history
+                this.healthHistory = new Map(
+                    Object.entries(data.healthHistory || {}).map(([k, v]) => [k, new Map(Object.entries(v))])
+                );
+                // Load maintenance nodes
+                this.maintenanceNodes = new Map(
+                    Object.entries(data.maintenanceNodes || {}).map(([k, v]) => [k, new Set(v)])
+                );
+                // Load webhooks
+                this.webhooks = new Map(
+                    Object.entries(data.webhooks || {}).map(([k, v]) => [k, new Set(v)])
+                );
+                // Load tag index
+                this.tagIndex = new Map(
+                    Object.entries(data.tagIndex || {}).map(([k, v]) => [k, new Set(v)])
+                );
+                // Reinitialize hashRegistry and healthyNodes
+                for (const serviceName of data.hashRegistry || []) {
+                    this.initHashRegistry(serviceName);
+                    const nodes = this.getNodes(serviceName);
+                    for (const nodeName of Object.keys(nodes || {})) {
+                        this.addNodeToHashRegistry(serviceName, nodeName);
+                        if (nodes[nodeName].healthy !== false) { // assuming healthy is true by default
+                            this.addToHealthyNodes(serviceName, nodeName);
+                        }
+                        this.addToTagIndex(nodeName, nodes[nodeName].metadata.tags);
+                    }
+                }
+            }
+        } catch (err) {
+            console.error('Failed to load from etcd:', err);
         }
     }
 

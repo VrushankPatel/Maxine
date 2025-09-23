@@ -17,17 +17,24 @@ const config = {
     redisHost: process.env.REDIS_HOST || 'localhost',
     redisPort: process.env.REDIS_PORT ? parseInt(process.env.REDIS_PORT) : 6379,
     redisPassword: process.env.REDIS_PASSWORD || null,
+    etcdEnabled: process.env.ETCD_ENABLED === 'true' || false,
+    etcdHost: process.env.ETCD_HOST || 'localhost',
+    etcdPort: process.env.ETCD_PORT ? parseInt(process.env.ETCD_PORT) : 2379,
+    kafkaEnabled: process.env.KAFKA_ENABLED === 'true' || false,
+    kafkaBrokers: process.env.KAFKA_BROKERS ? process.env.KAFKA_BROKERS.split(',') : ['localhost:9092'],
+    prometheusEnabled: process.env.PROMETHEUS_ENABLED === 'true' || false,
+    prometheusPort: process.env.PROMETHEUS_PORT ? parseInt(process.env.PROMETHEUS_PORT) : 9090,
     metricsEnabled: process.env.METRICS_ENABLED !== 'false',
     highPerformanceMode: process.env.HIGH_PERFORMANCE_MODE === 'true' || process.env.HIGH_PERFORMANCE_MODE === undefined,
     rateLimitMax: process.env.RATE_LIMIT_MAX ? parseInt(process.env.RATE_LIMIT_MAX) : 10000,
     rateLimitWindowMs: process.env.RATE_LIMIT_WINDOW_MS ? parseInt(process.env.RATE_LIMIT_WINDOW_MS) : 900000, // 15 minutes
       healthCheckInterval: process.env.HEALTH_CHECK_INTERVAL ? parseInt(process.env.HEALTH_CHECK_INTERVAL) : 30000,
-       healthCheckConcurrency: process.env.HEALTH_CHECK_CONCURRENCY ? parseInt(process.env.HEALTH_CHECK_CONCURRENCY) : 2000,
+        healthCheckConcurrency: process.env.HEALTH_CHECK_CONCURRENCY ? parseInt(process.env.HEALTH_CHECK_CONCURRENCY) : 500,
     proxyTimeout: process.env.PROXY_TIMEOUT ? parseInt(process.env.PROXY_TIMEOUT) : 10000,
     grpcEnabled: process.env.GRPC_ENABLED === 'true' || false,
     grpcPort: process.env.GRPC_PORT ? parseInt(process.env.GRPC_PORT) : 50051,
     tracingEnabled: process.env.TRACING_ENABLED === 'true' || false,
-    http2Enabled: process.env.HTTP2_ENABLED === 'true' || false
+    http2Enabled: process.env.HTTP2_ENABLED !== 'false'
 }
 
 Object.defineProperty(config, "profile", {
