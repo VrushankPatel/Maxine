@@ -603,6 +603,18 @@ class ServiceRegistry{
                 healthHistory: Object.fromEntries(
                     Array.from(this.healthHistory.entries()).map(([k, v]) => [k, Object.fromEntries(v)])
                 ),
+                maintenanceNodes: Object.fromEntries(
+                    Array.from(this.maintenanceNodes.entries()).map(([k, v]) => [k, Array.from(v)])
+                ),
+                drainingNodes: Object.fromEntries(
+                    Array.from(this.drainingNodes.entries()).map(([k, v]) => [k, Array.from(v)])
+                ),
+                webhooks: Object.fromEntries(
+                    Array.from(this.webhooks.entries()).map(([k, v]) => [k, Array.from(v)])
+                ),
+                tagIndex: Object.fromEntries(
+                    Array.from(this.tagIndex.entries()).map(([k, v]) => [k, Array.from(v)])
+                ),
                 circuitBreaker: Object.fromEntries(
                     Array.from(this.circuitBreaker.entries()).map(([k, v]) => [k, Object.fromEntries(v)])
                 )
@@ -630,6 +642,18 @@ class ServiceRegistry{
                 trafficSplit: Object.fromEntries(this.trafficSplit),
                 healthHistory: Object.fromEntries(
                     Array.from(this.healthHistory.entries()).map(([k, v]) => [k, Object.fromEntries(v)])
+                ),
+                maintenanceNodes: Object.fromEntries(
+                    Array.from(this.maintenanceNodes.entries()).map(([k, v]) => [k, Array.from(v)])
+                ),
+                drainingNodes: Object.fromEntries(
+                    Array.from(this.drainingNodes.entries()).map(([k, v]) => [k, Array.from(v)])
+                ),
+                webhooks: Object.fromEntries(
+                    Array.from(this.webhooks.entries()).map(([k, v]) => [k, Array.from(v)])
+                ),
+                tagIndex: Object.fromEntries(
+                    Array.from(this.tagIndex.entries()).map(([k, v]) => [k, Array.from(v)])
                 ),
                 circuitBreaker: Object.fromEntries(
                     Array.from(this.circuitBreaker.entries()).map(([k, v]) => [k, Object.fromEntries(v)])
@@ -661,6 +685,9 @@ class ServiceRegistry{
                 ),
                 maintenanceNodes: Object.fromEntries(
                     Array.from(this.maintenanceNodes.entries()).map(([k, v]) => [k, Array.from(v)])
+                ),
+                drainingNodes: Object.fromEntries(
+                    Array.from(this.drainingNodes.entries()).map(([k, v]) => [k, Array.from(v)])
                 ),
                 webhooks: Object.fromEntries(
                     Array.from(this.webhooks.entries()).map(([k, v]) => [k, Array.from(v)])
@@ -717,6 +744,22 @@ class ServiceRegistry{
                 this.healthHistory = new Map(
                     Object.entries(data.healthHistory || {}).map(([k, v]) => [k, new Map(Object.entries(v))])
                 );
+                // Load maintenance nodes
+                this.maintenanceNodes = new Map(
+                    Object.entries(data.maintenanceNodes || {}).map(([k, v]) => [k, new Set(v)])
+                );
+                // Load draining nodes
+                this.drainingNodes = new Map(
+                    Object.entries(data.drainingNodes || {}).map(([k, v]) => [k, new Set(v)])
+                );
+                // Load webhooks
+                this.webhooks = new Map(
+                    Object.entries(data.webhooks || {}).map(([k, v]) => [k, new Set(v)])
+                );
+                // Load tag index
+                this.tagIndex = new Map(
+                    Object.entries(data.tagIndex || {}).map(([k, v]) => [k, new Set(v)])
+                );
                 // Load circuit breaker
                 this.circuitBreaker = new Map(
                     Object.entries(data.circuitBreaker || {}).map(([k, v]) => [k, new Map(Object.entries(v))])
@@ -767,6 +810,10 @@ class ServiceRegistry{
                 // Load maintenance nodes
                 this.maintenanceNodes = new Map(
                     Object.entries(data.maintenanceNodes || {}).map(([k, v]) => [k, new Set(v)])
+                );
+                // Load draining nodes
+                this.drainingNodes = new Map(
+                    Object.entries(data.drainingNodes || {}).map(([k, v]) => [k, new Set(v)])
                 );
                 // Load webhooks
                 this.webhooks = new Map(
@@ -826,8 +873,24 @@ class ServiceRegistry{
                     this.healthHistory = new Map(
                         Object.entries(data.healthHistory || {}).map(([k, v]) => [k, new Map(Object.entries(v))])
                     );
-                 // Load circuit breaker
-                 this.circuitBreaker = new Map(Object.entries(data.circuitBreaker || {}));
+                    // Load maintenance nodes
+                    this.maintenanceNodes = new Map(
+                        Object.entries(data.maintenanceNodes || {}).map(([k, v]) => [k, new Set(v)])
+                    );
+                    // Load draining nodes
+                    this.drainingNodes = new Map(
+                        Object.entries(data.drainingNodes || {}).map(([k, v]) => [k, new Set(v)])
+                    );
+                    // Load webhooks
+                    this.webhooks = new Map(
+                        Object.entries(data.webhooks || {}).map(([k, v]) => [k, new Set(v)])
+                    );
+                    // Load tag index
+                    this.tagIndex = new Map(
+                        Object.entries(data.tagIndex || {}).map(([k, v]) => [k, new Set(v)])
+                    );
+                  // Load circuit breaker
+                  this.circuitBreaker = new Map(Object.entries(data.circuitBreaker || {}));
                  // Reinitialize hashRegistry and healthyNodes
                  this.healthyNodeSets = new Map();
                  for (const serviceName of data.hashRegistry || []) {

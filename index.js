@@ -65,38 +65,39 @@ if (config.clusteringEnabled && cluster.isMaster) {
         max: config.rateLimitMax,
         message: 'Too many requests from this IP, please try again later.'
     });
-    const app = ExpressAppBuilder.createNewApp()
-                        .ifProperty("highPerformanceMode", false)
-                            .addCompression()
-                        .endIfProperty()
-                         // .addCors()
-                         // .use('/', (req, res) => res.send('hello'))
-                           .ifPropertyOnce("statusMonitorEnabled")
-                               .use(expressStatusMonitor(statusMonitorConfig))
-                          .ifProperty("highPerformanceMode", false)
-                              .use(logRequest)
-                          .endIfProperty()
-                       .use(authenticationController)
-                       .mapStaticDir(path.join(currDir, "client"))
-                       .mapStaticDirWithRoute('/logs', path.join(currDir,"logs"))
-                          .ifPropertyOnce("actuatorEnabled")
-                              .use(actuator(actuatorConfig))
-                          .use('/api', limiter ? limiter : (req, res, next) => next(), maxineApiRoutes)
-                        .use('/api-spec', swaggerUi.serve, swaggerUi.setup(swaggerDocument))
-                       .ifPropertyOnce('profile','dev')
-                           .use('/shutdown', process.exit)
-                      .blockUnknownUrls()
-                       .use(logWebExceptions)
-                      .invoke(() => console.log('before listen'))
-                       .listenOrSpdy(constants.PORT, () => {
-                           if (config.clusteringEnabled) {
-                               console.log(`Worker ${process.pid} started`);
-                           }
-                           console.log('listening on port', constants.PORT);
-                           loggingUtil.initApp();
-                       })
-                        .invoke(() => console.log('app built'))
-                        .getApp();
+    const builder = ExpressAppBuilder.createNewApp()
+                         .ifProperty("highPerformanceMode", false)
+                             .addCompression()
+                         .endIfProperty()
+                          // .addCors()
+                          // .use('/', (req, res) => res.send('hello'))
+                            .ifPropertyOnce("statusMonitorEnabled")
+                                .use(expressStatusMonitor(statusMonitorConfig))
+                           .ifProperty("highPerformanceMode", false)
+                               .use(logRequest)
+                           .endIfProperty()
+                        .use(authenticationController)
+                        .mapStaticDir(path.join(currDir, "client"))
+                        .mapStaticDirWithRoute('/logs', path.join(currDir,"logs"))
+                           .ifPropertyOnce("actuatorEnabled")
+                               .use(actuator(actuatorConfig))
+                           .use('/api', limiter ? limiter : (req, res, next) => next(), maxineApiRoutes)
+                         .use('/api-spec', swaggerUi.serve, swaggerUi.setup(swaggerDocument))
+                        .ifPropertyOnce('profile','dev')
+                            .use('/shutdown', process.exit)
+                       .blockUnknownUrls()
+                        .use(logWebExceptions)
+                       .invoke(() => console.log('before listen'))
+                        .listenOrSpdy(constants.PORT, () => {
+                            if (config.clusteringEnabled) {
+                                console.log(`Worker ${process.pid} started`);
+                            }
+                            console.log('listening on port', constants.PORT);
+                            loggingUtil.initApp();
+                        })
+                         .invoke(() => console.log('app built'));
+    const app = builder.getApp();
+    const server = builder.getServer();
 
     // Initialize Kubernetes service if enabled
     if (config.kubernetesEnabled) {
@@ -110,7 +111,7 @@ if (config.clusteringEnabled && cluster.isMaster) {
 
     // WebSocket server for real-time changes (disabled in high performance mode)
     if (!config.highPerformanceMode) {
-        const wss = new WebSocket.Server({ server: app.getServer() });
+        const wss = new WebSocket.Server({ server });
 
         wss.on('connection', (ws) => {
             console.log('WebSocket client connected');
