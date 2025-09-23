@@ -38,6 +38,7 @@ const rateLimit = require('express-rate-limit');
 const compression = require('compression');
 const swaggerDocument = loadSwaggerYAML();
 const { healthService } = require('./src/main/service/health-service');
+const { serviceRegistry } = require('./src/main/entity/service-registry');
 const path = require("path");
 const currDir = require('./conf');
 const grpc = require('@grpc/grpc-js');
@@ -98,9 +99,8 @@ if (config.clusteringEnabled && cluster.isMaster) {
                        .getApp();
 
     // WebSocket server for real-time changes (disabled in high performance mode)
-    let wss;
     if (!config.highPerformanceMode) {
-        wss = new WebSocket.Server({ port: 8081 }); // Use different port
+        const wss = new WebSocket.Server({ server: app.getServer() });
 
         wss.on('connection', (ws) => {
             console.log('WebSocket client connected');
@@ -111,23 +111,9 @@ if (config.clusteringEnabled && cluster.isMaster) {
                 console.log('WebSocket client disconnected');
             });
         });
-    }
 
-    // Broadcast changes
-    const { serviceRegistry } = require('./src/main/entity/service-registry');
-    serviceRegistry.addChange = ((originalAddChange) => {
-        return function(type, serviceName, nodeName, data) {
-            originalAddChange.call(this, type, serviceName, nodeName, data);
-            // Broadcast to all WebSocket clients
-            if (wss) {
-                wss.clients.forEach(client => {
-                    if (client.readyState === WebSocket.OPEN) {
-                        client.send(JSON.stringify({ type, serviceName, nodeName, data, timestamp: Date.now() }));
-                    }
-                });
-            }
-        };
-    })(serviceRegistry.addChange);
+        serviceRegistry.setWss(wss);
+    }
 
     if (config.grpcEnabled) {
         const packageDefinition = protoLoader.loadSync(path.join(__dirname, 'api-specs/maxine.proto'), {
