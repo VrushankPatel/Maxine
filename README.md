@@ -116,7 +116,8 @@ As we can see, maxine SRD provides service addresses for direct client connectio
                      * **Push Health Updates**: Added `/api/maxine/serviceops/health/push` endpoint allowing services to push their health status updates directly to the registry, enabling faster health monitoring without relying solely on pull-based checks.
                      * **Service Priority**: Services can now specify priority in metadata for load balancing preference. Healthy nodes are sorted by priority (higher first).
                      * **Per-Service Rate Limiting**: Discovery requests are now rate limited per service per IP to prevent abuse.
-                    * **Service Groups**: Added support for service groups to allow hierarchical service organization. Services can be registered with a `group` in metadata, and discovery can filter by `group` query parameter.
+                     * **Service Groups**: Added support for service groups to allow hierarchical service organization. Services can be registered with a `group` in metadata, and discovery can filter by `group` query parameter.
+                     * **Latest Performance Optimizations**: Disabled persistence in high performance mode to eliminate I/O bottlenecks. Skipped alias resolution and address caching in high performance mode for maximum throughput.
                     * **Service Dependency Graph**: Added `/api/maxine/serviceops/dependency/graph` endpoint to retrieve the service dependency graph, showing which services depend on others.
                     * **Impact Analysis**: Added `/api/maxine/serviceops/impact/analysis` endpoint to analyze the impact of a service failure by listing all services that depend on it.
                     * **Python Client SDK**: Added a Python client SDK in `client-sdk/python/` for easy integration with Maxine registry from Python applications.
