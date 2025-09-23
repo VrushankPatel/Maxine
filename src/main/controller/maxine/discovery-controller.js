@@ -23,11 +23,11 @@ const hasMetrics = config.metricsEnabled;
 const isCircuitBreakerEnabled = config.circuitBreakerEnabled;
 
 // Cache for service name building
-const serviceNameCache = new LRU({ max: 50000, ttl: 900000 });
+const serviceNameCache = new LRU({ max: 100000, ttl: 900000 });
 // Cache for IP extraction
-const ipCache = new LRU({ max: 50000, ttl: 900000 });
+const ipCache = new LRU({ max: 100000, ttl: 900000 });
 // Cache for address building
-const addressCache = new LRU({ max: 50000, ttl: 900000 });
+const addressCache = new LRU({ max: 100000, ttl: 900000 });
 
 // Fast JSON stringify schemas
 const addressResponseSchema = {
@@ -92,7 +92,7 @@ const discoveryController = (req, res) => {
     const zone = req.query.zone || "default";
     const group = req.query.group;
     const endPoint = req.query.endPoint || "";
-    const reqId = req.ip || req.connection?.remoteAddress || req.socket?.remoteAddress || req.connection?.socket?.remoteAddress || 'unknown';
+    const reqId = req.ip || 'unknown';
     let ip = ipCache.get(reqId);
     if (!ip) {
         ip = req.clientIp || reqId;

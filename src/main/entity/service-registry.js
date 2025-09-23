@@ -89,6 +89,8 @@ class ServiceRegistry{
         if (this.changes.length > 1000) {
             this.changes.shift();
         }
+        // Skip notifications in high performance mode
+        if (config.highPerformanceMode) return;
         // Notify webhooks asynchronously
         this.notifyWebhooks(serviceName, change);
         // Send to Kafka
