@@ -379,6 +379,10 @@ class ServiceRegistry{
             const data = {
                 registry: Object.fromEntries(this.registry),
                 hashRegistry: Array.from(this.hashRegistry.keys()),
+                serviceAliases: Object.fromEntries(this.serviceAliases),
+                serviceDependencies: Object.fromEntries(
+                    Array.from(this.serviceDependencies.entries()).map(([k, v]) => [k, Array.from(v)])
+                ),
                 kvStore: Object.fromEntries(this.kvStore),
                 trafficSplit: Object.fromEntries(this.trafficSplit)
             };
@@ -407,7 +411,15 @@ class ServiceRegistry{
             if (dataStr) {
                 const data = JSON.parse(dataStr);
                 this.registry = new Map(Object.entries(data.registry || {}));
+                // Load aliases
+                this.serviceAliases = new Map(Object.entries(data.serviceAliases || {}));
+                // Load dependencies
+                this.serviceDependencies = new Map(
+                    Object.entries(data.serviceDependencies || {}).map(([k, v]) => [k, new Set(v)])
+                );
+                // Load KV store
                 this.kvStore = new Map(Object.entries(data.kvStore || {}));
+                // Load traffic split
                 this.trafficSplit = new Map(Object.entries(data.trafficSplit || {}));
                 // Reinitialize hashRegistry and healthyNodes
                 for (const serviceName of data.hashRegistry || []) {
