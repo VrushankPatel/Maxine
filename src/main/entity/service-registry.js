@@ -20,8 +20,8 @@ class ServiceRegistry{
     registry = new Map();
     timeResetters = new Map();
     hashRegistry = new Map();
-    healthyNodes = new Map();
-    healthyCache = new Map(); // serviceName -> array of healthy node names
+    healthyNodes = new Map(); // serviceName -> array of healthy node objects, sorted by priority desc
+    healthyCache = new Map(); // serviceName -> array of healthy node objects, filtered maintenance
     maintenanceNodes = new Map(); // serviceName -> Set of nodeNames in maintenance
     activeConnections = new Map();
     responseTimes = new Map();
@@ -362,9 +362,9 @@ class ServiceRegistry{
 
     getHealthyNodes = (serviceName) => {
         if (!this.healthyCache.has(serviceName)) {
-            const healthy = this.healthyNodes.get(serviceName) || [];
+            const all = this.healthyNodes.get(serviceName) || [];
             const maintenance = this.maintenanceNodes.has(serviceName) ? this.maintenanceNodes.get(serviceName) : new Set();
-            const filtered = healthy.filter(nodeName => !maintenance.has(nodeName));
+            const filtered = all.filter(node => !maintenance.has(node.nodeName));
             this.healthyCache.set(serviceName, filtered);
         }
         return this.healthyCache.get(serviceName);
@@ -383,15 +383,13 @@ class ServiceRegistry{
             this.healthyNodes.set(serviceName, []);
         }
         const arr = this.healthyNodes.get(serviceName);
-        if (!arr.includes(nodeName)) {
-            arr.push(nodeName);
-        // sort by priority desc
-        const nodes = this.getNodes(serviceName);
-        arr.sort((a,b) => {
-            const priA = nodes[a]?.metadata?.priority || 0;
-            const priB = nodes[b]?.metadata?.priority || 0;
-            return priB - priA;
-        });
+        const service = this.registry.get(serviceName);
+        if (!service || !service.nodes[nodeName]) return;
+        const node = service.nodes[nodeName];
+        if (!arr.find(n => n.nodeName === nodeName)) {
+            arr.push(node);
+            arr.sort((a, b) => (b.metadata.priority || 0) - (a.metadata.priority || 0));
+            this.addToHashRegistry(serviceName, nodeName);
         }
         this.healthyCache.delete(serviceName); // invalidate cache
         this.addChange('healthy', serviceName, nodeName, { healthy: true });
@@ -400,9 +398,10 @@ class ServiceRegistry{
     removeFromHealthyNodes = (serviceName, nodeName) => {
         if (this.healthyNodes.has(serviceName)) {
             const arr = this.healthyNodes.get(serviceName);
-            const index = arr.indexOf(nodeName);
+            const index = arr.findIndex(n => n.nodeName === nodeName);
             if (index > -1) {
                 arr.splice(index, 1);
+                this.removeFromHashRegistry(serviceName, nodeName);
             }
             this.healthyCache.delete(serviceName); // invalidate cache
             this.addChange('unhealthy', serviceName, nodeName, { healthy: false });

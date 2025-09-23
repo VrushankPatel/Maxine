@@ -8,12 +8,10 @@ class RandomDiscovery{
      * @returns {object}
      */
     getNode = (fullServiceName) => {
-        const healthyNodeNames = serviceRegistry.getHealthyNodes(fullServiceName);
-        if (healthyNodeNames.length === 0) return null;
-        const randomIndex = Math.floor(Math.random() * healthyNodeNames.length);
-        const nodeName = healthyNodeNames[randomIndex];
-        const nodes = serviceRegistry.getNodes(fullServiceName);
-        return nodes[nodeName] || null;
+        const healthyNodes = serviceRegistry.getHealthyNodes(fullServiceName);
+        if (healthyNodes.length === 0) return null;
+        const randomIndex = Math.floor(Math.random() * healthyNodes.length);
+        return healthyNodes[randomIndex];
     }
 
     invalidateCache = (fullServiceName) => {

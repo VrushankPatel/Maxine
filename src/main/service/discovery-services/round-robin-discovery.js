@@ -12,12 +12,10 @@ class RoundRobinDiscovery{
       * @returns {object}
       */
     getNode = (fullServiceName) => {
-        const healthyNodeNames = serviceRegistry.getHealthyNodes(fullServiceName);
-        if (healthyNodeNames.length === 0) return null;
+        const healthyNodes = serviceRegistry.getHealthyNodes(fullServiceName);
+        if (healthyNodes.length === 0) return null;
         const offset = this.getOffsetAndIncrement(fullServiceName) || 0;
-        const nodeName = healthyNodeNames[offset % healthyNodeNames.length];
-        const nodes = serviceRegistry.getNodes(fullServiceName);
-        return nodes[nodeName] || null;
+        return healthyNodes[offset % healthyNodes.length];
     }
 
     /**

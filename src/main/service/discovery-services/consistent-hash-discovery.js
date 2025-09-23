@@ -12,8 +12,8 @@ class ConsistentHashDiscovery{
         const hashRing = serviceRegistry.hashRegistry.get(fullServiceName);
         if (!hashRing || hashRing.servers.length === 0) return null;
         const nodeName = hashRing.get(ip);
-        const nodes = serviceRegistry.getNodes(fullServiceName);
-        return nodes[nodeName] || null;
+        const healthyNodes = serviceRegistry.getHealthyNodes(fullServiceName);
+        return healthyNodes.find(node => node.nodeName === nodeName) || null;
     }
 
     invalidateCache = (fullServiceName) => {

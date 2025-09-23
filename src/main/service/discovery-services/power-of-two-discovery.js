@@ -7,29 +7,26 @@ class PowerOfTwoDiscovery {
      * @returns {object}
      */
     getNode = (fullServiceName) => {
-        const healthyNodeNames = serviceRegistry.getHealthyNodes(fullServiceName);
-        if (healthyNodeNames.length === 0) return null;
-        if (healthyNodeNames.length === 1) {
-            const nodes = serviceRegistry.getNodes(fullServiceName);
-            return nodes[healthyNodeNames[0]] || null;
+        const healthyNodes = serviceRegistry.getHealthyNodes(fullServiceName);
+        if (healthyNodes.length === 0) return null;
+        if (healthyNodes.length === 1) {
+            return healthyNodes[0];
         }
 
         // Select two random nodes
-        const idx1 = Math.floor(Math.random() * healthyNodeNames.length);
-        let idx2 = Math.floor(Math.random() * healthyNodeNames.length);
+        const idx1 = Math.floor(Math.random() * healthyNodes.length);
+        let idx2 = Math.floor(Math.random() * healthyNodes.length);
         while (idx2 === idx1) {
-            idx2 = Math.floor(Math.random() * healthyNodeNames.length);
+            idx2 = Math.floor(Math.random() * healthyNodes.length);
         }
 
-        const node1 = healthyNodeNames[idx1];
-        const node2 = healthyNodeNames[idx2];
+        const node1 = healthyNodes[idx1];
+        const node2 = healthyNodes[idx2];
 
-        const conn1 = serviceRegistry.getActiveConnections(fullServiceName, node1);
-        const conn2 = serviceRegistry.getActiveConnections(fullServiceName, node2);
+        const conn1 = serviceRegistry.getActiveConnections(fullServiceName, node1.nodeName);
+        const conn2 = serviceRegistry.getActiveConnections(fullServiceName, node2.nodeName);
 
-        const selectedNodeName = conn1 <= conn2 ? node1 : node2;
-        const nodes = serviceRegistry.getNodes(fullServiceName);
-        return nodes[selectedNodeName] || null;
+        return conn1 <= conn2 ? node1 : node2;
     }
 
     invalidateCache = (fullServiceName) => {
