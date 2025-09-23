@@ -26,6 +26,8 @@ const isCircuitBreakerEnabled = config.circuitBreakerEnabled;
 const serviceNameCache = new LRU({ max: 100000, ttl: 900000 });
 // Cache for IP extraction
 const ipCache = new LRU({ max: 100000, ttl: 900000 });
+// Cache for address building
+const addressCache = new LRU({ max: 100000, ttl: 900000 });
 
 // Fast JSON stringify schemas
 const addressResponseSchema = {
@@ -159,9 +161,14 @@ const discoveryController = (req, res) => {
            return;
        }
 
-        req.fullServiceName = fullServiceName;
-        req.serviceNode = serviceNode;
-        const addressToRedirect = endPoint ? (endPoint.startsWith('/') ? serviceNode.address + endPoint : serviceNode.address + '/' + endPoint) : serviceNode.address;
+         req.fullServiceName = fullServiceName;
+         req.serviceNode = serviceNode;
+         const addressKey = `${serviceNode.address}:${endPoint || ''}`;
+         let addressToRedirect = addressCache.get(addressKey);
+         if (!addressToRedirect) {
+             addressToRedirect = endPoint ? `${serviceNode.address}${endPoint.startsWith('/') ? endPoint : `/${endPoint}`}` : serviceNode.address;
+             addressCache.set(addressKey, addressToRedirect);
+         }
 
        // Check if client wants address only (no proxy)
         if (req.query.proxy === 'false' || (req.query.proxy === undefined && !config.defaultProxyMode)) {
