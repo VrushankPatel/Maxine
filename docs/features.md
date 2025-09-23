@@ -138,7 +138,7 @@
 - All service operations (register, deregister, discover, health, metrics) require valid JWT tokens.
 - Authentication is handled via the `/api/maxine/signin` endpoint with admin credentials.
 ### Performance Optimizations
-  - In-memory LRU caching for discovery operations with configurable TTL (5min) and increased size (1M entries) to reduce lookup times and support high-throughput scenarios.
+  - In-memory LRU caching for discovery operations with configurable TTL (10min) and increased size (1M entries) to reduce lookup times and support high-throughput scenarios.
   - Healthy nodes cache eliminates filtering overhead, ensuring sub-millisecond service discovery lookups.
   - Debounced asynchronous file saves to minimize I/O blocking during high-frequency registrations with persistence across restarts.
   - Background parallel health checks with configurable interval (default 30 seconds) and concurrency (default 1000) maintain service status without request latency impact.
@@ -152,7 +152,7 @@
   - Compression enabled always for reduced response sizes and improved network performance.
    - HTTP/2 support for multiplexing and reduced latency over HTTP/1.1.
    - Optimized string operations in discovery controller to minimize CPU usage.
-   - Reduced default health check concurrency from 2000 to 500 to prevent system overload.
+   - Reduced default health check concurrency from 2000 to 200 to prevent system overload.
 ### etcd Persistence
 - Maxine supports etcd as a distributed key-value store backend for high availability and consistency.
 - Enable with `ETCD_ENABLED=true` and configure `ETCD_HOST` and `ETCD_PORT`.

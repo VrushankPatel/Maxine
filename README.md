@@ -102,7 +102,7 @@ As we can see, maxine SRD is working as a true reverse proxy for each servers, a
                * **Backup and Restore**: Added `/api/maxine/serviceops/backup` endpoint to export the entire registry state as JSON, and `/api/maxine/serviceops/restore` to import and restore from a backup. Useful for disaster recovery and migration. CLI commands `backup` and `restore` are also available.
                * **etcd Persistence**: Added etcd support for distributed key-value storage of the registry, providing high availability and consistency. Enable with `ETCD_ENABLED=true` and configure `ETCD_HOST` and `ETCD_PORT`.
                * **Kafka Event Streaming**: Added Kafka integration for real-time event streaming of registry changes (register, deregister, health updates). Enable with `KAFKA_ENABLED=true` and configure `KAFKA_BROKERS`.
-               * **Performance Optimizations**: Reduced default health check concurrency from 2000 to 500 to prevent overload, enabled HTTP/2 by default for improved performance over HTTP/1.1.
+                * **Performance Optimizations**: Reduced default health check concurrency from 2000 to 200 to prevent overload, increased discovery cache TTL to 10 minutes, cached config checks and alias resolutions for faster lookups, enabled HTTP/2 by default for improved performance over HTTP/1.1.
 
 
 ## Setup for development
@@ -133,7 +133,7 @@ Maxine can be configured via environment variables:
 - `STATUS_MONITOR_ENABLED`: Enable status monitor (default: true)
  - `SERVER_SELECTION_STRATEGY`: Load balancing strategy (RR, WRR, LRT, CH, RH, LC, LL, RANDOM, P2, ADAPTIVE) (default: RR)
 - `LOG_FORMAT`: Log format (JSON or PLAIN) (default: JSON)
-  - `DISCOVERY_CACHE_TTL`: Discovery cache TTL in ms (default: 1800000)
+  - `DISCOVERY_CACHE_TTL`: Discovery cache TTL in ms (default: 600000)
  - `FAILURE_THRESHOLD`: Health check failure threshold (default: 3)
  - `REDIS_ENABLED`: Enable Redis for distributed registry (default: false)
  - `REDIS_HOST`: Redis host (default: localhost)
@@ -144,7 +144,7 @@ Maxine can be configured via environment variables:
  - `RATE_LIMIT_MAX`: Maximum requests per IP per window (default: 10000)
  - `RATE_LIMIT_WINDOW_MS`: Rate limit window in milliseconds (default: 900000)
    - `HEALTH_CHECK_INTERVAL`: Health check interval in milliseconds (default: 30000)
-   - `HEALTH_CHECK_CONCURRENCY`: Maximum concurrent health checks (default: 2000)
+    - `HEALTH_CHECK_CONCURRENCY`: Maximum concurrent health checks (default: 200)
   - `GRPC_ENABLED`: Enable gRPC discovery service (default: false)
   - `GRPC_PORT`: gRPC server port (default: 50051)
    - `TRACING_ENABLED`: Enable OpenTelemetry tracing (default: false)
