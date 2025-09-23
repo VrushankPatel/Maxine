@@ -28,11 +28,11 @@ class DiscoveryService{
     p2d = new PowerOfTwoDiscovery();
     ad = new AdaptiveDiscovery();
     sd = new StickyDiscovery();
-    cache = new LRU({ max: 1000000, ttl: config.discoveryCacheTTL });
+    cache = new LRU({ max: 2000000, ttl: config.discoveryCacheTTL });
     serviceKeys = new Map(); // Map serviceName to set of cache keys
     cacheHits = 0;
     cacheMisses = 0;
-    aliasCache = new LRU({ max: 10000, ttl: 900000 }); // Cache for alias resolutions, 15 min TTL
+    aliasCache = new LRU({ max: 100000, ttl: 900000 }); // Cache for alias resolutions, 15 min TTL
 
     /**
      * Get fullServiceName and IP and based on the serverSelectionStrategy we've selected, It'll call that discoveryService and retrieve the node from it. (Ex. RoundRobin, Rendezvous, ConsistentHashing).
