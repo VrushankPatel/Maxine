@@ -2,6 +2,7 @@ const express = require('express');
 const config = require('../config/config');
 const { statusAndMsgs } = require('../util/constants/constants');
 const cors = require('cors');
+const spdy = require('spdy');
 class ExpressAppBuilder{
     app;
     conditionStack = [];
@@ -148,6 +149,21 @@ class ExpressAppBuilder{
      */
     listen(port, callback){
         this.app.listen(port, callback);
+        return this;
+    }
+
+    /**
+     * Starts the app with HTTP/2 if enabled, otherwise HTTP/1.1
+     * @param {number} port
+     * @param {function} callback
+     * @returns {object: ExpressAppBuilder}
+     */
+    listenOrSpdy(port, callback){
+        if (config.http2Enabled) {
+            spdy.createServer({}, this.app).listen(port, callback);
+        } else {
+            this.app.listen(port, callback);
+        }
         return this;
     }
 
