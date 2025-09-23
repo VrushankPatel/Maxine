@@ -103,7 +103,9 @@ As we can see, maxine SRD provides service addresses for direct client connectio
                 * **etcd Persistence**: Added etcd support for distributed key-value storage of the registry, providing high availability and consistency. Enable with `ETCD_ENABLED=true` and configure `ETCD_HOST` and `ETCD_PORT`.
                 * **Kafka Event Streaming**: Added Kafka integration for real-time event streaming of registry changes (register, deregister, health updates). Enable with `KAFKA_ENABLED=true` and configure `KAFKA_BROKERS`.
                  * **Performance Optimizations**: Reduced default health check concurrency from 2000 to 200 to prevent overload, increased discovery cache TTL to 10 minutes, cached config checks and alias resolutions for faster lookups, enabled HTTP/2 by default for improved performance over HTTP/1.1, optimized IP extraction caching in discovery controller, and precomputed service name building to reduce string operations.
-                 * **Service Groups**: Added support for service groups to allow hierarchical service organization. Services can be registered with a `group` in metadata, and discovery can filter by `group` query parameter.
+                  * **Service Groups**: Added support for service groups to allow hierarchical service organization. Services can be registered with a `group` in metadata, and discovery can filter by `group` query parameter.
+                  * **Service Dependency Graph**: Added `/api/maxine/serviceops/dependency/graph` endpoint to retrieve the service dependency graph, showing which services depend on others.
+                  * **Impact Analysis**: Added `/api/maxine/serviceops/impact/analysis` endpoint to analyze the impact of a service failure by listing all services that depend on it.
 
 
 ## Setup for development
