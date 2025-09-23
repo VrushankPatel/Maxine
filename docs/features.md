@@ -102,6 +102,12 @@
 - Register webhooks via `/api/maxine/serviceops/webhooks/add` with serviceName and URL.
 - Receive HTTP POST notifications to the webhook URL for register, deregister, and health status change events.
 - Webhooks enable external systems to react immediately to service availability changes without polling.
+### Kubernetes Integration
+- Maxine supports automatic service discovery from Kubernetes clusters for seamless integration with containerized deployments.
+- Enable with `KUBERNETES_ENABLED=true` to watch Kubernetes services and endpoints in real-time.
+- Automatically registers Kubernetes services as Maxine services, using service namespacing and endpoint IPs/ports.
+- Supports dynamic updates when services are added, modified, or removed in the cluster.
+- Enables Maxine to act as a service registry for both traditional and Kubernetes-native microservices architectures.
 ### Service API Specs
 - Maxine supports storing and retrieving API specifications for registered services to enable better service contract management.
 - Set API specs (e.g., OpenAPI/Swagger JSON) via `/api/maxine/serviceops/api-spec/set` with serviceName, nodeName, and apiSpec payload.
