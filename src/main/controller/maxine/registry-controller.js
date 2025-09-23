@@ -8,6 +8,7 @@ const { discoveryService } = require('../../service/discovery-service');
 const httpProxy = require('http-proxy');
 const http = require('http');
 const https = require('https');
+const pLimit = require('p-limit');
 const proxy = httpProxy.createProxyServer({
     agent: new http.Agent({
         keepAlive: true,
@@ -76,7 +77,8 @@ const healthController = async (req, res) => {
         res.status(statusAndMsgs.SERVICE_UNAVAILABLE).json({ message: "Service not found" });
         return;
     }
-    const healthPromises = Object.entries(nodes).map(async ([nodeName, node]) => {
+    const limit = pLimit(50);
+    const healthPromises = Object.entries(nodes).map(([nodeName, node]) => limit(async () => {
         try {
             const healthUrl = node.address + (node.metadata.healthEndpoint || '/health');
             const url = new URL(healthUrl);
@@ -123,7 +125,7 @@ const healthController = async (req, res) => {
             }
             return [nodeName, { status: 'unhealthy', error: error.message }];
         }
-    });
+    } ) );
     const healthResultsArray = await Promise.all(healthPromises);
     const healthResults = Object.fromEntries(healthResultsArray);
     res.status(statusAndMsgs.STATUS_SUCCESS).json({ serviceName, namespace, health: healthResults });
@@ -145,7 +147,8 @@ const bulkHealthController = async (req, res) => {
             results[serviceName] = { error: "Service not found" };
             continue;
         }
-        const healthPromises = Object.entries(nodes).map(async ([nodeName, node]) => {
+        const limit = pLimit(50);
+        const healthPromises = Object.entries(nodes).map(([nodeName, node]) => limit(async () => {
             try {
                 const healthUrl = node.address + (node.metadata.healthEndpoint || '/health');
                 const url = new URL(healthUrl);
@@ -192,7 +195,7 @@ const bulkHealthController = async (req, res) => {
                 }
                 return [nodeName, { status: 'unhealthy', error: error.message }];
             }
-        });
+        } ) );
         const healthResultsArray = await Promise.all(healthPromises);
         const healthResults = Object.fromEntries(healthResultsArray);
         results[serviceName] = { namespace, health: healthResults };
@@ -592,6 +595,17 @@ const listServicesByGroupController = (req, res) => {
     res.status(statusAndMsgs.STATUS_SUCCESS).json({ services });
 }
 
+const updateMetadataController = (req, res) => {
+    const { serviceName, nodeName, metadata, namespace } = req.body;
+    if (!serviceName || !nodeName || !metadata) {
+        res.status(statusAndMsgs.STATUS_GENERIC_ERROR).json({ message: "Missing serviceName, nodeName, or metadata" });
+        return;
+    }
+    const fullServiceName = namespace ? `${namespace}:${serviceName}` : serviceName;
+    serviceRegistry.updateNodeMetadata(fullServiceName, nodeName, metadata);
+    res.status(statusAndMsgs.STATUS_SUCCESS).json({ message: "Metadata updated" });
+}
+
 module.exports = {
     registryController,
     serverListController,
@@ -616,5 +630,6 @@ module.exports = {
     impactAnalysisController,
     setApiSpecController,
     getApiSpecController,
-    listServicesByGroupController
+    listServicesByGroupController,
+    updateMetadataController
 };
