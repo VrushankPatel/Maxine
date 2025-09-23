@@ -166,14 +166,19 @@ const discoveryController = (req, res) => {
            return;
        }
 
-         req.fullServiceName = fullServiceName;
-         req.serviceNode = serviceNode;
-         const addressKey = `${serviceNode.address}:${endPoint || ''}`;
-         let addressToRedirect = addressCache.get(addressKey);
-         if (!addressToRedirect) {
-             addressToRedirect = endPoint ? `${serviceNode.address}${endPoint.startsWith('/') ? endPoint : `/${endPoint}`}` : serviceNode.address;
-             addressCache.set(addressKey, addressToRedirect);
-         }
+          req.fullServiceName = fullServiceName;
+          req.serviceNode = serviceNode;
+          let addressToRedirect;
+          if (isHighPerformanceMode) {
+              addressToRedirect = endPoint ? `${serviceNode.address}${endPoint.startsWith('/') ? endPoint : `/${endPoint}`}` : serviceNode.address;
+          } else {
+              const addressKey = `${serviceNode.address}:${endPoint || ''}`;
+              addressToRedirect = addressCache.get(addressKey);
+              if (!addressToRedirect) {
+                  addressToRedirect = endPoint ? `${serviceNode.address}${endPoint.startsWith('/') ? endPoint : `/${endPoint}`}` : serviceNode.address;
+                  addressCache.set(addressKey, addressToRedirect);
+              }
+          }
 
        // Check if client wants address only (no proxy)
         if (req.query.proxy === 'false' || (req.query.proxy === undefined && !config.defaultProxyMode)) {
