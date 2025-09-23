@@ -103,22 +103,22 @@ if (config.clusteringEnabled && cluster.isMaster) {
 
     // Initialize Kubernetes service if enabled
     if (config.kubernetesEnabled) {
-        const { k8sService } = require('./src/main/service/k8s-service');
+        require('./src/main/service/k8s-service');
     }
 
     // Initialize Consul service if enabled
     if (config.consulEnabled) {
-        const { consulService } = require('./src/main/service/consul-service');
+        require('./src/main/service/consul-service');
     }
 
     // Initialize Eureka service if enabled
     if (config.eurekaEnabled) {
-        const { eurekaService } = require('./src/main/service/eureka-service');
+        require('./src/main/service/eureka-service');
     }
 
     // Initialize mDNS service if enabled
     if (config.mdnsEnabled) {
-        const { mdnsService } = require('./src/main/service/mdns-service');
+        require('./src/main/service/mdns-service');
     }
 
     // WebSocket server for real-time changes (disabled in high performance mode)
