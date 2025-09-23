@@ -31,6 +31,7 @@ describe(`${fileName} : API /api/maxine/{registry urls}`, () => {
         }
         serviceRegistry.registry = new Map();
         serviceRegistry.healthyNodes = new Map();
+        serviceRegistry.healthyNodeSets = new Map();
         serviceRegistry.hashRegistry = new Map();
         serviceRegistry.healthyCache = new Map();
         serviceRegistry.expandedHealthy = new Map();

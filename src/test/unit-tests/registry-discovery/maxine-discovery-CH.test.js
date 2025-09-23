@@ -32,6 +32,7 @@ if (fs.existsSync(registryPath)) {
 serviceRegistry.registry = new Map();
 serviceRegistry.hashRegistry = new Map();
 serviceRegistry.healthyNodes = new Map();
+serviceRegistry.healthyNodeSets = new Map();
 serviceRegistry.healthyCache = new Map();
 serviceRegistry.expandedHealthy = new Map();
 serviceRegistry.maintenanceNodes = new Map();
