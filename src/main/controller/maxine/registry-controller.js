@@ -114,6 +114,7 @@ const healthController = async (req, res) => {
 const bulkHealthController = async (req, res) => {
     const serviceNames = req.body.serviceNames;
     const namespace = req.body.namespace || "default";
+    const version = req.body.version;
     if (!serviceNames || !Array.isArray(serviceNames)) {
         res.status(statusAndMsgs.STATUS_GENERIC_ERROR).json({ message: "Missing or invalid serviceNames array" });
         return;
