@@ -27,6 +27,10 @@ const isCircuitBreakerEnabled = config.circuitBreakerEnabled;
 const ipCache = new LRU({ max: 1000000, ttl: 900000 });
 // Cache for address building
 const addressCache = new LRU({ max: 1000000, ttl: 900000 });
+// Cache for cache key building
+const cacheKeyCache = new LRU({ max: 1000000, ttl: 900000 });
+// Cache for traffic splitting
+const trafficSplitCache = new LRU({ max: 100000, ttl: 300000 }); // 5 min TTL
 
 // Fast JSON stringify schemas
 const addressResponseSchema = {
@@ -107,21 +111,30 @@ const discoveryController = (req, res) => {
         let fullServiceName;
         if (!selectedVersion) {
             const baseServiceName = buildServiceNameCached(tenantId, namespace, region, zone, serviceName, '');
-            const split = serviceRegistry.getTrafficSplit(baseServiceName);
-            if (split) {
-                const versions = Object.keys(split);
-                const total = Object.values(split).reduce((a, b) => a + b, 0);
-                let rand = Math.random() * total;
-                for (const v of versions) {
-                    rand -= split[v];
-                    if (rand <= 0) {
-                        selectedVersion = v;
-                        fullServiceName = buildServiceNameCached(tenantId, namespace, region, zone, serviceName, v);
-                        break;
+            const splitKey = baseServiceName;
+            let splitResult = trafficSplitCache.get(splitKey);
+            if (splitResult === undefined) {
+                const split = serviceRegistry.getTrafficSplit(baseServiceName);
+                if (split) {
+                    const versions = Object.keys(split);
+                    const total = Object.values(split).reduce((a, b) => a + b, 0);
+                    let rand = Math.random() * total;
+                    for (const v of versions) {
+                        rand -= split[v];
+                        if (rand <= 0) {
+                            selectedVersion = v;
+                            fullServiceName = buildServiceNameCached(tenantId, namespace, region, zone, serviceName, v);
+                            break;
+                        }
                     }
+                } else {
+                    fullServiceName = baseServiceName;
                 }
+                // Cache the result: selectedVersion or null if no split
+                trafficSplitCache.set(splitKey, selectedVersion || null);
             } else {
-                fullServiceName = baseServiceName;
+                selectedVersion = splitResult;
+                fullServiceName = selectedVersion ? buildServiceNameCached(tenantId, namespace, region, zone, serviceName, selectedVersion) : baseServiceName;
             }
         } else {
             fullServiceName = buildServiceNameCached(tenantId, namespace, region, zone, serviceName, selectedVersion);
