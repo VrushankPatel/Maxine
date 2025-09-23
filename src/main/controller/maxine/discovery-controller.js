@@ -23,9 +23,9 @@ const hasMetrics = config.metricsEnabled;
 const isCircuitBreakerEnabled = config.circuitBreakerEnabled;
 
 // Cache for service name building
-const serviceNameCache = new LRU({ max: 10000, ttl: 900000 });
+const serviceNameCache = new LRU({ max: 100000, ttl: 900000 });
 // Cache for IP extraction
-const ipCache = new LRU({ max: 10000, ttl: 900000 });
+const ipCache = new LRU({ max: 100000, ttl: 900000 });
 
 // Fast JSON stringify schemas
 const addressResponseSchema = {
@@ -54,15 +54,15 @@ const https = require('https');
 const proxy = httpProxy.createProxyServer({
     agent: new http.Agent({
         keepAlive: true,
-        maxSockets: 10000, // Optimized for high throughput
-        maxFreeSockets: 5000,
+        maxSockets: 50000, // Optimized for high throughput
+        maxFreeSockets: 10000,
         timeout: config.proxyTimeout,
         keepAliveMsecs: 300000
     }),
     httpsAgent: new https.Agent({
         keepAlive: true,
-        maxSockets: 10000, // Optimized for high throughput
-        maxFreeSockets: 5000,
+        maxSockets: 50000, // Optimized for high throughput
+        maxFreeSockets: 10000,
         timeout: config.proxyTimeout,
         keepAliveMsecs: 300000
     }),
