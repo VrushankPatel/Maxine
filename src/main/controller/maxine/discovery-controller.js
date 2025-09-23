@@ -7,6 +7,14 @@ const httpProxy = require('http-proxy');
 const rateLimit = require('express-rate-limit');
 const config = require("../../config/config");
 
+// Per-service rate limiter
+const perServiceLimiter = rateLimit({
+    windowMs: config.rateLimitWindowMs,
+    max: config.rateLimitMax,
+    keyGenerator: (req) => `${req.query.serviceName || 'unknown'}:${req.ip}`,
+    message: 'Too many requests for this service from this IP, please try again later.'
+});
+
 // Cache config values for performance
 const isHighPerformanceMode = config.highPerformanceMode;
 const hasMetrics = config.metricsEnabled;
