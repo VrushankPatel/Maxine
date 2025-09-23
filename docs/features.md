@@ -109,6 +109,11 @@
 - Automatically registers Kubernetes services as Maxine services, using service namespacing and endpoint IPs/ports.
 - Supports dynamic updates when services are added, modified, or removed in the cluster.
 - Enables Maxine to act as a service registry for both traditional and Kubernetes-native microservices architectures.
+### mDNS Service Discovery
+- Maxine supports advertising registered services via multicast DNS (mDNS) for local network discovery.
+- Enable with `MDNS_ENABLED=true` to advertise services on the local network using Bonjour/ZeroConf protocols.
+- Services are advertised as `_<serviceName>._tcp.local` with SRV and TXT records containing service details.
+- Enables service discovery in local networks without requiring a central registry, useful for development and IoT environments.
 ### Service Instance Limits
 - Maxine supports configurable limits on the number of instances per service to prevent overload and ensure stability.
 - Set `MAX_INSTANCES_PER_SERVICE` environment variable to define the maximum allowed instances (default: 1000).

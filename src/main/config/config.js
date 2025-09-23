@@ -46,9 +46,10 @@ const config = {
        tracingEnabled: process.env.TRACING_ENABLED === 'true',
         http2Enabled: process.env.HTTP2_ENABLED !== 'false',
         maxInstancesPerService: process.env.MAX_INSTANCES_PER_SERVICE ? parseInt(process.env.MAX_INSTANCES_PER_SERVICE) : 1000,
-        consulEnabled: process.env.CONSUL_ENABLED === 'true',
-        consulHost: process.env.CONSUL_HOST || 'localhost',
-        consulPort: process.env.CONSUL_PORT ? parseInt(process.env.CONSUL_PORT) : 8500
+         consulEnabled: process.env.CONSUL_ENABLED === 'true',
+         consulHost: process.env.CONSUL_HOST || 'localhost',
+         consulPort: process.env.CONSUL_PORT ? parseInt(process.env.CONSUL_PORT) : 8500,
+         mdnsEnabled: process.env.MDNS_ENABLED === 'true'
 }
 
 Object.defineProperty(config, "profile", {

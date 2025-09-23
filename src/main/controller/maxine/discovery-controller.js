@@ -24,9 +24,9 @@ const hasMetrics = config.metricsEnabled;
 const isCircuitBreakerEnabled = config.circuitBreakerEnabled;
 
 // Cache for IP extraction
-const ipCache = new LRU({ max: 100000, ttl: 900000 });
+const ipCache = new LRU({ max: 1000000, ttl: 900000 });
 // Cache for address building
-const addressCache = new LRU({ max: 100000, ttl: 900000 });
+const addressCache = new LRU({ max: 1000000, ttl: 900000 });
 
 // Fast JSON stringify schemas
 const addressResponseSchema = {

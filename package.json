@@ -56,6 +56,7 @@
     "prom-client": "^15.1.3",
     "read-last-lines": "^1.8.0",
     "redis": "^4.6.7",
+    "multicast-dns": "^7.2.5",
     "spdy": "^4.0.2",
     "swagger-ui-express": "^4.3.0",
     "winston": "^3.5.1",
