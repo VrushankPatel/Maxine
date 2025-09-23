@@ -15,6 +15,7 @@
 - Discovery supports version-specific routing via the optional `version` query parameter, allowing clients to target specific service versions (defaults to any version if not specified).
 - Service aliases allow services to be discoverable under multiple names, providing flexibility in service naming and migration scenarios.
 - Service maintenance mode allows temporary exclusion of service nodes from discovery without deregistration, useful for planned maintenance or upgrades via `/api/maxine/serviceops/maintenance`.
+- Service metadata updates allow dynamic changes to service properties (weights, health endpoints, tags) without re-registration via `/api/maxine/serviceops/metadata/update`.
 - Traffic splitting for versions allows services to define `trafficSplit` in metadata to route percentages of requests to different versions, enabling canary deployments and gradual rollouts.
 - If discovery finds the single service node with that serviceName, then It'll simply redirect that request to that service's URL.
 - If there are multiple nodes of the same service in the registry, then discovery has to distribute the traffic across all of them, that's where Maxine's load balancer comes to rescue.
@@ -202,6 +203,7 @@
   - Healthy nodes cache eliminates filtering overhead, ensuring sub-millisecond service discovery lookups.
   - Debounced asynchronous file saves to minimize I/O blocking during high-frequency registrations with persistence across restarts.
   - Background parallel health checks with configurable interval (default 60 seconds) and concurrency (default 50) using native HTTP modules for reduced overhead and maintain service status without request latency impact.
+- Added concurrency limits (50) to health check endpoints in controllers to prevent overwhelming services with many instances.
   - Aggressive connection pooling for HTTP proxying (10,000 max sockets, keep-alive) to handle thousands of concurrent requests.
   - Circuit breaker with failure counting automatically isolates unhealthy nodes while allowing recovery.
   - Configurable API rate limiting (default 10,000 requests per 15 minutes per IP) prevents abuse and ensures stability under load.
