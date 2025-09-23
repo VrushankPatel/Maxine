@@ -1,5 +1,7 @@
 const { constants } = require("../util/constants/constants");
 
+const highPerfDefault = process.env.HIGH_PERFORMANCE_MODE === 'true' || process.env.HIGH_PERFORMANCE_MODE === undefined;
+
 const config = {
     logAsync: process.env.LOG_ASYNC === 'false' ? false : true,
     heartBeatTimeout: process.env.HEARTBEAT_TIMEOUT ? parseInt(process.env.HEARTBEAT_TIMEOUT) : 5,
@@ -25,8 +27,8 @@ const config = {
      prometheusEnabled: process.env.PROMETHEUS_ENABLED === 'true' || false,
      prometheusPort: process.env.PROMETHEUS_PORT ? parseInt(process.env.PROMETHEUS_PORT) : 9090,
       metricsEnabled: process.env.METRICS_ENABLED === 'true',
-      highPerformanceMode: process.env.HIGH_PERFORMANCE_MODE === 'true' || process.env.HIGH_PERFORMANCE_MODE === undefined,
-      persistenceEnabled: process.env.PERSISTENCE_ENABLED !== 'false',
+      highPerformanceMode: highPerfDefault,
+      persistenceEnabled: process.env.PERSISTENCE_ENABLED !== 'false' && !highPerfDefault,
      rateLimitMax: process.env.RATE_LIMIT_MAX ? parseInt(process.env.RATE_LIMIT_MAX) : 10000,
      rateLimitWindowMs: process.env.RATE_LIMIT_WINDOW_MS ? parseInt(process.env.RATE_LIMIT_WINDOW_MS) : 900000, // 15 minutes
        healthCheckInterval: process.env.HEALTH_CHECK_INTERVAL ? parseInt(process.env.HEALTH_CHECK_INTERVAL) : 60000,
