@@ -81,6 +81,7 @@ const discoveryController = (req, res) => {
     const zone = req.query.zone || "default";
     const tenantId = req.query.tenantId || "default";
     const group = req.query.group;
+    const tags = req.query.tags ? req.query.tags.split(',') : undefined;
     const deployment = req.query.deployment;
     const endPoint = req.query.endPoint || "";
     const reqId = req.ip || 'unknown';
@@ -126,7 +127,7 @@ const discoveryController = (req, res) => {
             fullServiceName = buildServiceNameCached(tenantId, namespace, region, zone, serviceName, selectedVersion);
         }
 
-    const serviceNode = discoveryService.getNode(fullServiceName, ip, group, deployment);
+    const serviceNode = discoveryService.getNode(fullServiceName, ip, group, tags, deployment);
 
        // no service node is there so, service unavailable is our error response.
         if(!serviceNode){

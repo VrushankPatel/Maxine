@@ -4,6 +4,37 @@ const { registryService } = require('../../service/registry-service');
 const { serviceRegistry } = require('../../entity/service-registry');
 const { metricsService } = require('../../service/metrics-service');
 const { discoveryService } = require('../../service/discovery-service');
+const config = require('../../config/config');
+
+const statsController = (req, res) => {
+    const services = serviceRegistry.getRegServers();
+    const stats = {
+        totalServices: Object.keys(services).length,
+        totalNodes: 0,
+        healthyNodes: 0,
+        unhealthyNodes: 0,
+        services: {}
+    };
+    for (const [serviceName, service] of Object.entries(services)) {
+        const nodes = service.nodes;
+        const nodeCount = Object.keys(nodes).length;
+        stats.totalNodes += nodeCount;
+        let healthy = 0;
+        let unhealthy = 0;
+        for (const node of Object.values(nodes)) {
+            if (node.healthy) healthy++;
+            else unhealthy++;
+        }
+        stats.healthyNodes += healthy;
+        stats.unhealthyNodes += unhealthy;
+        stats.services[serviceName] = {
+            totalNodes: nodeCount,
+            healthyNodes: healthy,
+            unhealthyNodes: unhealthy
+        };
+    }
+    res.json(stats);
+};
 
 const httpProxy = require('http-proxy');
 const http = require('http');
@@ -226,7 +257,7 @@ const filteredDiscoveryController = (req, res) => {
 
     const fullServiceName = `${namespace}:${serviceName}`;
     const nodes = serviceRegistry.getNodes(fullServiceName);
-    const healthyNodeNames = serviceRegistry.getHealthyNodes(fullServiceName);
+    const healthyNodeNames = serviceRegistry.getHealthyNodes(fullServiceName, undefined, tags);
     if (healthyNodeNames.length === 0) {
         const latency = Date.now() - startTime;
         metricsService.recordRequest(serviceName, false, latency);
@@ -673,5 +704,6 @@ module.exports = {
     getApiSpecController,
     listServicesByGroupController,
     updateMetadataController,
-    databaseDiscoveryController
+    databaseDiscoveryController,
+    statsController
 };

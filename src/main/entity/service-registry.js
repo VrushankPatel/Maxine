@@ -556,7 +556,6 @@ class ServiceRegistry{
             set.add(nodeName);
             map.set(nodeName, node);
             arr.push(node);
-            arr.sort((a, b) => (b.metadata.priority || 0) - (a.metadata.priority || 0));
               this.addToHashRegistry(serviceName, nodeName);
              // Add to available if not in maintenance or draining
              if (!this.isInMaintenance(serviceName, nodeName) && !this.isInDraining(serviceName, nodeName)) {
