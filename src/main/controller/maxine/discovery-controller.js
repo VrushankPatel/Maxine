@@ -120,9 +120,9 @@ const discoveryController = (req, res) => {
            return;
        }
 
-       req.fullServiceName = fullServiceName;
-       req.serviceNode = serviceNode;
-    const addressToRedirect = serviceNode.address + (endPoint.length > 0 ? (endPoint[0] == "/" ? endPoint : `/${endPoint}`) : "");
+        req.fullServiceName = fullServiceName;
+        req.serviceNode = serviceNode;
+        const addressToRedirect = endPoint ? (endPoint.startsWith('/') ? serviceNode.address + endPoint : serviceNode.address + '/' + endPoint) : serviceNode.address;
 
       // Check if client wants address only (no proxy)
       if (req.query.proxy === 'false') {
