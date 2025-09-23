@@ -53,8 +53,8 @@ As we can see, maxine SRD is working as a true reverse proxy for each servers, a
 * That's the issue that Maxine solves. No matter where (on which port) the service is running, as long as the MAXINE-CLIENT is added to it, it'll always be discoverable to the SRD. This centralized service store and retrieval architecture make inter-service communication more reliable and robust.
 * Also, based on the service's performance diagnostics (If it's down or not working properly), we can stop its registration to the SRD. The client provides functions that can stop sending the heartbeat to the SRD so that the service can be deregistered.
 * Also, If any of the services are hosted on more powerful hardware, then we can make SRD distribute more traffic on that service's nodes than the others. All we have to do is to provide weight property to that service's client. the weight means how much power that service has compared to others. Based on weight property, the SRD will register that service will replications, and traffic will be distributed accordingly.
-* Maxine now includes health check capabilities to monitor service availability and persistence to survive restarts.
-* Maxine is optimized for high performance with in-memory LRU caching (configurable TTL), debounced file saves, parallel health checks (every 60 seconds), connection pooling, circuit breaker for unhealthy nodes, and efficient load balancing algorithms including Round Robin, Weighted Round Robin, Least Response Time, Consistent Hashing, Rendezvous Hashing, Least Connections, Least Loaded, and Random.
+ * Maxine now includes health check capabilities to monitor service availability and persistence to survive restarts.
+ * Maxine is optimized for high performance with in-memory LRU caching (1M entries, configurable TTL), debounced file saves, parallel health checks (every 30 seconds with 2000 concurrency), connection pooling, circuit breaker for unhealthy nodes, and efficient load balancing algorithms including Round Robin, Weighted Round Robin, Least Response Time, Consistent Hashing, Rendezvous Hashing, Least Connections, Least Loaded, and Random. High performance mode disables response time tracking and connection counting for maximum throughput.
 * Security is enhanced with JWT authentication for all registry operations.
 * Comprehensive metrics collection provides insights into request counts, latencies, and error rates.
 * Clustering support for multi-core CPU utilization.
@@ -88,12 +88,13 @@ As we can see, maxine SRD is working as a true reverse proxy for each servers, a
        * **Key-Value Store**: Added key-value store functionality for storing and retrieving arbitrary data. Use the `/api/maxine/serviceops/kv/*` endpoints to set, get, and delete key-value pairs.
        * **Client-side Proxy Mode**: Discovery endpoint supports `proxy=false` query parameter to return service address instead of proxying, allowing clients to handle proxying for better performance and flexibility.
        * **Self-Preservation Mode**: Automatically enters self-preservation mode when more than 85% of services fail health checks, preventing cascade failures by not evicting healthy services.
-         * **Service Priority Support**: Services can specify priority in metadata, and load balancing strategies prefer higher priority nodes for better resource allocation.
-         * **Advanced Health Checks**: Support for TCP health checks in addition to HTTP. Set `healthType: 'tcp'` in service metadata for TCP checks.
-         * **Audit Logging**: All registry operations (register, deregister) are logged to `logs/audit.log` for compliance and monitoring.
-         * **DNS SRV Discovery**: New `/api/maxine/serviceops/discover/dns` endpoint returns DNS SRV-like records for services, useful for DNS-based service discovery.
-         * **Traffic Splitting for Versions**: Services can specify `trafficSplit` in metadata to route requests to different versions based on percentages, enabling canary deployments and gradual rollouts.
-         * **CLI Tool**: Added a command-line interface at `bin/cli.js` for managing services (register, deregister, list, health, discover).
+ * **Service Priority Support**: Services can specify priority in metadata, and load balancing strategies prefer higher priority nodes for better resource allocation.
+          * **Advanced Health Checks**: Support for TCP health checks in addition to HTTP. Set `healthType: 'tcp'` in service metadata for TCP checks.
+          * **Audit Logging**: All registry operations (register, deregister) are logged to `logs/audit.log` for compliance and monitoring.
+          * **DNS SRV Discovery**: New `/api/maxine/serviceops/discover/dns` endpoint returns DNS SRV-like records for services, useful for DNS-based service discovery.
+          * **Traffic Splitting for Versions**: Services can specify `trafficSplit` in metadata to route requests to different versions based on percentages, enabling canary deployments and gradual rollouts.
+          * **CLI Tool**: Added a command-line interface at `bin/cli.js` for managing services (register, deregister, list, health, discover).
+          * **Lightning-Fast Performance Mode**: High performance mode now skips response time recording and active connection tracking for maximum throughput under heavy load.
 
 ## Setup for development
 
@@ -133,8 +134,8 @@ Maxine can be configured via environment variables:
  - `HIGH_PERFORMANCE_MODE`: Disable logging for discovery endpoints to improve performance (default: true)
  - `RATE_LIMIT_MAX`: Maximum requests per IP per window (default: 10000)
  - `RATE_LIMIT_WINDOW_MS`: Rate limit window in milliseconds (default: 900000)
- - `HEALTH_CHECK_INTERVAL`: Health check interval in milliseconds (default: 60000)
- - `HEALTH_CHECK_CONCURRENCY`: Maximum concurrent health checks (default: 1000)
+  - `HEALTH_CHECK_INTERVAL`: Health check interval in milliseconds (default: 30000)
+  - `HEALTH_CHECK_CONCURRENCY`: Maximum concurrent health checks (default: 2000)
 
 ### Run maxine on production.
 
