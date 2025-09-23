@@ -125,14 +125,14 @@ const discoveryController = (req, res) => {
         const addressToRedirect = endPoint ? (endPoint.startsWith('/') ? serviceNode.address + endPoint : serviceNode.address + '/' + endPoint) : serviceNode.address;
 
       // Check if client wants address only (no proxy)
-      if (req.query.proxy === 'false') {
-          if (hasMetrics && !isHighPerformanceMode) {
-              const latency = Date.now() - startTime;
-              metricsService.recordRequest(serviceName, true, latency);
-          }
-          res.json({ address: addressToRedirect, nodeName: serviceNode.nodeName });
-          return;
-      }
+       if (req.query.proxy === 'false' || (req.query.proxy === undefined && !config.defaultProxyMode)) {
+           if (hasMetrics && !isHighPerformanceMode) {
+               const latency = Date.now() - startTime;
+               metricsService.recordRequest(serviceName, true, latency);
+           }
+           res.json({ address: addressToRedirect, nodeName: serviceNode.nodeName });
+           return;
+       }
 
       // Increment active connections
       if (!isHighPerformanceMode) {
