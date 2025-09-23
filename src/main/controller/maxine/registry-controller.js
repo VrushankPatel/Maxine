@@ -39,6 +39,7 @@ const registryController = (req, res) => {
     const serviceResponse = registryService.registryService(req.body);
     if(!serviceResponse){
         res.status(statusAndMsgs.STATUS_GENERIC_ERROR).json({"message" : statusAndMsgs.MSG_INVALID_SERVICE_DATA});
+        return;
     }
     info(`Registered service ${serviceResponse.serviceName} with node ${serviceResponse.nodeName} at ${serviceResponse.address}`);
     res.status(statusAndMsgs.STATUS_SUCCESS).json(serviceResponse);
@@ -643,6 +644,8 @@ const changesSSEController = (req, res) => {
     });
 }
 
+const databaseDiscoveryController = require('./database-discovery-controller');
+
 module.exports = {
     registryController,
     serverListController,
@@ -669,5 +672,6 @@ module.exports = {
     setApiSpecController,
     getApiSpecController,
     listServicesByGroupController,
-    updateMetadataController
+    updateMetadataController,
+    databaseDiscoveryController
 };
