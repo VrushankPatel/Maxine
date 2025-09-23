@@ -40,7 +40,7 @@ const registryController = (req, res) => {
     if(!serviceResponse){
         res.status(statusAndMsgs.STATUS_GENERIC_ERROR).json({"message" : statusAndMsgs.MSG_INVALID_SERVICE_DATA});
     }
-    info(serviceResponse);
+    info(`Registered service ${serviceResponse.serviceName} with node ${serviceResponse.nodeName} at ${serviceResponse.address}`);
     res.status(statusAndMsgs.STATUS_SUCCESS).json(serviceResponse);
 }
 
