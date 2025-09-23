@@ -43,7 +43,8 @@
 ### Service Changes Watch API
 - Maxine provides a watch API for real-time monitoring of registry changes.
 - The changes endpoint `/api/maxine/serviceops/changes?since=<timestamp>` returns all registry events (register, deregister, health status changes) that occurred after the specified timestamp.
-- This enables clients to poll for updates and maintain synchronized views of the service registry without full refreshes.
+- The Server-Sent Events endpoint `/api/maxine/serviceops/changes/sse?since=<timestamp>` provides real-time streaming of registry changes using SSE, allowing clients to receive updates instantly without polling.
+- This enables clients to poll for updates or subscribe for real-time notifications to maintain synchronized views of the service registry.
 - Changes are tracked for the last 1000 events to balance memory usage with historical visibility.
 
 ### Service Dependencies

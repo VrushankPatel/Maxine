@@ -1,7 +1,7 @@
 const RouteBuilder = require('../builders/route-builder');
 const bodyParser = require('body-parser');
 const rateLimit = require('express-rate-limit');
-const { serverListController, registryController, deregisterController, healthController, bulkHealthController, pushHealthController, healthHistoryController, metricsController, prometheusMetricsController, cacheStatsController, filteredDiscoveryController, discoveryInfoController, changesController, bulkRegisterController, bulkDeregisterController, setMaintenanceController, setDrainingController, backupController, restoreController, dependencyGraphController, impactAnalysisController, setApiSpecController, getApiSpecController, listServicesByGroupController, updateMetadataController } = require('../controller/maxine/registry-controller');
+const { serverListController, registryController, deregisterController, healthController, bulkHealthController, pushHealthController, healthHistoryController, metricsController, prometheusMetricsController, cacheStatsController, filteredDiscoveryController, discoveryInfoController, changesController, changesSSEController, bulkRegisterController, bulkDeregisterController, setMaintenanceController, setDrainingController, backupController, restoreController, dependencyGraphController, impactAnalysisController, setApiSpecController, getApiSpecController, listServicesByGroupController, updateMetadataController } = require('../controller/maxine/registry-controller');
 const batchDiscoveryController = require('../controller/maxine/batch-discovery-controller');
 const envoyConfigController = require('../controller/maxine/envoy-controller');
 const { setConfig, getConfig, getAllConfig, deleteConfig } = require('../controller/config-control/config-controller');
@@ -62,9 +62,10 @@ let maxineApiRoutes = RouteBuilder.createNewRoute()
                                     .get("health/history", authenticationController, limiter, healthHistoryController)
                                      .get("metrics", authenticationController, limiter, metricsController)
                                      .get("metrics/prometheus", authenticationController, limiter, prometheusMetricsController)
-                                     .get("cache/stats", authenticationController, limiter, cacheStatsController)
-                                     .get("changes", authenticationController, limiter, changesController)
-                                     .get("envoy/config", authenticationController, limiter, envoyConfigController)
+                                      .get("cache/stats", authenticationController, limiter, cacheStatsController)
+                                      .get("changes", authenticationController, limiter, changesController)
+                                      .get("changes/sse", authenticationController, limiter, changesSSEController)
+                                      .get("envoy/config", authenticationController, limiter, envoyConfigController)
                                      .post("webhooks/add", authenticationController, requireRole('admin'), limiter, bodyParser.json(), addWebhook)
                                      .delete("webhooks/remove", authenticationController, requireRole('admin'), limiter, bodyParser.json(), removeWebhook)
                                     .get("webhooks", authenticationController, limiter, getWebhooks)
