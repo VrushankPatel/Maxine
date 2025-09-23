@@ -119,7 +119,7 @@
 
 ### CLI Tool
 - Maxine provides a command-line interface for managing services without direct API calls.
-- Available commands include register, deregister, list, health, and discover.
+- Available commands include register, deregister, list, health, discover, and metrics.
 - Use `node bin/cli.js <command> [options]` to interact with the registry programmatically or for automation.
 
 ### Asynchronous logging
