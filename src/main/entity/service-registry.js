@@ -370,6 +370,8 @@ class ServiceRegistry{
 
     // Maintenance mode management
     setMaintenanceMode = (serviceName, nodeName, inMaintenance) => {
+        const service = this.registry.get(serviceName);
+        const node = service && service.nodes[nodeName] ? service.nodes[nodeName] : null;
         if (inMaintenance) {
             if (!this.maintenanceNodes.has(serviceName)) {
                 this.maintenanceNodes.set(serviceName, new Set());
@@ -380,9 +382,9 @@ class ServiceRegistry{
                 this.availableNodes.get(serviceName).delete(nodeName);
             }
             // Remove from group index
-            if (this.groupIndex.has(serviceName)) {
+            if (this.groupIndex.has(serviceName) && node && node.metadata.group) {
                 const groupMap = this.groupIndex.get(serviceName);
-                if (node.metadata.group && groupMap.has(node.metadata.group)) {
+                if (groupMap.has(node.metadata.group)) {
                     groupMap.get(node.metadata.group).delete(nodeName);
                     if (groupMap.get(node.metadata.group).size === 0) groupMap.delete(node.metadata.group);
                 }
@@ -394,21 +396,20 @@ class ServiceRegistry{
                 if (this.maintenanceNodes.get(serviceName).size === 0) {
                     this.maintenanceNodes.delete(serviceName);
                 }
-                 // Add to available if healthy and not draining
-                 if (this.healthyNodeSets.has(serviceName) && this.healthyNodeSets.get(serviceName).has(nodeName) && !this.isInDraining(serviceName, nodeName)) {
-                     if (!this.availableNodes.has(serviceName)) {
-                         this.availableNodes.set(serviceName, new Set());
-                     }
-                     this.availableNodes.get(serviceName).add(nodeName);
-                     // Add to group index
-                     const node = this.healthyNodesMap.get(serviceName).get(nodeName);
-                     if (node && node.metadata.group) {
-                         if (!this.groupIndex.has(serviceName)) this.groupIndex.set(serviceName, new Map());
-                         const groupMap = this.groupIndex.get(serviceName);
-                         if (!groupMap.has(node.metadata.group)) groupMap.set(node.metadata.group, new Set());
-                         groupMap.get(node.metadata.group).add(nodeName);
-                     }
-                 }
+                  // Add to available if healthy and not draining
+                  if (this.healthyNodeSets.has(serviceName) && this.healthyNodeSets.get(serviceName).has(nodeName) && !this.isInDraining(serviceName, nodeName)) {
+                      if (!this.availableNodes.has(serviceName)) {
+                          this.availableNodes.set(serviceName, new Set());
+                      }
+                      this.availableNodes.get(serviceName).add(nodeName);
+                      // Add to group index
+                      if (node && node.metadata.group) {
+                          if (!this.groupIndex.has(serviceName)) this.groupIndex.set(serviceName, new Map());
+                          const groupMap = this.groupIndex.get(serviceName);
+                          if (!groupMap.has(node.metadata.group)) groupMap.set(node.metadata.group, new Set());
+                          groupMap.get(node.metadata.group).add(nodeName);
+                      }
+                  }
             }
         }
         // Invalidate all cache entries for this service (including groups)
@@ -425,6 +426,8 @@ class ServiceRegistry{
     }
 
     setDrainingMode = (serviceName, nodeName, draining) => {
+        const service = this.registry.get(serviceName);
+        const node = service && service.nodes[nodeName] ? service.nodes[nodeName] : null;
         if (draining) {
             if (!this.drainingNodes.has(serviceName)) {
                 this.drainingNodes.set(serviceName, new Set());
@@ -435,9 +438,9 @@ class ServiceRegistry{
                 this.availableNodes.get(serviceName).delete(nodeName);
             }
             // Remove from group index
-            if (this.groupIndex.has(serviceName)) {
+            if (this.groupIndex.has(serviceName) && node && node.metadata.group) {
                 const groupMap = this.groupIndex.get(serviceName);
-                if (node.metadata.group && groupMap.has(node.metadata.group)) {
+                if (groupMap.has(node.metadata.group)) {
                     groupMap.get(node.metadata.group).delete(nodeName);
                     if (groupMap.get(node.metadata.group).size === 0) groupMap.delete(node.metadata.group);
                 }
@@ -449,21 +452,20 @@ class ServiceRegistry{
                 if (this.drainingNodes.get(serviceName).size === 0) {
                     this.drainingNodes.delete(serviceName);
                 }
-                 // Add to available if healthy and not maintenance
-                 if (this.healthyNodeSets.has(serviceName) && this.healthyNodeSets.get(serviceName).has(nodeName) && !this.isInMaintenance(serviceName, nodeName)) {
-                     if (!this.availableNodes.has(serviceName)) {
-                         this.availableNodes.set(serviceName, new Set());
-                     }
-                     this.availableNodes.get(serviceName).add(nodeName);
-                     // Add to group index
-                     const node = this.healthyNodesMap.get(serviceName).get(nodeName);
-                     if (node && node.metadata.group) {
-                         if (!this.groupIndex.has(serviceName)) this.groupIndex.set(serviceName, new Map());
-                         const groupMap = this.groupIndex.get(serviceName);
-                         if (!groupMap.has(node.metadata.group)) groupMap.set(node.metadata.group, new Set());
-                         groupMap.get(node.metadata.group).add(nodeName);
-                     }
-                 }
+                  // Add to available if healthy and not maintenance
+                  if (this.healthyNodeSets.has(serviceName) && this.healthyNodeSets.get(serviceName).has(nodeName) && !this.isInMaintenance(serviceName, nodeName)) {
+                      if (!this.availableNodes.has(serviceName)) {
+                          this.availableNodes.set(serviceName, new Set());
+                      }
+                      this.availableNodes.get(serviceName).add(nodeName);
+                      // Add to group index
+                      if (node && node.metadata.group) {
+                          if (!this.groupIndex.has(serviceName)) this.groupIndex.set(serviceName, new Map());
+                          const groupMap = this.groupIndex.get(serviceName);
+                          if (!groupMap.has(node.metadata.group)) groupMap.set(node.metadata.group, new Set());
+                          groupMap.get(node.metadata.group).add(nodeName);
+                      }
+                  }
             }
         }
         // Invalidate cache

@@ -46,7 +46,7 @@ class DiscoveryService{
     serviceKeys = new Map(); // Map serviceName to set of cache keys
     cacheHits = 0;
     cacheMisses = 0;
-    aliasCache = new LRU({ max: config.aliasCacheMax, ttl: 900000 }); // Cache for alias resolutions, 15 min TTL
+    aliasCache = new LRU({ max: Math.max(config.aliasCacheMax, 1000000), ttl: 900000 }); // Cache for alias resolutions, 15 min TTL, at least 1M
 
     /**
      * Get fullServiceName and IP and based on the serverSelectionStrategy we've selected, It'll call that discoveryService and retrieve the node from it. (Ex. RoundRobin, Rendezvous, ConsistentHashing).

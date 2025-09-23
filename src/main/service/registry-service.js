@@ -7,6 +7,7 @@ const path = require('path');
 class RegistryService{
 
     auditLog = (action, details) => {
+        if (config.highPerformanceMode) return; // Skip audit logging in high performance mode
         const logEntry = {
             timestamp: new Date().toISOString(),
             action,

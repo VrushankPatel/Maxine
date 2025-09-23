@@ -123,12 +123,13 @@ As we can see, maxine SRD provides service addresses for direct client connectio
                    * **Service Tag Filtering**: Discovery requests can now filter services by tags using the `tags` query parameter. Services must have all specified tags in their metadata to be discoverable.
                    * **Service Metadata Updates**: Added `/api/maxine/serviceops/metadata/update` endpoint to update service instance metadata without re-registration, allowing dynamic changes to weights, health endpoints, and other properties.
                      * **Kubernetes Integration**: Added support for automatic service discovery from Kubernetes clusters. Enable with `KUBERNETES_ENABLED=true` to watch K8s services and endpoints, registering them in Maxine for seamless integration with containerized deployments.
-                      * **Service Instance Limits**: Added `MAX_INSTANCES_PER_SERVICE` environment variable to limit the number of instances per service (default 1000), preventing overload and improving stability.
-                      * **Service Health Score**: Implemented health score calculation for service nodes based on failure rate and average response time, enabling better load balancing decisions and service quality monitoring.
-                      * **Web Dashboard**: Added a simple web dashboard at `/dashboard` for monitoring registered services, nodes, and health status.
-                      * **Database Discovery**: Added `/api/maxine/serviceops/discover/database` endpoint to discover database services. Services registered with `metadata.type='database'` can be discovered with connection details including host, port, database name, credentials, and type.
-                      * **Multi-Tenancy Support**: Added tenantId parameter to service registration and discovery, allowing services to be isolated by tenant for multi-tenant deployments.
-                      * **Blue-Green Deployment Support**: Added deployment metadata field and deployment query parameter for discovery, enabling blue-green and canary deployment strategies by routing traffic to specific deployment versions.
+                       * **Service Instance Limits**: Added `MAX_INSTANCES_PER_SERVICE` environment variable to limit the number of instances per service (default 1000), preventing overload and improving stability.
+                       * **Service Health Score**: Implemented health score calculation for service nodes based on failure rate and average response time, enabling better load balancing decisions and service quality monitoring.
+                       * **Web Dashboard**: Added a simple web dashboard at `/dashboard` for monitoring registered services, nodes, and health status.
+                       * **Database Discovery**: Added `/api/maxine/serviceops/discover/database` endpoint to discover database services. Services registered with `metadata.type='database'` can be discovered with connection details including host, port, database name, credentials, and type.
+                       * **Multi-Tenancy Support**: Added tenantId parameter to service registration and discovery, allowing services to be isolated by tenant for multi-tenant deployments.
+                       * **Blue-Green Deployment Support**: Added deployment metadata field and deployment query parameter for discovery, enabling blue-green and canary deployment strategies by routing traffic to specific deployment versions.
+                       * **mDNS Service Discovery**: Added support for advertising services via multicast DNS (mDNS) for local network discovery. Enable with `MDNS_ENABLED=true` to allow clients on the same network to discover services without a central registry query.
 
 
 ## Setup for development
@@ -189,9 +190,10 @@ Maxine can be configured via environment variables:
      - `KUBERNETES_ENABLED`: Enable Kubernetes service discovery integration (default: false)
     - `PERSISTENCE_ENABLED`: Enable persistence to file/Redis/etcd (default: true, set to false for in-memory only mode)
      - `MAX_INSTANCES_PER_SERVICE`: Maximum number of instances allowed per service (default: 1000)
-     - `CONSUL_ENABLED`: Enable Consul service import (default: false)
-     - `CONSUL_HOST`: Consul host (default: localhost)
-     - `CONSUL_PORT`: Consul port (default: 8500)
+      - `CONSUL_ENABLED`: Enable Consul service import (default: false)
+      - `CONSUL_HOST`: Consul host (default: localhost)
+      - `CONSUL_PORT`: Consul port (default: 8500)
+      - `MDNS_ENABLED`: Enable mDNS service advertising (default: false)
 
 ### Run maxine on production.
 

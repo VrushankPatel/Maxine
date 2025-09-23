@@ -111,6 +111,11 @@ if (config.clusteringEnabled && cluster.isMaster) {
         const { consulService } = require('./src/main/service/consul-service');
     }
 
+    // Initialize mDNS service if enabled
+    if (config.mdnsEnabled) {
+        const { mdnsService } = require('./src/main/service/mdns-service');
+    }
+
     // WebSocket server for real-time changes (disabled in high performance mode)
     if (!config.highPerformanceMode) {
         const wss = new WebSocket.Server({ server });
