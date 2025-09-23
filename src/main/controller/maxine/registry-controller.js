@@ -15,14 +15,14 @@ const proxy = httpProxy.createProxyServer({
         maxSockets: 10000,
         maxFreeSockets: 5000,
         timeout: 60000,
-        keepAliveMsecs: 60000
+        keepAliveMsecs: 300000
     }),
     httpsAgent: new https.Agent({
         keepAlive: true,
         maxSockets: 10000,
         maxFreeSockets: 5000,
         timeout: 60000,
-        keepAliveMsecs: 60000
+        keepAliveMsecs: 300000
     }),
     proxyTimeout: 60000,
     timeout: 60000

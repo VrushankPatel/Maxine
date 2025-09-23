@@ -26,7 +26,7 @@ class DiscoveryService{
     rand = new RandomDiscovery();
     p2d = new PowerOfTwoDiscovery();
     ad = new AdaptiveDiscovery();
-    cache = new LRU({ max: 10000000, ttl: 600000 });
+    cache = new LRU({ max: 1000000, ttl: config.discoveryCacheTTL });
     serviceKeys = new Map(); // Map serviceName to set of cache keys
 
     /**
