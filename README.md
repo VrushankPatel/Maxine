@@ -102,7 +102,7 @@ As we can see, maxine SRD provides service addresses for direct client connectio
                 * **Backup and Restore**: Added `/api/maxine/serviceops/backup` endpoint to export the entire registry state as JSON, and `/api/maxine/serviceops/restore` to import and restore from a backup. Useful for disaster recovery and migration. CLI commands `backup` and `restore` are also available.
                 * **etcd Persistence**: Added etcd support for distributed key-value storage of the registry, providing high availability and consistency. Enable with `ETCD_ENABLED=true` and configure `ETCD_HOST` and `ETCD_PORT`.
                 * **Kafka Event Streaming**: Added Kafka integration for real-time event streaming of registry changes (register, deregister, health updates). Enable with `KAFKA_ENABLED=true` and configure `KAFKA_BROKERS`.
-                 * **Performance Optimizations**: Reduced default health check concurrency from 2000 to 200 to prevent overload, increased discovery cache TTL to 10 minutes, cached config checks and alias resolutions for faster lookups, enabled HTTP/2 by default for improved performance over HTTP/1.1, optimized IP extraction caching in discovery controller, and precomputed service name building to reduce string operations.
+                   * **Performance Optimizations**: Reduced default health check concurrency from 2000 to 200 to prevent overload, increased discovery cache TTL to 10 minutes, cached config checks and alias resolutions for faster lookups, enabled HTTP/2 by default for improved performance over HTTP/1.1, optimized IP extraction caching in discovery controller, and precomputed service name building to reduce string operations. Further optimized health check concurrency to 50 and interval to 60 seconds, reduced proxy connection pool from 50000 to 10000 maxSockets for better resource management, added service name caching in discovery controller to avoid repeated string concatenations.
                   * **Service Groups**: Added support for service groups to allow hierarchical service organization. Services can be registered with a `group` in metadata, and discovery can filter by `group` query parameter.
                   * **Service Dependency Graph**: Added `/api/maxine/serviceops/dependency/graph` endpoint to retrieve the service dependency graph, showing which services depend on others.
                   * **Impact Analysis**: Added `/api/maxine/serviceops/impact/analysis` endpoint to analyze the impact of a service failure by listing all services that depend on it.
@@ -147,8 +147,8 @@ Maxine can be configured via environment variables:
   - `HIGH_PERFORMANCE_MODE`: Disable logging for discovery endpoints to improve performance (default: true)
   - `RATE_LIMIT_MAX`: Maximum requests per IP per window (default: 10000)
   - `RATE_LIMIT_WINDOW_MS`: Rate limit window in milliseconds (default: 900000)
-   - `HEALTH_CHECK_INTERVAL`: Health check interval in milliseconds (default: 30000)
-      - `HEALTH_CHECK_CONCURRENCY`: Maximum concurrent health checks (default: 100)
+   - `HEALTH_CHECK_INTERVAL`: Health check interval in milliseconds (default: 60000)
+       - `HEALTH_CHECK_CONCURRENCY`: Maximum concurrent health checks (default: 50)
   - `DEFAULT_PROXY_MODE`: Default proxy mode for discovery (default: false)
    - `GRPC_ENABLED`: Enable gRPC discovery service (default: false)
    - `GRPC_PORT`: gRPC server port (default: 50051)
