@@ -100,6 +100,11 @@
 - Register webhooks via `/api/maxine/serviceops/webhooks/add` with serviceName and URL.
 - Receive HTTP POST notifications to the webhook URL for register, deregister, and health status change events.
 - Webhooks enable external systems to react immediately to service availability changes without polling.
+### Service API Specs
+- Maxine supports storing and retrieving API specifications for registered services to enable better service contract management.
+- Set API specs (e.g., OpenAPI/Swagger JSON) via `/api/maxine/serviceops/api-spec/set` with serviceName, nodeName, and apiSpec payload.
+- Retrieve API specs via `/api/maxine/serviceops/api-spec/get?serviceName=<name>&nodeName=<node>` to access service contracts programmatically.
+- API specs are stored per service node and persist across restarts, enabling API documentation and client code generation.
 ### Key-Value Store
 - Maxine includes a distributed key-value store for storing and retrieving arbitrary configuration data or shared state.
 - Set key-value pairs via `/api/maxine/serviceops/kv/set` with JSON payload containing key and value.
