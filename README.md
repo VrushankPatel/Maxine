@@ -54,7 +54,7 @@ As we can see, maxine SRD provides service addresses for direct client connectio
 * Also, based on the service's performance diagnostics (If it's down or not working properly), we can stop its registration to the SRD. The client provides functions that can stop sending the heartbeat to the SRD so that the service can be deregistered.
 * Also, If any of the services are hosted on more powerful hardware, then we can make SRD distribute more traffic on that service's nodes than the others. All we have to do is to provide weight property to that service's client. the weight means how much power that service has compared to others. Based on weight property, the SRD will register that service will replications, and traffic will be distributed accordingly.
  * Maxine now includes health check capabilities to monitor service availability and persistence to survive restarts.
- * Maxine is optimized for high performance with in-memory LRU caching (1M entries, 15-minute TTL), debounced file saves, parallel health checks (every 30 seconds with 100 concurrency), connection pooling, circuit breaker for unhealthy nodes, and efficient load balancing algorithms including Round Robin, Weighted Round Robin, Least Response Time, Consistent Hashing, Rendezvous Hashing, Least Connections, Least Loaded, and Random. High performance mode disables response time tracking and connection counting for maximum throughput. Health checks disabled by default for maximum performance; enable with HEALTH_CHECK_ENABLED=true for automatic service health monitoring.
+ * Maxine is optimized for high performance with in-memory LRU caching (1M entries, 15-minute TTL), debounced file saves, parallel health checks (every 30 seconds with 100 concurrency), connection pooling, circuit breaker for unhealthy nodes, and efficient load balancing algorithms including Round Robin, Weighted Round Robin, Least Response Time, Consistent Hashing, Rendezvous Hashing, Least Connections, Least Loaded, and Random. High performance mode disables response time tracking and connection counting for maximum throughput. Health checks enabled by default for automatic service health monitoring; disable with HEALTH_CHECK_ENABLED=false for maximum performance.
  * Security is enhanced with JWT authentication and role-based access control (RBAC) for all registry operations.
 * Comprehensive metrics collection provides insights into request counts, latencies, and error rates.
 * Clustering support for multi-core CPU utilization.
@@ -145,7 +145,7 @@ Maxine can be configured via environment variables:
   - `LOG_JSON_PRETTIFY`: Prettify JSON logs (default: false)
   - `ACTUATOR_ENABLED`: Enable actuator endpoints (default: true)
   - `STATUS_MONITOR_ENABLED`: Enable status monitor (default: false)
-   - `HEALTH_CHECK_ENABLED`: Enable health checks (default: false, set to true to enable)
+    - `HEALTH_CHECK_ENABLED`: Enable health checks (default: true, set to false to disable)
    - `SERVER_SELECTION_STRATEGY`: Load balancing strategy (RR, WRR, LRT, CH, RH, LC, LL, RANDOM, P2, ADAPTIVE, STICKY) (default: RR)
  - `LOG_FORMAT`: Log format (JSON or PLAIN) (default: JSON)
    - `DISCOVERY_CACHE_TTL`: Discovery cache TTL in ms (default: 900000)
@@ -171,7 +171,7 @@ Maxine can be configured via environment variables:
     - `ETCD_PORT`: etcd port (default: 2379)
     - `KAFKA_ENABLED`: Enable Kafka for event streaming (default: false)
     - `KAFKA_BROKERS`: Kafka brokers (default: localhost:9092)
-     - `CIRCUIT_BREAKER_ENABLED`: Enable circuit breaker (default: false, set to true to enable)
+      - `CIRCUIT_BREAKER_ENABLED`: Enable circuit breaker (default: true, set to false to disable)
    - `PERSISTENCE_ENABLED`: Enable persistence to file/Redis/etcd (default: true, set to false for in-memory only mode)
 
 ### Run maxine on production.
