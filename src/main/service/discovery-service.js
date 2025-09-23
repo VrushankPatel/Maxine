@@ -26,8 +26,10 @@ class DiscoveryService{
     rand = new RandomDiscovery();
     p2d = new PowerOfTwoDiscovery();
     ad = new AdaptiveDiscovery();
-    cache = new LRU({ max: 1000000, ttl: config.discoveryCacheTTL });
+    cache = new LRU({ max: 1000000 });
     serviceKeys = new Map(); // Map serviceName to set of cache keys
+    cacheHits = 0;
+    cacheMisses = 0;
 
     /**
      * Get fullServiceName and IP and based on the serverSelectionStrategy we've selected, It'll call that discoveryService and retrieve the node from it. (Ex. RoundRobin, Rendezvous, ConsistentHashing).
@@ -46,8 +48,10 @@ class DiscoveryService{
         const cacheKey = usesIp ? `${fullServiceName}:${ip}` : fullServiceName;
         const cached = this.cache.get(cacheKey);
         if (cached) {
+            this.cacheHits++;
             return cached;
         }
+        this.cacheMisses++;
 
         let node;
         switch(config.serverSelectionStrategy){

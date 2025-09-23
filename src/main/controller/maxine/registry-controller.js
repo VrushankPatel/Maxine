@@ -297,7 +297,9 @@ const cacheStatsController = (req, res) => {
         cacheSize: discoveryService.cache.size,
         cacheMax: discoveryService.cache.max,
         cacheTTL: discoveryService.cache.ttl,
-        serviceKeysCount: discoveryService.serviceKeys.size
+        serviceKeysCount: discoveryService.serviceKeys.size,
+        cacheHits: discoveryService.cacheHits,
+        cacheMisses: discoveryService.cacheMisses
     };
     res.status(statusAndMsgs.STATUS_SUCCESS).json(stats);
 }
