@@ -89,7 +89,7 @@ As we can see, maxine SRD is working as a true reverse proxy for each servers, a
        * **Client-side Proxy Mode**: Discovery endpoint supports `proxy=false` query parameter to return service address instead of proxying, allowing clients to handle proxying for better performance and flexibility.
        * **Self-Preservation Mode**: Automatically enters self-preservation mode when more than 85% of services fail health checks, preventing cascade failures by not evicting healthy services.
  * **Service Priority Support**: Services can specify priority in metadata, and load balancing strategies prefer higher priority nodes for better resource allocation.
-          * **Advanced Health Checks**: Support for TCP health checks in addition to HTTP. Set `healthType: 'tcp'` in service metadata for TCP checks.
+          * **Advanced Health Checks**: Support for TCP health checks in addition to HTTP. Set `healthType: 'tcp'` in service metadata for TCP checks. Custom HTTP methods (GET, POST, etc.) supported via `healthMethod` in metadata.
           * **Audit Logging**: All registry operations (register, deregister) are logged to `logs/audit.log` for compliance and monitoring.
           * **DNS SRV Discovery**: New `/api/maxine/serviceops/discover/dns` endpoint returns DNS SRV-like records for services, useful for DNS-based service discovery.
            * **Traffic Splitting for Versions**: Services can specify `trafficSplit` in metadata to route requests to different versions based on percentages, enabling canary deployments and gradual rollouts.
