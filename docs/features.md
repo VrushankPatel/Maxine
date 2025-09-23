@@ -26,6 +26,7 @@
 - Health status is cached in optimized data structures, enabling circuit breaker functionality with failure counting that automatically skips unhealthy nodes during discovery.
 - Circuit breaker includes automatic recovery when services become healthy again, improving overall system reliability and performance.
 - Health check history is tracked for each service node, accessible via `/api/maxine/serviceops/health/history?serviceName=<name>&nodeName=<node>` to monitor service stability over time.
+- Advanced health checks support custom HTTP methods (GET, POST, etc.) via `healthMethod` in service metadata, and TCP checks via `healthType: 'tcp'`.
 ### Metrics
 - Maxine provides comprehensive metrics collection for monitoring performance and usage.
   - The metrics endpoint `/api/maxine/serviceops/metrics` returns real-time statistics including:
