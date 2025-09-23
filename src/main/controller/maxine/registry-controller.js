@@ -431,6 +431,24 @@ const restoreController = (req, res) => {
     }
 }
 
+const dependencyGraphController = (req, res) => {
+    const graph = {};
+    for (const [service, deps] of serviceRegistry.serviceDependencies) {
+        graph[service] = Array.from(deps);
+    }
+    res.status(statusAndMsgs.STATUS_SUCCESS).json({ dependencyGraph: graph });
+}
+
+const impactAnalysisController = (req, res) => {
+    const serviceName = req.query.serviceName;
+    if (!serviceName) {
+        res.status(statusAndMsgs.STATUS_GENERIC_ERROR).json({ message: "Missing serviceName" });
+        return;
+    }
+    const impacted = serviceRegistry.getDependentServices(serviceName);
+    res.status(statusAndMsgs.STATUS_SUCCESS).json({ serviceName, impactedServices: impacted });
+}
+
 module.exports = {
     registryController,
     serverListController,
@@ -448,5 +466,7 @@ module.exports = {
     bulkDeregisterController,
     setMaintenanceController,
     backupController,
-    restoreController
+    restoreController,
+    dependencyGraphController,
+    impactAnalysisController
 };
