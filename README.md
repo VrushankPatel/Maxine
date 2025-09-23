@@ -66,7 +66,7 @@ As we can see, maxine SRD provides service addresses for direct client connectio
 * **Circuit Breaker**: Automatically skips unhealthy service nodes during discovery with failure counting and automatic recovery to improve reliability.
  * **Background Health Monitoring**: Continuous health checks every 30 seconds to maintain up-to-date service status without impacting request latency. Supports custom health endpoints via service metadata.
 * **Optimized Discovery**: Healthy nodes cache eliminates filtering overhead on each discovery request, ensuring lightning-fast service lookups.
- * **Load Balancing Strategies**: Supports Round Robin (RR), Weighted Round Robin (WRR), Least Response Time (LRT), Fastest Node (FASTEST), Consistent Hashing (CH), Rendezvous Hashing (RH), Least Connections (LC) with real connection tracking, Least Loaded (LL), Random selection with health-aware routing, Power of Two Choices (P2), and Adaptive load balancing that combines response time and connection metrics.
+ * **Load Balancing Strategies**: Supports Round Robin (RR), Weighted Round Robin (WRR), Least Response Time (LRT), Fastest Node (FASTEST), Consistent Hashing (CH), Rendezvous Hashing (RH), Least Connections (LC) with real connection tracking, Least Loaded (LL), Random selection with health-aware routing, Power of Two Choices (P2), Adaptive load balancing that combines response time and connection metrics, and Sticky Round Robin (STICKY) for client affinity.
 * **Security**: JWT-based authentication for registry operations (register, deregister, discover, health, metrics).
  * **Metrics**: Real-time metrics endpoint at `/api/maxine/serviceops/metrics` providing request counts, latencies, and error statistics. Prometheus-compatible metrics at `/api/maxine/serviceops/metrics/prometheus`. Cache statistics at `/api/maxine/serviceops/cache/stats`.
 * **Health Checks**: Enhanced parallel health monitoring for service nodes with automatic status updates and persistence across restarts.
@@ -137,7 +137,7 @@ Maxine can be configured via environment variables:
   - `ACTUATOR_ENABLED`: Enable actuator endpoints (default: true)
   - `STATUS_MONITOR_ENABLED`: Enable status monitor (default: false)
   - `HEALTH_CHECK_ENABLED`: Enable health checks (default: true)
-  - `SERVER_SELECTION_STRATEGY`: Load balancing strategy (RR, WRR, LRT, CH, RH, LC, LL, RANDOM, P2, ADAPTIVE) (default: RR)
+   - `SERVER_SELECTION_STRATEGY`: Load balancing strategy (RR, WRR, LRT, CH, RH, LC, LL, RANDOM, P2, ADAPTIVE, STICKY) (default: RR)
  - `LOG_FORMAT`: Log format (JSON or PLAIN) (default: JSON)
    - `DISCOVERY_CACHE_TTL`: Discovery cache TTL in ms (default: 900000)
   - `FAILURE_THRESHOLD`: Health check failure threshold (default: 3)

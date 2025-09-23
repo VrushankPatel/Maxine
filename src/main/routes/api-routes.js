@@ -25,7 +25,7 @@ const limiter = rateLimit({
 const discoveryLimiter = rateLimit({
     windowMs: 60 * 1000, // 1 minute
     max: 100000, // allow high rate for discovery requests
-    keyGenerator: (req) => `${req.query.serviceName || 'unknown'}:${req.ip}`,
+    keyGenerator: (req) => `${req.query.serviceName || 'unknown'}:${rateLimit.ipKeyGenerator(req)}`,
     standardHeaders: true,
     legacyHeaders: false,
     message: 'Too many discovery requests for this service from this IP, please try again later.'

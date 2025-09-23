@@ -11,7 +11,7 @@ const config = require("../../config/config");
 const perServiceLimiter = rateLimit({
     windowMs: config.rateLimitWindowMs,
     max: config.rateLimitMax,
-    keyGenerator: (req) => `${req.query.serviceName || 'unknown'}:${req.ip}`,
+    keyGenerator: (req) => `${req.query.serviceName || 'unknown'}:${rateLimit.ipKeyGenerator(req)}`,
     message: 'Too many requests for this service from this IP, please try again later.'
 });
 
