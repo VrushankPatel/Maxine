@@ -1,7 +1,7 @@
 const RouteBuilder = require('../builders/route-builder');
 const bodyParser = require('body-parser');
 const rateLimit = require('express-rate-limit');
-const { serverListController, registryController, deregisterController, healthController, bulkHealthController, metricsController, prometheusMetricsController, cacheStatsController, filteredDiscoveryController, discoveryInfoController, changesController, bulkRegisterController, bulkDeregisterController, setMaintenanceController } = require('../controller/maxine/registry-controller');
+const { serverListController, registryController, deregisterController, healthController, bulkHealthController, healthHistoryController, metricsController, prometheusMetricsController, cacheStatsController, filteredDiscoveryController, discoveryInfoController, changesController, bulkRegisterController, bulkDeregisterController, setMaintenanceController } = require('../controller/maxine/registry-controller');
 const { setConfig, getConfig, getAllConfig, deleteConfig } = require('../controller/config-control/config-controller');
 const { addWebhook, removeWebhook, getWebhooks } = require('../controller/webhook-controller');
 const { addAlias, removeAlias, getAliases } = require('../controller/alias-controller');
@@ -39,7 +39,7 @@ let maxineApiRoutes = RouteBuilder.createNewRoute()
                          .from("maxine")
                              .from("serviceops")
                                  .get("servers", authenticationController, limiter, serverListController)
-                                  .post("register", authenticationController, limiter, bodyParser.json(), registryController)
+                                   .post("register", authenticationController, bodyParser.json(), registryController)
                                   .post("register/bulk", authenticationController, limiter, bodyParser.json(), bulkRegisterController)
                                   .delete("deregister", authenticationController, limiter, bodyParser.json(), deregisterController)
                                   .delete("deregister/bulk", authenticationController, limiter, bodyParser.json(), bulkDeregisterController)
@@ -47,8 +47,9 @@ let maxineApiRoutes = RouteBuilder.createNewRoute()
                                    .get("discover/info", authenticationController, discoveryLimiter, discoveryInfoController)
                                    .get("discover/filtered", authenticationController, discoveryLimiter, filteredDiscoveryController)
                                    .get("discover/dns", authenticationController, discoveryLimiter, dnsController)
-                                   .get("health", authenticationController, limiter, healthController)
-                                   .post("health/bulk", authenticationController, limiter, bodyParser.json(), bulkHealthController)
+                                    .get("health", authenticationController, limiter, healthController)
+                                    .post("health/bulk", authenticationController, limiter, bodyParser.json(), bulkHealthController)
+                                    .get("health/history", authenticationController, limiter, healthHistoryController)
                                      .get("metrics", authenticationController, limiter, metricsController)
                                      .get("metrics/prometheus", authenticationController, limiter, prometheusMetricsController)
                                      .get("cache/stats", authenticationController, limiter, cacheStatsController)

@@ -10,20 +10,17 @@ const statusCheck = {"is status 200": response => response.status === 200};
 const headers = {headers: {'Content-Type': 'application/json'}};
 
 const serviceObj = JSON.stringify({
-    "hostName": host,
+    "hostName": "httpbin.org",
     "nodeName": "node-x-10",
     "serviceName": "dbservice",
-    "ssl": false,
+    "ssl": true,
     "timeOut": 50,
     "weight": 10,
-    "path": "/api/actuator/health"
+    "path": "/status/200"
 });
 
 export default function () {
-    let response = http.post(`${apiUrl}/maxine/serviceops/register`, serviceObj, headers);
-    check(response, statusCheck);
-
-    response = http.get(`${apiUrl}/maxine/serviceops/discover?serviceName=dbservice`);
+    let response = http.get(`${apiUrl}/maxine/serviceops/discover?serviceName=dbservice&version=1.0`);
     check(response, statusCheck);
 }
 

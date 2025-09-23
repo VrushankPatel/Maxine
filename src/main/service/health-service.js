@@ -82,10 +82,11 @@ class HealthService {
                                nodeObj.healthy = true;
                                nodeObj.failureCount = 0;
                                nodeObj.lastFailureTime = null;
-                               serviceRegistry.addToHealthyNodes(serviceName, nodeName);
-                               serviceRegistry.addToHashRegistry(serviceName, nodeName);
-                               serviceRegistry.debounceSave();
-                               discoveryService.invalidateServiceCache(serviceName);
+                                serviceRegistry.addToHealthyNodes(serviceName, nodeName);
+                                serviceRegistry.addToHashRegistry(serviceName, nodeName);
+                                serviceRegistry.addHealthHistory(serviceName, nodeName, true);
+                                serviceRegistry.debounceSave();
+                                discoveryService.invalidateServiceCache(serviceName);
                            }
                     } else {
                         throw new Error('Health check failed');
@@ -100,10 +101,11 @@ class HealthService {
                            nodeObj.lastFailureTime = Date.now();
                            if (nodeObj.failureCount >= config.failureThreshold) {
                                nodeObj.healthy = false;
-                               serviceRegistry.removeFromHealthyNodes(serviceName, nodeName);
-                               serviceRegistry.removeFromHashRegistry(serviceName, nodeName);
-                               serviceRegistry.debounceSave();
-                               discoveryService.invalidateServiceCache(serviceName);
+                                serviceRegistry.removeFromHealthyNodes(serviceName, nodeName);
+                                serviceRegistry.removeFromHashRegistry(serviceName, nodeName);
+                                serviceRegistry.addHealthHistory(serviceName, nodeName, false);
+                                serviceRegistry.debounceSave();
+                                discoveryService.invalidateServiceCache(serviceName);
                            }
                        }
                   }

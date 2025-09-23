@@ -67,7 +67,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/VrushankPatel/Gargantua-Maxine-Server"
+    "url": "https://github.com/VrushankPatel/Maxine"
   },
   "nyc": {
     "include": "src",
