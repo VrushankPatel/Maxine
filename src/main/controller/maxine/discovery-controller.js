@@ -10,6 +10,7 @@ const config = require("../../config/config");
 // Cache config values for performance
 const isHighPerformanceMode = config.highPerformanceMode;
 const hasMetrics = config.metricsEnabled;
+const isCircuitBreakerEnabled = config.circuitBreakerEnabled;
 
 const http = require('http');
 const https = require('https');
@@ -34,6 +35,9 @@ const proxy = httpProxy.createProxyServer({
 
 proxy.on('error', (err, req, res) => {
     console.error('Proxy error:', err);
+    if (isCircuitBreakerEnabled && req.serviceNode) {
+        serviceRegistry.incrementCircuitFailures(req.fullServiceName, req.serviceNode.nodeName);
+    }
     if (!res.headersSent) {
         res.status(502).json({ message: 'Bad Gateway' });
     }
@@ -92,18 +96,32 @@ const discoveryController = (req, res) => {
 
     const serviceNode = discoveryService.getNode(fullServiceName, ip);
 
-      // no service node is there so, service unavailable is our error response.
-       if(!serviceNode){
-          if (hasMetrics && !isHighPerformanceMode) {
-              const latency = Date.now() - startTime;
-              metricsService.recordRequest(serviceName, false, latency);
-              metricsService.recordError('service_unavailable');
-          }
-          res.status(statusAndMsgs.SERVICE_UNAVAILABLE).json({
-              "message" : statusAndMsgs.MSG_SERVICE_UNAVAILABLE
-          });
-          return;
-      }
+       // no service node is there so, service unavailable is our error response.
+        if(!serviceNode){
+           if (hasMetrics && !isHighPerformanceMode) {
+               const latency = Date.now() - startTime;
+               metricsService.recordRequest(serviceName, false, latency);
+               metricsService.recordError('service_unavailable');
+           }
+           res.status(statusAndMsgs.SERVICE_UNAVAILABLE).json({
+               "message" : statusAndMsgs.MSG_SERVICE_UNAVAILABLE
+           });
+           return;
+       }
+
+       // Check circuit breaker
+       if (isCircuitBreakerEnabled && serviceRegistry.isCircuitOpen(fullServiceName, serviceNode.nodeName)) {
+           if (hasMetrics && !isHighPerformanceMode) {
+               const latency = Date.now() - startTime;
+               metricsService.recordRequest(serviceName, false, latency);
+               metricsService.recordError('circuit_open');
+           }
+           res.status(503).json({ message: 'Service temporarily unavailable (circuit open)' });
+           return;
+       }
+
+       req.fullServiceName = fullServiceName;
+       req.serviceNode = serviceNode;
     const addressToRedirect = serviceNode.address + (endPoint.length > 0 ? (endPoint[0] == "/" ? endPoint : `/${endPoint}`) : "");
 
       // Check if client wants address only (no proxy)
@@ -136,21 +154,28 @@ const discoveryController = (req, res) => {
           return;
       }
 
-     // Record metrics and response time on response finish
-      res.on('finish', () => {
-          const latency = Date.now() - startTime;
-          const success = res.statusCode >= 200 && res.statusCode < 300;
-          if (hasMetrics && !isHighPerformanceMode) {
-              metricsService.recordRequest(serviceName, success, latency);
-          }
-            if (success && !isHighPerformanceMode) {
-                // Record response time for LRT algorithm
-                serviceRegistry.recordResponseTime(fullServiceName, serviceNode.nodeName, latency);
-            }
-           if (!isHighPerformanceMode) {
-               serviceRegistry.decrementActiveConnections(fullServiceName, serviceNode.nodeName);
+      // Record metrics and response time on response finish
+       res.on('finish', () => {
+           const latency = Date.now() - startTime;
+           const success = res.statusCode >= 200 && res.statusCode < 300;
+           if (hasMetrics && !isHighPerformanceMode) {
+               metricsService.recordRequest(serviceName, success, latency);
            }
-       });
+             if (success && !isHighPerformanceMode) {
+                 // Record response time for LRT algorithm
+                 serviceRegistry.recordResponseTime(fullServiceName, serviceNode.nodeName, latency);
+             }
+            if (!isHighPerformanceMode) {
+                serviceRegistry.decrementActiveConnections(fullServiceName, serviceNode.nodeName);
+            }
+            if (isCircuitBreakerEnabled && req.serviceNode) {
+                if (success) {
+                    serviceRegistry.onCircuitSuccess(req.fullServiceName, req.serviceNode.nodeName);
+                } else {
+                    serviceRegistry.incrementCircuitFailures(req.fullServiceName, req.serviceNode.nodeName);
+                }
+            }
+        });
       res.on('close', () => {
           if (!isHighPerformanceMode) {
               serviceRegistry.decrementActiveConnections(fullServiceName, serviceNode.nodeName);
