@@ -120,6 +120,8 @@ As we can see, maxine SRD provides service addresses for direct client connectio
                   * **Service Tag Filtering**: Discovery requests can now filter services by tags using the `tags` query parameter. Services must have all specified tags in their metadata to be discoverable.
                   * **Service Metadata Updates**: Added `/api/maxine/serviceops/metadata/update` endpoint to update service instance metadata without re-registration, allowing dynamic changes to weights, health endpoints, and other properties.
                     * **Kubernetes Integration**: Added support for automatic service discovery from Kubernetes clusters. Enable with `KUBERNETES_ENABLED=true` to watch K8s services and endpoints, registering them in Maxine for seamless integration with containerized deployments.
+                    * **Service Instance Limits**: Added `MAX_INSTANCES_PER_SERVICE` environment variable to limit the number of instances per service (default 1000), preventing overload and improving stability.
+                    * **Service Health Score**: Implemented health score calculation for service nodes based on failure rate and average response time, enabling better load balancing decisions and service quality monitoring.
 
 
 ## Setup for development
@@ -178,7 +180,8 @@ Maxine can be configured via environment variables:
      - `KAFKA_BROKERS`: Kafka brokers (default: localhost:9092)
        - `CIRCUIT_BREAKER_ENABLED`: Enable circuit breaker (default: true, set to false to disable)
      - `KUBERNETES_ENABLED`: Enable Kubernetes service discovery integration (default: false)
-   - `PERSISTENCE_ENABLED`: Enable persistence to file/Redis/etcd (default: true, set to false for in-memory only mode)
+    - `PERSISTENCE_ENABLED`: Enable persistence to file/Redis/etcd (default: true, set to false for in-memory only mode)
+    - `MAX_INSTANCES_PER_SERVICE`: Maximum number of instances allowed per service (default: 1000)
 
 ### Run maxine on production.
 
