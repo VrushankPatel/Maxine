@@ -142,27 +142,30 @@ class ExpressAppBuilder{
     }
 
     /**
-     * Starts the app on passed param port and  also pass callback to run after starting server.
-     * @param {number} port
-     * @param {function} callback
-     * @returns {object: ExpressAppBuilder}
-     */
+      * Starts the app on passed param port and  also pass callback to run after starting server.
+      * @param {number} port
+      * @param {function} callback
+      * @returns {object: ExpressAppBuilder}
+      */
     listen(port, callback){
-        this.app.listen(port, callback);
+        const server = this.app.listen(port, '0.0.0.0', callback);
+        server.on('error', (err) => console.error('listen error', err));
         return this;
     }
 
     /**
-     * Starts the app with HTTP/2 if enabled, otherwise HTTP/1.1
-     * @param {number} port
-     * @param {function} callback
-     * @returns {object: ExpressAppBuilder}
-     */
+      * Starts the app with HTTP/2 if enabled, otherwise HTTP/1.1
+      * @param {number} port
+      * @param {function} callback
+      * @returns {object: ExpressAppBuilder}
+      */
     listenOrSpdy(port, callback){
         if (config.http2Enabled) {
-            spdy.createServer({}, this.app).listen(port, callback);
+            const server = spdy.createServer({}, this.app).listen(port, callback);
+            server.on('error', (err) => console.error('spdy listen error', err));
         } else {
-            this.app.listen(port, callback);
+            const server = this.app.listen(port, '0.0.0.0', callback);
+            server.on('error', (err) => console.error('http listen error', err));
         }
         return this;
     }

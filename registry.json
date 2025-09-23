@@ -140,7 +140,10 @@
     "default:dbservice:1.0"
   ],
   "serviceAliases": {},
+  "serviceAliasesReverse": {},
   "serviceDependencies": {},
   "kvStore": {},
-  "trafficSplit": {}
+  "trafficSplit": {},
+  "healthHistory": {},
+  "circuitBreaker": {}
 }
