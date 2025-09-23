@@ -38,13 +38,14 @@ const config = {
             healthCheckConcurrency: process.env.HEALTH_CHECK_CONCURRENCY ? parseInt(process.env.HEALTH_CHECK_CONCURRENCY) : 50,
      defaultProxyMode: process.env.DEFAULT_PROXY_MODE === 'true' || false,
      proxyTimeout: process.env.PROXY_TIMEOUT ? parseInt(process.env.PROXY_TIMEOUT) : 10000,
-       circuitBreakerEnabled: process.env.CIRCUIT_BREAKER_ENABLED !== 'false' && !highPerfDefault,
-     circuitBreakerFailureThreshold: process.env.CIRCUIT_BREAKER_FAILURE_THRESHOLD ? parseInt(process.env.CIRCUIT_BREAKER_FAILURE_THRESHOLD) : 5,
-     circuitBreakerTimeout: process.env.CIRCUIT_BREAKER_TIMEOUT ? parseInt(process.env.CIRCUIT_BREAKER_TIMEOUT) : 60000,
-     grpcEnabled: process.env.GRPC_ENABLED === 'true',
-    grpcPort: process.env.GRPC_PORT ? parseInt(process.env.GRPC_PORT) : 50051,
-     tracingEnabled: process.env.TRACING_ENABLED === 'true',
-      http2Enabled: process.env.HTTP2_ENABLED !== 'false'
+      circuitBreakerEnabled: process.env.CIRCUIT_BREAKER_ENABLED !== 'false' && !highPerfDefault,
+      circuitBreakerFailureThreshold: process.env.CIRCUIT_BREAKER_FAILURE_THRESHOLD ? parseInt(process.env.CIRCUIT_BREAKER_FAILURE_THRESHOLD) : 5,
+      circuitBreakerTimeout: process.env.CIRCUIT_BREAKER_TIMEOUT ? parseInt(process.env.CIRCUIT_BREAKER_TIMEOUT) : 60000,
+      grpcEnabled: process.env.GRPC_ENABLED === 'true',
+     grpcPort: process.env.GRPC_PORT ? parseInt(process.env.GRPC_PORT) : 50051,
+      tracingEnabled: process.env.TRACING_ENABLED === 'true',
+       http2Enabled: process.env.HTTP2_ENABLED !== 'false',
+       maxInstancesPerService: process.env.MAX_INSTANCES_PER_SERVICE ? parseInt(process.env.MAX_INSTANCES_PER_SERVICE) : 1000
 }
 
 Object.defineProperty(config, "profile", {
