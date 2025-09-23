@@ -678,6 +678,49 @@ const changesSSEController = (req, res) => {
 
 const databaseDiscoveryController = require('./database-discovery-controller');
 
+const pendingServicesController = (req, res) => {
+    const pending = registryService.getPendingServices();
+    res.status(statusAndMsgs.STATUS_SUCCESS).json({ pendingServices: pending });
+};
+
+const approveServiceController = (req, res) => {
+    const { serviceName, nodeName } = req.body;
+    const service = registryService.approveService(serviceName, nodeName);
+    if (service) {
+        res.status(statusAndMsgs.STATUS_SUCCESS).json({ message: 'Service approved', service });
+    } else {
+        res.status(statusAndMsgs.STATUS_NOT_FOUND).json({ message: 'Pending service not found' });
+    }
+};
+
+const rejectServiceController = (req, res) => {
+    const { serviceName, nodeName } = req.body;
+    const success = registryService.rejectService(serviceName, nodeName);
+    if (success) {
+        res.status(statusAndMsgs.STATUS_SUCCESS).json({ message: 'Service rejected' });
+    } else {
+        res.status(statusAndMsgs.STATUS_NOT_FOUND).json({ message: 'Pending service not found' });
+    }
+};
+
+const testServiceController = async (req, res) => {
+    const { serviceName, nodeName } = req.query;
+    const service = serviceRegistry.registry.get(serviceName);
+    if (!service || !service.nodes[nodeName]) {
+        return res.status(statusAndMsgs.STATUS_NOT_FOUND).json({ message: 'Service or node not found' });
+    }
+    const node = service.nodes[nodeName];
+    const healthEndpoint = node.metadata.healthEndpoint || '/health';
+    const healthUrl = `${node.address}${healthEndpoint.startsWith('/') ? healthEndpoint : `/${healthEndpoint}`}`;
+    try {
+        const axios = require('axios');
+        const response = await axios.get(healthUrl, { timeout: 5000 });
+        res.status(statusAndMsgs.STATUS_SUCCESS).json({ status: 'healthy', response: response.data });
+    } catch (err) {
+        res.status(statusAndMsgs.STATUS_SUCCESS).json({ status: 'unhealthy', error: err.message });
+    }
+};
+
 module.exports = {
     registryController,
     serverListController,
@@ -706,5 +749,9 @@ module.exports = {
     listServicesByGroupController,
     updateMetadataController,
     databaseDiscoveryController,
-    statsController
+    statsController,
+    pendingServicesController,
+    approveServiceController,
+    rejectServiceController,
+    testServiceController
 };

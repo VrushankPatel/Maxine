@@ -111,6 +111,11 @@ if (config.clusteringEnabled && cluster.isMaster) {
         const { consulService } = require('./src/main/service/consul-service');
     }
 
+    // Initialize Eureka service if enabled
+    if (config.eurekaEnabled) {
+        const { eurekaService } = require('./src/main/service/eureka-service');
+    }
+
     // Initialize mDNS service if enabled
     if (config.mdnsEnabled) {
         const { mdnsService } = require('./src/main/service/mdns-service');

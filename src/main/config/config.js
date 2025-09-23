@@ -49,7 +49,12 @@ const config = {
           consulEnabled: process.env.CONSUL_ENABLED === 'true' && !highPerfDefault,
           consulHost: process.env.CONSUL_HOST || 'localhost',
           consulPort: process.env.CONSUL_PORT ? parseInt(process.env.CONSUL_PORT) : 8500,
-          mdnsEnabled: process.env.MDNS_ENABLED === 'true' && !highPerfDefault
+           mdnsEnabled: process.env.MDNS_ENABLED === 'true' && !highPerfDefault,
+           eurekaEnabled: process.env.EUREKA_ENABLED === 'true' && !highPerfDefault,
+           eurekaHost: process.env.EUREKA_HOST || 'localhost',
+           eurekaPort: process.env.EUREKA_PORT ? parseInt(process.env.EUREKA_PORT) : 8761,
+           approvalRequired: process.env.APPROVAL_REQUIRED === 'true',
+           alertWebhook: process.env.ALERT_WEBHOOK
 }
 
 Object.defineProperty(config, "profile", {

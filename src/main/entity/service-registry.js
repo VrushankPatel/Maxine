@@ -36,6 +36,7 @@ class ServiceRegistry{
     changes = [];
     webhooks = new Map(); // serviceName -> set of webhook URLs
     tagIndex = new Map(); // tag -> Set of nodeNames
+    pendingServices = new Map(); // serviceName -> pending registration data
     groupIndex = new Map(); // serviceName -> group -> Map<nodeName, node>
     kvStore = new Map(); // key -> value
     trafficSplit = new Map(); // baseServiceName -> {version: percent}
