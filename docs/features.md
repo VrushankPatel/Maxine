@@ -150,8 +150,18 @@
   - Optimized data structures using Maps and Sets for O(1) lookups in healthy nodes and response times tracking, providing lightning-fast service resolution for microservices architectures.
   - Caching in load balancing strategies (e.g., Least Response Time, Fastest) for reduced computation overhead.
   - Compression enabled always for reduced response sizes and improved network performance.
-  - HTTP/2 support for multiplexing and reduced latency over HTTP/1.1.
-  - Optimized string operations in discovery controller to minimize CPU usage.
+   - HTTP/2 support for multiplexing and reduced latency over HTTP/1.1.
+   - Optimized string operations in discovery controller to minimize CPU usage.
+   - Reduced default health check concurrency from 2000 to 500 to prevent system overload.
+### etcd Persistence
+- Maxine supports etcd as a distributed key-value store backend for high availability and consistency.
+- Enable with `ETCD_ENABLED=true` and configure `ETCD_HOST` and `ETCD_PORT`.
+- Provides distributed persistence across multiple Maxine instances for production deployments.
+### Kafka Event Streaming
+- Maxine integrates with Kafka for real-time event streaming of registry changes.
+- Enable with `KAFKA_ENABLED=true` and configure `KAFKA_BROKERS`.
+- Publishes events for register, deregister, and health status changes to the `maxine-registry-events` topic.
+- Enables event-driven architectures and real-time monitoring of service registry state.
 ### Config control
 - Maxine config control provides interactive way to manage the configuration.
 - the Settings and Logging tab provides options to monitor and manipulate the Maxine configuration.
