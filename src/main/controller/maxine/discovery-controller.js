@@ -135,7 +135,7 @@ const discoveryController = (req, res) => {
         fullServiceName = buildServiceName(namespace, region, zone, serviceName, selectedVersion);
     }
 
-    const serviceNode = discoveryService.getNode(fullServiceName, ip);
+    const serviceNode = discoveryService.getNode(fullServiceName, ip, group);
 
        // no service node is there so, service unavailable is our error response.
         if(!serviceNode){
