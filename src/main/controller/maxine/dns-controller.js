@@ -1,4 +1,5 @@
 const { serviceRegistry } = require("../../entity/service-registry");
+const { buildServiceNameCached } = require("../../util/util");
 
 const dnsController = (req, res) => {
     const serviceName = req.query.serviceName;
@@ -12,9 +13,7 @@ const dnsController = (req, res) => {
         return;
     }
 
-    const fullServiceName = (region !== "default" || zone !== "default") ?
-        (version ? `${namespace}:${region}:${zone}:${serviceName}:${version}` : `${namespace}:${region}:${zone}:${serviceName}`) :
-        (version ? `${namespace}:${serviceName}:${version}` : `${namespace}:${serviceName}`);
+    const fullServiceName = buildServiceNameCached(namespace, region, zone, serviceName, version);
 
     const nodes = serviceRegistry.getNodes(fullServiceName);
     if (!nodes) {

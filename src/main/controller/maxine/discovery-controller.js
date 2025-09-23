@@ -8,6 +8,7 @@ const rateLimit = require('express-rate-limit');
 const config = require("../../config/config");
 const LRU = require('lru-cache');
 const stringify = require('fast-json-stringify');
+const { buildServiceNameCached } = require("../../util/util");
 
 // Per-service rate limiter
 const perServiceLimiter = rateLimit({
@@ -22,8 +23,6 @@ const isHighPerformanceMode = config.highPerformanceMode;
 const hasMetrics = config.metricsEnabled;
 const isCircuitBreakerEnabled = config.circuitBreakerEnabled;
 
-// Cache for service name building
-const serviceNameCache = new LRU({ max: 100000, ttl: 900000 });
 // Cache for IP extraction
 const ipCache = new LRU({ max: 100000, ttl: 900000 });
 // Cache for address building
@@ -39,17 +38,7 @@ const addressResponseSchema = {
 };
 const stringifyAddress = stringify(addressResponseSchema);
 
-const buildServiceName = (namespace, region, zone, serviceName, version) => {
-    const key = `${namespace}:${region}:${zone}:${serviceName}:${version || ''}`;
-    if (serviceNameCache.has(key)) {
-        return serviceNameCache.get(key);
-    }
-    const fullServiceName = (region !== "default" || zone !== "default") ?
-        (version ? `${namespace}:${region}:${zone}:${serviceName}:${version}` : `${namespace}:${region}:${zone}:${serviceName}`) :
-        (version ? `${namespace}:${serviceName}:${version}` : `${namespace}:${serviceName}`);
-    serviceNameCache.set(key, fullServiceName);
-    return fullServiceName;
-};
+
 
 const http = require('http');
 const https = require('https');
@@ -112,28 +101,28 @@ const discoveryController = (req, res) => {
 
     // Handle traffic splitting if no version specified
     let selectedVersion = version;
-    let fullServiceName;
-    if (!selectedVersion) {
-        const baseServiceName = buildServiceName(namespace, region, zone, serviceName, '');
-        const split = serviceRegistry.getTrafficSplit(baseServiceName);
-        if (split) {
-            const versions = Object.keys(split);
-            const total = Object.values(split).reduce((a, b) => a + b, 0);
-            let rand = Math.random() * total;
-            for (const v of versions) {
-                rand -= split[v];
-                if (rand <= 0) {
-                    selectedVersion = v;
-                    fullServiceName = buildServiceName(namespace, region, zone, serviceName, v);
-                    break;
+        let fullServiceName;
+        if (!selectedVersion) {
+            const baseServiceName = buildServiceNameCached(namespace, region, zone, serviceName, '');
+            const split = serviceRegistry.getTrafficSplit(baseServiceName);
+            if (split) {
+                const versions = Object.keys(split);
+                const total = Object.values(split).reduce((a, b) => a + b, 0);
+                let rand = Math.random() * total;
+                for (const v of versions) {
+                    rand -= split[v];
+                    if (rand <= 0) {
+                        selectedVersion = v;
+                        fullServiceName = buildServiceNameCached(namespace, region, zone, serviceName, v);
+                        break;
+                    }
                 }
+            } else {
+                fullServiceName = baseServiceName;
             }
         } else {
-            fullServiceName = baseServiceName;
+            fullServiceName = buildServiceNameCached(namespace, region, zone, serviceName, selectedVersion);
         }
-    } else {
-        fullServiceName = buildServiceName(namespace, region, zone, serviceName, selectedVersion);
-    }
 
     const serviceNode = discoveryService.getNode(fullServiceName, ip, group);
 

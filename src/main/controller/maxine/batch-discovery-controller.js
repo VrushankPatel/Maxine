@@ -4,6 +4,7 @@ const { metricsService } = require("../../service/metrics-service");
 const { serviceRegistry } = require("../../entity/service-registry");
 const { info } = require("../../util/logging/logging-util");
 const config = require("../../config/config");
+const { buildServiceNameCached } = require("../../util/util");
 
 const batchDiscoveryController = (req, res) => {
     const startTime = Date.now();
@@ -35,9 +36,7 @@ const batchDiscoveryController = (req, res) => {
             continue;
         }
 
-        let fullServiceName = (region !== "default" || zone !== "default") ?
-            (version ? `${namespace}:${region}:${zone}:${serviceName}:${version}` : `${namespace}:${region}:${zone}:${serviceName}`) :
-            (version ? `${namespace}:${serviceName}:${version}` : `${namespace}:${serviceName}`);
+        let fullServiceName = buildServiceNameCached(namespace, region, zone, serviceName, version);
 
         // Handle traffic splitting if no version specified
         if (!version) {
@@ -52,8 +51,7 @@ const batchDiscoveryController = (req, res) => {
                     rand -= split[v];
                     if (rand <= 0) {
                         version = v;
-                        fullServiceName = (region !== "default" || zone !== "default") ?
-                            `${namespace}:${region}:${zone}:${serviceName}:${version}` : `${namespace}:${serviceName}:${version}`;
+                         fullServiceName = buildServiceNameCached(namespace, region, zone, serviceName, version);
                         break;
                     }
                 }
