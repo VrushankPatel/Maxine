@@ -96,21 +96,22 @@ As we can see, maxine SRD provides service addresses for direct client connectio
               * **CLI Tool**: Added a command-line interface at `bin/cli.js` for managing services (register, deregister, list, health, discover, metrics).
               * **Client SDK**: Added a JavaScript/Node.js client SDK in `client-sdk/` for easy integration with Maxine registry.
              * **Lightning-Fast Performance Mode**: High performance mode now skips response time recording and active connection tracking for maximum throughput under heavy load.
-              * **gRPC Support**: Added gRPC endpoint for service discovery at port 50051 (configurable via GRPC_PORT), enabled with GRPC_ENABLED=true.
-              * **Batch Discovery**: Added `/api/maxine/serviceops/discover/batch` endpoint to discover multiple services in a single request, improving performance for clients needing multiple service addresses.
-                  * **Envoy Configuration Generation**: Added `/api/maxine/serviceops/envoy/config` endpoint to generate Envoy proxy configuration for all registered services, enabling seamless integration with service mesh architectures.
-                  * **WebSocket Support**: Added WebSocket server for real-time notifications of service registry changes (register, deregister, health updates).
-                 * **OpenTelemetry Tracing**: Added support for distributed tracing using OpenTelemetry with Jaeger exporter for better observability in microservices architectures. Enable with `TRACING_ENABLED=true` and configure `JAEGER_ENDPOINT`.
-                 * **Backup and Restore**: Added `/api/maxine/serviceops/backup` endpoint to export the entire registry state as JSON, and `/api/maxine/serviceops/restore` to import and restore from a backup. Useful for disaster recovery and migration. CLI commands `backup` and `restore` are also available.
-                 * **etcd Persistence**: Added etcd support for distributed key-value storage of the registry, providing high availability and consistency. Enable with `ETCD_ENABLED=true` and configure `ETCD_HOST` and `ETCD_PORT`.
-                 * **Kafka Event Streaming**: Added Kafka integration for real-time event streaming of registry changes (register, deregister, health updates). Enable with `KAFKA_ENABLED=true` and configure `KAFKA_BROKERS`.
+               * **gRPC Support**: Added gRPC endpoint for service discovery at port 50051 (configurable via GRPC_PORT), enabled with GRPC_ENABLED=true.
+               * **Batch Discovery**: Added `/api/maxine/serviceops/discover/batch` endpoint to discover multiple services in a single request, improving performance for clients needing multiple service addresses.
+                   * **Envoy Configuration Generation**: Added `/api/maxine/serviceops/envoy/config` endpoint to generate Envoy proxy configuration for all registered services, enabling seamless integration with service mesh architectures.
+                   * **WebSocket Support**: Added WebSocket server for real-time notifications of service registry changes (register, deregister, health updates).
+                  * **OpenTelemetry Tracing**: Added support for distributed tracing using OpenTelemetry with Jaeger exporter for better observability in microservices architectures. Enable with `TRACING_ENABLED=true` and configure `JAEGER_ENDPOINT`.
+                  * **Backup and Restore**: Added `/api/maxine/serviceops/backup` endpoint to export the entire registry state as JSON, and `/api/maxine/serviceops/restore` to import and restore from a backup. Useful for disaster recovery and migration. CLI commands `backup` and `restore` are also available.
+                  * **etcd Persistence**: Added etcd support for distributed key-value storage of the registry, providing high availability and consistency. Enable with `ETCD_ENABLED=true` and configure `ETCD_HOST` and `ETCD_PORT`.
+                  * **Kafka Event Streaming**: Added Kafka integration for real-time event streaming of registry changes (register, deregister, health updates). Enable with `KAFKA_ENABLED=true` and configure `KAFKA_BROKERS`.
                      * **Performance Optimizations**: Reduced default health check concurrency from 2000 to 50 to prevent overload, increased discovery cache TTL to 15 minutes, cached config checks and alias resolutions for faster lookups, enabled HTTP/2 by default for improved performance over HTTP/1.1, optimized IP extraction caching in discovery controller, and precomputed service name building to reduce string operations. Further optimized health check concurrency to 50 and interval to 60 seconds, increased proxy connection pool to 50000 maxSockets for high throughput, added service name caching in discovery controller to avoid repeated string concatenations. Health checks enabled by default.
-                    * **Service Priority**: Services can now specify priority in metadata for load balancing preference. Healthy nodes are sorted by priority (higher first).
-                    * **Per-Service Rate Limiting**: Discovery requests are now rate limited per service per IP to prevent abuse.
-                   * **Service Groups**: Added support for service groups to allow hierarchical service organization. Services can be registered with a `group` in metadata, and discovery can filter by `group` query parameter.
-                   * **Service Dependency Graph**: Added `/api/maxine/serviceops/dependency/graph` endpoint to retrieve the service dependency graph, showing which services depend on others.
-                   * **Impact Analysis**: Added `/api/maxine/serviceops/impact/analysis` endpoint to analyze the impact of a service failure by listing all services that depend on it.
-                   * **Python Client SDK**: Added a Python client SDK in `client-sdk/python/` for easy integration with Maxine registry from Python applications.
+                     * **Push Health Updates**: Added `/api/maxine/serviceops/health/push` endpoint allowing services to push their health status updates directly to the registry, enabling faster health monitoring without relying solely on pull-based checks.
+                     * **Service Priority**: Services can now specify priority in metadata for load balancing preference. Healthy nodes are sorted by priority (higher first).
+                     * **Per-Service Rate Limiting**: Discovery requests are now rate limited per service per IP to prevent abuse.
+                    * **Service Groups**: Added support for service groups to allow hierarchical service organization. Services can be registered with a `group` in metadata, and discovery can filter by `group` query parameter.
+                    * **Service Dependency Graph**: Added `/api/maxine/serviceops/dependency/graph` endpoint to retrieve the service dependency graph, showing which services depend on others.
+                    * **Impact Analysis**: Added `/api/maxine/serviceops/impact/analysis` endpoint to analyze the impact of a service failure by listing all services that depend on it.
+                    * **Python Client SDK**: Added a Python client SDK in `client-sdk/python/` for easy integration with Maxine registry from Python applications.
 
 
 ## Setup for development

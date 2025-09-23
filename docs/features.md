@@ -20,9 +20,10 @@
 - If there are multiple nodes of the same service in the registry, then discovery has to distribute the traffic across all of them, that's where Maxine's load balancer comes to rescue.
 - Filtered discovery allows routing to services based on tags, enabling environment-specific or feature-specific routing via `/api/maxine/serviceops/discover/filtered?serviceName=<name>&tags=<tag1>,<tag2>`.
 ### Health checks
-- Maxine provides comprehensive health monitoring for registered services with both on-demand and background checks.
+- Maxine provides comprehensive health monitoring for registered services with both on-demand, background, and push-based checks.
 - The health check endpoint `/api/maxine/serviceops/health?serviceName=<name>` performs parallel HTTP requests to all nodes of the specified service and reports their status.
-  - Background health checks run continuously every 30 seconds to maintain up-to-date service status without impacting request latency.
+  - Background health checks run continuously every 60 seconds to maintain up-to-date service status without impacting request latency.
+- Push health updates allow services to send their health status directly via `/api/maxine/serviceops/health/push` with JSON payload containing serviceName, nodeName, status ('healthy' or 'unhealthy'), and optional namespace, enabling faster health monitoring without pull-based checks.
 - Health status is cached in optimized data structures, enabling circuit breaker functionality with failure counting that automatically skips unhealthy nodes during discovery.
 - Circuit breaker includes automatic recovery when services become healthy again, improving overall system reliability and performance.
 - Health check history is tracked for each service node, accessible via `/api/maxine/serviceops/health/history?serviceName=<name>&nodeName=<node>` to monitor service stability over time.
