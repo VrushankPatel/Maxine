@@ -58,7 +58,7 @@ if (config.clusteringEnabled && cluster.isMaster) {
         cluster.fork();
     });
 } else {
-    const limiter = rateLimit({
+    const limiter = config.highPerformanceMode ? null : rateLimit({
         windowMs: config.rateLimitWindowMs,
         max: config.rateLimitMax,
         message: 'Too many requests from this IP, please try again later.'
@@ -75,9 +75,9 @@ if (config.clusteringEnabled && cluster.isMaster) {
                       .use(authenticationController)
                        .mapStaticDir(path.join(currDir, "client"))
                        .mapStaticDirWithRoute('/logs', path.join(currDir,"logs"))
-                         .ifPropertyOnce("actuatorEnabled")
-                             .use(actuator(actuatorConfig))
-                         .use('/api', limiter, maxineApiRoutes)
+                          .ifPropertyOnce("actuatorEnabled")
+                              .use(actuator(actuatorConfig))
+                          .use('/api', limiter ? limiter : (req, res, next) => next(), maxineApiRoutes)
                       .ifPropertyOnce('profile','dev')
                           // .use('/api-spec', swaggerUi.serve, swaggerUi.setup(swaggerDocument))
                           .use('/shutdown', process.exit)
