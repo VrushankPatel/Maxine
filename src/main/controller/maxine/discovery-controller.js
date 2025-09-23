@@ -14,6 +14,8 @@ const isCircuitBreakerEnabled = config.circuitBreakerEnabled;
 
 // Cache for service name building
 const serviceNameCache = new Map();
+// Cache for IP extraction
+const ipCache = new Map();
 
 const buildServiceName = (namespace, region, zone, serviceName, version) => {
     const key = `${namespace}:${region}:${zone}:${serviceName}:${version || ''}`;
@@ -32,15 +34,15 @@ const https = require('https');
 const proxy = httpProxy.createProxyServer({
     agent: new http.Agent({
         keepAlive: true,
-        maxSockets: 10000, // Optimized for high throughput
-        maxFreeSockets: 5000,
+        maxSockets: 50000, // Optimized for high throughput
+        maxFreeSockets: 25000,
         timeout: config.proxyTimeout,
         keepAliveMsecs: 300000
     }),
     httpsAgent: new https.Agent({
         keepAlive: true,
-        maxSockets: 10000, // Optimized for high throughput
-        maxFreeSockets: 5000,
+        maxSockets: 50000, // Optimized for high throughput
+        maxFreeSockets: 25000,
         timeout: config.proxyTimeout,
         keepAliveMsecs: 300000
     }),
@@ -68,11 +70,14 @@ const discoveryController = (req, res) => {
     const zone = req.query.zone || "default";
     const group = req.query.group;
     const endPoint = req.query.endPoint || "";
-    const ip = req.clientIp || (req.clientIp = req.ip ||
-        req.connection?.remoteAddress ||
-        req.socket?.remoteAddress ||
-        req.connection?.socket?.remoteAddress ||
-        'unknown');
+    const reqId = req.ip || req.connection?.remoteAddress || req.socket?.remoteAddress || req.connection?.socket?.remoteAddress || 'unknown';
+    let ip = ipCache.get(reqId);
+    if (!ip) {
+        ip = req.clientIp || reqId;
+        ipCache.set(reqId, ip);
+        // Cache for 5 minutes
+        setTimeout(() => ipCache.delete(reqId), 300000);
+    }
 
     // if serviceName is not there, responding with error
       if(!serviceName) {

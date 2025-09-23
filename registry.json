@@ -8,130 +8,110 @@
           "parentNode": "node-x-10",
           "address": "https://httpbin.org/status/200",
           "timeOut": 50,
-          "registeredAt": 1758603054608,
+          "registeredAt": 1758611419026,
           "healthy": true,
           "failureCount": 0,
           "lastFailureTime": null,
-          "metadata": {
-            "healthEndpoint": ""
-          }
+          "metadata": {}
         },
         "node-x-10-1": {
           "nodeName": "node-x-10-1",
           "parentNode": "node-x-10",
           "address": "https://httpbin.org/status/200",
           "timeOut": 50,
-          "registeredAt": 1758603054609,
+          "registeredAt": 1758611419028,
           "healthy": true,
           "failureCount": 0,
           "lastFailureTime": null,
-          "metadata": {
-            "healthEndpoint": ""
-          }
+          "metadata": {}
         },
         "node-x-10-2": {
           "nodeName": "node-x-10-2",
           "parentNode": "node-x-10",
           "address": "https://httpbin.org/status/200",
           "timeOut": 50,
-          "registeredAt": 1758603054611,
+          "registeredAt": 1758611419029,
           "healthy": true,
           "failureCount": 0,
           "lastFailureTime": null,
-          "metadata": {
-            "healthEndpoint": ""
-          }
+          "metadata": {}
         },
         "node-x-10-3": {
           "nodeName": "node-x-10-3",
           "parentNode": "node-x-10",
           "address": "https://httpbin.org/status/200",
           "timeOut": 50,
-          "registeredAt": 1758603054612,
+          "registeredAt": 1758611419029,
           "healthy": true,
           "failureCount": 0,
           "lastFailureTime": null,
-          "metadata": {
-            "healthEndpoint": ""
-          }
+          "metadata": {}
         },
         "node-x-10-4": {
           "nodeName": "node-x-10-4",
           "parentNode": "node-x-10",
           "address": "https://httpbin.org/status/200",
           "timeOut": 50,
-          "registeredAt": 1758603054613,
+          "registeredAt": 1758611419031,
           "healthy": true,
           "failureCount": 0,
           "lastFailureTime": null,
-          "metadata": {
-            "healthEndpoint": ""
-          }
+          "metadata": {}
         },
         "node-x-10-5": {
           "nodeName": "node-x-10-5",
           "parentNode": "node-x-10",
           "address": "https://httpbin.org/status/200",
           "timeOut": 50,
-          "registeredAt": 1758603054614,
+          "registeredAt": 1758611419031,
           "healthy": true,
           "failureCount": 0,
           "lastFailureTime": null,
-          "metadata": {
-            "healthEndpoint": ""
-          }
+          "metadata": {}
         },
         "node-x-10-6": {
           "nodeName": "node-x-10-6",
           "parentNode": "node-x-10",
           "address": "https://httpbin.org/status/200",
           "timeOut": 50,
-          "registeredAt": 1758603054615,
+          "registeredAt": 1758611419032,
           "healthy": true,
           "failureCount": 0,
           "lastFailureTime": null,
-          "metadata": {
-            "healthEndpoint": ""
-          }
+          "metadata": {}
         },
         "node-x-10-7": {
           "nodeName": "node-x-10-7",
           "parentNode": "node-x-10",
           "address": "https://httpbin.org/status/200",
           "timeOut": 50,
-          "registeredAt": 1758603054616,
+          "registeredAt": 1758611419033,
           "healthy": true,
           "failureCount": 0,
           "lastFailureTime": null,
-          "metadata": {
-            "healthEndpoint": ""
-          }
+          "metadata": {}
         },
         "node-x-10-8": {
           "nodeName": "node-x-10-8",
           "parentNode": "node-x-10",
           "address": "https://httpbin.org/status/200",
           "timeOut": 50,
-          "registeredAt": 1758603054617,
+          "registeredAt": 1758611419033,
           "healthy": true,
           "failureCount": 0,
           "lastFailureTime": null,
-          "metadata": {
-            "healthEndpoint": ""
-          }
+          "metadata": {}
         },
         "node-x-10-9": {
           "nodeName": "node-x-10-9",
           "parentNode": "node-x-10",
           "address": "https://httpbin.org/status/200",
           "timeOut": 50,
-          "registeredAt": 1758603054617,
+          "registeredAt": 1758611419034,
           "healthy": true,
           "failureCount": 0,
           "lastFailureTime": null,
-          "metadata": {
-            "healthEndpoint": ""
-          }
+          "metadata": {}
         }
       }
     }
