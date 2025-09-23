@@ -401,8 +401,10 @@ class ServiceRegistry{
 
     };
 
-    getHealthyNodes = (serviceName, group) => {
-        const cacheKey = group ? `${serviceName}:${group}` : serviceName;
+    getHealthyNodes = (serviceName, group, tags) => {
+        const groupKey = group ? `:${group}` : '';
+        const tagKey = tags && tags.length > 0 ? `:${tags.sort().join(',')}` : '';
+        const cacheKey = `${serviceName}${groupKey}${tagKey}`;
         if (!this.healthyCache.has(cacheKey)) {
             const all = this.healthyNodes.get(serviceName) || [];
             const maintenance = this.maintenanceNodes.has(serviceName) ? this.maintenanceNodes.get(serviceName) : new Set();
@@ -410,6 +412,9 @@ class ServiceRegistry{
             let filtered = all.filter(node => !maintenance.has(node.nodeName) && !draining.has(node.nodeName));
             if (group) {
                 filtered = filtered.filter(node => node.metadata.group === group);
+            }
+            if (tags && tags.length > 0) {
+                filtered = filtered.filter(node => node.metadata.tags && tags.every(tag => node.metadata.tags.includes(tag)));
             }
             // Sort by priority descending (higher priority first)
             filtered.sort((a, b) => (b.metadata.priority || 0) - (a.metadata.priority || 0));

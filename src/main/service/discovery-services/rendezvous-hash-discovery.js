@@ -13,31 +13,34 @@ class RendezvousHashDiscovery{
       * Calls Select method and returns node retrieved from select method.
       * @param {string} serviceName
       * @param {string} ip
-      * @param {string} version
+      * @param {string} group
+      * @param {array} tags
       * @returns {object} returns the node by calling select method
       */
-    getNode = (fullServiceName, ip) => {
-        const cacheKey = `${fullServiceName}:${ip}`;
+    getNode = (fullServiceName, ip, group, tags) => {
+        const groupKey = group ? `:${group}` : '';
+        const tagKey = tags && tags.length > 0 ? `:${tags.sort().join(',')}` : '';
+        const cacheKey = `${fullServiceName}:${ip}${groupKey}${tagKey}`;
         const cached = this.cache.get(cacheKey);
         if (cached && (Date.now() - cached.timestamp) < this.cacheTTL) {
             return cached.node;
         }
-        const targetNode = this.selectNode(ip, fullServiceName);
+        const targetNode = this.selectNode(ip, fullServiceName, group, tags);
         this.cache.set(cacheKey, { node: targetNode, timestamp: Date.now() });
         return targetNode;
     }
 
     /**
      * Selects the node based on hash-digest of IP.
-     * @param {object} nodes
      * @param {string} ip
      * @param {string} serviceName
-     * @param {string} version
+     * @param {string} group
+     * @param {array} tags
      * @returns {object} select the node based on IP Hashing
      */
-    selectNode(ip, fullServiceName) {
+    selectNode(ip, fullServiceName, group, tags) {
         let targetNode, targetNodeRank = -1;
-        const healthyNodes = serviceRegistry.getHealthyNodes(fullServiceName);
+        const healthyNodes = serviceRegistry.getHealthyNodes(fullServiceName, group, tags);
         for (let node of healthyNodes) {
             let nodeRank = this.rank(node.nodeName, ip);
             if (nodeRank > targetNodeRank) {
