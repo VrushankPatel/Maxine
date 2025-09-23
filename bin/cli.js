@@ -82,6 +82,15 @@ async function discover() {
     }
 }
 
+async function metrics() {
+    try {
+        const res = await api.get('/api/maxine/serviceops/metrics');
+        console.log(JSON.stringify(res.data, null, 2));
+    } catch (err) {
+        console.error('Error:', err.response?.data || err.message);
+    }
+}
+
 switch (command) {
     case 'register':
         register();
@@ -98,8 +107,11 @@ switch (command) {
     case 'discover':
         discover();
         break;
+    case 'metrics':
+        metrics();
+        break;
     default:
         console.log('Usage: cli <command> [options]');
-        console.log('Commands: register, deregister, list, health, discover');
+        console.log('Commands: register, deregister, list, health, discover, metrics');
         console.log('Options: --url <baseUrl>');
 }
