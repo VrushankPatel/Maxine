@@ -1,7 +1,7 @@
 const RouteBuilder = require('../builders/route-builder');
 const bodyParser = require('body-parser');
 const rateLimit = require('express-rate-limit');
-const { serverListController, registryController, deregisterController, healthController, bulkHealthController, pushHealthController, healthHistoryController, metricsController, prometheusMetricsController, cacheStatsController, filteredDiscoveryController, discoveryInfoController, changesController, bulkRegisterController, bulkDeregisterController, setMaintenanceController, backupController, restoreController, dependencyGraphController, impactAnalysisController, setApiSpecController, getApiSpecController } = require('../controller/maxine/registry-controller');
+const { serverListController, registryController, deregisterController, healthController, bulkHealthController, pushHealthController, healthHistoryController, metricsController, prometheusMetricsController, cacheStatsController, filteredDiscoveryController, discoveryInfoController, changesController, bulkRegisterController, bulkDeregisterController, setMaintenanceController, setDrainingController, backupController, restoreController, dependencyGraphController, impactAnalysisController, setApiSpecController, getApiSpecController } = require('../controller/maxine/registry-controller');
 const batchDiscoveryController = require('../controller/maxine/batch-discovery-controller');
 const envoyConfigController = require('../controller/maxine/envoy-controller');
 const { setConfig, getConfig, getAllConfig, deleteConfig } = require('../controller/config-control/config-controller');
@@ -73,7 +73,8 @@ let maxineApiRoutes = RouteBuilder.createNewRoute()
                                      .get("config/get", authenticationController, limiter, getConfig)
                                      .get("config/all", authenticationController, limiter, getAllConfig)
                                       .delete("config/delete", authenticationController, requireRole('admin'), limiter, bodyParser.json(), deleteConfig)
-                                       .post("maintenance", authenticationController, requireRole('admin'), limiter, bodyParser.json(), setMaintenanceController)
+                                        .post("maintenance", authenticationController, requireRole('admin'), limiter, bodyParser.json(), setMaintenanceController)
+                                        .post("draining", authenticationController, requireRole('admin'), limiter, bodyParser.json(), setDrainingController)
                                        .post("kv/set", authenticationController, requireRole('admin'), limiter, bodyParser.json(), setKv)
                                       .get("kv/get", authenticationController, limiter, getKv)
                                       .get("kv/all", authenticationController, limiter, getAllKv)
