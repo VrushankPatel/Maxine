@@ -159,7 +159,7 @@ Maxine can be configured via environment variables:
    - `GRPC_PORT`: gRPC server port (default: 50051)
      - `TRACING_ENABLED`: Enable OpenTelemetry tracing (default: false, set to true to enable)
     - `JAEGER_ENDPOINT`: Jaeger exporter endpoint (default: http://localhost:14268/api/traces)
-    - `HTTP2_ENABLED`: Enable HTTP/2 support (default: false)
+      - `HTTP2_ENABLED`: Enable HTTP/2 support (default: true)
     - `ETCD_ENABLED`: Enable etcd for distributed persistence (default: false)
     - `ETCD_HOST`: etcd host (default: localhost)
     - `ETCD_PORT`: etcd port (default: 2379)
