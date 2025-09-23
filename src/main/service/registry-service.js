@@ -117,9 +117,16 @@ class RegistryService{
     registryService = (serviceObj) => {
         let service = Service.buildByObj(serviceObj);
         if(!service) return;
-        this.registerService(service);
-        service.registeredAt = new Date().toLocaleString();
-        return service;
+        if (config.approvalRequired) {
+            const key = `${service.serviceName}:${service.nodeName}`;
+            sRegistry.pendingServices.set(key, service);
+            sRegistry.addChange('pending', service.serviceName, service.nodeName, { address: service.address, metadata: service.metadata });
+            return { status: 'pending', service };
+        } else {
+            this.registerService(service);
+            service.registeredAt = new Date().toLocaleString();
+            return service;
+        }
     }
 
     deregisterService = (serviceName, nodeName, namespace = "default", region = "default", zone = "default", tenantId = "default") => {
@@ -147,6 +154,33 @@ class RegistryService{
         this.auditLog('deregister', { fullServiceName, nodeName });
         discoveryService.invalidateServiceCache(fullServiceName);
         return true;
+    }
+
+    approveService = (serviceName, nodeName) => {
+        const key = `${serviceName}:${nodeName}`;
+        const service = sRegistry.pendingServices.get(key);
+        if (service) {
+            sRegistry.pendingServices.delete(key);
+            this.registerService(service);
+            service.registeredAt = new Date().toLocaleString();
+            return service;
+        }
+        return null;
+    }
+
+    rejectService = (serviceName, nodeName) => {
+        const key = `${serviceName}:${nodeName}`;
+        const service = sRegistry.pendingServices.get(key);
+        if (service) {
+            sRegistry.pendingServices.delete(key);
+            sRegistry.addChange('rejected', serviceName, nodeName, {});
+            return true;
+        }
+        return false;
+    }
+
+    getPendingServices = () => {
+        return Array.from(sRegistry.pendingServices.values());
     }
 }
 

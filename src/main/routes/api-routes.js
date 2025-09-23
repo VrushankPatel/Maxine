@@ -1,7 +1,7 @@
 const RouteBuilder = require('../builders/route-builder');
 const bodyParser = require('body-parser');
 const rateLimit = require('express-rate-limit');
-const { serverListController, registryController, deregisterController, healthController, bulkHealthController, pushHealthController, healthHistoryController, metricsController, prometheusMetricsController, cacheStatsController, filteredDiscoveryController, discoveryInfoController, changesController, changesSSEController, bulkRegisterController, bulkDeregisterController, setMaintenanceController, setDrainingController, backupController, restoreController, dependencyGraphController, impactAnalysisController, setApiSpecController, getApiSpecController, listServicesByGroupController, updateMetadataController, databaseDiscoveryController, statsController } = require('../controller/maxine/registry-controller');
+const { serverListController, registryController, deregisterController, healthController, bulkHealthController, pushHealthController, healthHistoryController, metricsController, prometheusMetricsController, cacheStatsController, filteredDiscoveryController, discoveryInfoController, changesController, changesSSEController, bulkRegisterController, bulkDeregisterController, setMaintenanceController, setDrainingController, backupController, restoreController, dependencyGraphController, impactAnalysisController, setApiSpecController, getApiSpecController, listServicesByGroupController, updateMetadataController, databaseDiscoveryController, statsController, pendingServicesController, approveServiceController, rejectServiceController, testServiceController } = require('../controller/maxine/registry-controller');
 const batchDiscoveryController = require('../controller/maxine/batch-discovery-controller');
 const envoyConfigController = require('../controller/maxine/envoy-controller');
 const { setConfig, getConfig, getAllConfig, deleteConfig } = require('../controller/config-control/config-controller');
@@ -90,6 +90,10 @@ let maxineApiRoutes = RouteBuilder.createNewRoute()
                                         .get("impact/analysis", authenticationController, limiter, impactAnalysisController)
                                         .post("api-spec/set", authenticationController, requireRole('admin'), limiter, bodyParser.json(), setApiSpecController)
                                         .get("api-spec/get", authenticationController, limiter, getApiSpecController)
+                                        .get("pending", authenticationController, requireRole('admin'), limiter, pendingServicesController)
+                                        .post("approve", authenticationController, requireRole('admin'), limiter, bodyParser.json(), approveServiceController)
+                                        .post("reject", authenticationController, requireRole('admin'), limiter, bodyParser.json(), rejectServiceController)
+                                        .get("test", authenticationController, limiter, testServiceController)
                             .stepBack()
                             .post("signin", bodyParser.json(), signInController)
                             .put("change-password", bodyParser.json(), changePwdController)
