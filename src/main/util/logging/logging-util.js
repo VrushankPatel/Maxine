@@ -8,7 +8,7 @@ const logger = winston.createLogger(logConfiguration);
 
 
 const log = (logFunction) => {
-    if (config.highPerformanceMode) return;
+    if (config.highPerformanceMode || config.noLogging) return;
     return config.logAsync === true ? setTimeout(logFunction, 0) : logFunction();
 };
 
@@ -23,6 +23,18 @@ const errorAndClose = (msg) => {
     process.exit();
 };
 
+const consoleLog = (...args) => {
+    if (!config.noLogging) {
+        console.log(...args);
+    }
+};
+
+const consoleError = (...args) => {
+    if (!config.noLogging) {
+        console.error(...args);
+    }
+};
+
 const logExceptions = (req, msg) => log(() => logger.error(logBuilder("ERROR", "WEBREQUEST-Exception", statusAndMsgs.STATUS_SERVER_ERROR, req, msg)));
 
 const loggingUtil = {
@@ -33,7 +45,9 @@ const loggingUtil = {
     error,
     initApp : () => logger.info(`\n${BANNER} » ${constants.PROFILE} server started on port : ${constants.PORT}\n`),
     logExceptions,
-    errorAndClose
+    errorAndClose,
+    consoleLog,
+    consoleError
 }
 
 module.exports = loggingUtil;

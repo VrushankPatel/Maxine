@@ -1,0 +1,26 @@
+replicaCount: 1
+
+image:
+  repository: maxine
+  pullPolicy: IfNotPresent
+  tag: "latest"
+
+service:
+  type: ClusterIP
+  port: 8080
+
+resources: {}
+
+nodeSelector: {}
+
+tolerations: []
+
+affinity: {}
+
+env:
+  - name: HIGH_PERFORMANCE_MODE
+    value: "true"
+  - name: CLUSTERING_ENABLED
+    value: "true"
+  - name: HEALTH_CHECK_ENABLED
+    value: "true"

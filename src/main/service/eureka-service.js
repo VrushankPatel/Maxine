@@ -2,6 +2,7 @@ const axios = require('axios');
 const { serviceRegistry } = require('../entity/service-registry');
 const { registryService } = require('./registry-service');
 const config = require('../config/config');
+const { consoleError } = require('../util/logging/logging-util');
 
 class EurekaService {
     constructor() {
@@ -68,7 +69,7 @@ class EurekaService {
                 }
             }
         } catch (err) {
-            console.error('Eureka sync error:', err.message);
+            consoleError('Eureka sync error:', err.message);
         }
     }
 }

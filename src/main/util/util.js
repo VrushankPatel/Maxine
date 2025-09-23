@@ -1,11 +1,11 @@
-const date = require('date-and-time');
+// const date = require('date-and-time');
 const JsonBuilder = require('../builders/json-builder');
 const config = require('../config/config');
 const { constants } = require('./constants/constants');
-const YAML = require('yamljs');
-const LRU = require('lru-cache');
+// const YAML = require('yamljs');
+const { LRUCache } = require('lru-cache');
 
-const getCurrentDate = () => date.format(new Date(), constants.REQUEST_LOG_TIMESTAMP_FORMAT);
+const getCurrentDate = () => new Date().toISOString();
 
 /**
  * Below object contains method to check ServerSelectionStrategy.
@@ -63,13 +63,12 @@ const logBuilder = (...args) => {
 };
 
 const loadSwaggerYAML = () => {
-    try{
-        return YAML.load(constants.SWAGGER_PATH);
-    }catch(e){}
+    // Swagger not available
+    return null;
 }
 
 // Cache for service name building
-const serviceNameCache = new LRU({ max: config.highPerformanceMode ? 500000 : 1000000, ttl: 900000 }); // 15 min TTL, optimized for memory
+const serviceNameCache = new LRUCache({ max: config.highPerformanceMode ? 1000000 : 200000, ttl: 900000 }); // 15 min TTL, optimized for memory
 
 const buildServiceNameCached = (tenantId, namespace, region, zone, serviceName, version) => {
     const key = `${tenantId}:${namespace}:${region}:${zone}:${serviceName}:${version || ''}`;
@@ -84,11 +83,25 @@ const buildServiceNameCached = (tenantId, namespace, region, zone, serviceName, 
     return fullServiceName;
 };
 
+const buildFullServiceName = (serviceName, namespace = "default", datacenter = "default", version) => {
+    if (datacenter !== "default") {
+        if (version) {
+            return `${datacenter}:${namespace}:${serviceName}:${version}`;
+        }
+        return `${datacenter}:${namespace}:${serviceName}`;
+    }
+    if (version) {
+        return `${namespace}:${serviceName}:${version}`;
+    }
+    return `${namespace}:${serviceName}`;
+};
+
 module.exports = {
     getCurrentDate,
     logBuilder,
     sssChecker,
     logFormatChecker,
     loadSwaggerYAML,
-    buildServiceNameCached
+    buildServiceNameCached,
+    buildFullServiceName
 }

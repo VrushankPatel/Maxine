@@ -13,8 +13,8 @@ class WeightedRoundRobinDiscovery {
       * @param {array} tags
       * @returns {object}
       */
-    getNode = (fullServiceName, group, tags, deployment) => {
-        const healthy = serviceRegistry.getHealthyNodes(fullServiceName, group, tags, deployment);
+    getNode = (fullServiceName, group, tags, deployment, filter) => {
+        const healthy = serviceRegistry.getHealthyNodes(fullServiceName, group, tags, deployment, filter);
         if (healthy.length === 0) return null;
 
         // Build expanded list if not cached or changed

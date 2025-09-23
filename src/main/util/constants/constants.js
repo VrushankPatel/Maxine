@@ -1,5 +1,4 @@
 const envArgs = require('minimist')(process.argv.slice(2));
-const Enums = require("enums");
 const PORT = process.env.PORT || parseInt(envArgs['p']) || parseInt(envArgs['port']) || 8080;
 const APP_NAME = "Maxine-Service-Discovery";
 const PROFILE = (envArgs['env'] || envArgs['profile'] || "prod").trim();
@@ -30,7 +29,7 @@ const CONSISTENT_HASH_ALGO = "sha256";
 const CONSISTENT_HASHING_OPTIONS = {
     algorithm: CONSISTENT_HASH_ALGO
 }
-const CIRCLECI_ARTIFACTS = "https://circleci.com/api/v1.1/project/github/VrushankPatel/Maxine/latest/artifacts?branch=master";
+
 /**
  * Below are SSS : Server Selection Strategies for Load Balancer
  * RR : Round Robin
@@ -39,26 +38,30 @@ const CIRCLECI_ARTIFACTS = "https://circleci.com/api/v1.1/project/github/Vrushan
  * LC : Least Connections
  * RANDOM : Random
  */
-const SSS = new Enums([
-    {name: 'RR', code: '0', message: 'Round Robin'},
-    {name: 'WRR', code: '5', message: 'Weighted Round Robin'},
-    {name: 'LRT', code: '6', message: 'Least Response Time'},
-    {name: 'FASTEST', code: '9', message: 'Fastest Node'},
-    {name: 'CH', code: '1', message: 'Consistent Hashing'},
-    {name: 'RH', code: '2', message: 'Rendezvous Hashing'},
-    {name: 'LC', code: '3', message: 'Least Connections'},
-    {name: 'LL', code: '7', message: 'Least Loaded'},
-    {name: 'RANDOM', code: '4', message: 'Random'},
-    {name: 'ADAPTIVE', code: '8', message: 'Adaptive Load Balancing'},
-    {name: 'P2', code: '10', message: 'Power of Two Choices'},
-    {name: 'STICKY', code: '11', message: 'Sticky Round Robin'},
-    {name: 'LR', code: '12', message: 'Least Request'}
-]);
-
-const LOG_FORMATS = new Enums([
-    {name: 'JSON', code: '0', message: 'Jsonified logging'},
-    {name: 'PLAIN', code: '1', message: 'Plain logs'}
-])
+const SSS = {
+    RR: '0',
+    WRR: '5',
+    WRANDOM: '13',
+    LRT: '6',
+    FASTEST: '9',
+    CH: '1',
+    RH: '2',
+    LC: '3',
+    LL: '7',
+    RANDOM: '4',
+    ADAPTIVE: '8',
+    P2: '10',
+    STICKY: '11',
+    LR: '12',
+    PRIORITY: '14',
+    BHS: '15',
+    GEO: '16',
+    AFFINITY: '17'
+};
+const LOG_FORMATS = {
+    JSON: '0',
+    PLAIN: '1'
+}
 
 // Http Status Code and Messages
 const STATUS_NOT_FOUND = 404;
@@ -119,7 +122,6 @@ const constants = {
     DEFAULT_ADMIN_USERNAME_PWD,
     EXPIRATION_TIME,
     SECRET,
-    CIRCLECI_ARTIFACTS,
     API_URLS_WITH_AUTH,
     MAX_SERVER_WEIGHT,
     SSS,

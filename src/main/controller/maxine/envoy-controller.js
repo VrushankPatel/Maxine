@@ -30,6 +30,30 @@ const envoyConfigController = (req, res) => {
                 connect_timeout: "5s",
                 type: "STRICT_DNS",
                 dns_lookup_family: "V4_ONLY",
+                lb_policy: "ROUND_ROBIN",
+                health_checks: [{
+                    timeout: "3s",
+                    interval: "10s",
+                    unhealthy_threshold: 3,
+                    healthy_threshold: 2,
+                    http_health_check: {
+                        path: "/health"
+                    }
+                }],
+                circuit_breakers: {
+                    thresholds: [{
+                        max_connections: 1024,
+                        max_pending_requests: 1024,
+                        max_requests: 1024,
+                        max_retries: 3
+                    }]
+                },
+                outlier_detection: {
+                    consecutive_5xx: 5,
+                    interval: "10s",
+                    base_ejection_time: "30s",
+                    max_ejection_percent: 50
+                },
                 load_assignment: {
                     cluster_name: serviceName,
                     endpoints: [{
@@ -44,7 +68,13 @@ const envoyConfigController = (req, res) => {
                 },
                 route: {
                     cluster: serviceName,
-                    prefix_rewrite: "/"
+                    prefix_rewrite: "/",
+                    retry_policy: {
+                        retry_on: "5xx,connect-failure,refused-stream",
+                        num_retries: 3,
+                        per_try_timeout: "2s"
+                    },
+                    timeout: "15s"
                 }
             });
         }

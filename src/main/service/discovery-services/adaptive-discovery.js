@@ -3,7 +3,7 @@ const { serviceRegistry } = require("../../entity/service-registry");
 class AdaptiveDiscovery {
     constructor() {
         this.cache = new Map(); // serviceName -> {node, timestamp}
-        this.cacheTTL = 1000; // 1 second
+        this.cacheTTL = 5000; // 5 seconds
     }
 
     /**
@@ -14,12 +14,12 @@ class AdaptiveDiscovery {
       * @param {array} tags
       * @returns {object}
       */
-    getNode(fullServiceName, group, tags) {
+    getNode(fullServiceName, group, tags, deployment, filter) {
         const cached = this.cache.get(fullServiceName);
         if (cached && (Date.now() - cached.timestamp) < this.cacheTTL) {
             return cached.node;
         }
-        const healthyNodes = serviceRegistry.getHealthyNodes(fullServiceName, group, tags);
+        const healthyNodes = serviceRegistry.getHealthyNodes(fullServiceName, group, tags, deployment, filter);
         if (healthyNodes.length === 0) return null;
 
         let bestNode = null;

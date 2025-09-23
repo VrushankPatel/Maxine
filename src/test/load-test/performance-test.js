@@ -4,33 +4,45 @@ import { textSummary } from 'https://jslib.k6.io/k6-summary/0.0.1/index.js';
 import { htmlReport } from "https://raw.githubusercontent.com/benc-uk/k6-reporter/main/dist/bundle.js";
 
 const host = "http://localhost:8080";
-const apiUrl = `${host}/api`;
+const apiUrl = host;
+const isLightning = __ENV.ULTRA_FAST_MODE === 'true' || __ENV.LIGHTNING_MODE !== 'false';
+const registerUrl = isLightning ? '/register' : '/api/maxine/serviceops/register';
+const heartbeatUrl = isLightning ? '/heartbeat' : '/api/maxine/serviceops/heartbeat';
+const discoverUrl = isLightning ? '/discover?serviceName=dbservice' : '/api/maxine/serviceops/discover?serviceName=dbservice';
 const statusCheck = {"is status 200": response => response.status === 200};
 
 const headers = {headers: {'Content-Type': 'application/json'}};
 
 const serviceObj = JSON.stringify({
-    "hostName": "httpbin.org",
-    "nodeName": "node-x-10",
     "serviceName": "dbservice",
-    "ssl": true,
-    "timeOut": 50,
-    "weight": 10,
-    "path": "/status/200"
+    "host": "localhost",
+    "port": 3000,
+    "metadata": {"version": "1.0"}
 });
 
 export function setup() {
-    let signinResponse = http.post(`${apiUrl}/maxine/signin`, JSON.stringify({userName: "admin", password: "admin"}), headers);
-    let token = signinResponse.json().accessToken;
-    let authHeaders = { headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' } };
-    http.post(`${apiUrl}/maxine/serviceops/register`, serviceObj, authHeaders);
-    return { token };
+    let headers = { headers: { 'Content-Type': 'application/json' } };
+    let registerResponse = http.post(`${apiUrl}${registerUrl}`, serviceObj, headers);
+    if (registerResponse.status !== 200) {
+        console.log('Registration failed:', registerResponse.status, registerResponse.body);
+        return { headers };
+    }
+    let registerData = JSON.parse(registerResponse.body);
+    let nodeId = registerData.nodeId;
+    let heartbeatResponse = http.post(`${apiUrl}${heartbeatUrl}`, JSON.stringify({ nodeId }), headers);
+    if (heartbeatResponse.status !== 200) {
+        console.log('Heartbeat failed:', heartbeatResponse.status, heartbeatResponse.body);
+    }
+    return { headers };
 }
 
 export default function (data) {
-    let authHeaders = { headers: { 'Authorization': `Bearer ${data.token}` } };
-    let response = http.get(`${apiUrl}/maxine/serviceops/discover?serviceName=dbservice&version=1.0`, authHeaders);
+    let response = http.get(`${apiUrl}${discoverUrl}`, data.headers);
     check(response, statusCheck);
+    // Log response for debugging
+    if (response.status !== 200) {
+        console.log('Response status:', response.status, 'body:', response.body);
+    }
 }
 
 export function handleSummary(data) {
@@ -47,10 +59,10 @@ export function teardown() {
 export let options = {
     vus: 50,
     iterations: 5000,
-    duration: '50s',
+    duration: '30s',
     thresholds: {
         http_req_failed: ['rate<0.02'],
-        http_req_duration: ['p(95)<500'],
+        http_req_duration: ['p(95)<100'], // Stricter for ultra-fast
         http_reqs: ['count>100']
     },
 };

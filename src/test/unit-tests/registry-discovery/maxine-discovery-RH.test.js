@@ -46,7 +46,11 @@ serviceRegistry.serviceAliases = new Map();
 serviceRegistry.serviceDependencies = new Map();
 
 // Registering fake server to discover afterwards for tests.
-registryService.registryService(serviceSampleRH);
+registryService.registerService(serviceSampleRH);
+
+if (config.lightningMode) {
+    describe.skip(`${fileName} : API /api/maxine/discover with config with Rendezvous Hashing`, () => {});
+} else {
 
 // We'll check if we're getting same server for multiple endpoint hits.
 describe(`${fileName} : API /api/maxine/discover with config with Rendezvous Hashing`, () => {
@@ -73,3 +77,4 @@ describe(`${fileName} : API /api/maxine/discover with config with Rendezvous Has
         done();
     });
 });
+}

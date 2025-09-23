@@ -22,6 +22,33 @@ const actuatorConfig = {
     basePath: constants.ACTUATORPATH,
     customEndpoints: [
         {
+            id: 'info',
+            controller: (_req, res) => {
+                res.json({
+                    build: {
+                        name: 'maxine-discovery',
+                        description: 'A high-performance service discovery and registry'
+                    },
+                    app: {
+                        name: 'Maxine',
+                        version: '1.0.0',
+                        pid: process.pid,
+                        uptime: process.uptime(),
+                        node_env: process.env.NODE_ENV || 'development'
+                    }
+                });
+            }
+        },
+        {
+            id: 'metrics',
+            controller: (_req, res) => {
+                res.json({
+                    mem: process.memoryUsage(),
+                    uptime: process.uptime()
+                });
+            }
+        },
+        {
             id: 'performance',
             controller: (_req, res) => {
                 axios.get(constants.CIRCLECI_ARTIFACTS)

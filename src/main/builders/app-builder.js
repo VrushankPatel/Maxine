@@ -1,8 +1,8 @@
 const express = require('express');
 const config = require('../config/config');
 const { statusAndMsgs } = require('../util/constants/constants');
-const cors = require('cors');
-const spdy = require('spdy');
+const { consoleLog, consoleError } = require('../util/logging/logging-util');
+let cors, spdy;
 class ExpressAppBuilder{
     app;
     conditionStack = [];
@@ -34,15 +34,23 @@ class ExpressAppBuilder{
      * @param {object: Express} app
      * @returns {object: ExpressAppBuilder}
      */
-    addCors = () => this.use(cors());
+    addCors = () => {
+        if (!cors) cors = require('cors');
+        return this.use(cors());
+    };
 
     /**
      * Add compression middleware
      * @returns {object: ExpressAppBuilder}
      */
     addCompression(){
-        const compression = require('compression');
-        return this.use(compression());
+        try {
+            const compression = require('compression');
+            return this.use(compression());
+        } catch (e) {
+            // Compression not available
+            return this;
+        }
     }
 
     /**
@@ -148,8 +156,8 @@ class ExpressAppBuilder{
       * @returns {object: ExpressAppBuilder}
       */
     listen(port, callback){
-        const server = this.app.listen(port, '0.0.0.0', callback);
-        server.on('error', (err) => console.error('listen error', err));
+        const server = this.app.listen(port, callback);
+        server.on('error', (err) => consoleError('listen error', err));
         return this;
     }
 
@@ -160,13 +168,25 @@ class ExpressAppBuilder{
       * @returns {object: ExpressAppBuilder}
       */
     listenOrSpdy(port, callback){
+        console.log('app type', typeof this.app);
+        console.log('app has use', typeof this.app.use);
         let server;
         if (config.http2Enabled) {
-            server = spdy.createServer({}, this.app).listen(port, callback);
-            server.on('error', (err) => console.error('spdy listen error', err));
+            try {
+                if (!spdy) spdy = require('spdy');
+                server = spdy.createServer({}, this.app).listen(port, callback);
+                server.on('error', (err) => consoleError('spdy listen error', err));
+                server.on('listening', () => consoleLog('server is listening on', port));
+            } catch (e) {
+                // Fallback to http
+                server = this.app.listen(port, '0.0.0.0', callback);
+                server.on('error', (err) => consoleError('http listen error', err));
+                server.on('listening', () => consoleLog('server is listening on', port));
+            }
         } else {
-            server = this.app.listen(port, '0.0.0.0', callback);
-            server.on('error', (err) => console.error('http listen error', err));
+            server = this.app.listen(port, callback);
+            server.on('error', (err) => consoleError('http listen error', err));
+            server.on('listening', () => consoleLog('server is listening on', port));
         }
         this.server = server;
         return this;

@@ -1,0 +1,13 @@
+version: '3.8'
+
+services:
+  maxine:
+    build: .
+    ports:
+      - "8080:8080"
+    environment:
+      - HIGH_PERFORMANCE_MODE=true
+      - CLUSTERING_ENABLED=true
+    volumes:
+      - ./logs:/app/logs
+      - ./registry.json:/app/registry.json

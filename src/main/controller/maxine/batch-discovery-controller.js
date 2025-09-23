@@ -6,6 +6,17 @@ const { info } = require("../../util/logging/logging-util");
 const config = require("../../config/config");
 const { buildServiceNameCached } = require("../../util/util");
 
+// Fast LCG PRNG
+let lcgSeed = Date.now();
+const lcgA = 1664525;
+const lcgC = 1013904223;
+const lcgM = 4294967296;
+
+const fastRandom = () => {
+    lcgSeed = (lcgA * lcgSeed + lcgC) % lcgM;
+    return lcgSeed / lcgM;
+};
+
 const batchDiscoveryController = (req, res) => {
     const startTime = Date.now();
     const ip = req.clientIp || (req.clientIp = req.ip
@@ -46,7 +57,7 @@ const batchDiscoveryController = (req, res) => {
             if (split) {
                 const versions = Object.keys(split);
                 const total = Object.values(split).reduce((a, b) => a + b, 0);
-                let rand = Math.random() * total;
+                let rand = fastRandom() * total;
                 for (const v of versions) {
                     rand -= split[v];
                     if (rand <= 0) {

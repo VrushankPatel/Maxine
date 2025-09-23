@@ -30,7 +30,6 @@ class RouteBuilder{
      * @returns {object: RouteBuilder}
      */
     from(routeEndPt){
-        routeEndPt = this.formatEndpoint(routeEndPt);
         this.routeStack.push(routeEndPt);
         return this;
     }
@@ -60,7 +59,9 @@ class RouteBuilder{
      * @returns {object: RouteBuilder}
      */
     get(endPoint, ...args){
-        this.route.get(this.createRouteString(endPoint), ...args);
+        const route = this.createRouteString(endPoint);
+        console.log('adding GET route', route);
+        this.route.get(route, ...args.filter(arg => arg != null));
         return this;
     }
 
@@ -71,7 +72,7 @@ class RouteBuilder{
      * @returns {object: RouteBuilder}
      */
     post(endPoint, ...args){
-        this.route.post(this.createRouteString(endPoint), ...args);
+        this.route.post(this.createRouteString(endPoint), ...args.filter(arg => arg != null));
         return this;
     }
 
@@ -82,7 +83,7 @@ class RouteBuilder{
      * @returns {object: RouteBuilder}
      */
     put(endPoint, ...args){
-        this.route.put(this.createRouteString(endPoint), ...args);
+        this.route.put(this.createRouteString(endPoint), ...args.filter(arg => arg != null));
         return this;
     }
 
@@ -93,7 +94,7 @@ class RouteBuilder{
      * @returns {object: RouteBuilder}
      */
     delete(endPoint, ...args){
-        this.route.delete(this.createRouteString(endPoint), ...args);
+        this.route.delete(this.createRouteString(endPoint), ...args.filter(arg => arg != null));
         return this;
     }
 
@@ -104,7 +105,18 @@ class RouteBuilder{
      * @returns {object: RouteBuilder}
      */
     all(endPoint, ...args){
-        this.route.all(this.createRouteString(endPoint), ...args);
+        this.route.all(this.createRouteString(endPoint), ...args.filter(arg => arg != null));
+        return this;
+    }
+
+    /**
+     * Use middleware for the route.
+     * @param {string} endPoint
+     * @param  {...any} args
+     * @returns {object: RouteBuilder}
+     */
+    use(endPoint, ...args){
+        this.route.use(this.createRouteString(endPoint), ...args.filter(arg => arg != null));
         return this;
     }
 
@@ -122,7 +134,7 @@ class RouteBuilder{
      * @returns {object: RouteBuilder}
      */
     createRouteString(endPt) {
-        return this.routeStack.join('') + this.formatEndpoint(endPt);
+        return '/' + this.routeStack.join('/') + this.formatEndpoint(endPt);
     }
 
     /**

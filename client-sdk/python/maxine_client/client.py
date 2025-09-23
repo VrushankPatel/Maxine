@@ -1,6 +1,7 @@
 import requests
 import json
 import time
+import socket
 from typing import Dict, List, Optional, Any
 from urllib.parse import urljoin
 
@@ -152,6 +153,49 @@ class MaxineClient:
         self._set_cache(cache_key, result)
         return result
 
+    def discover_service_udp(self, service_name: str, udp_port: int = 8081, udp_host: str = 'localhost') -> Dict[str, Any]:
+        """
+        Discover a service instance via UDP for ultra-fast lookups
+
+        Args:
+            service_name: Name of the service to discover
+            udp_port: UDP port of the Maxine server
+            udp_host: UDP host of the Maxine server
+
+        Returns:
+            Service discovery response
+        """
+        sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        sock.settimeout(self.timeout)
+        try:
+            sock.sendto(service_name.encode(), (udp_host, udp_port))
+            data, _ = sock.recvfrom(1024)
+            return json.loads(data.decode())
+        finally:
+            sock.close()
+
+    def discover_service_tcp(self, service_name: str, tcp_port: int = 8082, tcp_host: str = 'localhost') -> Dict[str, Any]:
+        """
+        Discover a service instance via TCP for ultra-fast lookups
+
+        Args:
+            service_name: Name of the service to discover
+            tcp_port: TCP port of the Maxine server
+            tcp_host: TCP host of the Maxine server
+
+        Returns:
+            Service discovery response
+        """
+        sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        sock.settimeout(self.timeout)
+        try:
+            sock.connect((tcp_host, tcp_port))
+            sock.sendall(service_name.encode() + b'\n')
+            data = sock.recv(1024)
+            return json.loads(data.decode().strip())
+        finally:
+            sock.close()
+
     def get_service_health(self, service_name: str, namespace: str = "default") -> Dict[str, Any]:
         """
         Get health status of all nodes for a service
@@ -209,3 +253,286 @@ class MaxineClient:
         """
         params = {"since": since}
         return self._make_request('GET', 'changes', params=params)
+
+    def add_alias(self, alias: str, primary_service_name: str) -> Dict[str, Any]:
+        """
+        Add a service alias
+
+        Args:
+            alias: Alias name
+            primary_service_name: Primary service name
+
+        Returns:
+            Response
+        """
+        payload = {"alias": alias, "primaryServiceName": primary_service_name}
+        return self._make_request('POST', 'aliases/add', json=payload)
+
+    def remove_alias(self, alias: str) -> Dict[str, Any]:
+        """
+        Remove a service alias
+
+        Args:
+            alias: Alias name
+
+        Returns:
+            Response
+        """
+        payload = {"alias": alias}
+        return self._make_request('DELETE', 'aliases/remove', json=payload)
+
+    def get_aliases(self, service_name: str) -> Dict[str, Any]:
+        """
+        Get aliases for a service
+
+        Args:
+            service_name: Service name
+
+        Returns:
+            Response
+        """
+        params = {"serviceName": service_name}
+        return self._make_request('GET', 'aliases', params=params)
+
+    def add_webhook(self, service_name: str, url: str) -> Dict[str, Any]:
+        """
+        Add a webhook for service changes
+
+        Args:
+            service_name: Service name
+            url: Webhook URL
+
+        Returns:
+            Response
+        """
+        payload = {"serviceName": service_name, "url": url}
+        return self._make_request('POST', 'webhooks/add', json=payload)
+
+    def remove_webhook(self, service_name: str, url: str) -> Dict[str, Any]:
+        """
+        Remove a webhook
+
+        Args:
+            service_name: Service name
+            url: Webhook URL
+
+        Returns:
+            Response
+        """
+        payload = {"serviceName": service_name, "url": url}
+        return self._make_request('DELETE', 'webhooks/remove', json=payload)
+
+    def get_webhooks(self, service_name: str) -> Dict[str, Any]:
+        """
+        Get webhooks for a service
+
+        Args:
+            service_name: Service name
+
+        Returns:
+            Response
+        """
+        params = {"serviceName": service_name}
+        return self._make_request('GET', 'webhooks', params=params)
+
+    def set_kv(self, key: str, value: Any) -> Dict[str, Any]:
+        """
+        Set a key-value pair
+
+        Args:
+            key: Key
+            value: Value
+
+        Returns:
+            Response
+        """
+        payload = {"key": key, "value": value}
+        return self._make_request('POST', 'kv/set', json=payload)
+
+    def get_kv(self, key: str) -> Any:
+        """
+        Get a key-value pair
+
+        Args:
+            key: Key
+
+        Returns:
+            Value
+        """
+        params = {"key": key}
+        response = self._make_request('GET', 'kv/get', params=params)
+        return response.get('value')
+
+    def delete_kv(self, key: str) -> Dict[str, Any]:
+        """
+        Delete a key-value pair
+
+        Args:
+            key: Key
+
+        Returns:
+            Response
+        """
+        payload = {"key": key}
+        return self._make_request('DELETE', 'kv/delete', json=payload)
+
+    def get_all_kv(self) -> Dict[str, Any]:
+        """
+        Get all key-value pairs
+
+        Returns:
+            Response
+        """
+        return self._make_request('GET', 'kv/all')
+
+    # Lightning Mode API Methods (for ultra-fast operations)
+
+    def register_service_lightning(self, service_name: str, host: str, port: int,
+                                   metadata: Optional[Dict[str, Any]] = None,
+                                   tags: Optional[List[str]] = None,
+                                   version: Optional[str] = None,
+                                   environment: Optional[str] = None,
+                                   namespace: str = "default",
+                                   datacenter: str = "default") -> Dict[str, Any]:
+        """
+        Register a service using Lightning Mode API for maximum speed
+
+        Args:
+            service_name: Name of the service
+            host: Service host
+            port: Service port
+            metadata: Additional metadata
+            tags: Service tags
+            version: Service version
+            environment: Environment (dev/staging/prod)
+            namespace: Service namespace
+            datacenter: Service datacenter
+
+        Returns:
+            Registration response
+        """
+        payload = {
+            "serviceName": service_name,
+            "host": host,
+            "port": port,
+            "metadata": metadata or {},
+            "tags": tags or [],
+            "version": version,
+            "environment": environment,
+            "namespace": namespace,
+            "datacenter": datacenter
+        }
+        url = urljoin(self.base_url + '/', 'register')
+        response = self.session.post(url, json=payload, timeout=self.timeout)
+        response.raise_for_status()
+        return response.json()
+
+    def discover_service_lightning(self, service_name: str,
+                                   strategy: str = 'round-robin',
+                                   client_id: Optional[str] = None,
+                                   tags: Optional[List[str]] = None,
+                                   version: Optional[str] = None,
+                                   environment: Optional[str] = None,
+                                   namespace: str = "default",
+                                   datacenter: str = "default") -> Dict[str, Any]:
+        """
+        Discover a service using Lightning Mode API
+
+        Args:
+            service_name: Name of the service
+            strategy: Load balancing strategy
+            client_id: Client identifier for sticky sessions
+            tags: Required tags
+            version: Service version
+            environment: Environment filter
+            namespace: Service namespace
+            datacenter: Service datacenter
+
+        Returns:
+            Discovery response
+        """
+        params = {
+            "serviceName": service_name,
+            "strategy": strategy,
+            "namespace": namespace,
+            "datacenter": datacenter
+        }
+        if client_id:
+            params["clientId"] = client_id
+        if tags:
+            params["tags"] = ','.join(tags)
+        if version:
+            params["version"] = version
+        if environment:
+            params["environment"] = environment
+
+        url = urljoin(self.base_url + '/', 'discover')
+        response = self.session.get(url, params=params, timeout=self.timeout)
+        response.raise_for_status()
+        return response.json()
+
+    def heartbeat_lightning(self, node_id: str) -> Dict[str, Any]:
+        """
+        Send heartbeat using Lightning Mode API
+
+        Args:
+            node_id: Node identifier
+
+        Returns:
+            Heartbeat response
+        """
+        payload = {"nodeId": node_id}
+        url = urljoin(self.base_url + '/', 'heartbeat')
+        response = self.session.post(url, json=payload, timeout=self.timeout)
+        response.raise_for_status()
+        return response.json()
+
+    def deregister_service_lightning(self, service_name: str, node_name: str,
+                                     namespace: str = "default",
+                                     datacenter: str = "default") -> Dict[str, Any]:
+        """
+        Deregister a service using Lightning Mode API
+
+        Args:
+            service_name: Name of the service
+            node_name: Node name
+            namespace: Service namespace
+            datacenter: Service datacenter
+
+        Returns:
+            Deregistration response
+        """
+        payload = {
+            "serviceName": service_name,
+            "nodeName": node_name,
+            "namespace": namespace,
+            "datacenter": datacenter
+        }
+        url = urljoin(self.base_url + '/', 'deregister')
+        response = self.session.delete(url, json=payload, timeout=self.timeout)
+        response.raise_for_status()
+        return response.json()
+
+    def list_services_lightning(self) -> Dict[str, Any]:
+        """
+        List all services using Lightning Mode API
+
+        Returns:
+            Services list
+        """
+        url = urljoin(self.base_url + '/', 'servers')
+        response = self.session.get(url, timeout=self.timeout)
+        response.raise_for_status()
+        return response.json()
+
+    def get_health_lightning(self) -> Dict[str, Any]:
+        """
+        Get health status using Lightning Mode API
+
+        Returns:
+            Health status
+        """
+        url = urljoin(self.base_url + '/', 'health')
+        response = self.session.get(url, timeout=self.timeout)
+        response.raise_for_status()
+        return response.json()

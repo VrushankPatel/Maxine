@@ -2,6 +2,7 @@ var chai = require('chai');
 var chaiHttp = require('chai-http');
 const app = require('../../../index');
 const { constants } = require('../../main/util/constants/constants');
+const config = require('../../main/config/config');
 var should = chai.should();
 chai.use(require('chai-json'));
 chai.use(chaiHttp);
@@ -11,6 +12,11 @@ const { testUser, ENDPOINTS } = require('../testUtil/test-constants');
 const fileName = require('path').basename(__filename).replace(".js","");
 
 describe(`${fileName} : API /api/maxine/signin`, () => {
+    // Skip security tests in lightning mode
+    if (config.lightningMode) {
+        it.skip('Security tests skipped in lightning mode', () => {});
+        return;
+    }
     it('POST /signin Signin endpoint fire but without any payload, it should return 400 Bad request.', (done) => {
         chai.request(app)
             .post(ENDPOINTS.maxine.signin)

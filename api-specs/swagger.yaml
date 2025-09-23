@@ -134,7 +134,7 @@ paths:
           content:
             application/json:
               example: '{"message":"File not found"}'
-   /api/maxine/serviceops/register:
+  /api/maxine/serviceops/register:
      post:
        summary: >-
          Register the server with it's data (ServiceName, NodeName, Host, Port,
@@ -165,7 +165,7 @@ paths:
                  {"message": "Please provide all of these -> hostName, nodeName,
                  port and serviceName"}
        x-codegen-request-body-name: service
-   /api/maxine/serviceops/deregister:
+  /api/maxine/serviceops/deregister:
      delete:
        summary: Deregister a service node by serviceName and nodeName.
        tags:
@@ -195,7 +195,7 @@ paths:
              application/json:
                example: '{"message": "Missing serviceName or nodeName"}'
        x-codegen-request-body-name: deregister
-    /api/maxine/serviceops/discover:
+  /api/maxine/serviceops/discover:
       get:
         summary: >-
           Proxy the request to the registered service based on service name and load balancing strategy.
@@ -232,7 +232,7 @@ paths:
               application/json:
                 example: '{"message": "Bad Gateway"}'
         x-codegen-request-body-name: service
-    /api/maxine/serviceops/discover/filtered:
+  /api/maxine/serviceops/discover/filtered:
       get:
         summary: >-
           Proxy the request to the registered service based on service name, tags, and load balancing strategy.
@@ -362,7 +362,7 @@ paths:
                application/json:
                  example: '{"message": "Service not found"}'
          x-codegen-request-body-name: service
-    /api/maxine/serviceops/servers:
+  /api/maxine/serviceops/servers:
     get:
       summary: >-
         Get all the registered servers in Maxine service registry if there are
@@ -398,7 +398,7 @@ paths:
            content:
              application/json:
                example: '{"message":"Forbidden"}'
-    /api/maxine/serviceops/aliases/add:
+  /api/maxine/serviceops/aliases/add:
       post:
         summary: Add an alias for a service.
         tags:
@@ -451,7 +451,7 @@ paths:
             content:
               application/json:
                 example: '{"message":"Unauthorized"}'
-    /api/maxine/serviceops/aliases/remove:
+  /api/maxine/serviceops/aliases/remove:
       delete:
         summary: Remove an alias for a service.
         tags:
@@ -500,7 +500,7 @@ paths:
             content:
               application/json:
                 example: '{"message":"Unauthorized"}'
-    /api/maxine/serviceops/aliases:
+  /api/maxine/serviceops/aliases:
       get:
         summary: Get aliases for services.
         tags:
@@ -550,7 +550,7 @@ paths:
             content:
               application/json:
                 example: '{"message":"Unauthorized"}'
-   /api/maxine/control/config:
+  /api/maxine/control/config:
     get:
       summary: Get the current config data of Maxine.
       tags:

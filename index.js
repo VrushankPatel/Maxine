@@ -1,178 +1,328 @@
 require('./src/main/util/logging/log-generic-exceptions')();
 const config = require('./src/main/config/config');
 
-// Initialize OpenTelemetry tracing if enabled and not in high performance mode
-if (config.tracingEnabled && !config.highPerformanceMode) {
-    const { NodeSDK } = require('@opentelemetry/sdk-node');
-    const { getNodeAutoInstrumentations } = require('@opentelemetry/auto-instrumentations-node');
-    const { JaegerExporter } = require('@opentelemetry/exporter-jaeger');
+process.on('uncaughtException', (err) => {
+  console.error('uncaught exception', err);
+  process.exit(1);
+});
 
-    const sdk = new NodeSDK({
-        serviceName: 'maxine-service-registry',
-        traceExporter: new JaegerExporter({
-            endpoint: process.env.JAEGER_ENDPOINT || 'http://localhost:14268/api/traces',
-        }),
-        instrumentations: [getNodeAutoInstrumentations()],
-    });
+process.on('unhandledRejection', (reason, promise) => {
+  console.error('unhandled rejection', reason);
+  process.exit(1);
+});
 
-    sdk.start();
-    console.log('OpenTelemetry tracing enabled');
-}
-
-const cluster = require('cluster');
-const os = require('os');
-const loggingUtil = require('./src/main/util/logging/logging-util');
+// Lightning mode: minimal, fast server
 const { constants } = require('./src/main/util/constants/constants');
-const actuator = require('express-actuator');
 const ExpressAppBuilder = require('./src/main/builders/app-builder');
-const maxineApiRoutes = require('./src/main/routes/api-routes');
-const expressStatusMonitor = require('express-status-monitor');
-const logWebExceptions = require('./src/main/util/logging/log-web-exceptions');
-const logRequest = require('./src/main/util/logging/log-request');
-const { authenticationController } = require('./src/main/controller/security/authentication-controller');
-const swaggerUi = require('swagger-ui-express');
-const { discoveryService } = require('./src/main/service/discovery-service');
-const { statusMonitorConfig, actuatorConfig } = require('./src/main/config/actuator/actuator-config');
-const { loadSwaggerYAML } = require('./src/main/util/util');
-const rateLimit = require('express-rate-limit');
-const compression = require('compression');
-const swaggerDocument = loadSwaggerYAML();
-const { healthService } = require('./src/main/service/health-service');
-const { serviceRegistry } = require('./src/main/entity/service-registry');
-const dashboardController = require('./src/main/controller/dashboard-controller');
-const path = require("path");
-const currDir = require('./conf');
-const grpc = require('@grpc/grpc-js');
-const protoLoader = require('@grpc/proto-loader');
-const spdy = require('spdy');
-const WebSocket = require('ws');
 
-if (config.clusteringEnabled && cluster.isMaster) {
-    console.log(`Master ${process.pid} is running`);
+let builder;
 
-    // Fork workers
-    for (let i = 0; i < config.numWorkers; i++) {
-        cluster.fork();
-    }
+if (config.lightningMode) {
+    // Minimal lightning mode with raw HTTP for ultimate speed
+    const { LightningServiceRegistrySimple } = require('./src/main/entity/lightning-service-registry-simple');
+    const serviceRegistry = new LightningServiceRegistrySimple();
 
-    cluster.on('exit', (worker, code, signal) => {
-        console.log(`Worker ${worker.process.pid} died with code: ${code}, and signal: ${signal}`);
-        console.log('Starting a new worker');
-        cluster.fork();
+    // Raw HTTP server for maximum performance
+    const http = require('http');
+    const url = require('url');
+
+    const stringify = require('fast-json-stringify');
+
+    // Precompiled stringify functions for performance
+    const registerResponseSchema = {
+        type: 'object',
+        properties: {
+            nodeId: { type: 'string' },
+            status: { type: 'string' }
+        }
+    };
+    const stringifyRegister = stringify(registerResponseSchema);
+
+    const discoverResponseSchema = {
+        type: 'object',
+        properties: {
+            address: { type: 'string' },
+            nodeName: { type: 'string' },
+            healthy: { type: 'boolean' }
+        }
+    };
+    const stringifyDiscover = stringify(discoverResponseSchema);
+
+    const successResponseSchema = {
+        type: 'object',
+        properties: {
+            success: { type: 'boolean' }
+        }
+    };
+    const stringifySuccess = stringify(successResponseSchema);
+
+    const serversResponseSchema = {
+        type: 'object',
+        properties: {
+            services: { type: 'array', items: { type: 'string' } }
+        }
+    };
+    const stringifyServers = stringify(serversResponseSchema);
+
+    const healthResponseSchema = {
+        type: 'object',
+        properties: {
+            status: { type: 'string' },
+            services: { type: 'number' },
+            nodes: { type: 'number' }
+        }
+    };
+    const stringifyHealth = stringify(healthResponseSchema);
+
+    const metricsResponseSchema = {
+        type: 'object',
+        properties: {
+            uptime: { type: 'number' },
+            requests: { type: 'number' },
+            errors: { type: 'number' },
+            services: { type: 'number' },
+            nodes: { type: 'number' }
+        }
+    };
+    const stringifyMetrics = stringify(metricsResponseSchema);
+
+    // Pre-allocated error buffers
+    const errorMissingServiceName = Buffer.from('{"error": "Missing serviceName"}');
+    const errorMissingNodeId = Buffer.from('{"error": "Missing nodeId"}');
+    const errorInvalidJSON = Buffer.from('{"error": "Invalid JSON"}');
+    const errorNotFound = Buffer.from('{"message": "Not found"}');
+    const successTrue = Buffer.from('{"success":true}');
+    const serviceUnavailable = Buffer.from('{"message": "Service unavailable"}');
+
+    // Routes map for O(1) lookup
+    const routes = new Map();
+
+    // Metrics
+    let requestCount = 0;
+    let errorCount = 0;
+
+    // Rate limiting
+    const rateLimitMap = new Map(); // ip -> { count, resetTime }
+    const rateLimitMax = 1000;
+    const rateLimitWindow = 15 * 60 * 1000; // 15 minutes
+
+    // Handler functions - only core features for lightning speed
+    const handleRegister = (req, res, query, body) => {
+        const { serviceName, host, port } = body;
+        if (!serviceName || !host || !port) {
+            res.writeHead(400, { 'Content-Type': 'application/json' });
+            res.end(errorMissingServiceName);
+            return;
+        }
+        const nodeId = serviceRegistry.register(serviceName, { host, port });
+        res.writeHead(200, { 'Content-Type': 'application/json' });
+        res.end(stringifyRegister({ nodeId, status: 'registered' }));
+    };
+
+    const handleHeartbeat = (req, res, query, body) => {
+        const { nodeId } = body;
+        if (!nodeId) {
+            res.writeHead(400, { 'Content-Type': 'application/json' });
+            res.end(errorMissingNodeId);
+            return;
+        }
+        const success = serviceRegistry.heartbeat(nodeId);
+        res.writeHead(200, { 'Content-Type': 'application/json' });
+        res.end(stringifySuccess({ success }));
+    };
+
+    const handleDeregister = (req, res, query, body) => {
+        const { nodeId } = body;
+        if (!nodeId) {
+            res.writeHead(400, { 'Content-Type': 'application/json' });
+            res.end(errorMissingNodeId);
+            return;
+        }
+        serviceRegistry.deregister(nodeId);
+        res.writeHead(200, { 'Content-Type': 'application/json' });
+        res.end(successTrue);
+    };
+
+    const handleDiscover = (req, res, query, body) => {
+        const serviceName = query.serviceName;
+        if (!serviceName) {
+            res.writeHead(400, { 'Content-Type': 'application/json' });
+            res.end(errorMissingServiceName);
+            return;
+        }
+        const strategy = query.loadBalancing || 'round-robin';
+        const clientIP = req.connection.remoteAddress;
+        const node = serviceRegistry.getRandomNode(serviceName, strategy, clientIP);
+        if (!node) {
+            res.writeHead(404, { 'Content-Type': 'application/json' });
+            res.end(serviceUnavailable);
+            return;
+        }
+        res.writeHead(200, { 'Content-Type': 'application/json' });
+        res.end(stringifyDiscover({ address: node.address, nodeName: node.nodeName, healthy: true }));
+    };
+
+    const handleServers = (req, res, query, body) => {
+        const services = serviceRegistry.getServices();
+        res.writeHead(200, { 'Content-Type': 'application/json' });
+        res.end(stringifyServers({ services }));
+    };
+
+    const handleHealth = (req, res, query, body) => {
+        const services = serviceRegistry.servicesCount;
+        const nodes = serviceRegistry.nodesCount;
+        res.writeHead(200, { 'Content-Type': 'application/json' });
+        res.end(stringifyHealth({ status: 'ok', services, nodes }));
+    };
+
+    const handleMetrics = (req, res, query, body) => {
+        const uptime = process.uptime();
+        const services = serviceRegistry.servicesCount;
+        const nodes = serviceRegistry.nodesCount;
+        res.writeHead(200, { 'Content-Type': 'application/json' });
+        res.end(stringifyMetrics({ uptime, requests: requestCount, errors: errorCount, services, nodes }));
+    };
+
+    routes.set('POST /register', handleRegister);
+    routes.set('POST /heartbeat', handleHeartbeat);
+    routes.set('DELETE /deregister', handleDeregister);
+    routes.set('GET /discover', handleDiscover);
+    routes.set('GET /servers', handleServers);
+    routes.set('GET /health', handleHealth);
+    routes.set('GET /metrics', handleMetrics);
+
+    // Actuator endpoints for compatibility
+    routes.set('GET /api/actuator/health', (req, res, query, body) => {
+        res.writeHead(200, { 'Content-Type': 'application/json' });
+        res.end('{"status": "UP"}');
     });
-} else {
-    const limiter = config.highPerformanceMode ? null : rateLimit({
-        windowMs: config.rateLimitWindowMs,
-        max: config.rateLimitMax,
-        message: 'Too many requests from this IP, please try again later.'
+    routes.set('GET /api/actuator/info', (req, res, query, body) => {
+        res.writeHead(200, { 'Content-Type': 'application/json' });
+        res.end('{"build": {"description": "Maxine Lightning Mode", "name": "maxine-discovery"}}');
     });
-    const builder = ExpressAppBuilder.createNewApp()
-                         .ifProperty("highPerformanceMode", false)
-                             .addCompression()
-                         .endIfProperty()
-                          // .addCors()
-                          // .use('/', (req, res) => res.send('hello'))
-                            .ifPropertyOnce("statusMonitorEnabled")
-                                .use(expressStatusMonitor(statusMonitorConfig))
-                           .ifProperty("highPerformanceMode", false)
-                               .use(logRequest)
-                           .endIfProperty()
-                         .use(authenticationController)
-                         .use('/dashboard', dashboardController)
-                         .mapStaticDir(path.join(currDir, "client"))
-                         .mapStaticDirWithRoute('/logs', path.join(currDir,"logs"))
-                           .ifPropertyOnce("actuatorEnabled")
-                               .use(actuator(actuatorConfig))
-                           .use('/api', limiter ? limiter : (req, res, next) => next(), maxineApiRoutes)
-                         .use('/api-spec', swaggerUi.serve, swaggerUi.setup(swaggerDocument))
-                        .ifPropertyOnce('profile','dev')
-                            .use('/shutdown', process.exit)
-                       .blockUnknownUrls()
-                        .use(logWebExceptions)
-                       .invoke(() => console.log('before listen'))
-                        .listenOrSpdy(constants.PORT, () => {
-                            if (config.clusteringEnabled) {
-                                console.log(`Worker ${process.pid} started`);
-                            }
-                            console.log('listening on port', constants.PORT);
-                            loggingUtil.initApp();
-                        })
-                         .invoke(() => console.log('app built'));
-    const app = builder.getApp();
-    const server = builder.getServer();
+    routes.set('GET /api/actuator/metrics', (req, res, query, body) => {
+        const mem = process.memoryUsage();
+        const uptime = process.uptime();
+        res.writeHead(200, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ mem, uptime }));
+    });
 
-    // Initialize Kubernetes service if enabled
-    if (config.kubernetesEnabled) {
-        require('./src/main/service/k8s-service');
-    }
+    // Logs endpoint for compatibility
+    routes.set('GET /api/logs/download', (req, res, query, body) => {
+        res.writeHead(200, { 'Content-Type': 'application/json' });
+        res.end('{}');
+    });
 
-    // Initialize Consul service if enabled
-    if (config.consulEnabled) {
-        require('./src/main/service/consul-service');
-    }
+    // Config endpoint for compatibility
+    routes.set('GET /api/maxine/control/config', (req, res, query, body) => {
+        res.writeHead(200, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({
+            logAsync: config.logAsync,
+            heartBeatTimeout: config.heartBeatTimeout,
+            highPerformanceMode: false,
+            logJsonPrettify: config.logJsonPrettify,
+            serverSelectionStrategy: 'RR',
+            logFormat: 'JSON'
+        }));
+    });
+    routes.set('PUT /api/maxine/control/config', (req, res, query, body) => {
+        const key = Object.keys(body)[0];
+        const value = body[key];
+        if (key === 'serverSelectionStrategy') {
+            config[key] = constants.SSS[value] || value;
+        } else if (key === 'logFormat') {
+            config[key] = constants.LOG_FORMATS[value] || value;
+        } else {
+            config[key] = value;
+        }
+        res.writeHead(200, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ [key]: "Success" }));
+    });
 
-    // Initialize Eureka service if enabled
-    if (config.eurekaEnabled) {
-        require('./src/main/service/eureka-service');
-    }
+     const server = http.createServer({ keepAlive: true, keepAliveInitialDelay: 0 }, (req, res) => {
+         const clientIP = req.connection.remoteAddress || req.socket.remoteAddress || 'unknown';
 
-    // Initialize mDNS service if enabled
-    if (config.mdnsEnabled) {
-        require('./src/main/service/mdns-service');
-    }
+         // Rate limiting
+         const now = Date.now();
+         let rateData = rateLimitMap.get(clientIP);
+         if (!rateData || now > rateData.resetTime) {
+             rateData = { count: 0, resetTime: now + rateLimitWindow };
+             rateLimitMap.set(clientIP, rateData);
+         }
+         if (rateData.count >= rateLimitMax) {
+             res.writeHead(429, { 'Content-Type': 'application/json' });
+             res.end('{"error": "Too many requests"}');
+             return;
+         }
+         rateData.count++;
 
-    // Initialize ECS service if enabled
-    if (config.ecsEnabled) {
-        require('./src/main/service/ecs-service');
-    }
+         requestCount++;
 
-    // WebSocket server for real-time changes (disabled in high performance mode)
-    if (!config.highPerformanceMode) {
-        const wss = new WebSocket.Server({ server });
+         const parsedUrl = new URL(req.url, `http://localhost`);
+         const pathname = parsedUrl.pathname;
+         const query = Object.fromEntries(parsedUrl.searchParams);
+         const method = req.method;
 
-        wss.on('connection', (ws) => {
-            console.log('WebSocket client connected');
-            ws.on('message', (message) => {
-                console.log('Received:', message);
-            });
-            ws.on('close', () => {
-                console.log('WebSocket client disconnected');
-            });
-        });
-
-        serviceRegistry.setWss(wss);
-    }
-
-    if (config.grpcEnabled) {
-        const packageDefinition = protoLoader.loadSync(path.join(__dirname, 'api-specs/maxine.proto'), {
-            keepCase: true,
-            longs: String,
-            enums: String,
-            defaults: true,
-            oneofs: true
-        });
-        const maxineProto = grpc.loadPackageDefinition(packageDefinition).maxine;
-        const grpcServer = new grpc.Server();
-        grpcServer.addService(maxineProto.DiscoveryService.service, {
-            Discover: (call, callback) => {
-                const { serviceName, version, namespace = 'default', region = 'default', zone = 'default', ip, proxy = true } = call.request;
-                let fullServiceName = (region !== "default" || zone !== "default") ?
-                    (version ? `${namespace}:${region}:${zone}:${serviceName}:${version}` : `${namespace}:${region}:${zone}:${serviceName}`) :
-                    (version ? `${namespace}:${serviceName}:${version}` : `${namespace}:${serviceName}`);
-                const serviceNode = discoveryService.getNode(fullServiceName, ip);
-                if (!serviceNode) {
-                    callback(null, { message: 'Service unavailable' });
-                    return;
-                }
-                const addressToRedirect = serviceNode.address;
-                callback(null, { address: addressToRedirect, nodeName: serviceNode.nodeName });
+        // Use routes map for O(1) lookup
+        const routeKey = `${method} ${pathname}`;
+        const handler = routes.get(routeKey);
+        if (handler) {
+            if (method === 'POST' || method === 'PUT' || method === 'DELETE') {
+                 const chunks = [];
+                 req.on('data', chunk => chunks.push(chunk));
+                 req.on('end', () => {
+                     const body = Buffer.concat(chunks).toString();
+                     try {
+                         const parsedBody = body ? JSON.parse(body) : {};
+                         handler(req, res, query, parsedBody);
+                     } catch (e) {
+                         res.writeHead(400, { 'Content-Type': 'application/json' });
+                         res.end(errorInvalidJSON);
+                     }
+                 });
+            } else {
+                handler(req, res, query, {});
             }
+        } else {
+            res.writeHead(404, { 'Content-Type': 'application/json' });
+            res.end(errorNotFound);
+        }
+    });
+
+    if (!config.isTestMode) {
+        server.listen(constants.PORT, () => {
+            console.log('Maxine lightning-fast server listening on port', constants.PORT);
+            console.log('Lightning mode: minimal features for maximum performance using raw HTTP');
         });
-        grpcServer.bindAsync(`0.0.0.0:${config.grpcPort}`, grpc.ServerCredentials.createInsecure(), () => {
-            grpcServer.start();
-            console.log(`gRPC server running on port ${config.grpcPort}`);
-        });
+
+
     }
 
-    module.exports = app;
+    builder = { getApp: () => server };
+} else {
+    // Full mode
+    const loggingUtil = require('./src/main/util/logging/logging-util');
+    const maxineApiRoutes = require('./src/main/routes/api-routes');
+    const { discoveryService } = require('./src/main/service/discovery-service');
+    const { healthService } = require('./src/main/service/health-service');
+    const { serviceRegistry } = require('./src/main/entity/service-registry');
+    const path = require("path");
+    const currDir = require('./conf');
+
+    builder = ExpressAppBuilder.createNewApp()
+        .use('/api', (req, res, next) => {
+            req.url = req.url.replace(/^\/api/, '') || '/';
+            maxineApiRoutes(req, res, next);
+        })
+        .blockUnknownUrls()
+        .invoke(() => console.log('before listen'));
+
+    if (!config.isTestMode) {
+        builder.listenOrSpdy(constants.PORT, () => {
+            console.log('Maxine lightning-fast server listening on port', constants.PORT);
+            console.log('Full mode: comprehensive features with optimized performance');
+        });
+    }
 }
+
+module.exports = builder.getApp();
