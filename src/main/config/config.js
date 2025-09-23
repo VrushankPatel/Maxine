@@ -21,7 +21,7 @@ const config = {
     highPerformanceMode: process.env.HIGH_PERFORMANCE_MODE === 'true' || process.env.HIGH_PERFORMANCE_MODE === undefined,
     rateLimitMax: process.env.RATE_LIMIT_MAX ? parseInt(process.env.RATE_LIMIT_MAX) : 10000,
     rateLimitWindowMs: process.env.RATE_LIMIT_WINDOW_MS ? parseInt(process.env.RATE_LIMIT_WINDOW_MS) : 900000, // 15 minutes
-      healthCheckInterval: process.env.HEALTH_CHECK_INTERVAL ? parseInt(process.env.HEALTH_CHECK_INTERVAL) : 60000,
+      healthCheckInterval: process.env.HEALTH_CHECK_INTERVAL ? parseInt(process.env.HEALTH_CHECK_INTERVAL) : 30000,
        healthCheckConcurrency: process.env.HEALTH_CHECK_CONCURRENCY ? parseInt(process.env.HEALTH_CHECK_CONCURRENCY) : 2000,
     proxyTimeout: process.env.PROXY_TIMEOUT ? parseInt(process.env.PROXY_TIMEOUT) : 10000,
     grpcEnabled: process.env.GRPC_ENABLED === 'true' || false,
