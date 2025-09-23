@@ -1,7 +1,7 @@
 const RouteBuilder = require('../builders/route-builder');
 const bodyParser = require('body-parser');
 const rateLimit = require('express-rate-limit');
-const { serverListController, registryController, deregisterController, healthController, bulkHealthController, pushHealthController, healthHistoryController, metricsController, prometheusMetricsController, cacheStatsController, filteredDiscoveryController, discoveryInfoController, changesController, changesSSEController, bulkRegisterController, bulkDeregisterController, setMaintenanceController, setDrainingController, backupController, restoreController, dependencyGraphController, impactAnalysisController, setApiSpecController, getApiSpecController, listServicesByGroupController, updateMetadataController, databaseDiscoveryController } = require('../controller/maxine/registry-controller');
+const { serverListController, registryController, deregisterController, healthController, bulkHealthController, pushHealthController, healthHistoryController, metricsController, prometheusMetricsController, cacheStatsController, filteredDiscoveryController, discoveryInfoController, changesController, changesSSEController, bulkRegisterController, bulkDeregisterController, setMaintenanceController, setDrainingController, backupController, restoreController, dependencyGraphController, impactAnalysisController, setApiSpecController, getApiSpecController, listServicesByGroupController, updateMetadataController, databaseDiscoveryController, statsController } = require('../controller/maxine/registry-controller');
 const batchDiscoveryController = require('../controller/maxine/batch-discovery-controller');
 const envoyConfigController = require('../controller/maxine/envoy-controller');
 const { setConfig, getConfig, getAllConfig, deleteConfig } = require('../controller/config-control/config-controller');
@@ -61,8 +61,9 @@ let maxineApiRoutes = RouteBuilder.createNewRoute()
                                     .post("health/bulk", authenticationController, limiter, bodyParser.json(), bulkHealthController)
                                     .post("health/push", authenticationController, limiter, bodyParser.json(), pushHealthController)
                                     .get("health/history", authenticationController, limiter, healthHistoryController)
-                                     .get("metrics", authenticationController, limiter, metricsController)
-                                     .get("metrics/prometheus", authenticationController, limiter, prometheusMetricsController)
+                                      .get("metrics", authenticationController, limiter, metricsController)
+                                      .get("metrics/prometheus", authenticationController, limiter, prometheusMetricsController)
+                                      .get("stats", authenticationController, limiter, statsController)
                                       .get("cache/stats", authenticationController, limiter, cacheStatsController)
                                       .get("changes", authenticationController, limiter, changesController)
                                       .get("changes/sse", authenticationController, limiter, changesSSEController)
