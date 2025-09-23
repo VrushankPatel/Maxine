@@ -202,8 +202,8 @@
   - Conditional metrics collection can be disabled for maximum performance.
   - Optimized data structures using Maps and Sets for O(1) lookups in healthy nodes and response times tracking, providing lightning-fast service resolution for microservices architectures.
   - Caching in load balancing strategies (e.g., Least Response Time, Fastest) for reduced computation overhead.
-  - Compression enabled always for reduced response sizes and improved network performance.
-   - HTTP/2 support for multiplexing and reduced latency over HTTP/1.1.
+   - Compression enabled when high performance mode is disabled for reduced response sizes and improved network performance.
+    - HTTP/2 support enabled by default for multiplexing and reduced latency over HTTP/1.1.
    - Optimized string operations in discovery controller to minimize CPU usage.
    - Native HTTP implementation for health checks eliminates axios dependency overhead.
 ### etcd Persistence
