@@ -3,6 +3,7 @@ const JsonBuilder = require('../builders/json-builder');
 const config = require('../config/config');
 const { constants } = require('./constants/constants');
 const YAML = require('yamljs');
+const LRU = require('lru-cache');
 
 const getCurrentDate = () => date.format(new Date(), constants.REQUEST_LOG_TIMESTAMP_FORMAT);
 
@@ -67,10 +68,26 @@ const loadSwaggerYAML = () => {
     }catch(e){}
 }
 
+// Cache for service name building
+const serviceNameCache = new LRU({ max: 100000, ttl: 900000 }); // 15 min TTL
+
+const buildServiceNameCached = (namespace, region, zone, serviceName, version) => {
+    const key = `${namespace}:${region}:${zone}:${serviceName}:${version || ''}`;
+    if (serviceNameCache.has(key)) {
+        return serviceNameCache.get(key);
+    }
+    const fullServiceName = (region !== "default" || zone !== "default") ?
+        (version ? `${namespace}:${region}:${zone}:${serviceName}:${version}` : `${namespace}:${region}:${zone}:${serviceName}`) :
+        (version ? `${namespace}:${serviceName}:${version}` : `${namespace}:${serviceName}`);
+    serviceNameCache.set(key, fullServiceName);
+    return fullServiceName;
+};
+
 module.exports = {
     getCurrentDate,
     logBuilder,
     sssChecker,
     logFormatChecker,
-    loadSwaggerYAML
+    loadSwaggerYAML,
+    buildServiceNameCached
 }

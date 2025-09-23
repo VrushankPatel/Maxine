@@ -1,5 +1,6 @@
 const { serviceRegistry } = require('../../entity/service-registry');
 const { statusAndMsgs } = require('../../util/constants/constants');
+const { buildServiceNameCached } = require('../../util/util');
 
 const databaseDiscoveryController = (req, res) => {
     const serviceName = req.query.serviceName;
@@ -11,7 +12,7 @@ const databaseDiscoveryController = (req, res) => {
         return;
     }
 
-    const fullServiceName = version ? `${namespace}:${serviceName}:${version}` : `${namespace}:${serviceName}`;
+    const fullServiceName = buildServiceNameCached(namespace, 'default', 'default', serviceName, version);
     const nodes = serviceRegistry.getNodes(fullServiceName);
 
     if (!nodes || Object.keys(nodes).length === 0) {
