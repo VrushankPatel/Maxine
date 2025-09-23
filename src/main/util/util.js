@@ -69,7 +69,7 @@ const loadSwaggerYAML = () => {
 }
 
 // Cache for service name building
-const serviceNameCache = new LRU({ max: 100000, ttl: 900000 }); // 15 min TTL, optimized for memory
+const serviceNameCache = new LRU({ max: 1000000, ttl: 900000 }); // 15 min TTL, optimized for memory
 
 const buildServiceNameCached = (tenantId, namespace, region, zone, serviceName, version) => {
     const key = `${tenantId}:${namespace}:${region}:${zone}:${serviceName}:${version || ''}`;
