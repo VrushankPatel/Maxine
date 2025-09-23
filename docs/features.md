@@ -22,7 +22,7 @@
 ### Health checks
 - Maxine provides comprehensive health monitoring for registered services with both on-demand, background, and push-based checks.
 - The health check endpoint `/api/maxine/serviceops/health?serviceName=<name>` performs parallel HTTP requests to all nodes of the specified service and reports their status.
-  - Background health checks run continuously every 60 seconds to maintain up-to-date service status without impacting request latency.
+  - Background health checks are disabled by default for maximum performance; enable with `HEALTH_CHECK_ENABLED=true` to run continuously every 60 seconds to maintain up-to-date service status without impacting request latency.
 - Push health updates allow services to send their health status directly via `/api/maxine/serviceops/health/push` with JSON payload containing serviceName, nodeName, status ('healthy' or 'unhealthy'), and optional namespace, enabling faster health monitoring without pull-based checks.
 - Health status is cached in optimized data structures, enabling circuit breaker functionality with failure counting that automatically skips unhealthy nodes during discovery.
 - Circuit breaker includes automatic recovery when services become healthy again, improving overall system reliability and performance.
