@@ -28,6 +28,20 @@ class DiscoveryService{
     p2d = new PowerOfTwoDiscovery();
     ad = new AdaptiveDiscovery();
     sd = new StickyDiscovery();
+    strategyMap = new Map([
+        [constants.SSS.RR, this.rrd],
+        [constants.SSS.WRR, this.wrrd],
+        [constants.SSS.LRT, this.lrtd],
+        [constants.SSS.FASTEST, this.fd],
+        [constants.SSS.CH, this.chd],
+        [constants.SSS.RH, this.rhd],
+        [constants.SSS.LC, this.lcd],
+        [constants.SSS.LL, this.lld],
+        [constants.SSS.RANDOM, this.rand],
+        [constants.SSS.P2, this.p2d],
+        [constants.SSS.ADAPTIVE, this.ad],
+        [constants.SSS.STICKY, this.sd]
+    ]);
     cache = new LRU({ max: config.discoveryCacheMax, ttl: config.discoveryCacheTTL });
     serviceKeys = new Map(); // Map serviceName to set of cache keys
     cacheHits = 0;
@@ -62,58 +76,14 @@ class DiscoveryService{
         }
         this.cacheMisses++;
 
+        const strategy = this.strategyMap.get(config.serverSelectionStrategy) || this.rrd;
         let node;
-        switch(config.serverSelectionStrategy){
-            case constants.SSS.RR:
-            node = this.rrd.getNode(fullServiceName, group);
-            break;
-
-            case constants.SSS.WRR:
-            node = this.wrrd.getNode(fullServiceName, group);
-            break;
-
-            case constants.SSS.LRT:
-            node = this.lrtd.getNode(fullServiceName, group);
-            break;
-
-            case constants.SSS.FASTEST:
-            node = this.fd.getNode(fullServiceName, group);
-            break;
-
-            case constants.SSS.CH:
-            node = this.chd.getNode(fullServiceName, ip);
-            break;
-
-            case constants.SSS.RH:
-            node = this.rhd.getNode(fullServiceName, ip);
-            break;
-
-            case constants.SSS.LC:
-            node = this.lcd.getNode(fullServiceName, group);
-            break;
-
-            case constants.SSS.LL:
-            node = this.lld.getNode(fullServiceName, group);
-            break;
-
-            case constants.SSS.RANDOM:
-            node = this.rand.getNode(fullServiceName, group);
-            break;
-
-            case constants.SSS.P2:
-            node = this.p2d.getNode(fullServiceName, group);
-            break;
-
-             case constants.SSS.ADAPTIVE:
-             node = this.ad.getNode(fullServiceName, group);
-             break;
-
-             case constants.SSS.STICKY:
-             node = this.sd.getNode(fullServiceName, ip, group);
-             break;
-
-             default:
-             node = this.rrd.getNode(fullServiceName, group);
+        if (config.serverSelectionStrategy === constants.SSS.CH) {
+            node = strategy.getNode(fullServiceName, ip);
+        } else if (config.serverSelectionStrategy === constants.SSS.RH || config.serverSelectionStrategy === constants.SSS.STICKY) {
+            node = strategy.getNode(fullServiceName, ip, group);
+        } else {
+            node = strategy.getNode(fullServiceName, group);
         }
 
         if (node) {
@@ -141,18 +111,9 @@ class DiscoveryService{
             this.serviceKeys.delete(fullServiceName);
         }
         // Invalidate strategy caches
-        this.rrd.invalidateCache(fullServiceName);
-        this.wrrd.invalidateCache(fullServiceName);
-        this.lrtd.invalidateCache(fullServiceName);
-        this.fd.invalidateCache(fullServiceName);
-        this.chd.invalidateCache(fullServiceName);
-        this.rhd.invalidateCache(fullServiceName);
-        this.lcd.invalidateCache(fullServiceName);
-        this.lld.invalidateCache(fullServiceName);
-         this.rand.invalidateCache(fullServiceName);
-         this.p2d.invalidateCache(fullServiceName);
-         this.ad.invalidateCache(fullServiceName);
-         this.sd.invalidateCache(fullServiceName);
+        for (const strategy of this.strategyMap.values()) {
+            strategy.invalidateCache(fullServiceName);
+        }
     }
 }
 
