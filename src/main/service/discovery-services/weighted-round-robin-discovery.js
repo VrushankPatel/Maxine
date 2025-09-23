@@ -13,19 +13,20 @@ class WeightedRoundRobinDiscovery {
       * @param {array} tags
       * @returns {object}
       */
-    getNode = (fullServiceName, group, tags) => {
-        const healthy = serviceRegistry.getHealthyNodes(fullServiceName, group, tags);
+    getNode = (fullServiceName, group, tags, deployment) => {
+        const healthy = serviceRegistry.getHealthyNodes(fullServiceName, group, tags, deployment);
         if (healthy.length === 0) return null;
 
         // Build expanded list if not cached or changed
-        if (!this.expandedLists.has(fullServiceName)) {
-            this.buildExpandedList(fullServiceName, healthy);
+        const cacheKey = `${fullServiceName}:${deployment || ''}`;
+        if (!this.expandedLists.has(cacheKey)) {
+            this.buildExpandedList(cacheKey, healthy);
         }
 
-        const expanded = this.expandedLists.get(fullServiceName);
+        const expanded = this.expandedLists.get(cacheKey);
         if (!expanded || expanded.length === 0) return null;
 
-        const offset = this.getOffsetAndIncrement(fullServiceName);
+        const offset = this.getOffsetAndIncrement(cacheKey);
         return expanded[offset % expanded.length];
     }
 
@@ -41,8 +42,13 @@ class WeightedRoundRobinDiscovery {
     }
 
     invalidateCache = (fullServiceName) => {
-        this.expandedLists.delete(fullServiceName);
-        this.offsets.delete(fullServiceName);
+        // Delete all keys starting with fullServiceName
+        for (const key of this.expandedLists.keys()) {
+            if (key.startsWith(fullServiceName)) {
+                this.expandedLists.delete(key);
+                this.offsets.delete(key);
+            }
+        }
     }
 
     /**

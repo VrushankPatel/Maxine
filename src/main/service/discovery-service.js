@@ -53,9 +53,10 @@ class DiscoveryService{
      * @param {string} fullServiceName
      * @param {string} ip
      * @param {string} group
+     * @param {string} deployment
      * @returns {object}
      */
-    getNode = (fullServiceName, ip, group) => {
+    getNode = (fullServiceName, ip, group, deployment) => {
           // Check if serviceName is an alias (cached)
           let resolvedServiceName = this.aliasCache.get(fullServiceName);
           if (resolvedServiceName === undefined) {
@@ -68,7 +69,8 @@ class DiscoveryService{
 
         const usesIp = [constants.SSS.CH, constants.SSS.RH, constants.SSS.STICKY].includes(config.serverSelectionStrategy);
         const groupKey = group ? `:${group}` : '';
-        const cacheKey = usesIp ? `${fullServiceName}:${ip}${groupKey}` : `${fullServiceName}${groupKey}`;
+        const deploymentKey = deployment ? `:${deployment}` : '';
+        const cacheKey = usesIp ? `${fullServiceName}:${ip}${groupKey}${deploymentKey}` : `${fullServiceName}${groupKey}${deploymentKey}`;
         const cached = this.cache.get(cacheKey);
         if (cached) {
             this.cacheHits++;
@@ -79,11 +81,11 @@ class DiscoveryService{
         const strategy = this.strategyMap.get(config.serverSelectionStrategy) || this.rrd;
         let node;
         if (config.serverSelectionStrategy === constants.SSS.CH) {
-            node = strategy.getNode(fullServiceName, ip);
+            node = strategy.getNode(fullServiceName, ip, group, undefined, deployment);
         } else if (config.serverSelectionStrategy === constants.SSS.RH || config.serverSelectionStrategy === constants.SSS.STICKY) {
-            node = strategy.getNode(fullServiceName, ip, group);
+            node = strategy.getNode(fullServiceName, ip, group, undefined, deployment);
         } else {
-            node = strategy.getNode(fullServiceName, group);
+            node = strategy.getNode(fullServiceName, group, undefined, deployment);
         }
 
         if (node) {

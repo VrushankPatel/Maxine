@@ -71,14 +71,15 @@ const loadSwaggerYAML = () => {
 // Cache for service name building
 const serviceNameCache = new LRU({ max: 100000, ttl: 900000 }); // 15 min TTL
 
-const buildServiceNameCached = (namespace, region, zone, serviceName, version) => {
-    const key = `${namespace}:${region}:${zone}:${serviceName}:${version || ''}`;
+const buildServiceNameCached = (tenantId, namespace, region, zone, serviceName, version) => {
+    const key = `${tenantId}:${namespace}:${region}:${zone}:${serviceName}:${version || ''}`;
     if (serviceNameCache.has(key)) {
         return serviceNameCache.get(key);
     }
+    const tenantPrefix = tenantId !== "default" ? `${tenantId}:` : '';
     const fullServiceName = (region !== "default" || zone !== "default") ?
-        (version ? `${namespace}:${region}:${zone}:${serviceName}:${version}` : `${namespace}:${region}:${zone}:${serviceName}`) :
-        (version ? `${namespace}:${serviceName}:${version}` : `${namespace}:${serviceName}`);
+        (version ? `${tenantPrefix}${namespace}:${region}:${zone}:${serviceName}:${version}` : `${tenantPrefix}${namespace}:${region}:${zone}:${serviceName}`) :
+        (version ? `${tenantPrefix}${namespace}:${serviceName}:${version}` : `${tenantPrefix}${namespace}:${serviceName}`);
     serviceNameCache.set(key, fullServiceName);
     return fullServiceName;
 };

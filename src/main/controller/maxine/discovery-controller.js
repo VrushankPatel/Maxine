@@ -79,7 +79,9 @@ const discoveryController = (req, res) => {
     const namespace = req.query.namespace || "default";
     const region = req.query.region || "default";
     const zone = req.query.zone || "default";
+    const tenantId = req.query.tenantId || "default";
     const group = req.query.group;
+    const deployment = req.query.deployment;
     const endPoint = req.query.endPoint || "";
     const reqId = req.ip || 'unknown';
     let ip = ipCache.get(reqId);
@@ -103,7 +105,7 @@ const discoveryController = (req, res) => {
     let selectedVersion = version;
         let fullServiceName;
         if (!selectedVersion) {
-            const baseServiceName = buildServiceNameCached(namespace, region, zone, serviceName, '');
+            const baseServiceName = buildServiceNameCached(tenantId, namespace, region, zone, serviceName, '');
             const split = serviceRegistry.getTrafficSplit(baseServiceName);
             if (split) {
                 const versions = Object.keys(split);
@@ -113,7 +115,7 @@ const discoveryController = (req, res) => {
                     rand -= split[v];
                     if (rand <= 0) {
                         selectedVersion = v;
-                        fullServiceName = buildServiceNameCached(namespace, region, zone, serviceName, v);
+                        fullServiceName = buildServiceNameCached(tenantId, namespace, region, zone, serviceName, v);
                         break;
                     }
                 }
@@ -121,10 +123,10 @@ const discoveryController = (req, res) => {
                 fullServiceName = baseServiceName;
             }
         } else {
-            fullServiceName = buildServiceNameCached(namespace, region, zone, serviceName, selectedVersion);
+            fullServiceName = buildServiceNameCached(tenantId, namespace, region, zone, serviceName, selectedVersion);
         }
 
-    const serviceNode = discoveryService.getNode(fullServiceName, ip, group);
+    const serviceNode = discoveryService.getNode(fullServiceName, ip, group, deployment);
 
        // no service node is there so, service unavailable is our error response.
         if(!serviceNode){
