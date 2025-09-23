@@ -5,10 +5,11 @@ class PowerOfTwoDiscovery {
       * Select two random healthy nodes and choose the one with least connections.
       * @param {string} fullServiceName
       * @param {string} group
+      * @param {array} tags
       * @returns {object}
       */
-    getNode = (fullServiceName, group) => {
-        const healthyNodes = serviceRegistry.getHealthyNodes(fullServiceName, group);
+    getNode = (fullServiceName, group, tags) => {
+        const healthyNodes = serviceRegistry.getHealthyNodes(fullServiceName, group, tags);
         if (healthyNodes.length === 0) return null;
         if (healthyNodes.length === 1) {
             return healthyNodes[0];

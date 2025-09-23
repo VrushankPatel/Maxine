@@ -10,10 +10,11 @@ class FastestDiscovery {
       * Retrieve the node with the lowest average response time
       * @param {string} serviceName
       * @param {string} group
+      * @param {array} tags
       * @returns {object}
       */
-    getNode = (fullServiceName, group) => {
-        const healthyNodes = serviceRegistry.getHealthyNodes(fullServiceName, group);
+    getNode = (fullServiceName, group, tags) => {
+        const healthyNodes = serviceRegistry.getHealthyNodes(fullServiceName, group, tags);
         if (healthyNodes.length === 0) return null;
 
         // Check cache

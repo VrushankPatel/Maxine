@@ -19,8 +19,17 @@ const serviceObj = JSON.stringify({
     "path": "/status/200"
 });
 
-export default function () {
-    let response = http.get(`${apiUrl}/maxine/serviceops/discover?serviceName=dbservice&version=1.0`);
+export function setup() {
+    let signinResponse = http.post(`${apiUrl}/maxine/signin`, JSON.stringify({userName: "admin", password: "admin"}), headers);
+    let token = signinResponse.json().accessToken;
+    let authHeaders = { headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' } };
+    http.post(`${apiUrl}/maxine/serviceops/register`, serviceObj, authHeaders);
+    return { token };
+}
+
+export default function (data) {
+    let authHeaders = { headers: { 'Authorization': `Bearer ${data.token}` } };
+    let response = http.get(`${apiUrl}/maxine/serviceops/discover?serviceName=dbservice&version=1.0`, authHeaders);
     check(response, statusCheck);
 }
 

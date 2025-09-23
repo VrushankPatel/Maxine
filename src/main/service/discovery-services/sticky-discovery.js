@@ -10,13 +10,15 @@ class StickyDiscovery {
      * @param {string} serviceName
      * @param {string} ip
      * @param {string} group
+     * @param {array} tags
      * @returns {object}
      */
-    getNode = (fullServiceName, ip, group) => {
-        const healthyNodes = serviceRegistry.getHealthyNodes(fullServiceName, group);
+    getNode = (fullServiceName, ip, group, tags) => {
+        const healthyNodes = serviceRegistry.getHealthyNodes(fullServiceName, group, tags);
         if (healthyNodes.length === 0) return null;
 
-        const clientKey = `${fullServiceName}:${ip}`;
+        const tagKey = tags && tags.length > 0 ? `:${tags.sort().join(',')}` : '';
+        const clientKey = `${fullServiceName}:${ip}${tagKey}`;
         let assignedNode = this.clientNodeMap.get(clientKey);
 
         if (assignedNode && healthyNodes.some(node => node.nodeName === assignedNode.nodeName)) {
