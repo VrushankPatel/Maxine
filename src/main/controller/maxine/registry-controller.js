@@ -1,4 +1,4 @@
-const { info } = require('../../util/logging/logging-util');
+const { info, audit } = require('../../util/logging/logging-util');
 const { statusAndMsgs } = require('../../util/constants/constants');
 const { registryService } = require('../../service/registry-service');
 const { serviceRegistry } = require('../../entity/service-registry');
@@ -72,7 +72,7 @@ const registryController = (req, res) => {
         res.status(statusAndMsgs.STATUS_GENERIC_ERROR).json({"message" : statusAndMsgs.MSG_INVALID_SERVICE_DATA});
         return;
     }
-    info(`Registered service ${serviceResponse.serviceName} with node ${serviceResponse.nodeName} at ${serviceResponse.address}`);
+    audit(`REGISTER: service ${serviceResponse.serviceName} node ${serviceResponse.nodeName} at ${serviceResponse.address}`);
     res.status(statusAndMsgs.STATUS_SUCCESS).json(serviceResponse);
 }
 
@@ -90,6 +90,7 @@ const deregisterController = (req, res) => {
     }
     const success = registryService.deregisterService(serviceName, nodeName, namespace, undefined, undefined, tenantId);
     if (success) {
+        audit(`DEREGISTER: service ${serviceName} node ${nodeName}`);
         res.status(statusAndMsgs.STATUS_SUCCESS).json({ message: "Deregistered successfully" });
     } else {
         res.status(statusAndMsgs.SERVICE_UNAVAILABLE).json({ message: "Service not found" });

@@ -11,7 +11,7 @@ const config = {
     serverSelectionStrategy: process.env.SERVER_SELECTION_STRATEGY ? constants.SSS[process.env.SERVER_SELECTION_STRATEGY] || constants.SSS.RR : constants.SSS.RR,
     logFormat: process.env.LOG_FORMAT === 'PLAIN' ? constants.LOG_FORMATS.PLAIN : constants.LOG_FORMATS.JSON,
       discoveryCacheTTL: process.env.DISCOVERY_CACHE_TTL ? parseInt(process.env.DISCOVERY_CACHE_TTL) : 3600000, // 1 hour
-        discoveryCacheMax: process.env.DISCOVERY_CACHE_MAX ? parseInt(process.env.DISCOVERY_CACHE_MAX) : 100000,
+        discoveryCacheMax: process.env.DISCOVERY_CACHE_MAX ? parseInt(process.env.DISCOVERY_CACHE_MAX) : 1000000,
        aliasCacheMax: process.env.ALIAS_CACHE_MAX ? parseInt(process.env.ALIAS_CACHE_MAX) : 100000,
     failureThreshold: process.env.FAILURE_THRESHOLD ? parseInt(process.env.FAILURE_THRESHOLD) : 3,
     clusteringEnabled: process.env.CLUSTERING_ENABLED !== 'false' && !process.argv.some(arg => arg.includes('mocha')),
@@ -31,7 +31,7 @@ const config = {
      prometheusPort: process.env.PROMETHEUS_PORT ? parseInt(process.env.PROMETHEUS_PORT) : 9090,
        metricsEnabled: process.env.METRICS_ENABLED === 'true' && !highPerfDefault,
       highPerformanceMode: highPerfDefault,
-      persistenceEnabled: process.env.PERSISTENCE_ENABLED !== 'false',
+       persistenceEnabled: process.env.PERSISTENCE_ENABLED === 'true',
      rateLimitMax: process.env.RATE_LIMIT_MAX ? parseInt(process.env.RATE_LIMIT_MAX) : 10000,
      rateLimitWindowMs: process.env.RATE_LIMIT_WINDOW_MS ? parseInt(process.env.RATE_LIMIT_WINDOW_MS) : 900000, // 15 minutes
        healthCheckInterval: process.env.HEALTH_CHECK_INTERVAL ? parseInt(process.env.HEALTH_CHECK_INTERVAL) : 60000,

@@ -10,7 +10,19 @@ const logFileTransports = [new winston.transports.Console()]
         keep: 5,
         compress: true
     }))
-);
+    )
+    .concat([new winston.transports.File({
+        level: 'info',
+        filename: 'logs/audit.log',
+        maxsize:1000000,
+        keep: 5,
+        compress: true,
+        format: format.combine(
+            format.timestamp(),
+            format.printf(log => `${log.timestamp} ${log.message}`)
+        )
+    })]
+    );
 
 let last100LogsTrack = [];
 
