@@ -13,8 +13,16 @@ class ConsistentHashDiscovery{
         const hashRing = serviceRegistry.hashRegistry.get(fullServiceName);
         if (!hashRing || hashRing.servers.length === 0) return null;
         const nodeName = hashRing.get(ip);
-        const healthyNodes = serviceRegistry.getHealthyNodes(fullServiceName, group, tags);
-        return healthyNodes.find(node => node.nodeName === nodeName) || null;
+        // First check if node is in healthyNodesMap for O(1) lookup
+        const healthyMap = serviceRegistry.healthyNodesMap.get(fullServiceName);
+        if (healthyMap && healthyMap.has(nodeName)) {
+            const node = healthyMap.get(nodeName);
+            // Check group and tags
+            if (group && node.metadata.group !== group) return null;
+            if (tags && tags.length > 0 && (!node.metadata.tags || !tags.every(tag => node.metadata.tags.includes(tag)))) return null;
+            return node;
+        }
+        return null;
     }
 
     invalidateCache = (fullServiceName) => {
