@@ -6,7 +6,7 @@ const config = {
     logAsync: process.env.LOG_ASYNC === 'false' ? false : true,
     heartBeatTimeout: process.env.HEARTBEAT_TIMEOUT ? parseInt(process.env.HEARTBEAT_TIMEOUT) : 5,
     logJsonPrettify: process.env.LOG_JSON_PRETTIFY === 'true' ? true : false,
-    actuatorEnabled: process.env.ACTUATOR_ENABLED === 'false' ? false : true,
+    actuatorEnabled: process.env.ACTUATOR_ENABLED === 'true' || (!highPerfDefault && process.env.ACTUATOR_ENABLED !== 'false'),
     statusMonitorEnabled: process.env.STATUS_MONITOR_ENABLED === 'true' || false,
     serverSelectionStrategy: process.env.SERVER_SELECTION_STRATEGY ? constants.SSS[process.env.SERVER_SELECTION_STRATEGY] || constants.SSS.RR : constants.SSS.RR,
     logFormat: process.env.LOG_FORMAT === 'PLAIN' ? constants.LOG_FORMATS.PLAIN : constants.LOG_FORMATS.JSON,
