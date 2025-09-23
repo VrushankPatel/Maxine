@@ -109,6 +109,12 @@
 - Automatically registers Kubernetes services as Maxine services, using service namespacing and endpoint IPs/ports.
 - Supports dynamic updates when services are added, modified, or removed in the cluster.
 - Enables Maxine to act as a service registry for both traditional and Kubernetes-native microservices architectures.
+### ECS Integration
+- Maxine supports automatic service discovery from AWS ECS clusters for seamless integration with containerized deployments.
+- Enable with `ECS_ENABLED=true` and configure `AWS_REGION` to poll ECS services and tasks in real-time.
+- Automatically registers ECS services as Maxine services, using task IPs and ports.
+- Supports dynamic updates when services are deployed, updated, or removed in the cluster.
+- Enables Maxine to act as a service registry for both traditional and ECS-native microservices architectures.
 ### mDNS Service Discovery
 - Maxine supports advertising registered services via multicast DNS (mDNS) for local network discovery.
 - Enable with `MDNS_ENABLED=true` to advertise services on the local network using Bonjour/ZeroConf protocols.
