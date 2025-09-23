@@ -57,6 +57,7 @@ class ServiceRegistry{
         } else {
             this.loadFromFile();
         }
+        this.circuitBreaker = new Map();
     }
 
     getRegServers = () => Object.fromEntries(this.registry);
@@ -268,6 +269,9 @@ class ServiceRegistry{
             ),
             tagIndex: Object.fromEntries(
                 Array.from(this.tagIndex.entries()).map(([k, v]) => [k, Array.from(v)])
+            ),
+            circuitBreaker: Object.fromEntries(
+                Array.from(this.circuitBreaker.entries()).map(([k, v]) => [k, Object.fromEntries(v)])
             )
         };
     }
@@ -294,6 +298,9 @@ class ServiceRegistry{
         );
         this.tagIndex = new Map(
             Object.entries(data.tagIndex || {}).map(([k, v]) => [k, new Set(v)])
+        );
+        this.circuitBreaker = new Map(
+            Object.entries(data.circuitBreaker || {}).map(([k, v]) => [k, new Map(Object.entries(v))])
         );
         // Reinitialize hashRegistry and healthyNodes
         this.hashRegistry = new Map();
@@ -496,6 +503,9 @@ class ServiceRegistry{
                 trafficSplit: Object.fromEntries(this.trafficSplit),
                 healthHistory: Object.fromEntries(
                     Array.from(this.healthHistory.entries()).map(([k, v]) => [k, Object.fromEntries(v)])
+                ),
+                circuitBreaker: Object.fromEntries(
+                    Array.from(this.circuitBreaker.entries()).map(([k, v]) => [k, Object.fromEntries(v)])
                 )
             };
             await fs.promises.writeFile(path.join(__dirname, '../../../registry.json'), JSON.stringify(data, null, 2));
@@ -521,6 +531,9 @@ class ServiceRegistry{
                 trafficSplit: Object.fromEntries(this.trafficSplit),
                 healthHistory: Object.fromEntries(
                     Array.from(this.healthHistory.entries()).map(([k, v]) => [k, Object.fromEntries(v)])
+                ),
+                circuitBreaker: Object.fromEntries(
+                    Array.from(this.circuitBreaker.entries()).map(([k, v]) => [k, Object.fromEntries(v)])
                 )
             };
             await this.redisClient.set('registry', JSON.stringify(data));
@@ -555,6 +568,9 @@ class ServiceRegistry{
                 ),
                 tagIndex: Object.fromEntries(
                     Array.from(this.tagIndex.entries()).map(([k, v]) => [k, Array.from(v)])
+                ),
+                circuitBreaker: Object.fromEntries(
+                    Array.from(this.circuitBreaker.entries()).map(([k, v]) => [k, Object.fromEntries(v)])
                 )
             };
             await this.etcdClient.put('registry').value(JSON.stringify(data));
@@ -600,6 +616,10 @@ class ServiceRegistry{
                 // Load health history
                 this.healthHistory = new Map(
                     Object.entries(data.healthHistory || {}).map(([k, v]) => [k, new Map(Object.entries(v))])
+                );
+                // Load circuit breaker
+                this.circuitBreaker = new Map(
+                    Object.entries(data.circuitBreaker || {}).map(([k, v]) => [k, new Map(Object.entries(v))])
                 );
                 // Reinitialize hashRegistry and healthyNodes
                 for (const serviceName of data.hashRegistry || []) {
@@ -655,6 +675,10 @@ class ServiceRegistry{
                 this.tagIndex = new Map(
                     Object.entries(data.tagIndex || {}).map(([k, v]) => [k, new Set(v)])
                 );
+                // Load circuit breaker
+                this.circuitBreaker = new Map(
+                    Object.entries(data.circuitBreaker || {}).map(([k, v]) => [k, new Map(Object.entries(v))])
+                );
                 // Reinitialize hashRegistry and healthyNodes
                 for (const serviceName of data.hashRegistry || []) {
                     this.initHashRegistry(serviceName);
@@ -698,6 +722,10 @@ class ServiceRegistry{
                     this.healthHistory = new Map(
                         Object.entries(data.healthHistory || {}).map(([k, v]) => [k, new Map(Object.entries(v))])
                     );
+                    // Load circuit breaker
+                    this.circuitBreaker = new Map(
+                        Object.entries(data.circuitBreaker || {}).map(([k, v]) => [k, new Map(Object.entries(v))])
+                    );
                     // Reinitialize hashRegistry and healthyNodes
                     for (const serviceName of data.hashRegistry || []) {
                         this.initHashRegistry(serviceName);
@@ -714,6 +742,64 @@ class ServiceRegistry{
             }
         } catch (err) {
             console.error('Failed to load registry:', err);
+        }
+    }
+
+    setCircuitBreaker(serviceName, nodeName, state, failures = 0, lastFailure = 0, nextTry = 0) {
+        if (!this.circuitBreaker.has(serviceName)) this.circuitBreaker.set(serviceName, new Map());
+        this.circuitBreaker.get(serviceName).set(nodeName, {state, failures, lastFailure, nextTry});
+    }
+
+    getCircuitBreaker(serviceName, nodeName) {
+        if (!this.circuitBreaker.has(serviceName)) return {state: 'closed', failures: 0, lastFailure: 0, nextTry: 0};
+        return this.circuitBreaker.get(serviceName).get(nodeName) || {state: 'closed', failures: 0, lastFailure: 0, nextTry: 0};
+    }
+
+    incrementCircuitFailures(serviceName, nodeName) {
+        const cb = this.getCircuitBreaker(serviceName, nodeName);
+        cb.failures++;
+        cb.lastFailure = Date.now();
+        if (cb.state === 'half-open' || cb.failures >= config.circuitBreakerFailureThreshold) {
+            cb.state = 'open';
+            cb.nextTry = Date.now() + config.circuitBreakerTimeout;
+        }
+        this.setCircuitBreaker(serviceName, nodeName, cb.state, cb.failures, cb.lastFailure, cb.nextTry);
+    }
+
+    resetCircuitFailures(serviceName, nodeName) {
+        this.setCircuitBreaker(serviceName, nodeName, 'closed', 0, 0, 0);
+    }
+
+    isCircuitOpen(serviceName, nodeName) {
+        const cb = this.getCircuitBreaker(serviceName, nodeName);
+        if (cb.state === 'open') {
+            if (Date.now() > cb.nextTry) {
+                cb.state = 'half-open';
+                this.setCircuitBreaker(serviceName, nodeName, cb.state, cb.failures, cb.lastFailure, cb.nextTry);
+                return false;
+            }
+            return true;
+        }
+        return false;
+    }
+
+    onCircuitSuccess(serviceName, nodeName) {
+        const cb = this.getCircuitBreaker(serviceName, nodeName);
+        if (cb.state === 'half-open') {
+            cb.state = 'closed';
+        }
+        cb.failures = 0;
+        cb.lastFailure = 0;
+        cb.nextTry = 0;
+        this.setCircuitBreaker(serviceName, nodeName, cb.state, cb.failures, cb.lastFailure, cb.nextTry);
+    }
+
+    onCircuitFailure(serviceName, nodeName) {
+        const cb = this.getCircuitBreaker(serviceName, nodeName);
+        if (cb.state === 'half-open') {
+            cb.state = 'open';
+            cb.nextTry = Date.now() + config.circuitBreakerTimeout;
+            this.setCircuitBreaker(serviceName, nodeName, cb.state, cb.failures, cb.lastFailure, cb.nextTry);
         }
     }
 }
