@@ -43,6 +43,7 @@ const currDir = require('./conf');
 const grpc = require('@grpc/grpc-js');
 const protoLoader = require('@grpc/proto-loader');
 const spdy = require('spdy');
+const WebSocket = require('ws');
 
 if (config.clusteringEnabled && cluster.isMaster) {
     console.log(`Master ${process.pid} is running`);
@@ -91,8 +92,35 @@ if (config.clusteringEnabled && cluster.isMaster) {
                            console.log('listening on port', constants.PORT);
                            loggingUtil.initApp();
                        })
-                      .invoke(() => console.log('app built'))
-                      .getApp();
+                        .invoke(() => console.log('app built'))
+                       .getApp();
+
+    // WebSocket server for real-time changes
+    const wss = new WebSocket.Server({ server: app.listen(8080) }); // Assuming port 8080
+
+    wss.on('connection', (ws) => {
+        console.log('WebSocket client connected');
+        ws.on('message', (message) => {
+            console.log('Received:', message);
+        });
+        ws.on('close', () => {
+            console.log('WebSocket client disconnected');
+        });
+    });
+
+    // Broadcast changes
+    const { serviceRegistry } = require('./src/main/entity/service-registry');
+    serviceRegistry.addChange = ((originalAddChange) => {
+        return function(type, serviceName, nodeName, data) {
+            originalAddChange.call(this, type, serviceName, nodeName, data);
+            // Broadcast to all WebSocket clients
+            wss.clients.forEach(client => {
+                if (client.readyState === WebSocket.OPEN) {
+                    client.send(JSON.stringify({ type, serviceName, nodeName, data, timestamp: Date.now() }));
+                }
+            });
+        };
+    })(serviceRegistry.addChange);
 
     if (config.grpcEnabled) {
         const packageDefinition = protoLoader.loadSync(path.join(__dirname, 'api-specs/maxine.proto'), {

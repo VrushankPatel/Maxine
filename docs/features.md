@@ -47,6 +47,37 @@
 - Maxine provides a service dependencies API to retrieve the dependency graph for services.
 - The dependencies endpoint `/api/maxine/serviceops/dependencies?serviceName=<name>` returns the services that the specified service depends on and the services that depend on it.
 - This enables understanding service relationships and impact analysis for changes.
+### Security
+- Maxine implements JWT-based authentication for all registry operations.
+- Role-based access control (RBAC) restricts write operations (register, deregister, config changes) to admin users, while read operations are available to authenticated users.
+- Admin user can perform all operations, while regular users can only read service information and metrics.
+
+### Client SDK
+- Maxine provides a JavaScript/Node.js client SDK located in `client-sdk/` for easy integration.
+- The SDK supports all major operations: register, deregister, discover, health checks, and metrics retrieval.
+- Example usage:
+  ```javascript
+  const MaxineClient = require('./client-sdk');
+
+  const client = new MaxineClient('http://localhost:8080', 'your-jwt-token');
+
+  // Register a service
+  await client.register({
+    hostName: 'localhost',
+    nodeName: 'node-1',
+    serviceName: 'my-service',
+    port: 3000
+  });
+
+  // Discover a service
+  const service = await client.discover('my-service');
+  ```
+
+### WebSocket Real-time Updates
+- Maxine supports WebSocket connections for real-time notifications of service registry changes.
+- Connect to `ws://localhost:8080` to receive events for register, deregister, and health status updates.
+- Events are sent as JSON messages with type, serviceName, nodeName, data, and timestamp.
+
 ### Webhook Notifications
 - Maxine supports webhook notifications for real-time alerts on service registry changes.
 - Register webhooks via `/api/maxine/serviceops/webhooks/add` with serviceName and URL.

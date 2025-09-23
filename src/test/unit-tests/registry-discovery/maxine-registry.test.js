@@ -49,6 +49,7 @@ describe(`${fileName} : API /api/maxine/{registry urls}`, () => {
     it('POST /register (without passing necessary parameters) -> 400 & should return error', (done) => {
         chai.request(app)
             .post(ENDPOINTS.maxine.serviceops.register)
+            .set("Authorization", `Bearer ${accessToken}`)
             .end((_, res) => {
                 res.should.have.status(400);
                 res.should.be.json;
@@ -63,6 +64,7 @@ describe(`${fileName} : API /api/maxine/{registry urls}`, () => {
     it('POST /register (With all necessary parameters) -> 200 & should register the server', (done) => {
         chai.request(app)
             .post(ENDPOINTS.maxine.serviceops.register)
+            .set("Authorization", `Bearer ${accessToken}`)
             .set('Content-Type', 'application/json')
             .send(serviceSampleRS)
             .end((_, res) => {
