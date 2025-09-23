@@ -199,7 +199,7 @@
 - All service operations (register, deregister, discover, health, metrics) require valid JWT tokens.
 - Authentication is handled via the `/api/maxine/signin` endpoint with admin credentials.
 ### Performance Optimizations
-  - In-memory LRU caching for discovery operations with configurable TTL (10min) and increased size (1M entries) to reduce lookup times and support high-throughput scenarios.
+   - In-memory LRU caching for discovery operations with configurable TTL (1 hour) and increased size (1M entries) to reduce lookup times and support high-throughput scenarios.
   - Healthy nodes cache eliminates filtering overhead, ensuring sub-millisecond service discovery lookups.
   - Debounced asynchronous file saves to minimize I/O blocking during high-frequency registrations with persistence across restarts.
   - Background parallel health checks with configurable interval (default 60 seconds) and concurrency (default 50) using native HTTP modules for reduced overhead and maintain service status without request latency impact.

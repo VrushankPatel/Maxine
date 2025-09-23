@@ -43,15 +43,15 @@ const https = require('https');
 const proxy = httpProxy.createProxyServer({
     agent: new http.Agent({
         keepAlive: true,
-        maxSockets: 50000, // Optimized for high throughput
-        maxFreeSockets: 25000,
+        maxSockets: 10000, // Optimized for high throughput
+        maxFreeSockets: 5000,
         timeout: config.proxyTimeout,
         keepAliveMsecs: 300000
     }),
     httpsAgent: new https.Agent({
         keepAlive: true,
-        maxSockets: 50000, // Optimized for high throughput
-        maxFreeSockets: 25000,
+        maxSockets: 10000, // Optimized for high throughput
+        maxFreeSockets: 5000,
         timeout: config.proxyTimeout,
         keepAliveMsecs: 300000
     }),
