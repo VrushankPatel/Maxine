@@ -22,19 +22,20 @@ const hasMetrics = config.metricsEnabled;
 const isCircuitBreakerEnabled = config.circuitBreakerEnabled;
 
 // Cache for service name building
-const serviceNameCache = new LRU({ max: 1000000, ttl: 900000 });
+const serviceNameCache = new LRU({ max: 10000, ttl: 900000 });
 // Cache for IP extraction
-const ipCache = new LRU({ max: 1000000, ttl: 900000 });
+const ipCache = new LRU({ max: 10000, ttl: 900000 });
 
 const buildServiceName = (namespace, region, zone, serviceName, version) => {
     const key = `${namespace}:${region}:${zone}:${serviceName}:${version || ''}`;
-    if (serviceNameCache.has(key)) {
-        return serviceNameCache.get(key);
+    const hashKey = require('crypto').createHash('md5').update(key).digest('hex');
+    if (serviceNameCache.has(hashKey)) {
+        return serviceNameCache.get(hashKey);
     }
     const fullServiceName = (region !== "default" || zone !== "default") ?
         (version ? `${namespace}:${region}:${zone}:${serviceName}:${version}` : `${namespace}:${region}:${zone}:${serviceName}`) :
         (version ? `${namespace}:${serviceName}:${version}` : `${namespace}:${serviceName}`);
-    serviceNameCache.set(key, fullServiceName);
+    serviceNameCache.set(hashKey, fullServiceName);
     return fullServiceName;
 };
 
