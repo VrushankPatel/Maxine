@@ -1,7 +1,8 @@
 const { serviceRegistry } = require('../entity/service-registry');
 const { discoveryService } = require('../service/discovery-service');
 const config = require('../config/config');
-const axios = require('axios');
+const http = require('http');
+const https = require('https');
 const net = require('net');
 const pLimit = require('p-limit');
 
@@ -46,6 +47,30 @@ class HealthService {
         });
     }
 
+    async checkHttpHealth(baseUrl, endpoint, method) {
+        return new Promise((resolve) => {
+            const url = new URL(endpoint, baseUrl);
+            const client = url.protocol === 'https:' ? https : http;
+            const options = {
+                hostname: url.hostname,
+                port: url.port,
+                path: url.pathname + url.search,
+                method: method,
+                timeout: 3000
+            };
+            const req = client.request(options, (res) => {
+                resolve(res.statusCode >= 200 && res.statusCode < 300);
+                req.destroy();
+            });
+            req.on('error', () => resolve(false));
+            req.on('timeout', () => {
+                req.destroy();
+                resolve(false);
+            });
+            req.end();
+        });
+    }
+
     async performHealthChecks() {
         const limit = pLimit(config.healthCheckConcurrency); // Configurable concurrency for health checks
         const services = Object.keys(serviceRegistry.registry);
@@ -69,12 +94,9 @@ class HealthService {
                          const port = node.metadata.healthEndpoint ? parseInt(node.metadata.healthEndpoint) : url.port || 80;
                          isHealthy = await this.checkTcpHealth(host, port);
                     } else {
-                        // HTTP health check
-                        const healthUrl = node.address + (node.metadata.healthEndpoint || '/health');
-                        const method = node.metadata.healthMethod || 'GET';
-                        const response = await axios({ method, url: healthUrl, timeout: 3000 });
-                        isHealthy = response.status >= 200 && response.status < 300;
-                    }
+                         // HTTP health check
+                         isHealthy = await this.checkHttpHealth(node.address, node.metadata.healthEndpoint || '/health', node.metadata.healthMethod || 'GET');
+                     }
                     if (isHealthy) {
                         // Update registry with healthy status
                         const service = serviceRegistry.registry.get(serviceName);
