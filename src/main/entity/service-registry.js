@@ -293,26 +293,11 @@ class ServiceRegistry{
                  tagIndex: Object.fromEntries(
                      Array.from(this.tagIndex.entries()).map(([k, v]) => [k, Array.from(v)])
                  ),
-                 groupIndex: Object.fromEntries(
-                     Array.from(this.groupIndex.entries()).map(([k, v]) => [k, Object.fromEntries(
-                         Array.from(v.entries()).map(([k2, v2]) => [k2, Array.from(v2)])
-                     )])
-                 ),
-                 groupIndex: Object.fromEntries(
-                     Array.from(this.groupIndex.entries()).map(([k, v]) => [k, Object.fromEntries(
-                         Array.from(v.entries()).map(([k2, v2]) => [k2, Array.from(v2)])
-                     )])
-                 ),
-                 groupIndex: Object.fromEntries(
-                     Array.from(this.groupIndex.entries()).map(([k, v]) => [k, Object.fromEntries(
-                         Array.from(v.entries()).map(([k2, v2]) => [k2, Array.from(v2)])
-                     )])
-                 ),
-              groupIndex: Object.fromEntries(
-                  Array.from(this.groupIndex.entries()).map(([k, v]) => [k, Object.fromEntries(
-                      Array.from(v.entries()).map(([k2, v2]) => [k2, Array.from(v2)])
-                  )])
-              ),
+                  groupIndex: Object.fromEntries(
+                      Array.from(this.groupIndex.entries()).map(([k, v]) => [k, Object.fromEntries(
+                          Array.from(v.entries()).map(([k2, v2]) => [k2, Array.from(v2)])
+                      )])
+                  ),
               circuitBreaker: Object.fromEntries(this.circuitBreaker),
               availableNodes: Object.fromEntries(
                   Array.from(this.availableNodes.entries()).map(([k, v]) => [k, Array.from(v)])
@@ -1017,24 +1002,12 @@ class ServiceRegistry{
                  this.tagIndex = new Map(
                      Object.entries(data.tagIndex || {}).map(([k, v]) => [k, new Set(v)])
                  );
-                 // Load group index
-                 this.groupIndex = new Map(
-                     Object.entries(data.groupIndex || {}).map(([k, v]) => [k, new Map(
-                         Object.entries(v).map(([k2, v2]) => [k2, new Set(v2)])
-                     )])
-                 );
-                 // Load group index
-                 this.groupIndex = new Map(
-                     Object.entries(data.groupIndex || {}).map(([k, v]) => [k, new Map(
-                         Object.entries(v).map(([k2, v2]) => [k2, new Set(v2)])
-                     )])
-                 );
-                 // Load group index
-                 this.groupIndex = new Map(
-                     Object.entries(data.groupIndex || {}).map(([k, v]) => [k, new Map(
-                         Object.entries(v).map(([k2, v2]) => [k2, new Set(v2)])
-                     )])
-                 );
+                  // Load group index
+                  this.groupIndex = new Map(
+                      Object.entries(data.groupIndex || {}).map(([k, v]) => [k, new Map(
+                          Object.entries(v).map(([k2, v2]) => [k2, new Set(v2)])
+                      )])
+                  );
                   // Load circuit breaker
                   this.circuitBreaker = new Map(Object.entries(data.circuitBreaker || {}));
                   // Load available nodes
