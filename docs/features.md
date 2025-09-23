@@ -22,7 +22,7 @@
 ### Health checks
 - Maxine provides comprehensive health monitoring for registered services with both on-demand and background checks.
 - The health check endpoint `/api/maxine/serviceops/health?serviceName=<name>` performs parallel HTTP requests to all nodes of the specified service and reports their status.
- - Background health checks run continuously every 60 seconds to maintain up-to-date service status without impacting request latency.
+  - Background health checks run continuously every 30 seconds to maintain up-to-date service status without impacting request latency.
 - Health status is cached in optimized data structures, enabling circuit breaker functionality with failure counting that automatically skips unhealthy nodes during discovery.
 - Circuit breaker includes automatic recovery when services become healthy again, improving overall system reliability and performance.
 ### Metrics
@@ -139,7 +139,7 @@
   - In-memory LRU caching for discovery operations with configurable TTL (5min) and increased size (1M entries) to reduce lookup times and support high-throughput scenarios.
   - Healthy nodes cache eliminates filtering overhead, ensuring sub-millisecond service discovery lookups.
   - Debounced asynchronous file saves to minimize I/O blocking during high-frequency registrations with persistence across restarts.
-  - Background parallel health checks with configurable interval (default 60 seconds) and concurrency (default 1000) maintain service status without request latency impact.
+  - Background parallel health checks with configurable interval (default 30 seconds) and concurrency (default 1000) maintain service status without request latency impact.
   - Aggressive connection pooling for HTTP proxying (50,000 max sockets, keep-alive) to handle thousands of concurrent requests.
   - Circuit breaker with failure counting automatically isolates unhealthy nodes while allowing recovery.
   - Configurable API rate limiting (default 10,000 requests per 15 minutes per IP) prevents abuse and ensures stability under load.
