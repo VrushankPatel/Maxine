@@ -64,31 +64,35 @@ if (config.clusteringEnabled && cluster.isMaster) {
         message: 'Too many requests from this IP, please try again later.'
     });
     const app = ExpressAppBuilder.createNewApp()
-                      .ifProperty("highPerformanceMode", false)
-                          .addCompression()
-                      .endIfProperty()
-                      .addCors()
-                      .ifPropertyOnce("statusMonitorEnabled")
-                          .use(expressStatusMonitor(statusMonitorConfig))
-                      .use(logRequest)
-                     .use(authenticationController)
-                      .mapStaticDir(path.join(currDir, "client"))
-                      .mapStaticDirWithRoute('/logs', path.join(currDir,"logs"))
-                        .ifPropertyOnce("actuatorEnabled")
-                            .use(actuator(actuatorConfig))
-                        .use('/api', limiter, maxineApiRoutes)
-                     .ifPropertyOnce('profile','dev')
-                         .use('/api-spec', swaggerUi.serve, swaggerUi.setup(swaggerDocument))
-                         .use('/shutdown', process.exit)
-                     .blockUnknownUrls()
-                     .use(logWebExceptions)
-                      .listenOrSpdy(constants.PORT, () => {
-                          if (config.clusteringEnabled) {
-                              console.log(`Worker ${process.pid} started`);
-                          }
-                          loggingUtil.initApp();
-                      })
-                     .getApp();
+                       // .ifProperty("highPerformanceMode", false)
+                       //     .addCompression()
+                       // .endIfProperty()
+                       // .addCors()
+                       // .use('/', (req, res) => res.send('hello'))
+                         .ifPropertyOnce("statusMonitorEnabled")
+                             .use(expressStatusMonitor(statusMonitorConfig))
+                        .use(logRequest)
+                      .use(authenticationController)
+                       .mapStaticDir(path.join(currDir, "client"))
+                       .mapStaticDirWithRoute('/logs', path.join(currDir,"logs"))
+                         .ifPropertyOnce("actuatorEnabled")
+                             .use(actuator(actuatorConfig))
+                         .use('/api', limiter, maxineApiRoutes)
+                      .ifPropertyOnce('profile','dev')
+                          // .use('/api-spec', swaggerUi.serve, swaggerUi.setup(swaggerDocument))
+                          .use('/shutdown', process.exit)
+                      .blockUnknownUrls()
+                       .use(logWebExceptions)
+                      .invoke(() => console.log('before listen'))
+                       .listenOrSpdy(constants.PORT, () => {
+                           if (config.clusteringEnabled) {
+                               console.log(`Worker ${process.pid} started`);
+                           }
+                           console.log('listening on port', constants.PORT);
+                           loggingUtil.initApp();
+                       })
+                      .invoke(() => console.log('app built'))
+                      .getApp();
 
     if (config.grpcEnabled) {
         const packageDefinition = protoLoader.loadSync(path.join(__dirname, 'api-specs/maxine.proto'), {
