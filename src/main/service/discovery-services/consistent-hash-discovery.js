@@ -15,6 +15,10 @@ class ConsistentHashDiscovery{
         const nodes = serviceRegistry.getNodes(fullServiceName);
         return nodes[nodeName] || null;
     }
+
+    invalidateCache = (fullServiceName) => {
+        // Uses serviceRegistry hashRegistry, invalidated there
+    }
 }
 
 module.exports = {

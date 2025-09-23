@@ -45,6 +45,7 @@ class WeightedRoundRobinDiscovery {
 
     invalidateCache = (fullServiceName) => {
         this.expandedLists.delete(fullServiceName);
+        this.offsets.delete(fullServiceName);
     }
 
     /**

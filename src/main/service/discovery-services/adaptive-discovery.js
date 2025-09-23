@@ -35,6 +35,10 @@ class AdaptiveDiscovery {
         if (!bestNodeName) return null;
         return nodes[bestNodeName] || null;
     }
+
+    invalidateCache = (fullServiceName) => {
+        // No persistent cache
+    }
 }
 
 module.exports = {

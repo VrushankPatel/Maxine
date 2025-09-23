@@ -54,6 +54,10 @@ class RendezvousHashDiscovery{
         }
         return hash;
     }
+
+    invalidateCache = (fullServiceName) => {
+        // Uses serviceRegistry hashRegistry, invalidated there
+    }
 }
 
 module.exports = {

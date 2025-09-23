@@ -23,6 +23,10 @@ class LeastConnectionsDiscovery{
         const nodes = serviceRegistry.getNodes(fullServiceName);
         return nodes[selectedNodeName] || null;
     }
+
+    invalidateCache = (fullServiceName) => {
+        // No persistent cache
+    }
 }
 
 module.exports = {

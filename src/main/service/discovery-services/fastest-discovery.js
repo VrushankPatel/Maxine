@@ -45,6 +45,10 @@ class FastestDiscovery {
         const nodes = serviceRegistry.getNodes(fullServiceName);
         return nodes[selectedNodeName] || null;
     }
+
+    invalidateCache = (fullServiceName) => {
+        this.fastestCache.delete(fullServiceName);
+    }
 }
 
 module.exports = {
