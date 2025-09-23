@@ -149,6 +149,9 @@
   - Conditional metrics collection can be disabled for maximum performance.
   - Optimized data structures using Maps and Sets for O(1) lookups in healthy nodes and response times tracking, providing lightning-fast service resolution for microservices architectures.
   - Caching in load balancing strategies (e.g., Least Response Time, Fastest) for reduced computation overhead.
+  - Compression enabled always for reduced response sizes and improved network performance.
+  - HTTP/2 support for multiplexing and reduced latency over HTTP/1.1.
+  - Optimized string operations in discovery controller to minimize CPU usage.
 ### Config control
 - Maxine config control provides interactive way to manage the configuration.
 - the Settings and Logging tab provides options to monitor and manipulate the Maxine configuration.
