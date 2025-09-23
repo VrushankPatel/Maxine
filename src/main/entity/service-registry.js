@@ -63,6 +63,7 @@ class ServiceRegistry{
 
     // Service aliases support
     serviceAliases = new Map(); // alias -> primaryServiceName
+    serviceAliasesReverse = new Map(); // primaryServiceName -> Set of aliases
     serviceDependencies = new Map(); // serviceName -> Set of dependent services
 
     addChange = (type, serviceName, nodeName, data) => {
@@ -143,10 +144,21 @@ class ServiceRegistry{
     // Alias management
     addServiceAlias = (alias, primaryServiceName) => {
         this.serviceAliases.set(alias, primaryServiceName);
+        if (!this.serviceAliasesReverse.has(primaryServiceName)) {
+            this.serviceAliasesReverse.set(primaryServiceName, new Set());
+        }
+        this.serviceAliasesReverse.get(primaryServiceName).add(alias);
         this.debounceSave();
     }
 
     removeServiceAlias = (alias) => {
+        const primary = this.serviceAliases.get(alias);
+        if (primary && this.serviceAliasesReverse.has(primary)) {
+            this.serviceAliasesReverse.get(primary).delete(alias);
+            if (this.serviceAliasesReverse.get(primary).size === 0) {
+                this.serviceAliasesReverse.delete(primary);
+            }
+        }
         this.serviceAliases.delete(alias);
         this.debounceSave();
     }
@@ -156,13 +168,7 @@ class ServiceRegistry{
     }
 
     getAliasesForService = (serviceName) => {
-        const aliases = [];
-        for (const [alias, primary] of this.serviceAliases) {
-            if (primary === serviceName) {
-                aliases.push(alias);
-            }
-        }
-        return aliases;
+        return this.serviceAliasesReverse.has(serviceName) ? Array.from(this.serviceAliasesReverse.get(serviceName)) : [];
     }
 
     // Service dependency management
@@ -243,6 +249,9 @@ class ServiceRegistry{
             registry: Object.fromEntries(this.registry),
             hashRegistry: Array.from(this.hashRegistry.keys()),
             serviceAliases: Object.fromEntries(this.serviceAliases),
+            serviceAliasesReverse: Object.fromEntries(
+                Array.from(this.serviceAliasesReverse.entries()).map(([k, v]) => [k, Array.from(v)])
+            ),
             serviceDependencies: Object.fromEntries(
                 Array.from(this.serviceDependencies.entries()).map(([k, v]) => [k, Array.from(v)])
             ),
@@ -266,6 +275,9 @@ class ServiceRegistry{
     restore = (data) => {
         this.registry = new Map(Object.entries(data.registry || {}));
         this.serviceAliases = new Map(Object.entries(data.serviceAliases || {}));
+        this.serviceAliasesReverse = new Map(
+            Object.entries(data.serviceAliasesReverse || {}).map(([k, v]) => [k, new Set(v)])
+        );
         this.serviceDependencies = new Map(
             Object.entries(data.serviceDependencies || {}).map(([k, v]) => [k, new Set(v)])
         );
@@ -474,6 +486,9 @@ class ServiceRegistry{
                 registry: Object.fromEntries(this.registry),
                 hashRegistry: Array.from(this.hashRegistry.keys()),
                 serviceAliases: Object.fromEntries(this.serviceAliases),
+                serviceAliasesReverse: Object.fromEntries(
+                    Array.from(this.serviceAliasesReverse.entries()).map(([k, v]) => [k, Array.from(v)])
+                ),
                 serviceDependencies: Object.fromEntries(
                     Array.from(this.serviceDependencies.entries()).map(([k, v]) => [k, Array.from(v)])
                 ),
@@ -496,6 +511,9 @@ class ServiceRegistry{
                 registry: Object.fromEntries(this.registry),
                 hashRegistry: Array.from(this.hashRegistry.keys()),
                 serviceAliases: Object.fromEntries(this.serviceAliases),
+                serviceAliasesReverse: Object.fromEntries(
+                    Array.from(this.serviceAliasesReverse.entries()).map(([k, v]) => [k, Array.from(v)])
+                ),
                 serviceDependencies: Object.fromEntries(
                     Array.from(this.serviceDependencies.entries()).map(([k, v]) => [k, Array.from(v)])
                 ),
@@ -518,6 +536,9 @@ class ServiceRegistry{
                 registry: Object.fromEntries(this.registry),
                 hashRegistry: Array.from(this.hashRegistry.keys()),
                 serviceAliases: Object.fromEntries(this.serviceAliases),
+                serviceAliasesReverse: Object.fromEntries(
+                    Array.from(this.serviceAliasesReverse.entries()).map(([k, v]) => [k, Array.from(v)])
+                ),
                 serviceDependencies: Object.fromEntries(
                     Array.from(this.serviceDependencies.entries()).map(([k, v]) => [k, Array.from(v)])
                 ),
@@ -565,6 +586,9 @@ class ServiceRegistry{
                 this.registry = new Map(Object.entries(data.registry || {}));
                 // Load aliases
                 this.serviceAliases = new Map(Object.entries(data.serviceAliases || {}));
+                this.serviceAliasesReverse = new Map(
+                    Object.entries(data.serviceAliasesReverse || {}).map(([k, v]) => [k, new Set(v)])
+                );
                 // Load dependencies
                 this.serviceDependencies = new Map(
                     Object.entries(data.serviceDependencies || {}).map(([k, v]) => [k, new Set(v)])
@@ -604,6 +628,9 @@ class ServiceRegistry{
                 this.registry = new Map(Object.entries(data.registry || {}));
                 // Load aliases
                 this.serviceAliases = new Map(Object.entries(data.serviceAliases || {}));
+                this.serviceAliasesReverse = new Map(
+                    Object.entries(data.serviceAliasesReverse || {}).map(([k, v]) => [k, new Set(v)])
+                );
                 // Load dependencies
                 this.serviceDependencies = new Map(
                     Object.entries(data.serviceDependencies || {}).map(([k, v]) => [k, new Set(v)])
@@ -656,6 +683,9 @@ class ServiceRegistry{
                     this.registry = new Map(Object.entries(data.registry || {}));
                     // Load aliases
                     this.serviceAliases = new Map(Object.entries(data.serviceAliases || {}));
+                    this.serviceAliasesReverse = new Map(
+                        Object.entries(data.serviceAliasesReverse || {}).map(([k, v]) => [k, new Set(v)])
+                    );
                     // Load dependencies
                     this.serviceDependencies = new Map(
                         Object.entries(data.serviceDependencies || {}).map(([k, v]) => [k, new Set(v)])

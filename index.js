@@ -64,7 +64,9 @@ if (config.clusteringEnabled && cluster.isMaster) {
         message: 'Too many requests from this IP, please try again later.'
     });
     const app = ExpressAppBuilder.createNewApp()
-                      .addCompression()
+                      .ifProperty("highPerformanceMode", false)
+                          .addCompression()
+                      .endIfProperty()
                       .addCors()
                       .ifPropertyOnce("statusMonitorEnabled")
                           .use(expressStatusMonitor(statusMonitorConfig))
