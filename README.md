@@ -125,13 +125,17 @@ As we can see, maxine SRD provides service addresses for direct client connectio
                    * **Service Tag Filtering**: Discovery requests can now filter services by tags using the `tags` query parameter. Services must have all specified tags in their metadata to be discoverable.
                    * **Service Metadata Updates**: Added `/api/maxine/serviceops/metadata/update` endpoint to update service instance metadata without re-registration, allowing dynamic changes to weights, health endpoints, and other properties.
                      * **Kubernetes Integration**: Added support for automatic service discovery from Kubernetes clusters. Enable with `KUBERNETES_ENABLED=true` to watch K8s services and endpoints, registering them in Maxine for seamless integration with containerized deployments.
-                       * **Service Instance Limits**: Added `MAX_INSTANCES_PER_SERVICE` environment variable to limit the number of instances per service (default 1000), preventing overload and improving stability.
-                       * **Service Health Score**: Implemented health score calculation for service nodes based on failure rate and average response time, enabling better load balancing decisions and service quality monitoring.
-                       * **Web Dashboard**: Added a simple web dashboard at `/dashboard` for monitoring registered services, nodes, and health status.
-                       * **Database Discovery**: Added `/api/maxine/serviceops/discover/database` endpoint to discover database services. Services registered with `metadata.type='database'` can be discovered with connection details including host, port, database name, credentials, and type.
-                       * **Multi-Tenancy Support**: Added tenantId parameter to service registration and discovery, allowing services to be isolated by tenant for multi-tenant deployments.
-                       * **Blue-Green Deployment Support**: Added deployment metadata field and deployment query parameter for discovery, enabling blue-green and canary deployment strategies by routing traffic to specific deployment versions.
-                       * **mDNS Service Discovery**: Added support for advertising services via multicast DNS (mDNS) for local network discovery. Enable with `MDNS_ENABLED=true` to allow clients on the same network to discover services without a central registry query.
+                        * **Service Instance Limits**: Added `MAX_INSTANCES_PER_SERVICE` environment variable to limit the number of instances per service (default 1000), preventing overload and improving stability.
+                        * **Service Health Score**: Implemented health score calculation for service nodes based on failure rate and average response time, enabling better load balancing decisions and service quality monitoring.
+                        * **Web Dashboard**: Added a simple web dashboard at `/dashboard` for monitoring registered services, nodes, and health status.
+                        * **Database Discovery**: Added `/api/maxine/serviceops/discover/database` endpoint to discover database services. Services registered with `metadata.type='database'` can be discovered with connection details including host, port, database name, credentials, and type.
+                        * **Multi-Tenancy Support**: Added tenantId parameter to service registration and discovery, allowing services to be isolated by tenant for multi-tenant deployments.
+                        * **Blue-Green Deployment Support**: Added deployment metadata field and deployment query parameter for discovery, enabling blue-green and canary deployment strategies by routing traffic to specific deployment versions.
+                        * **mDNS Service Discovery**: Added support for advertising services via multicast DNS (mDNS) for local network discovery. Enable with `MDNS_ENABLED=true` to allow clients on the same network to discover services without a central registry query.
+                        * **Eureka Integration**: Added support for importing services from Netflix Eureka registries. Enable with `EUREKA_ENABLED=true` and configure `EUREKA_HOST` and `EUREKA_PORT` for seamless migration from Eureka-based systems.
+                        * **Service Governance**: Implemented registration approval workflows with pending services queue. Enable with `APPROVAL_REQUIRED=true` to require admin approval for new service registrations. New endpoints: `/api/maxine/serviceops/pending` (GET), `/api/maxine/serviceops/approve` (POST), `/api/maxine/serviceops/reject` (POST).
+                        * **Service Testing**: Added `/api/maxine/serviceops/test` endpoint to manually test service health by calling configured health endpoints.
+                        * **Alerting System**: Configurable webhook alerts for service failures. Set `ALERT_WEBHOOK` to receive POST notifications when services fail health checks.
 
 
 ## Setup for development
@@ -195,7 +199,12 @@ Maxine can be configured via environment variables:
       - `CONSUL_ENABLED`: Enable Consul service import (default: false)
       - `CONSUL_HOST`: Consul host (default: localhost)
       - `CONSUL_PORT`: Consul port (default: 8500)
-      - `MDNS_ENABLED`: Enable mDNS service advertising (default: false)
+       - `MDNS_ENABLED`: Enable mDNS service advertising (default: false)
+       - `EUREKA_ENABLED`: Enable Eureka service import (default: false)
+       - `EUREKA_HOST`: Eureka server host (default: localhost)
+       - `EUREKA_PORT`: Eureka server port (default: 8761)
+       - `APPROVAL_REQUIRED`: Require admin approval for service registrations (default: false)
+       - `ALERT_WEBHOOK`: Webhook URL for failure alerts (default: null)
 
 ### Run maxine on production.
 
