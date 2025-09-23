@@ -2,7 +2,8 @@ const { constants } = require("../../main/util/constants/constants");
 
 const TESTUSER = {
     userName: constants.DEFAULT_ADMIN_USERNAME_PWD,
-    password: constants.DEFAULT_ADMIN_USERNAME_PWD
+    password: constants.DEFAULT_ADMIN_USERNAME_PWD,
+    role: 'admin'
 }
 
 const ENDPOINTS = {

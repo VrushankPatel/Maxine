@@ -55,7 +55,7 @@ As we can see, maxine SRD provides service addresses for direct client connectio
 * Also, If any of the services are hosted on more powerful hardware, then we can make SRD distribute more traffic on that service's nodes than the others. All we have to do is to provide weight property to that service's client. the weight means how much power that service has compared to others. Based on weight property, the SRD will register that service will replications, and traffic will be distributed accordingly.
  * Maxine now includes health check capabilities to monitor service availability and persistence to survive restarts.
  * Maxine is optimized for high performance with in-memory LRU caching (1M entries, 15-minute TTL), debounced file saves, parallel health checks (every 30 seconds with 100 concurrency), connection pooling, circuit breaker for unhealthy nodes, and efficient load balancing algorithms including Round Robin, Weighted Round Robin, Least Response Time, Consistent Hashing, Rendezvous Hashing, Least Connections, Least Loaded, and Random. High performance mode disables response time tracking and connection counting for maximum throughput. Health checks enabled by default for automatic service health monitoring.
-* Security is enhanced with JWT authentication for all registry operations.
+ * Security is enhanced with JWT authentication and role-based access control (RBAC) for all registry operations.
 * Comprehensive metrics collection provides insights into request counts, latencies, and error rates.
 * Clustering support for multi-core CPU utilization.
 * Configuration via environment variables for flexible deployment.
@@ -94,10 +94,12 @@ As we can see, maxine SRD provides service addresses for direct client connectio
            * **DNS SRV Discovery**: New `/api/maxine/serviceops/discover/dns` endpoint returns DNS SRV-like records for services, useful for DNS-based service discovery.
              * **Traffic Splitting for Versions**: Services can specify `trafficSplit` in metadata to route requests to different versions based on percentages, enabling canary deployments and gradual rollouts.
               * **CLI Tool**: Added a command-line interface at `bin/cli.js` for managing services (register, deregister, list, health, discover, metrics).
+              * **Client SDK**: Added a JavaScript/Node.js client SDK in `client-sdk/` for easy integration with Maxine registry.
              * **Lightning-Fast Performance Mode**: High performance mode now skips response time recording and active connection tracking for maximum throughput under heavy load.
              * **gRPC Support**: Added gRPC endpoint for service discovery at port 50051 (configurable via GRPC_PORT), enabled with GRPC_ENABLED=true.
              * **Batch Discovery**: Added `/api/maxine/serviceops/discover/batch` endpoint to discover multiple services in a single request, improving performance for clients needing multiple service addresses.
-                * **Envoy Configuration Generation**: Added `/api/maxine/serviceops/envoy/config` endpoint to generate Envoy proxy configuration for all registered services, enabling seamless integration with service mesh architectures.
+                 * **Envoy Configuration Generation**: Added `/api/maxine/serviceops/envoy/config` endpoint to generate Envoy proxy configuration for all registered services, enabling seamless integration with service mesh architectures.
+                 * **WebSocket Support**: Added WebSocket server for real-time notifications of service registry changes (register, deregister, health updates).
                 * **OpenTelemetry Tracing**: Added support for distributed tracing using OpenTelemetry with Jaeger exporter for better observability in microservices architectures. Enable with `TRACING_ENABLED=true` and configure `JAEGER_ENDPOINT`.
                 * **Backup and Restore**: Added `/api/maxine/serviceops/backup` endpoint to export the entire registry state as JSON, and `/api/maxine/serviceops/restore` to import and restore from a backup. Useful for disaster recovery and migration. CLI commands `backup` and `restore` are also available.
                 * **etcd Persistence**: Added etcd support for distributed key-value storage of the registry, providing high availability and consistency. Enable with `ETCD_ENABLED=true` and configure `ETCD_HOST` and `ETCD_PORT`.

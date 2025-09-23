@@ -24,19 +24,28 @@ function authenticationController(req, res, next) {
     }
 
     jwt.verify(token, constants.SECRET, (err, user) => {
-        if (user && User.createUserFromObj(user).userName === admin.userName && User.createUserFromObj(user).password === admin.password){
-            next();
-            return;
-        }
-
-        if(err){
+        if (err) {
             err.message.includes("jwt expired") ?
             res.status(statusAndMsgs.STATUS_UNAUTHORIZED).json({"message" : statusAndMsgs.MSG_JWT_EXPIRED}) :
             res.status(statusAndMsgs.STATUS_FORBIDDEN).json({"message" : statusAndMsgs.MSG_FORBIDDEN});
             return;
         }
 
-        res.status(statusAndMsgs.STATUS_UNAUTHORIZED).json({"message" : statusAndMsgs.MSG_UNAUTHORIZED});
+        const userObj = User.createUserFromObj(user);
+        if (userObj.userName === admin.userName && userObj.password === admin.password && userObj.role === 'admin') {
+            req.user = userObj;
+            next();
+            return;
+        }
+
+        // For other users, check if role allows
+        if (userObj.role === 'admin' || userObj.role === 'user') {
+            req.user = userObj;
+            next();
+            return;
+        }
+
+        res.status(statusAndMsgs.STATUS_FORBIDDEN).json({"message" : statusAndMsgs.MSG_FORBIDDEN});
     });
 }
 

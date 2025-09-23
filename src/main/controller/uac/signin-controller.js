@@ -11,7 +11,8 @@ const signInController = (req, res) => {
         return;
     }
     if (new User(userName, password).userName === admin.userName && new User(userName, password).password === admin.password){
-        const token = generateAccessToken(req.body);
+        const userWithRole = { ...req.body, role: admin.role };
+        const token = generateAccessToken(userWithRole);
         res.json({"accessToken" : token});
         return;
     }
