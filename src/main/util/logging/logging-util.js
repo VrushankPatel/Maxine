@@ -7,7 +7,10 @@ const { logBuilder } = require('../util');
 const logger = winston.createLogger(logConfiguration);
 
 
-const log = (logFunction) => config.logAsync === true ? setTimeout(logFunction, 0) : logFunction();
+const log = (logFunction) => {
+    if (config.highPerformanceMode) return;
+    return config.logAsync === true ? setTimeout(logFunction, 0) : logFunction();
+};
 
 const info = (msg) => log(() => logger.info(logBuilder("INFO", "GENERIC", null, null, msg)));
 
