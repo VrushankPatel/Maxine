@@ -902,13 +902,11 @@ class ServiceRegistry{
                          this.addToTagIndex(nodeName, nodes[nodeName].metadata.tags);
                      }
                   }
-                 }
-                 // Load circuit breaker
-                 this.circuitBreaker = new Map(Object.entries(data.circuitBreaker || {}));
-             }
-         } catch (err) {
-             console.error('Failed to load registry:', err);
-         }
+                  }
+              }
+          } catch (err) {
+              console.error('Failed to load registry:', err);
+          }
     }
 
     setCircuitBreaker(serviceName, nodeName, state, failures = 0, lastFailure = 0, nextTry = 0) {
