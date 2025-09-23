@@ -213,6 +213,7 @@
     - Optimized string operations in discovery controller to minimize CPU usage.
     - Native HTTP implementation for health checks eliminates axios dependency overhead.
     - LRU caching for alias resolutions, IP extractions, and service name building to prevent memory leaks and improve performance under high load.
+    - Configurable persistence control allows disabling file/Redis/etcd saves for pure in-memory operation in high-performance scenarios.
 ### etcd Persistence
 - Maxine supports etcd as a distributed key-value store backend for high availability and consistency.
 - Enable with `ETCD_ENABLED=true` and configure `ETCD_HOST` and `ETCD_PORT`.
