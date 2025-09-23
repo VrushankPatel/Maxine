@@ -54,7 +54,7 @@ As we can see, maxine SRD provides service addresses for direct client connectio
 * Also, based on the service's performance diagnostics (If it's down or not working properly), we can stop its registration to the SRD. The client provides functions that can stop sending the heartbeat to the SRD so that the service can be deregistered.
 * Also, If any of the services are hosted on more powerful hardware, then we can make SRD distribute more traffic on that service's nodes than the others. All we have to do is to provide weight property to that service's client. the weight means how much power that service has compared to others. Based on weight property, the SRD will register that service will replications, and traffic will be distributed accordingly.
  * Maxine now includes health check capabilities to monitor service availability and persistence to survive restarts.
- * Maxine is optimized for high performance with in-memory LRU caching (1M entries, 5-minute TTL), debounced file saves, parallel health checks (every 30 seconds with 2000 concurrency), connection pooling, circuit breaker for unhealthy nodes, and efficient load balancing algorithms including Round Robin, Weighted Round Robin, Least Response Time, Consistent Hashing, Rendezvous Hashing, Least Connections, Least Loaded, and Random. High performance mode disables response time tracking and connection counting for maximum throughput.
+ * Maxine is optimized for high performance with in-memory LRU caching (1M entries, 15-minute TTL), debounced file saves, parallel health checks (every 30 seconds with 100 concurrency), connection pooling, circuit breaker for unhealthy nodes, and efficient load balancing algorithms including Round Robin, Weighted Round Robin, Least Response Time, Consistent Hashing, Rendezvous Hashing, Least Connections, Least Loaded, and Random. High performance mode disables response time tracking and connection counting for maximum throughput. Health checks enabled by default for automatic service health monitoring.
 * Security is enhanced with JWT authentication for all registry operations.
 * Comprehensive metrics collection provides insights into request counts, latencies, and error rates.
 * Clustering support for multi-core CPU utilization.
@@ -102,7 +102,7 @@ As we can see, maxine SRD provides service addresses for direct client connectio
                 * **Backup and Restore**: Added `/api/maxine/serviceops/backup` endpoint to export the entire registry state as JSON, and `/api/maxine/serviceops/restore` to import and restore from a backup. Useful for disaster recovery and migration. CLI commands `backup` and `restore` are also available.
                 * **etcd Persistence**: Added etcd support for distributed key-value storage of the registry, providing high availability and consistency. Enable with `ETCD_ENABLED=true` and configure `ETCD_HOST` and `ETCD_PORT`.
                 * **Kafka Event Streaming**: Added Kafka integration for real-time event streaming of registry changes (register, deregister, health updates). Enable with `KAFKA_ENABLED=true` and configure `KAFKA_BROKERS`.
-                   * **Performance Optimizations**: Reduced default health check concurrency from 2000 to 200 to prevent overload, increased discovery cache TTL to 10 minutes, cached config checks and alias resolutions for faster lookups, enabled HTTP/2 by default for improved performance over HTTP/1.1, optimized IP extraction caching in discovery controller, and precomputed service name building to reduce string operations. Further optimized health check concurrency to 50 and interval to 60 seconds, reduced proxy connection pool from 50000 to 10000 maxSockets for better resource management, added service name caching in discovery controller to avoid repeated string concatenations.
+                   * **Performance Optimizations**: Reduced default health check concurrency from 2000 to 100 to prevent overload, increased discovery cache TTL to 15 minutes, cached config checks and alias resolutions for faster lookups, enabled HTTP/2 by default for improved performance over HTTP/1.1, optimized IP extraction caching in discovery controller, and precomputed service name building to reduce string operations. Further optimized health check concurrency to 100 and interval to 30 seconds, increased proxy connection pool to 50000 maxSockets for high throughput, added service name caching in discovery controller to avoid repeated string concatenations. Health checks enabled by default.
                   * **Service Groups**: Added support for service groups to allow hierarchical service organization. Services can be registered with a `group` in metadata, and discovery can filter by `group` query parameter.
                   * **Service Dependency Graph**: Added `/api/maxine/serviceops/dependency/graph` endpoint to retrieve the service dependency graph, showing which services depend on others.
                   * **Impact Analysis**: Added `/api/maxine/serviceops/impact/analysis` endpoint to analyze the impact of a service failure by listing all services that depend on it.
@@ -134,10 +134,10 @@ Maxine can be configured via environment variables:
   - `LOG_JSON_PRETTIFY`: Prettify JSON logs (default: false)
   - `ACTUATOR_ENABLED`: Enable actuator endpoints (default: true)
   - `STATUS_MONITOR_ENABLED`: Enable status monitor (default: false)
-  - `HEALTH_CHECK_ENABLED`: Enable health checks (default: false)
+  - `HEALTH_CHECK_ENABLED`: Enable health checks (default: true)
   - `SERVER_SELECTION_STRATEGY`: Load balancing strategy (RR, WRR, LRT, CH, RH, LC, LL, RANDOM, P2, ADAPTIVE) (default: RR)
  - `LOG_FORMAT`: Log format (JSON or PLAIN) (default: JSON)
-   - `DISCOVERY_CACHE_TTL`: Discovery cache TTL in ms (default: 600000)
+   - `DISCOVERY_CACHE_TTL`: Discovery cache TTL in ms (default: 900000)
   - `FAILURE_THRESHOLD`: Health check failure threshold (default: 3)
   - `REDIS_ENABLED`: Enable Redis for distributed registry (default: false)
   - `REDIS_HOST`: Redis host (default: localhost)
@@ -147,8 +147,8 @@ Maxine can be configured via environment variables:
   - `HIGH_PERFORMANCE_MODE`: Disable logging for discovery endpoints to improve performance (default: true)
   - `RATE_LIMIT_MAX`: Maximum requests per IP per window (default: 10000)
   - `RATE_LIMIT_WINDOW_MS`: Rate limit window in milliseconds (default: 900000)
-   - `HEALTH_CHECK_INTERVAL`: Health check interval in milliseconds (default: 60000)
-       - `HEALTH_CHECK_CONCURRENCY`: Maximum concurrent health checks (default: 50)
+   - `HEALTH_CHECK_INTERVAL`: Health check interval in milliseconds (default: 30000)
+        - `HEALTH_CHECK_CONCURRENCY`: Maximum concurrent health checks (default: 100)
   - `DEFAULT_PROXY_MODE`: Default proxy mode for discovery (default: false)
    - `GRPC_ENABLED`: Enable gRPC discovery service (default: false)
    - `GRPC_PORT`: gRPC server port (default: 50051)
