@@ -15,7 +15,9 @@ const serviceSampleCH = {
     "version": "1.0",
     "ssl": true,
     "timeOut": 5,
-    "weight": 10
+    "weight": 10,
+    "address": "https://xx.xxx.xx.xx:8082",
+    "metadata": {}
 };
 
 
@@ -51,11 +53,13 @@ describe(`${fileName} : API /api/maxine/discover with config with Consistent Has
     it(`CH discover with NonAPI`, (done) => {
         // Making sure that server selection strategy is CH
         config.serverSelectionStrategy = constants.SSS.CH;
+        // Register service for test
+        registryService.registerService(serviceSampleCH);
         discoveryService.clearCache();
         discoveryService.serviceKeys = new Map();
 
         const fullServiceName = `default:${serviceSampleCH.serviceName}:1.0`;
-        const ip = serviceSampleCH.hostName;
+        const ip = "127.0.0.1";
 
         const response1 = discoveryService.getNode(fullServiceName, ip);
 

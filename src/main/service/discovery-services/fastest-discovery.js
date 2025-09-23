@@ -19,7 +19,8 @@ class FastestDiscovery {
         // Check cache
         const cached = this.fastestCache.get(fullServiceName);
         if (cached && (Date.now() - cached.timestamp) < this.cacheTTL) {
-            return cached.nodeName;
+            const nodes = serviceRegistry.getNodes(fullServiceName);
+            return nodes[cached.nodeName] || null;
         }
 
         let selectedNodeName = null;
@@ -41,7 +42,8 @@ class FastestDiscovery {
         // Cache the result
         this.fastestCache.set(fullServiceName, { nodeName: selectedNodeName, timestamp: Date.now() });
 
-        return selectedNodeName;
+        const nodes = serviceRegistry.getNodes(fullServiceName);
+        return nodes[selectedNodeName] || null;
     }
 }
 

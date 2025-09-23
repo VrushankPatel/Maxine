@@ -4,6 +4,7 @@ class LeastResponseTimeDiscovery {
     constructor() {
         this.fastestCache = new Map(); // serviceName -> {nodeName, timestamp}
         this.cacheTTL = 1000; // 1 second
+        this.offsets = new Map();
     }
 
     /**
@@ -19,7 +20,8 @@ class LeastResponseTimeDiscovery {
         // Check cache
         const cached = this.fastestCache.get(fullServiceName);
         if (cached && (Date.now() - cached.timestamp) < this.cacheTTL) {
-            return cached.nodeName;
+            const nodes = serviceRegistry.getNodes(fullServiceName);
+            return nodes[cached.nodeName] || null;
         }
 
         let selectedNodeName = null;
@@ -42,19 +44,21 @@ class LeastResponseTimeDiscovery {
         // Cache the result
         this.fastestCache.set(fullServiceName, { nodeName: selectedNodeName, timestamp: Date.now() });
 
-        return selectedNodeName;
+        const nodes = serviceRegistry.getNodes(fullServiceName);
+        return nodes[selectedNodeName] || null;
     }
 
     /**
-     * Increment offset for fallback
-     * @param {string} serviceName
-     * @returns {number}
-     */
+      * Increment offset for fallback
+      * @param {string} serviceName
+      * @returns {number}
+      */
     getOffsetAndIncrement = (fullServiceName) => {
-        const service = serviceRegistry.registry[fullServiceName];
-        if (!service) return 0;
-        const currentOffset = service.offset || 0;
-        service.offset = currentOffset + 1;
+        if (!this.offsets.has(fullServiceName)) {
+            this.offsets.set(fullServiceName, 0);
+        }
+        const currentOffset = this.offsets.get(fullServiceName);
+        this.offsets.set(fullServiceName, currentOffset + 1);
         return currentOffset;
     }
 }

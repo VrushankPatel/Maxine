@@ -26,7 +26,7 @@ class DiscoveryService{
     rand = new RandomDiscovery();
     p2d = new PowerOfTwoDiscovery();
     ad = new AdaptiveDiscovery();
-    cache = new LRU({ max: 1000000, ttl: config.discoveryCacheTTL });
+    cache = new LRU({ max: 10000000, ttl: 600000 });
     serviceKeys = new Map(); // Map serviceName to set of cache keys
 
     /**
@@ -49,59 +49,57 @@ class DiscoveryService{
             return cached;
         }
 
-        let nodeName;
-        switch(config.serverSelectionStrategy.name){
-            case 'RR':
-            nodeName = this.rrd.getNode(fullServiceName);
+        let node;
+        switch(config.serverSelectionStrategy){
+            case constants.SSS.RR:
+            node = this.rrd.getNode(fullServiceName);
             break;
 
-            case 'WRR':
-            nodeName = this.wrrd.getNode(fullServiceName);
+            case constants.SSS.WRR:
+            node = this.wrrd.getNode(fullServiceName);
             break;
 
-            case 'LRT':
-            nodeName = this.lrtd.getNode(fullServiceName);
+            case constants.SSS.LRT:
+            node = this.lrtd.getNode(fullServiceName);
             break;
 
-            case 'FASTEST':
-            nodeName = this.fd.getNode(fullServiceName);
+            case constants.SSS.FASTEST:
+            node = this.fd.getNode(fullServiceName);
             break;
 
-            case 'CH':
-            nodeName = this.chd.getNode(fullServiceName, ip);
+            case constants.SSS.CH:
+            node = this.chd.getNode(fullServiceName, ip);
             break;
 
-            case 'RH':
-            nodeName = this.rhd.getNode(fullServiceName, ip);
+            case constants.SSS.RH:
+            node = this.rhd.getNode(fullServiceName, ip);
             break;
 
-            case 'LC':
-            nodeName = this.lcd.getNode(fullServiceName);
+            case constants.SSS.LC:
+            node = this.lcd.getNode(fullServiceName);
             break;
 
-            case 'LL':
-            nodeName = this.lld.getNode(fullServiceName);
+            case constants.SSS.LL:
+            node = this.lld.getNode(fullServiceName);
             break;
 
-            case 'RANDOM':
-            nodeName = this.rand.getNode(fullServiceName);
+            case constants.SSS.RANDOM:
+            node = this.rand.getNode(fullServiceName);
             break;
 
-            case 'P2':
-            nodeName = this.p2d.getNode(fullServiceName);
+            case constants.SSS.P2:
+            node = this.p2d.getNode(fullServiceName);
             break;
 
-            case 'ADAPTIVE':
-            nodeName = this.ad.getNode(fullServiceName);
+            case constants.SSS.ADAPTIVE:
+            node = this.ad.getNode(fullServiceName);
             break;
 
             default:
-            nodeName = this.rrd.getNode(fullServiceName);
+            node = this.rrd.getNode(fullServiceName);
         }
 
-        if (nodeName) {
-            const nodes = serviceRegistry.getNodes(fullServiceName);
-            const node = nodes[nodeName];
+        if (node) {
             this.cache.set(cacheKey, node);
             // Track keys per service
             if (!this.serviceKeys.has(fullServiceName)) {
@@ -125,6 +123,8 @@ class DiscoveryService{
             keys.forEach(key => this.cache.delete(key));
             this.serviceKeys.delete(fullServiceName);
         }
+        // Invalidate WRR expanded list
+        this.wrrd.invalidateCache(fullServiceName);
     }
 }
 

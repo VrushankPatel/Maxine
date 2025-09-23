@@ -92,9 +92,10 @@ As we can see, maxine SRD is working as a true reverse proxy for each servers, a
           * **Advanced Health Checks**: Support for TCP health checks in addition to HTTP. Set `healthType: 'tcp'` in service metadata for TCP checks.
           * **Audit Logging**: All registry operations (register, deregister) are logged to `logs/audit.log` for compliance and monitoring.
           * **DNS SRV Discovery**: New `/api/maxine/serviceops/discover/dns` endpoint returns DNS SRV-like records for services, useful for DNS-based service discovery.
-          * **Traffic Splitting for Versions**: Services can specify `trafficSplit` in metadata to route requests to different versions based on percentages, enabling canary deployments and gradual rollouts.
-          * **CLI Tool**: Added a command-line interface at `bin/cli.js` for managing services (register, deregister, list, health, discover).
-          * **Lightning-Fast Performance Mode**: High performance mode now skips response time recording and active connection tracking for maximum throughput under heavy load.
+           * **Traffic Splitting for Versions**: Services can specify `trafficSplit` in metadata to route requests to different versions based on percentages, enabling canary deployments and gradual rollouts.
+           * **CLI Tool**: Added a command-line interface at `bin/cli.js` for managing services (register, deregister, list, health, discover).
+           * **Lightning-Fast Performance Mode**: High performance mode now skips response time recording and active connection tracking for maximum throughput under heavy load.
+           * **gRPC Support**: Added gRPC endpoint for service discovery at port 50051 (configurable via GRPC_PORT), enabled with GRPC_ENABLED=true.
 
 ## Setup for development
 
@@ -134,8 +135,10 @@ Maxine can be configured via environment variables:
  - `HIGH_PERFORMANCE_MODE`: Disable logging for discovery endpoints to improve performance (default: true)
  - `RATE_LIMIT_MAX`: Maximum requests per IP per window (default: 10000)
  - `RATE_LIMIT_WINDOW_MS`: Rate limit window in milliseconds (default: 900000)
-  - `HEALTH_CHECK_INTERVAL`: Health check interval in milliseconds (default: 30000)
-  - `HEALTH_CHECK_CONCURRENCY`: Maximum concurrent health checks (default: 2000)
+   - `HEALTH_CHECK_INTERVAL`: Health check interval in milliseconds (default: 30000)
+   - `HEALTH_CHECK_CONCURRENCY`: Maximum concurrent health checks (default: 2000)
+   - `GRPC_ENABLED`: Enable gRPC discovery service (default: false)
+   - `GRPC_PORT`: gRPC server port (default: 50051)
 
 ### Run maxine on production.
 

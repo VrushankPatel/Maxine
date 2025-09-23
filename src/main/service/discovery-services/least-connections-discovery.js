@@ -19,7 +19,9 @@ class LeastConnectionsDiscovery{
                 selectedNodeName = nodeName;
             }
         }
-        return selectedNodeName;
+        if (!selectedNodeName) return null;
+        const nodes = serviceRegistry.getNodes(fullServiceName);
+        return nodes[selectedNodeName] || null;
     }
 }
 

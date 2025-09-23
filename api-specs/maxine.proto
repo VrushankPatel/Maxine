@@ -1,0 +1,23 @@
+syntax = "proto3";
+
+package maxine;
+
+service DiscoveryService {
+  rpc Discover (DiscoverRequest) returns (DiscoverResponse);
+}
+
+message DiscoverRequest {
+  string serviceName = 1;
+  string version = 2;
+  string namespace = 3;
+  string region = 4;
+  string zone = 5;
+  string ip = 6;
+  bool proxy = 7;
+}
+
+message DiscoverResponse {
+  string address = 1;
+  string nodeName = 2;
+  string message = 3;
+}

@@ -12,7 +12,9 @@ class ConsistentHashDiscovery{
         const healthyNodeNames = serviceRegistry.getHealthyNodes(fullServiceName);
         if (healthyNodeNames.length === 0) return null;
         const hash = this.hashString(ip);
-        return healthyNodeNames[Math.abs(hash) % healthyNodeNames.length];
+        const nodeName = healthyNodeNames[Math.abs(hash) % healthyNodeNames.length];
+        const nodes = serviceRegistry.getNodes(fullServiceName);
+        return nodes[nodeName] || null;
     }
 
     hashString = (str) => {

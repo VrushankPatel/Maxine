@@ -18,7 +18,8 @@ const serviceSampleRR = {
     "version": "1.0",
     "ssl": true,
     "timeOut": 5,
-    "weight": 10
+    "weight": 10,
+    "metadata": {}
 };
 
 // Clear registry for clean test
@@ -52,12 +53,10 @@ describe(`${fileName} : NON API discover with config with Round Robin`, () => {
     it(`RR discover with NonAPI`, (done) => {
         // Making sure that server selection strategy is RR
         config.serverSelectionStrategy = constants.SSS.RR;
-        // Reset offset and cache for test
-        const { serviceRegistry } = require('../../../main/entity/service-registry');
+        // Register service for test
+        registryService.registerService(serviceSampleRR);
+        // Reset cache for test
         const fullServiceName = `default:${serviceSampleRR.serviceName}:1.0`;
-        if (serviceRegistry.registry[fullServiceName]) {
-            serviceRegistry.registry[fullServiceName].offset = 0;
-        }
         discoveryService.clearCache();
         const response1 = discoveryService.getNode(fullServiceName, serviceSampleRR.hostName);
         response1.should.be.a('object');
