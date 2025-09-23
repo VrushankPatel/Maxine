@@ -449,6 +449,40 @@ const impactAnalysisController = (req, res) => {
     res.status(statusAndMsgs.STATUS_SUCCESS).json({ serviceName, impactedServices: impacted });
 }
 
+const setApiSpecController = (req, res) => {
+    const { serviceName, nodeName, apiSpec, namespace } = req.body;
+    if (!serviceName || !nodeName) {
+        res.status(statusAndMsgs.STATUS_GENERIC_ERROR).json({ message: "Missing serviceName or nodeName" });
+        return;
+    }
+    const fullServiceName = namespace ? `${namespace}:${serviceName}` : serviceName;
+    const service = serviceRegistry.registry.get(fullServiceName);
+    if (!service || !service.nodes[nodeName]) {
+        res.status(statusAndMsgs.SERVICE_UNAVAILABLE).json({ message: "Service or node not found" });
+        return;
+    }
+    service.nodes[nodeName].apiSpec = apiSpec;
+    serviceRegistry.debounceSave();
+    res.status(statusAndMsgs.STATUS_SUCCESS).json({ message: "API spec updated" });
+}
+
+const getApiSpecController = (req, res) => {
+    const serviceName = req.query.serviceName;
+    const nodeName = req.query.nodeName;
+    const namespace = req.query.namespace || "default";
+    if (!serviceName || !nodeName) {
+        res.status(statusAndMsgs.STATUS_GENERIC_ERROR).json({ message: "Missing serviceName or nodeName" });
+        return;
+    }
+    const fullServiceName = `${namespace}:${serviceName}`;
+    const service = serviceRegistry.registry.get(fullServiceName);
+    if (!service || !service.nodes[nodeName]) {
+        res.status(statusAndMsgs.SERVICE_UNAVAILABLE).json({ message: "Service or node not found" });
+        return;
+    }
+    res.status(statusAndMsgs.STATUS_SUCCESS).json({ apiSpec: service.nodes[nodeName].apiSpec });
+}
+
 const pushHealthController = (req, res) => {
     const { serviceName, nodeName, status, namespace } = req.body;
     if (!serviceName || !nodeName || !status) {
@@ -504,5 +538,7 @@ module.exports = {
     backupController,
     restoreController,
     dependencyGraphController,
-    impactAnalysisController
+    impactAnalysisController,
+    setApiSpecController,
+    getApiSpecController
 };

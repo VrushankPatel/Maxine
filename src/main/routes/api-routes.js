@@ -1,7 +1,7 @@
 const RouteBuilder = require('../builders/route-builder');
 const bodyParser = require('body-parser');
 const rateLimit = require('express-rate-limit');
-const { serverListController, registryController, deregisterController, healthController, bulkHealthController, pushHealthController, healthHistoryController, metricsController, prometheusMetricsController, cacheStatsController, filteredDiscoveryController, discoveryInfoController, changesController, bulkRegisterController, bulkDeregisterController, setMaintenanceController, backupController, restoreController, dependencyGraphController, impactAnalysisController } = require('../controller/maxine/registry-controller');
+const { serverListController, registryController, deregisterController, healthController, bulkHealthController, pushHealthController, healthHistoryController, metricsController, prometheusMetricsController, cacheStatsController, filteredDiscoveryController, discoveryInfoController, changesController, bulkRegisterController, bulkDeregisterController, setMaintenanceController, backupController, restoreController, dependencyGraphController, impactAnalysisController, setApiSpecController, getApiSpecController } = require('../controller/maxine/registry-controller');
 const batchDiscoveryController = require('../controller/maxine/batch-discovery-controller');
 const envoyConfigController = require('../controller/maxine/envoy-controller');
 const { setConfig, getConfig, getAllConfig, deleteConfig } = require('../controller/config-control/config-controller');
@@ -80,8 +80,10 @@ let maxineApiRoutes = RouteBuilder.createNewRoute()
                                        .delete("kv/delete", authenticationController, requireRole('admin'), limiter, bodyParser.json(), deleteKv)
                                        .get("backup", authenticationController, limiter, backupController)
                                         .post("restore", authenticationController, requireRole('admin'), limiter, bodyParser.json(), restoreController)
-                                       .get("dependency/graph", authenticationController, limiter, dependencyGraphController)
-                                       .get("impact/analysis", authenticationController, limiter, impactAnalysisController)
+                                        .get("dependency/graph", authenticationController, limiter, dependencyGraphController)
+                                        .get("impact/analysis", authenticationController, limiter, impactAnalysisController)
+                                        .post("api-spec/set", authenticationController, requireRole('admin'), limiter, bodyParser.json(), setApiSpecController)
+                                        .get("api-spec/get", authenticationController, limiter, getApiSpecController)
                             .stepBack()
                             .post("signin", bodyParser.json(), signInController)
                             .put("change-password", bodyParser.json(), changePwdController)
