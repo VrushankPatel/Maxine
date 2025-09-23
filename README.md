@@ -20,7 +20,7 @@
 
 ## Introduction
 
-Maxine is a Service registry and discovery server that detects and registers each service and device in the network, providing service addresses for client-side discovery to enable fast communication between microservices. It includes optional reverse proxy capabilities for scenarios requiring centralized routing. Maxine SRD solves the problem of hardwiring URLs to establish flawless communication between microservices.
+Maxine is a lightning-fast Service registry and discovery server that detects and registers each service and device in the network, providing service addresses for client-side discovery to enable fast communication between microservices. It includes optional reverse proxy capabilities for scenarios requiring centralized routing. Maxine SRD solves the problem of hardwiring URLs to establish flawless communication between microservices, optimized for high-performance with in-memory caching, parallel processing, and high-performance mode for maximum throughput.
 
 Maxine SRD has the ability to locate a network automatically making it so that there is no need for a long configuration setup process. The Service discovery works by services connecting through REST on the network allowing devices or services to connect without any manual intervention.
 
