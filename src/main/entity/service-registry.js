@@ -27,7 +27,7 @@ class ServiceRegistry{
     healthyNodesMap = new Map(); // serviceName -> Map<nodeName, node> for O(1) node lookup
     maintenanceNodes = new Map(); // serviceName -> Set of nodeNames in maintenance
     drainingNodes = new Map(); // serviceName -> Set of nodeNames in draining mode
-    activeConnections = new Map();
+    activeConnections = new Map(); // key: `${serviceName}:${nodeName}`, value: count
     responseTimes = new Map();
     averageResponseTimes = new Map(); // cache averages
     saveTimeout = null;
@@ -290,9 +290,7 @@ class ServiceRegistry{
             tagIndex: Object.fromEntries(
                 Array.from(this.tagIndex.entries()).map(([k, v]) => [k, Array.from(v)])
             ),
-            circuitBreaker: Object.fromEntries(
-                Array.from(this.circuitBreaker.entries()).map(([k, v]) => [k, Object.fromEntries(v)])
-            )
+             circuitBreaker: Object.fromEntries(this.circuitBreaker)
         };
     }
 
@@ -322,9 +320,7 @@ class ServiceRegistry{
         this.tagIndex = new Map(
             Object.entries(data.tagIndex || {}).map(([k, v]) => [k, new Set(v)])
         );
-        this.circuitBreaker = new Map(
-            Object.entries(data.circuitBreaker || {}).map(([k, v]) => [k, new Map(Object.entries(v))])
-        );
+         this.circuitBreaker = new Map(Object.entries(data.circuitBreaker || {}));
                   // Reinitialize hashRegistry and healthyNodes
                   this.hashRegistry = new Map();
                   this.healthyNodes = new Map();
@@ -563,51 +559,41 @@ class ServiceRegistry{
     }
 
     incrementActiveConnections = (serviceName, nodeName) => {
-        if (!this.activeConnections.has(serviceName)) {
-            this.activeConnections.set(serviceName, new Map());
-        }
-        const serviceConns = this.activeConnections.get(serviceName);
-        serviceConns.set(nodeName, (serviceConns.get(nodeName) || 0) + 1);
+        const key = `${serviceName}:${nodeName}`;
+        this.activeConnections.set(key, (this.activeConnections.get(key) || 0) + 1);
     }
 
     decrementActiveConnections = (serviceName, nodeName) => {
-        const serviceConns = this.activeConnections.get(serviceName);
-        if (serviceConns && serviceConns.get(nodeName) > 0) {
-            serviceConns.set(nodeName, serviceConns.get(nodeName) - 1);
+        const key = `${serviceName}:${nodeName}`;
+        const current = this.activeConnections.get(key);
+        if (current > 0) {
+            this.activeConnections.set(key, current - 1);
         }
     }
 
     getActiveConnections = (serviceName, nodeName) => {
-        const serviceConns = this.activeConnections.get(serviceName);
-        return serviceConns ? serviceConns.get(nodeName) || 0 : 0;
+        const key = `${serviceName}:${nodeName}`;
+        return this.activeConnections.get(key) || 0;
     }
 
     recordResponseTime = (serviceName, nodeName, responseTime) => {
-        if (!this.responseTimes.has(serviceName)) {
-            this.responseTimes.set(serviceName, new Map());
+        const key = `${serviceName}:${nodeName}`;
+        if (!this.responseTimes.has(key)) {
+            this.responseTimes.set(key, []);
         }
-        const serviceTimes = this.responseTimes.get(serviceName);
-        if (!serviceTimes.has(nodeName)) {
-            serviceTimes.set(nodeName, []);
-        }
-        const times = serviceTimes.get(nodeName);
+        const times = this.responseTimes.get(key);
         times.push(responseTime);
         // Keep only last 10 response times
         if (times.length > 10) {
             times.shift();
         }
         // Update cached average
-        if (!this.averageResponseTimes.has(serviceName)) {
-            this.averageResponseTimes.set(serviceName, new Map());
-        }
-        const avgMap = this.averageResponseTimes.get(serviceName);
-        avgMap.set(nodeName, times.reduce((a, b) => a + b, 0) / times.length);
+        this.averageResponseTimes.set(key, times.reduce((a, b) => a + b, 0) / times.length);
     }
 
     getAverageResponseTime = (serviceName, nodeName) => {
-        if (!this.averageResponseTimes.has(serviceName)) return 0;
-        const avgMap = this.averageResponseTimes.get(serviceName);
-        return avgMap.get(nodeName) || 0;
+        const key = `${serviceName}:${nodeName}`;
+        return this.averageResponseTimes.get(key) || 0;
     }
 
     addNodeToHashRegistry = (serviceName, nodeName) => {
@@ -847,12 +833,14 @@ class ServiceRegistry{
                               this.addToHealthyNodes(serviceName, nodeName);
                           }
                           this.addToTagIndex(nodeName, nodes[nodeName].metadata.tags);
-                          }
-                      }
-            }
-        } catch (err) {
-            console.error('Failed to load from etcd:', err);
-        }
+                           }
+                       }
+                 // Load circuit breaker
+                 this.circuitBreaker = new Map(Object.entries(data.circuitBreaker || {}));
+             }
+         } catch (err) {
+             console.error('Failed to load from etcd:', err);
+         }
     }
 
     loadFromFile = async () => {
@@ -880,10 +868,8 @@ class ServiceRegistry{
                     this.healthHistory = new Map(
                         Object.entries(data.healthHistory || {}).map(([k, v]) => [k, new Map(Object.entries(v))])
                     );
-                    // Load circuit breaker
-                    this.circuitBreaker = new Map(
-                        Object.entries(data.circuitBreaker || {}).map(([k, v]) => [k, new Map(Object.entries(v))])
-                    );
+                 // Load circuit breaker
+                 this.circuitBreaker = new Map(Object.entries(data.circuitBreaker || {}));
                  // Reinitialize hashRegistry and healthyNodes
                  this.healthyNodeSets = new Map();
                  for (const serviceName of data.hashRegistry || []) {
@@ -896,22 +882,24 @@ class ServiceRegistry{
                          }
                          this.addToTagIndex(nodeName, nodes[nodeName].metadata.tags);
                      }
+                  }
                  }
-                }
-            }
-        } catch (err) {
-            console.error('Failed to load registry:', err);
-        }
+                 // Load circuit breaker
+                 this.circuitBreaker = new Map(Object.entries(data.circuitBreaker || {}));
+             }
+         } catch (err) {
+             console.error('Failed to load registry:', err);
+         }
     }
 
     setCircuitBreaker(serviceName, nodeName, state, failures = 0, lastFailure = 0, nextTry = 0) {
-        if (!this.circuitBreaker.has(serviceName)) this.circuitBreaker.set(serviceName, new Map());
-        this.circuitBreaker.get(serviceName).set(nodeName, {state, failures, lastFailure, nextTry});
+        const key = `${serviceName}:${nodeName}`;
+        this.circuitBreaker.set(key, {state, failures, lastFailure, nextTry});
     }
 
     getCircuitBreaker(serviceName, nodeName) {
-        if (!this.circuitBreaker.has(serviceName)) return {state: 'closed', failures: 0, lastFailure: 0, nextTry: 0};
-        return this.circuitBreaker.get(serviceName).get(nodeName) || {state: 'closed', failures: 0, lastFailure: 0, nextTry: 0};
+        const key = `${serviceName}:${nodeName}`;
+        return this.circuitBreaker.get(key) || {state: 'closed', failures: 0, lastFailure: 0, nextTry: 0};
     }
 
     incrementCircuitFailures(serviceName, nodeName) {

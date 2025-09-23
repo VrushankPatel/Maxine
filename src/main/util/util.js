@@ -21,22 +21,24 @@ const logFormatChecker = {
 }
 
 function jsonLogBuilder(logLevel, logType, statusAndMsgs, req, msg = ""){
-    return JsonBuilder.createNewJson()
-                    .put("LogLevel", logLevel)
-                    .put("LogType", logType)
-                    .put("Timestamp", getCurrentDate())
-                    .putIfNotNull("Status", statusAndMsgs)
-                    .putIfNotNullOrEmpty("Message", msg)
-                    .checkIfNull(req)
-                        .registerObj(req)
-                            .putFromRegObj("method", "Method")
-                            .putFromRegObj("ip", "ClientIp")
-                            .putFromRegObj("originalUrl", "Endpoint")
-                            .putFromRegObj("httpVersion", "HTTPVersion")
-                        .deregisterObj()
-                    .endCondition()
-                    .formatJson()
-                    .getJson();
+    const logObj = {
+        LogLevel: logLevel,
+        LogType: logType,
+        Timestamp: getCurrentDate()
+    };
+    if (statusAndMsgs !== null && statusAndMsgs !== undefined) {
+        logObj.Status = statusAndMsgs;
+    }
+    if (msg) {
+        logObj.Message = msg;
+    }
+    if (req) {
+        logObj.Method = req.method;
+        logObj.ClientIp = req.ip;
+        logObj.Endpoint = req.originalUrl;
+        logObj.HTTPVersion = req.httpVersion;
+    }
+    return JSON.stringify(logObj);
 }
 
 function plainLogBuilder(logLevel, logType, statusAndMsgs, req, msg = ""){
