@@ -24,7 +24,7 @@ const isCircuitBreakerEnabled = config.circuitBreakerEnabled;
 // Cache for service name building
 const serviceNameCache = new LRU({ max: 1000000, ttl: 900000 });
 // Cache for IP extraction
-const ipCache = new LRU({ max: 1000000, ttl: 300000 });
+const ipCache = new LRU({ max: 1000000, ttl: 900000 });
 
 const buildServiceName = (namespace, region, zone, serviceName, version) => {
     const key = `${namespace}:${region}:${zone}:${serviceName}:${version || ''}`;
@@ -84,8 +84,6 @@ const discoveryController = (req, res) => {
     if (!ip) {
         ip = req.clientIp || reqId;
         ipCache.set(reqId, ip);
-        // Cache for 5 minutes
-        setTimeout(() => ipCache.delete(reqId), 300000);
     }
 
     // if serviceName is not there, responding with error

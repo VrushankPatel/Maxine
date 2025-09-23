@@ -160,13 +160,15 @@ class ExpressAppBuilder{
       * @returns {object: ExpressAppBuilder}
       */
     listenOrSpdy(port, callback){
+        let server;
         if (config.http2Enabled) {
-            const server = spdy.createServer({}, this.app).listen(port, callback);
+            server = spdy.createServer({}, this.app).listen(port, callback);
             server.on('error', (err) => console.error('spdy listen error', err));
         } else {
-            const server = this.app.listen(port, '0.0.0.0', callback);
+            server = this.app.listen(port, '0.0.0.0', callback);
             server.on('error', (err) => console.error('http listen error', err));
         }
+        this.server = server;
         return this;
     }
 
@@ -176,6 +178,14 @@ class ExpressAppBuilder{
      */
      getApp(){
         return this.app;
+    }
+
+    /**
+     * returns the Server.
+     * @returns {object}
+     */
+     getServer(){
+        return this.server;
     }
 }
 

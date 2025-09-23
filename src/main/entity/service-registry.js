@@ -62,6 +62,10 @@ class ServiceRegistry{
         this.circuitBreaker = new Map();
     }
 
+    setWss(wss) {
+        this.wss = wss;
+    }
+
     getRegServers = () => Object.fromEntries(this.registry);
 
     // Service aliases support
@@ -90,6 +94,14 @@ class ServiceRegistry{
                 topic: 'maxine-registry-events',
                 messages: [{ value: JSON.stringify(change) }]
             }).catch(err => console.error('Kafka send error:', err));
+        }
+        // Broadcast to WebSocket clients
+        if (this.wss) {
+            this.wss.clients.forEach(client => {
+                if (client.readyState === WebSocket.OPEN) {
+                    client.send(JSON.stringify(change));
+                }
+            });
         }
     }
 
