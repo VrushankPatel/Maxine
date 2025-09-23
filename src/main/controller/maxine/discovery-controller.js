@@ -113,8 +113,10 @@ const discoveryController = (req, res) => {
          return;
      }
 
-    // Increment active connections
-    serviceRegistry.incrementActiveConnections(fullServiceName, serviceNode.nodeName);
+     // Increment active connections
+     if (!config.highPerformanceMode) {
+         serviceRegistry.incrementActiveConnections(fullServiceName, serviceNode.nodeName);
+     }
 
     const proxyTimeout = serviceNode.metadata.proxyTimeout || config.proxyTimeout;
     try {
@@ -138,15 +140,19 @@ const discoveryController = (req, res) => {
          if (config.metricsEnabled && !config.highPerformanceMode) {
              metricsService.recordRequest(serviceName, success, latency);
          }
-          if (success) {
-              // Record response time for LRT algorithm
-              serviceRegistry.recordResponseTime(fullServiceName, serviceNode.nodeName, latency);
+           if (success && !config.highPerformanceMode) {
+               // Record response time for LRT algorithm
+               serviceRegistry.recordResponseTime(fullServiceName, serviceNode.nodeName, latency);
+           }
+          if (!config.highPerformanceMode) {
+              serviceRegistry.decrementActiveConnections(fullServiceName, serviceNode.nodeName);
           }
-         serviceRegistry.decrementActiveConnections(fullServiceName, serviceNode.nodeName);
+      });
+     res.on('close', () => {
+         if (!config.highPerformanceMode) {
+             serviceRegistry.decrementActiveConnections(fullServiceName, serviceNode.nodeName);
+         }
      });
-    res.on('close', () => {
-        serviceRegistry.decrementActiveConnections(fullServiceName, serviceNode.nodeName);
-    });
 }
 
 module.exports = discoveryController
