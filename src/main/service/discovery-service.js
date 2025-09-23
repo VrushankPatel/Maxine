@@ -45,12 +45,12 @@ class DiscoveryService{
         [constants.SSS.STICKY, this.sd],
         [constants.SSS.LR, this.lrd]
     ]);
-    cache = new LRU({ max: config.discoveryCacheMax, ttl: config.discoveryCacheTTL });
+    cache = new LRU({ max: config.highPerformanceMode ? Math.min(config.discoveryCacheMax, 50000) : config.discoveryCacheMax, ttl: config.discoveryCacheTTL });
     serviceKeys = new Map(); // Map serviceName to set of cache keys
     cacheHits = 0;
     cacheMisses = 0;
-    aliasCache = new LRU({ max: Math.max(config.aliasCacheMax, 10000), ttl: 900000 }); // Cache for alias resolutions, 15 min TTL, at least 10k
-    cacheKeyCache = new LRU({ max: 100000, ttl: 900000 }); // Cache for cache key building
+    aliasCache = new LRU({ max: config.highPerformanceMode ? Math.min(config.aliasCacheMax, 50000) : Math.max(config.aliasCacheMax, 10000), ttl: 900000 }); // Cache for alias resolutions, 15 min TTL, at least 10k
+    cacheKeyCache = new LRU({ max: config.highPerformanceMode ? 50000 : 100000, ttl: 900000 }); // Cache for cache key building
 
     /**
      * Get fullServiceName and IP and based on the serverSelectionStrategy we've selected, It'll call that discoveryService and retrieve the node from it. (Ex. RoundRobin, Rendezvous, ConsistentHashing).
