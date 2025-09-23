@@ -435,6 +435,18 @@ const setMaintenanceController = (req, res) => {
     res.status(statusAndMsgs.STATUS_SUCCESS).json({ message: "Maintenance mode updated" });
 }
 
+const setDrainingController = (req, res) => {
+    const { serviceName, nodeName, namespace, draining } = req.body;
+    if (!serviceName || !nodeName) {
+        res.status(statusAndMsgs.STATUS_GENERIC_ERROR).json({ message: "Missing serviceName or nodeName" });
+        return;
+    }
+    const fullServiceName = namespace ? `${namespace}:${serviceName}` : serviceName;
+    serviceRegistry.setDrainingMode(fullServiceName, nodeName, draining === true);
+    discoveryService.invalidateServiceCache(fullServiceName);
+    res.status(statusAndMsgs.STATUS_SUCCESS).json({ message: "Draining mode updated" });
+}
+
 const healthHistoryController = (req, res) => {
     const serviceName = req.query.serviceName;
     const nodeName = req.query.nodeName;
@@ -573,6 +585,7 @@ module.exports = {
     bulkRegisterController,
     bulkDeregisterController,
     setMaintenanceController,
+    setDrainingController,
     backupController,
     restoreController,
     dependencyGraphController,

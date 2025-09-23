@@ -24,6 +24,7 @@ class ServiceRegistry{
     healthyCache = new Map(); // serviceName -> array of healthy node objects, filtered maintenance
     healthyNodeSets = new Map(); // serviceName -> Set of nodeNames for O(1) existence check
     maintenanceNodes = new Map(); // serviceName -> Set of nodeNames in maintenance
+    drainingNodes = new Map(); // serviceName -> Set of nodeNames in draining mode
     activeConnections = new Map();
     responseTimes = new Map();
     averageResponseTimes = new Map(); // cache averages
@@ -262,9 +263,12 @@ class ServiceRegistry{
             healthHistory: Object.fromEntries(
                 Array.from(this.healthHistory.entries()).map(([k, v]) => [k, Object.fromEntries(v)])
             ),
-            maintenanceNodes: Object.fromEntries(
-                Array.from(this.maintenanceNodes.entries()).map(([k, v]) => [k, Array.from(v)])
-            ),
+             maintenanceNodes: Object.fromEntries(
+                 Array.from(this.maintenanceNodes.entries()).map(([k, v]) => [k, Array.from(v)])
+             ),
+             drainingNodes: Object.fromEntries(
+                 Array.from(this.drainingNodes.entries()).map(([k, v]) => [k, Array.from(v)])
+             ),
             webhooks: Object.fromEntries(
                 Array.from(this.webhooks.entries()).map(([k, v]) => [k, Array.from(v)])
             ),
@@ -291,9 +295,12 @@ class ServiceRegistry{
         this.healthHistory = new Map(
             Object.entries(data.healthHistory || {}).map(([k, v]) => [k, new Map(Object.entries(v))])
         );
-        this.maintenanceNodes = new Map(
-            Object.entries(data.maintenanceNodes || {}).map(([k, v]) => [k, new Set(v)])
-        );
+         this.maintenanceNodes = new Map(
+             Object.entries(data.maintenanceNodes || {}).map(([k, v]) => [k, new Set(v)])
+         );
+         this.drainingNodes = new Map(
+             Object.entries(data.drainingNodes || {}).map(([k, v]) => [k, new Set(v)])
+         );
         this.webhooks = new Map(
             Object.entries(data.webhooks || {}).map(([k, v]) => [k, new Set(v)])
         );
@@ -359,6 +366,33 @@ class ServiceRegistry{
         return this.maintenanceNodes.has(serviceName) && this.maintenanceNodes.get(serviceName).has(nodeName);
     }
 
+    setDrainingMode = (serviceName, nodeName, draining) => {
+        if (draining) {
+            if (!this.drainingNodes.has(serviceName)) {
+                this.drainingNodes.set(serviceName, new Set());
+            }
+            this.drainingNodes.get(serviceName).add(nodeName);
+        } else {
+            if (this.drainingNodes.has(serviceName)) {
+                this.drainingNodes.get(serviceName).delete(nodeName);
+                if (this.drainingNodes.get(serviceName).size === 0) {
+                    this.drainingNodes.delete(serviceName);
+                }
+            }
+        }
+        // Invalidate cache
+        for (const key of this.healthyCache.keys()) {
+            if (key === serviceName || key.startsWith(serviceName + ':')) {
+                this.healthyCache.delete(key);
+            }
+        }
+        this.debounceSave();
+    }
+
+    isInDraining = (serviceName, nodeName) => {
+        return this.drainingNodes.has(serviceName) && this.drainingNodes.get(serviceName).has(nodeName);
+    }
+
     getNodes = (serviceName) => {
 
         const service = this.registry.get(serviceName);
@@ -372,7 +406,8 @@ class ServiceRegistry{
         if (!this.healthyCache.has(cacheKey)) {
             const all = this.healthyNodes.get(serviceName) || [];
             const maintenance = this.maintenanceNodes.has(serviceName) ? this.maintenanceNodes.get(serviceName) : new Set();
-            let filtered = all.filter(node => !maintenance.has(node.nodeName));
+            const draining = this.drainingNodes.has(serviceName) ? this.drainingNodes.get(serviceName) : new Set();
+            let filtered = all.filter(node => !maintenance.has(node.nodeName) && !draining.has(node.nodeName));
             if (group) {
                 filtered = filtered.filter(node => node.metadata.group === group);
             }
