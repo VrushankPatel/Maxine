@@ -20,7 +20,7 @@
 
 ## Introduction
 
-Maxine is a Service registry and a discovery server that detects and registers each service and device in the network and works as a true reverse proxy to make each service available by its name. Maxine SRD solves the problem of hardwiring URLs to establish flawless communication between microservices.
+Maxine is a Service registry and discovery server that detects and registers each service and device in the network, providing service addresses for client-side discovery to enable fast communication between microservices. It includes optional reverse proxy capabilities for scenarios requiring centralized routing. Maxine SRD solves the problem of hardwiring URLs to establish flawless communication between microservices.
 
 Maxine SRD has the ability to locate a network automatically making it so that there is no need for a long configuration setup process. The Service discovery works by services connecting through REST on the network allowing devices or services to connect without any manual intervention.
 
@@ -29,9 +29,9 @@ Maxine SRD has the ability to locate a network automatically making it so that t
 1. Assuming that the Maxine SRD server is up and running and all the services or microservices in the network have MAXINE-CLIENT added as a dependency in it, below are the steps on how Service discovery will work.
 2. The Maxine client installed in all the services will start sending the heartbeat (A special request that'll have all the necessary metadata of that service to let the other services connect) to the Maxine SRD.
 3. The SRD server will extract the service metadata from that request payload and will save it in the in-memory database (to reduce the latency), The server will also run a thread that'll remove that service metadata after the given timeout in the metadata (If not provided, then default heartbeat timeout will be used). SRD will store the data by keeping the serviceName as the primary key so that by the serviceName, its URL can be discovered.
-4. After this, all the services that want to intercommunicate with the service inside its network, It'll connect to that service via the Maxine client, and here, it'll use the serviceName instead of the service URL, and the Maxine API client will pass that request to SRD.
-5. SRD will receive the request and will extract the serviceName from it. It'll discover if that service is stored there in the registry, If it is, then it'll proxy the request to that service's URL.
-6. If that service name has multiple nodes in the registry, then SRD will distribute the traffic across all the nodes of that service.
+4. After this, all the services that want to intercommunicate with the service inside its network, They'll connect to that service via the Maxine client, using the serviceName instead of the service URL. The Maxine API client will query SRD for the service address.
+5. SRD will receive the request and will extract the serviceName from it. It'll discover if that service is stored there in the registry, If it is, then it'll return the service's address to the client for direct connection. Optionally, if proxy mode is enabled (proxy=true), it can proxy the request to the service.
+6. If that service name has multiple nodes in the registry, then SRD will select a node based on the load balancing strategy and return its address.
 
 Below is a tiny animation that explains how maxine registers all the services in the network by their HEARTBEATs sent by the maxine client.
 <br/><br/>
@@ -43,7 +43,7 @@ Once the services are registered, Below is the animation that shows how services
 <br/><br/>
 <img src="docs/img/anim/maxine-discovery.gif" />
 <br/><br/>
-As we can see, maxine SRD is working as a true reverse proxy for each servers, and proxying all the requests to the respective servers by searching for their URLs in registry by using the serviceName as a key.
+As we can see, maxine SRD provides service addresses for direct client connections, enabling fast and efficient inter-service communication. When proxy mode is used, it acts as a reverse proxy, routing requests to the appropriate servers.
 
 
 ## What problems does Maxine solve?
@@ -62,7 +62,7 @@ As we can see, maxine SRD is working as a true reverse proxy for each servers, a
 
 ## New Features
 
-    * **Performance Optimizations**: In-memory caching for discovery operations with 5-minute TTL for cache freshness, debounced asynchronous file/Redis saves for persistence, parallel health checks with 200 concurrency using native HTTP modules for reduced overhead, aggressive connection pooling for proxying (50000 max sockets with 5min keep-alive), and API rate limiting. Discovery cache now intelligently uses IP-based keys only for strategies that require it (CH/RH), eliminating unnecessary cache misses. Optimized data structures using Maps and Sets for O(1) lookups in healthy nodes and response times tracking. Fixed metrics latency recording to accurately measure full request response times. Consistent Hashing now uses the hashring library for O(1) hash lookups. Healthy nodes array is cached to avoid repeated Array.from() calls. Weighted Round Robin implemented properly using expanded node lists based on weights. LRU cache size optimized to 1M entries for better memory usage under high load. High performance mode enabled by default, disabling logging and metrics for discovery endpoints to improve throughput. Cache statistics include hit/miss ratios for performance monitoring. Lodash dependency removed and replaced with native JavaScript methods for reduced bundle size and faster execution. Compression enabled when high performance mode is disabled for reduced response sizes; disabled in high performance mode for maximum throughput. HTTP/2 support added for improved performance over HTTP/1.1. Optimized string operations in discovery controller to reduce CPU overhead. Load balancing strategies now use per-service offsets to prevent contention and ensure fair distribution. Added invalidateCache methods to all strategies for proper cache invalidation on registry changes. Optimized alias lookups with reverse mapping for O(1) alias resolution.
+     * **Performance Optimizations**: In-memory caching for discovery operations with 10-minute TTL for cache freshness, debounced asynchronous file/Redis saves for persistence, parallel health checks with 100 concurrency using native HTTP modules for reduced overhead, aggressive connection pooling for proxying (50000 max sockets with 5min keep-alive), and API rate limiting. Discovery cache now intelligently uses IP-based keys only for strategies that require it (CH/RH), eliminating unnecessary cache misses. Optimized data structures using Maps and Sets for O(1) lookups in healthy nodes and response times tracking. Fixed metrics latency recording to accurately measure full request response times. Consistent Hashing now uses the hashring library for O(1) hash lookups. Healthy nodes array is cached to avoid repeated Array.from() calls. Weighted Round Robin implemented properly using expanded node lists based on weights. LRU cache size optimized to 1M entries for better memory usage under high load. High performance mode enabled by default, disabling logging and metrics for discovery endpoints to improve throughput. Cache statistics include hit/miss ratios for performance monitoring. Lodash dependency removed and replaced with native JavaScript methods for reduced bundle size and faster execution. Compression enabled when high performance mode is disabled for reduced response sizes; disabled in high performance mode for maximum throughput. HTTP/2 support added for improved performance over HTTP/1.1. Optimized string operations in discovery controller to reduce CPU overhead. Load balancing strategies now use per-service offsets to prevent contention and ensure fair distribution. Added invalidateCache methods to all strategies for proper cache invalidation on registry changes. Optimized alias lookups with reverse mapping for O(1) alias resolution. Client-side discovery enabled by default for maximum performance, with optional proxy mode.
 * **Circuit Breaker**: Automatically skips unhealthy service nodes during discovery with failure counting and automatic recovery to improve reliability.
  * **Background Health Monitoring**: Continuous health checks every 30 seconds to maintain up-to-date service status without impacting request latency. Supports custom health endpoints via service metadata.
 * **Optimized Discovery**: Healthy nodes cache eliminates filtering overhead on each discovery request, ensuring lightning-fast service lookups.
@@ -124,13 +124,14 @@ As we can see, maxine SRD is working as a true reverse proxy for each servers, a
 
 Maxine can be configured via environment variables:
 
-- `CLUSTERING_ENABLED`: Enable clustering (default: true)
-- `NUM_WORKERS`: Number of worker processes (default: CPU cores)
-- `LOG_ASYNC`: Enable async logging (default: true)
-- `HEARTBEAT_TIMEOUT`: Heartbeat timeout in seconds (default: 5)
-- `LOG_JSON_PRETTIFY`: Prettify JSON logs (default: false)
-- `ACTUATOR_ENABLED`: Enable actuator endpoints (default: true)
-- `STATUS_MONITOR_ENABLED`: Enable status monitor (default: true)
+ - `CLUSTERING_ENABLED`: Enable clustering (default: true)
+ - `NUM_WORKERS`: Number of worker processes (default: CPU cores)
+ - `LOG_ASYNC`: Enable async logging (default: true)
+ - `HEARTBEAT_TIMEOUT`: Heartbeat timeout in seconds (default: 5)
+ - `LOG_JSON_PRETTIFY`: Prettify JSON logs (default: false)
+ - `ACTUATOR_ENABLED`: Enable actuator endpoints (default: true)
+ - `STATUS_MONITOR_ENABLED`: Enable status monitor (default: true)
+ - `HEALTH_CHECK_ENABLED`: Enable health checks (default: false)
  - `SERVER_SELECTION_STRATEGY`: Load balancing strategy (RR, WRR, LRT, CH, RH, LC, LL, RANDOM, P2, ADAPTIVE) (default: RR)
 - `LOG_FORMAT`: Log format (JSON or PLAIN) (default: JSON)
   - `DISCOVERY_CACHE_TTL`: Discovery cache TTL in ms (default: 600000)
@@ -143,8 +144,9 @@ Maxine can be configured via environment variables:
  - `HIGH_PERFORMANCE_MODE`: Disable logging for discovery endpoints to improve performance (default: true)
  - `RATE_LIMIT_MAX`: Maximum requests per IP per window (default: 10000)
  - `RATE_LIMIT_WINDOW_MS`: Rate limit window in milliseconds (default: 900000)
-   - `HEALTH_CHECK_INTERVAL`: Health check interval in milliseconds (default: 30000)
-    - `HEALTH_CHECK_CONCURRENCY`: Maximum concurrent health checks (default: 200)
+  - `HEALTH_CHECK_INTERVAL`: Health check interval in milliseconds (default: 30000)
+     - `HEALTH_CHECK_CONCURRENCY`: Maximum concurrent health checks (default: 100)
+     - `DEFAULT_PROXY_MODE`: Default proxy mode for discovery (default: false)
   - `GRPC_ENABLED`: Enable gRPC discovery service (default: false)
   - `GRPC_PORT`: gRPC server port (default: 50051)
    - `TRACING_ENABLED`: Enable OpenTelemetry tracing (default: false)
