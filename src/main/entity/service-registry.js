@@ -23,6 +23,7 @@ class ServiceRegistry{
     webhooks = new Map(); // serviceName -> set of webhook URLs
     tagIndex = new Map(); // tag -> Set of nodeNames
     kvStore = new Map(); // key -> value
+    trafficSplit = new Map(); // baseServiceName -> {version: percent}
 
     constructor() {
         if (config.redisEnabled) {
@@ -185,6 +186,15 @@ class ServiceRegistry{
 
     getAllKv = () => {
         return Object.fromEntries(this.kvStore);
+    }
+
+    setTrafficSplit = (baseServiceName, split) => {
+        this.trafficSplit.set(baseServiceName, split);
+        this.debounceSave();
+    }
+
+    getTrafficSplit = (baseServiceName) => {
+        return this.trafficSplit.get(baseServiceName);
     }
 
     // Maintenance mode management
@@ -354,7 +364,8 @@ class ServiceRegistry{
                 serviceDependencies: Object.fromEntries(
                     Array.from(this.serviceDependencies.entries()).map(([k, v]) => [k, Array.from(v)])
                 ),
-                kvStore: Object.fromEntries(this.kvStore)
+                kvStore: Object.fromEntries(this.kvStore),
+                trafficSplit: Object.fromEntries(this.trafficSplit)
             };
             await fs.promises.writeFile(path.join(__dirname, '../../../registry.json'), JSON.stringify(data, null, 2));
         } catch (err) {
@@ -368,7 +379,8 @@ class ServiceRegistry{
             const data = {
                 registry: Object.fromEntries(this.registry),
                 hashRegistry: Array.from(this.hashRegistry.keys()),
-                kvStore: Object.fromEntries(this.kvStore)
+                kvStore: Object.fromEntries(this.kvStore),
+                trafficSplit: Object.fromEntries(this.trafficSplit)
             };
             await this.redisClient.set('registry', JSON.stringify(data));
         } catch (err) {
@@ -396,6 +408,7 @@ class ServiceRegistry{
                 const data = JSON.parse(dataStr);
                 this.registry = new Map(Object.entries(data.registry || {}));
                 this.kvStore = new Map(Object.entries(data.kvStore || {}));
+                this.trafficSplit = new Map(Object.entries(data.trafficSplit || {}));
                 // Reinitialize hashRegistry and healthyNodes
                 for (const serviceName of data.hashRegistry || []) {
                     this.initHashRegistry(serviceName);
@@ -431,6 +444,8 @@ class ServiceRegistry{
                     );
                     // Load KV store
                     this.kvStore = new Map(Object.entries(data.kvStore || {}));
+                    // Load traffic split
+                    this.trafficSplit = new Map(Object.entries(data.trafficSplit || {}));
                     // Reinitialize hashRegistry and healthyNodes
                     for (const serviceName of data.hashRegistry || []) {
                         this.initHashRegistry(serviceName);

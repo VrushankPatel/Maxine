@@ -13,7 +13,9 @@ class RegistryService{
             ...details
         };
         const logFile = path.join(__dirname, '../../../logs/audit.log');
-        fs.appendFileSync(logFile, JSON.stringify(logEntry) + '\n');
+        fs.appendFile(logFile, JSON.stringify(logEntry) + '\n', (err) => {
+            if (err) console.error('Audit log error:', err);
+        });
     }
 
     registerService = (serviceObj) => {

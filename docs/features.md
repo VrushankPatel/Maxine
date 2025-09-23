@@ -15,6 +15,7 @@
 - Discovery supports version-specific routing via the optional `version` query parameter, allowing clients to target specific service versions (defaults to any version if not specified).
 - Service aliases allow services to be discoverable under multiple names, providing flexibility in service naming and migration scenarios.
 - Service maintenance mode allows temporary exclusion of service nodes from discovery without deregistration, useful for planned maintenance or upgrades via `/api/maxine/serviceops/maintenance`.
+- Traffic splitting for versions allows services to define `trafficSplit` in metadata to route percentages of requests to different versions, enabling canary deployments and gradual rollouts.
 - If discovery finds the single service node with that serviceName, then It'll simply redirect that request to that service's URL.
 - If there are multiple nodes of the same service in the registry, then discovery has to distribute the traffic across all of them, that's where Maxine's load balancer comes to rescue.
 - Filtered discovery allows routing to services based on tags, enabling environment-specific or feature-specific routing via `/api/maxine/serviceops/discover/filtered?serviceName=<name>&tags=<tag1>,<tag2>`.
@@ -113,6 +114,11 @@
 - Maxine client takes care of sending the heartbeat to the registry but before you start the server, you have to provide all these parameters in the properties or configurations.
 - If you pass the above example request to Maxine registry and then open the Maxine UI's servers page, it'll show the registered server like given below.
 <img src="/en/latest/img/maxine-servers.png" />
+
+### CLI Tool
+- Maxine provides a command-line interface for managing services without direct API calls.
+- Available commands include register, deregister, list, health, and discover.
+- Use `node bin/cli.js <command> [options]` to interact with the registry programmatically or for automation.
 
 ### Asynchronous logging
 - For Maxine SRD, logging is by default enabled and once you start the server, It'll start showing console logs, apart from that it'll also start storing logs into the files.

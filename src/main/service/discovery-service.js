@@ -37,7 +37,6 @@ class DiscoveryService{
      */
     getNode = (fullServiceName, ip) => {
         // Check if serviceName is an alias
-        const { serviceRegistry } = require("../entity/service-registry");
         const resolvedServiceName = serviceRegistry.getServiceByAlias(fullServiceName);
         if (resolvedServiceName !== fullServiceName) {
             fullServiceName = resolvedServiceName;
