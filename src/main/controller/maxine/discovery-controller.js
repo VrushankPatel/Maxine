@@ -7,6 +7,7 @@ const httpProxy = require('http-proxy');
 const rateLimit = require('express-rate-limit');
 const config = require("../../config/config");
 const LRU = require('lru-cache');
+const stringify = require('fast-json-stringify');
 
 // Per-service rate limiter
 const perServiceLimiter = rateLimit({
@@ -25,6 +26,16 @@ const isCircuitBreakerEnabled = config.circuitBreakerEnabled;
 const serviceNameCache = new LRU({ max: 10000, ttl: 900000 });
 // Cache for IP extraction
 const ipCache = new LRU({ max: 10000, ttl: 900000 });
+
+// Fast JSON stringify schemas
+const addressResponseSchema = {
+    type: 'object',
+    properties: {
+        address: { type: 'string' },
+        nodeName: { type: 'string' }
+    }
+};
+const stringifyAddress = stringify(addressResponseSchema);
 
 const buildServiceName = (namespace, region, zone, serviceName, version) => {
     const key = `${namespace}:${region}:${zone}:${serviceName}:${version || ''}`;
@@ -152,15 +163,15 @@ const discoveryController = (req, res) => {
         req.serviceNode = serviceNode;
         const addressToRedirect = endPoint ? (endPoint.startsWith('/') ? serviceNode.address + endPoint : serviceNode.address + '/' + endPoint) : serviceNode.address;
 
-      // Check if client wants address only (no proxy)
-       if (req.query.proxy === 'false' || (req.query.proxy === undefined && !config.defaultProxyMode)) {
-           if (hasMetrics && !isHighPerformanceMode) {
-               const latency = Date.now() - startTime;
-               metricsService.recordRequest(serviceName, true, latency);
-           }
-           res.json({ address: addressToRedirect, nodeName: serviceNode.nodeName });
-           return;
-       }
+       // Check if client wants address only (no proxy)
+        if (req.query.proxy === 'false' || (req.query.proxy === undefined && !config.defaultProxyMode)) {
+            if (hasMetrics && !isHighPerformanceMode) {
+                const latency = Date.now() - startTime;
+                metricsService.recordRequest(serviceName, true, latency);
+            }
+            res.send(stringifyAddress({ address: addressToRedirect, nodeName: serviceNode.nodeName }));
+            return;
+        }
 
       // Increment active connections
       if (!isHighPerformanceMode) {

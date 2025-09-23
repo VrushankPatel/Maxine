@@ -107,7 +107,11 @@ As we can see, maxine SRD provides service addresses for direct client connectio
                    * **Backup and Restore**: Added `/api/maxine/serviceops/backup` endpoint to export the entire registry state as JSON, and `/api/maxine/serviceops/restore` to import and restore from a backup. Useful for disaster recovery and migration. CLI commands `backup` and `restore` are also available.
                    * **etcd Persistence**: Added etcd support for distributed key-value storage of the registry, providing high availability and consistency. Enable with `ETCD_ENABLED=true` and configure `ETCD_HOST` and `ETCD_PORT`.
                    * **Kafka Event Streaming**: Added Kafka integration for real-time event streaming of registry changes (register, deregister, health updates). Enable with `KAFKA_ENABLED=true` and configure `KAFKA_BROKERS`.
-                   * **Service Instance Draining Mode**: Added support for putting service instances into draining mode to gracefully stop accepting new requests while allowing existing connections to complete. Use the `/api/maxine/serviceops/draining` endpoint.
+                    * **Service Instance Draining Mode**: Added support for putting service instances into draining mode to gracefully stop accepting new requests while allowing existing connections to complete. Use the `/api/maxine/serviceops/draining` endpoint.
+                     * **Client SDK Caching**: JavaScript and Python client SDKs now include built-in LRU caching for discovery operations to reduce latency and network requests.
+                     * **Fast JSON Serialization**: Responses now use fast-json-stringify for improved JSON serialization performance.
+                     * **Swagger UI Enabled**: API documentation is now available at /api-spec by default.
+                     * **Consul Integration**: Services can be automatically imported from HashiCorp Consul for seamless migration and multi-registry support. Enable with CONSUL_ENABLED=true.
                       * **Performance Optimizations**: Reduced default health check concurrency from 2000 to 50 to prevent overload, increased discovery cache TTL to 1 hour, cached config checks and alias resolutions for faster lookups, enabled HTTP/2 by default for improved performance over HTTP/1.1, optimized IP extraction caching in discovery controller, and precomputed service name building to reduce string operations. Further optimized health check concurrency to 50 and interval to 60 seconds, increased proxy connection pool to 10000 maxSockets for high throughput, added service name caching in discovery controller to avoid repeated string concatenations. Health checks disabled by default for maximum performance; enable with HEALTH_CHECK_ENABLED=true. Added LRU caching for alias resolutions, IP extractions, and service name building to prevent memory leaks and improve performance under high load. Precomputed healthy nodes excluding maintenance and draining modes to reduce filtering overhead on discovery requests. Added O(1) healthy node lookups using Maps for consistent hashing strategy to eliminate linear searches. Flattened data structures for active connections and circuit breaker using composite keys for faster Map lookups. Circuit breaker disabled in high performance mode by default. JSON logging optimized with native JSON.stringify for reduced serialization overhead. Added LRU cache for JWT token verification to avoid repeated cryptographic operations on authenticated requests.
                      * **Push Health Updates**: Added `/api/maxine/serviceops/health/push` endpoint allowing services to push their health status updates directly to the registry, enabling faster health monitoring without relying solely on pull-based checks.
                      * **Service Priority**: Services can now specify priority in metadata for load balancing preference. Healthy nodes are sorted by priority (higher first).
@@ -181,7 +185,10 @@ Maxine can be configured via environment variables:
        - `CIRCUIT_BREAKER_ENABLED`: Enable circuit breaker (default: true, set to false to disable)
      - `KUBERNETES_ENABLED`: Enable Kubernetes service discovery integration (default: false)
     - `PERSISTENCE_ENABLED`: Enable persistence to file/Redis/etcd (default: true, set to false for in-memory only mode)
-    - `MAX_INSTANCES_PER_SERVICE`: Maximum number of instances allowed per service (default: 1000)
+     - `MAX_INSTANCES_PER_SERVICE`: Maximum number of instances allowed per service (default: 1000)
+     - `CONSUL_ENABLED`: Enable Consul service import (default: false)
+     - `CONSUL_HOST`: Consul host (default: localhost)
+     - `CONSUL_PORT`: Consul port (default: 8500)
 
 ### Run maxine on production.
 

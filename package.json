@@ -47,6 +47,7 @@
     "http-proxy": "^1.18.1",
     "jsonwebtoken": "^8.5.1",
     "kafkajs": "^2.2.4",
+    "consul": "^1.2.0",
     "@kubernetes/client-node": "^0.18.1",
     "lru-cache": "^7.18.3",
     "minimist": "^1.2.5",
