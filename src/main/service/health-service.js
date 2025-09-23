@@ -71,7 +71,8 @@ class HealthService {
                     } else {
                         // HTTP health check
                         const healthUrl = node.address + (node.metadata.healthEndpoint || '/health');
-                        const response = await axios.get(healthUrl, { timeout: 3000 });
+                        const method = node.metadata.healthMethod || 'GET';
+                        const response = await axios({ method, url: healthUrl, timeout: 3000 });
                         isHealthy = response.status >= 200 && response.status < 300;
                     }
                     if (isHealthy) {
