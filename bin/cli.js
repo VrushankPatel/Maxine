@@ -123,6 +123,35 @@ async function restore() {
     }
 }
 
+async function config() {
+    const { key, value } = args;
+    if (value !== undefined) {
+        // set
+        try {
+            const res = await api.put('/api/maxine/control/config', { [key]: value });
+            console.log('Config updated:', res.data);
+        } catch (err) {
+            console.error('Error:', err.response?.data || err.message);
+        }
+    } else if (key) {
+        // get
+        try {
+            const res = await api.get('/api/maxine/control/config');
+            console.log(key + ':', res.data[key] || 'Key not found');
+        } catch (err) {
+            console.error('Error:', err.response?.data || err.message);
+        }
+    } else {
+        // get all
+        try {
+            const res = await api.get('/api/maxine/control/config');
+            console.log(JSON.stringify(res.data, null, 2));
+        } catch (err) {
+            console.error('Error:', err.response?.data || err.message);
+        }
+    }
+}
+
 switch (command) {
     case 'register':
         register();
@@ -148,8 +177,11 @@ switch (command) {
     case 'restore':
         restore();
         break;
+    case 'config':
+        config();
+        break;
     default:
         console.log('Usage: cli <command> [options]');
-        console.log('Commands: register, deregister, list, health, discover, metrics, backup, restore');
+        console.log('Commands: register, deregister, list, health, discover, metrics, backup, restore, config');
         console.log('Options: --url <baseUrl>');
 }
