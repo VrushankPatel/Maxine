@@ -34,7 +34,7 @@
     - Per-service request counts
     - Error type breakdowns
   - Prometheus-compatible metrics are available at `/api/maxine/serviceops/metrics/prometheus` for integration with monitoring systems.
-  - Cache statistics are available at `/api/maxine/serviceops/cache/stats` showing cache size, max size, TTL, and service key count.
+   - Cache statistics are available at `/api/maxine/serviceops/cache/stats` showing cache size, max size, TTL, service key count, and hit/miss ratios.
   - Metrics are collected automatically for all discovery operations.
 ### Service Changes Watch API
 - Maxine provides a watch API for real-time monitoring of registry changes.
