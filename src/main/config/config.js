@@ -31,7 +31,7 @@ const config = {
      prometheusPort: process.env.PROMETHEUS_PORT ? parseInt(process.env.PROMETHEUS_PORT) : 9090,
        metricsEnabled: process.env.METRICS_ENABLED === 'true' && !highPerfDefault,
       highPerformanceMode: highPerfDefault,
-      persistenceEnabled: process.env.PERSISTENCE_ENABLED !== 'false' && !highPerfDefault,
+      persistenceEnabled: process.env.PERSISTENCE_ENABLED !== 'false',
      rateLimitMax: process.env.RATE_LIMIT_MAX ? parseInt(process.env.RATE_LIMIT_MAX) : 10000,
      rateLimitWindowMs: process.env.RATE_LIMIT_WINDOW_MS ? parseInt(process.env.RATE_LIMIT_WINDOW_MS) : 900000, // 15 minutes
        healthCheckInterval: process.env.HEALTH_CHECK_INTERVAL ? parseInt(process.env.HEALTH_CHECK_INTERVAL) : 60000,
