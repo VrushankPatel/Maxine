@@ -42,6 +42,11 @@
 - The changes endpoint `/api/maxine/serviceops/changes?since=<timestamp>` returns all registry events (register, deregister, health status changes) that occurred after the specified timestamp.
 - This enables clients to poll for updates and maintain synchronized views of the service registry without full refreshes.
 - Changes are tracked for the last 1000 events to balance memory usage with historical visibility.
+
+### Service Dependencies
+- Maxine provides a service dependencies API to retrieve the dependency graph for services.
+- The dependencies endpoint `/api/maxine/serviceops/dependencies?serviceName=<name>` returns the services that the specified service depends on and the services that depend on it.
+- This enables understanding service relationships and impact analysis for changes.
 ### Webhook Notifications
 - Maxine supports webhook notifications for real-time alerts on service registry changes.
 - Register webhooks via `/api/maxine/serviceops/webhooks/add` with serviceName and URL.
