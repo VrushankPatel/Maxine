@@ -43,9 +43,12 @@ const config = {
       circuitBreakerTimeout: process.env.CIRCUIT_BREAKER_TIMEOUT ? parseInt(process.env.CIRCUIT_BREAKER_TIMEOUT) : 60000,
       grpcEnabled: process.env.GRPC_ENABLED === 'true',
      grpcPort: process.env.GRPC_PORT ? parseInt(process.env.GRPC_PORT) : 50051,
-      tracingEnabled: process.env.TRACING_ENABLED === 'true',
-       http2Enabled: process.env.HTTP2_ENABLED !== 'false',
-       maxInstancesPerService: process.env.MAX_INSTANCES_PER_SERVICE ? parseInt(process.env.MAX_INSTANCES_PER_SERVICE) : 1000
+       tracingEnabled: process.env.TRACING_ENABLED === 'true',
+        http2Enabled: process.env.HTTP2_ENABLED !== 'false',
+        maxInstancesPerService: process.env.MAX_INSTANCES_PER_SERVICE ? parseInt(process.env.MAX_INSTANCES_PER_SERVICE) : 1000,
+        consulEnabled: process.env.CONSUL_ENABLED === 'true',
+        consulHost: process.env.CONSUL_HOST || 'localhost',
+        consulPort: process.env.CONSUL_PORT ? parseInt(process.env.CONSUL_PORT) : 8500
 }
 
 Object.defineProperty(config, "profile", {

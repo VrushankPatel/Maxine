@@ -1,7 +1,8 @@
 const axios = require('axios');
+const LRU = require('lru-cache');
 
 class MaxineClient {
-    constructor(baseUrl, token) {
+    constructor(baseUrl, token, cacheOptions = {}) {
         this.baseUrl = baseUrl;
         this.token = token;
         this.client = axios.create({
@@ -10,6 +11,10 @@ class MaxineClient {
                 'Authorization': `Bearer ${token}`,
                 'Content-Type': 'application/json'
             }
+        });
+        this.discoveryCache = new LRU({
+            max: cacheOptions.max || 100,
+            ttl: cacheOptions.ttl || 30000 // 30 seconds default
         });
     }
 
@@ -27,13 +32,23 @@ class MaxineClient {
 
     async discover(serviceName, options = {}) {
         const params = { serviceName, ...options };
+        const cacheKey = JSON.stringify(params);
+        if (this.discoveryCache.has(cacheKey)) {
+            return this.discoveryCache.get(cacheKey);
+        }
         const response = await this.client.get('/api/maxine/serviceops/discover', { params });
+        this.discoveryCache.set(cacheKey, response.data);
         return response.data;
     }
 
     async getServiceInfo(serviceName, options = {}) {
         const params = { serviceName, ...options };
+        const cacheKey = 'info:' + JSON.stringify(params);
+        if (this.discoveryCache.has(cacheKey)) {
+            return this.discoveryCache.get(cacheKey);
+        }
         const response = await this.client.get('/api/maxine/serviceops/discover/info', { params });
+        this.discoveryCache.set(cacheKey, response.data);
         return response.data;
     }
 
@@ -57,6 +72,10 @@ class MaxineClient {
         const params = { serviceName, key };
         const response = await this.client.get('/api/maxine/serviceops/config/get', { params });
         return response.data;
+    }
+
+    clearCache() {
+        this.discoveryCache.clear();
     }
 }
 

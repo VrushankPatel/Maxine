@@ -82,9 +82,9 @@ if (config.clusteringEnabled && cluster.isMaster) {
                           .ifPropertyOnce("actuatorEnabled")
                               .use(actuator(actuatorConfig))
                           .use('/api', limiter ? limiter : (req, res, next) => next(), maxineApiRoutes)
-                      .ifPropertyOnce('profile','dev')
-                          // .use('/api-spec', swaggerUi.serve, swaggerUi.setup(swaggerDocument))
-                          .use('/shutdown', process.exit)
+                        .use('/api-spec', swaggerUi.serve, swaggerUi.setup(swaggerDocument))
+                       .ifPropertyOnce('profile','dev')
+                           .use('/shutdown', process.exit)
                       .blockUnknownUrls()
                        .use(logWebExceptions)
                       .invoke(() => console.log('before listen'))
@@ -101,6 +101,11 @@ if (config.clusteringEnabled && cluster.isMaster) {
     // Initialize Kubernetes service if enabled
     if (config.kubernetesEnabled) {
         const { k8sService } = require('./src/main/service/k8s-service');
+    }
+
+    // Initialize Consul service if enabled
+    if (config.consulEnabled) {
+        const { consulService } = require('./src/main/service/consul-service');
     }
 
     // WebSocket server for real-time changes (disabled in high performance mode)
