@@ -33,11 +33,17 @@ if (fs.existsSync(registryPath)) {
 serviceRegistry.registry = new Map();
 serviceRegistry.healthyNodes = new Map();
 serviceRegistry.healthyNodeSets = new Map();
+serviceRegistry.healthyNodesMap = new Map();
+serviceRegistry.availableNodes = new Map();
+serviceRegistry.groupIndex = new Map();
 serviceRegistry.hashRegistry = new Map();
 serviceRegistry.healthyCache = new Map();
 serviceRegistry.expandedHealthy = new Map();
 serviceRegistry.maintenanceNodes = new Map();
+serviceRegistry.drainingNodes = new Map();
 serviceRegistry.responseTimes = new Map();
+serviceRegistry.averageResponseTimes = new Map();
+serviceRegistry.healthScore = new Map();
 serviceRegistry.activeConnections = new Map();
 serviceRegistry.timeResetters = new Map();
 serviceRegistry.changes = [];
@@ -45,10 +51,10 @@ serviceRegistry.webhooks = new Map();
 serviceRegistry.tagIndex = new Map();
 serviceRegistry.kvStore = new Map();
 serviceRegistry.serviceAliases = new Map();
+serviceRegistry.serviceAliasesReverse = new Map();
 serviceRegistry.serviceDependencies = new Map();
-
-// Registering fake server to discover afterwards for tests.
-registryService.registryService(serviceSampleRR);
+serviceRegistry.trafficSplit = new Map();
+serviceRegistry.healthHistory = new Map();
 
 describe(`${fileName} : NON API discover with config with Round Robin`, () => {
     it(`RR discover with NonAPI`, (done) => {

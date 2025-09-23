@@ -24,7 +24,7 @@ class ServiceRegistry{
     healthyCache = new Map(); // serviceName -> array of healthy node objects, filtered maintenance
     healthyNodeSets = new Map(); // serviceName -> Set of nodeNames for O(1) existence check
     healthyNodesMap = new Map(); // serviceName -> Map<nodeName, node> for O(1) node lookup
-    availableNodes = new Map(); // serviceName -> Set of nodeNames that are healthy and not in maintenance/draining
+    availableNodes = new Map(); // serviceName -> Map<nodeName, node> that are healthy and not in maintenance/draining
     maintenanceNodes = new Map(); // serviceName -> Set of nodeNames in maintenance
     drainingNodes = new Map(); // serviceName -> Set of nodeNames in draining mode
     activeConnections = new Map(); // key: `${serviceName}:${nodeName}`, value: count
@@ -35,7 +35,7 @@ class ServiceRegistry{
     changes = [];
     webhooks = new Map(); // serviceName -> set of webhook URLs
     tagIndex = new Map(); // tag -> Set of nodeNames
-    groupIndex = new Map(); // serviceName -> group -> Set of nodeNames
+    groupIndex = new Map(); // serviceName -> group -> Map<nodeName, node>
     kvStore = new Map(); // key -> value
     trafficSplit = new Map(); // baseServiceName -> {version: percent}
     healthHistory = new Map(); // serviceName -> nodeName -> array of {timestamp, status}
@@ -293,11 +293,11 @@ class ServiceRegistry{
                  tagIndex: Object.fromEntries(
                      Array.from(this.tagIndex.entries()).map(([k, v]) => [k, Array.from(v)])
                  ),
-                  groupIndex: Object.fromEntries(
-                      Array.from(this.groupIndex.entries()).map(([k, v]) => [k, Object.fromEntries(
-                          Array.from(v.entries()).map(([k2, v2]) => [k2, Array.from(v2)])
-                      )])
-                  ),
+                   groupIndex: Object.fromEntries(
+                       Array.from(this.groupIndex.entries()).map(([k, v]) => [k, Object.fromEntries(
+                           Array.from(v.entries()).map(([k2, v2]) => [k2, Object.fromEntries(v2)])
+                       )])
+                   ),
               circuitBreaker: Object.fromEntries(this.circuitBreaker),
               availableNodes: Object.fromEntries(
                   Array.from(this.availableNodes.entries()).map(([k, v]) => [k, Array.from(v)])
@@ -331,15 +331,15 @@ class ServiceRegistry{
           this.tagIndex = new Map(
               Object.entries(data.tagIndex || {}).map(([k, v]) => [k, new Set(v)])
           );
-          this.groupIndex = new Map(
-              Object.entries(data.groupIndex || {}).map(([k, v]) => [k, new Map(
-                  Object.entries(v).map(([k2, v2]) => [k2, new Set(v2)])
-              )])
-          );
+           this.groupIndex = new Map(
+               Object.entries(data.groupIndex || {}).map(([k, v]) => [k, new Map(
+                   Object.entries(v).map(([k2, v2]) => [k2, new Map(Object.entries(v2))])
+               )])
+           );
           this.circuitBreaker = new Map(Object.entries(data.circuitBreaker || {}));
-          this.availableNodes = new Map(
-              Object.entries(data.availableNodes || {}).map(([k, v]) => [k, new Set(v)])
-          );
+           this.availableNodes = new Map(
+               Object.entries(data.availableNodes || {}).map(([k, v]) => [k, new Map(Object.entries(v))])
+           );
                    // Reinitialize hashRegistry and healthyNodes
                    this.hashRegistry = new Map();
                    this.healthyNodes = new Map();
@@ -452,20 +452,20 @@ class ServiceRegistry{
                 if (this.drainingNodes.get(serviceName).size === 0) {
                     this.drainingNodes.delete(serviceName);
                 }
-                  // Add to available if healthy and not maintenance
-                  if (this.healthyNodeSets.has(serviceName) && this.healthyNodeSets.get(serviceName).has(nodeName) && !this.isInMaintenance(serviceName, nodeName)) {
-                      if (!this.availableNodes.has(serviceName)) {
-                          this.availableNodes.set(serviceName, new Set());
-                      }
-                      this.availableNodes.get(serviceName).add(nodeName);
-                      // Add to group index
-                      if (node && node.metadata.group) {
-                          if (!this.groupIndex.has(serviceName)) this.groupIndex.set(serviceName, new Map());
-                          const groupMap = this.groupIndex.get(serviceName);
-                          if (!groupMap.has(node.metadata.group)) groupMap.set(node.metadata.group, new Set());
-                          groupMap.get(node.metadata.group).add(nodeName);
-                      }
-                  }
+                   // Add to available if healthy and not maintenance
+                   if (this.healthyNodeSets.has(serviceName) && this.healthyNodeSets.get(serviceName).has(nodeName) && !this.isInMaintenance(serviceName, nodeName)) {
+                       if (!this.availableNodes.has(serviceName)) {
+                           this.availableNodes.set(serviceName, new Map());
+                       }
+                       this.availableNodes.get(serviceName).set(nodeName, node);
+                       // Add to group index
+                       if (node && node.metadata && node.metadata.group) {
+                           if (!this.groupIndex.has(serviceName)) this.groupIndex.set(serviceName, new Map());
+                           const groupMap = this.groupIndex.get(serviceName);
+                           if (!groupMap.has(node.metadata.group)) groupMap.set(node.metadata.group, new Map());
+                           groupMap.get(node.metadata.group).set(nodeName, node);
+                       }
+                   }
             }
         }
         // Invalidate cache
@@ -497,16 +497,24 @@ class ServiceRegistry{
         if (!this.healthyCache.has(cacheKey)) {
             let candidates;
             if (group) {
-                candidates = this.groupIndex.get(serviceName)?.get(group) || new Set();
+                candidates = this.groupIndex.get(serviceName)?.get(group) || new Map();
             } else {
-                candidates = this.availableNodes.get(serviceName) || new Set();
+                candidates = this.availableNodes.get(serviceName) || new Map();
             }
             let filtered = [];
-            for (const nodeName of candidates) {
-                const node = this.healthyNodesMap.get(serviceName).get(nodeName);
-                if (tags && tags.length > 0 && (!node.metadata.tags || !tags.every(tag => node.metadata.tags.includes(tag)))) continue;
-                if (deployment && node.metadata.deployment !== deployment) continue;
-                filtered.push(node);
+            if (tags && tags.length > 0) {
+                for (const [nodeName, node] of candidates) {
+                    if (!node.metadata.tags || !tags.every(tag => node.metadata.tags.includes(tag))) continue;
+                    if (deployment && node.metadata.deployment !== deployment) continue;
+                    filtered.push(node);
+                }
+            } else if (deployment) {
+                for (const [nodeName, node] of candidates) {
+                    if (node.metadata.deployment !== deployment) continue;
+                    filtered.push(node);
+                }
+            } else {
+                filtered = Array.from(candidates.values());
             }
             filtered.sort((a, b) => (b.metadata.priority || 0) - (a.metadata.priority || 0));
             this.healthyCache.set(cacheKey, filtered);
@@ -527,7 +535,7 @@ class ServiceRegistry{
             this.healthyNodes.set(serviceName, []);
             this.healthyNodeSets.set(serviceName, new Set());
             this.healthyNodesMap.set(serviceName, new Map());
-            this.availableNodes.set(serviceName, new Set());
+            this.availableNodes.set(serviceName, new Map());
         }
         let arr = this.healthyNodes.get(serviceName);
         let set = this.healthyNodeSets.get(serviceName);
@@ -545,10 +553,7 @@ class ServiceRegistry{
             map = new Map();
             this.healthyNodesMap.set(serviceName, map);
         }
-        if (!avail) {
-            avail = new Set();
-            this.availableNodes.set(serviceName, avail);
-        }
+        // avail is already set above
         const service = this.registry.get(serviceName);
         if (!service || !service.nodes[nodeName]) return;
         const node = service.nodes[nodeName];
@@ -557,17 +562,17 @@ class ServiceRegistry{
             map.set(nodeName, node);
             arr.push(node);
               this.addToHashRegistry(serviceName, nodeName);
-             // Add to available if not in maintenance or draining
-             if (!this.isInMaintenance(serviceName, nodeName) && !this.isInDraining(serviceName, nodeName)) {
-                 avail.add(nodeName);
-                 // Add to group index
-                 if (node.metadata.group) {
-                     if (!this.groupIndex.has(serviceName)) this.groupIndex.set(serviceName, new Map());
-                     const groupMap = this.groupIndex.get(serviceName);
-                     if (!groupMap.has(node.metadata.group)) groupMap.set(node.metadata.group, new Set());
-                     groupMap.get(node.metadata.group).add(nodeName);
-                 }
-             }
+              // Add to available if not in maintenance or draining
+              if (!this.isInMaintenance(serviceName, nodeName) && !this.isInDraining(serviceName, nodeName)) {
+                  avail.set(nodeName, node);
+                  // Add to group index
+                  if (node.metadata && node.metadata.group) {
+                      if (!this.groupIndex.has(serviceName)) this.groupIndex.set(serviceName, new Map());
+                      const groupMap = this.groupIndex.get(serviceName);
+                      if (!groupMap.has(node.metadata.group)) groupMap.set(node.metadata.group, new Map());
+                      groupMap.get(node.metadata.group).set(nodeName, node);
+                  }
+              }
         }
         // Invalidate all cache entries for this service (including groups)
         for (const key of this.healthyCache.keys()) {
@@ -876,9 +881,9 @@ class ServiceRegistry{
                 );
                 // Load available nodes
                 this.availableNodes = new Map(
-                    Object.entries(data.availableNodes || {}).map(([k, v]) => [k, new Set(v)])
+                    Object.entries(data.availableNodes || {}).map(([k, v]) => [k, new Map(Object.entries(v))])
                 );
-                   // Reinitialize hashRegistry and healthyNodes
+                        // Reinitialize hashRegistry and healthyNodes
                    this.healthyNodeSets = new Map();
                   for (const serviceName of data.hashRegistry || []) {
                       this.initHashRegistry(serviceName);
@@ -1005,18 +1010,18 @@ class ServiceRegistry{
                  this.tagIndex = new Map(
                      Object.entries(data.tagIndex || {}).map(([k, v]) => [k, new Set(v)])
                  );
-                  // Load group index
-                  this.groupIndex = new Map(
-                      Object.entries(data.groupIndex || {}).map(([k, v]) => [k, new Map(
-                          Object.entries(v).map(([k2, v2]) => [k2, new Set(v2)])
-                      )])
-                  );
+                   // Load group index
+                   this.groupIndex = new Map(
+                       Object.entries(data.groupIndex || {}).map(([k, v]) => [k, new Map(
+                           Object.entries(v).map(([k2, v2]) => [k2, new Map(Object.entries(v2))])
+                       )])
+                   );
                   // Load circuit breaker
                   this.circuitBreaker = new Map(Object.entries(data.circuitBreaker || {}));
-                  // Load available nodes
-                  this.availableNodes = new Map(
-                      Object.entries(data.availableNodes || {}).map(([k, v]) => [k, new Set(v)])
-                  );
+                // Load available nodes
+                this.availableNodes = new Map(
+                    Object.entries(data.availableNodes || {}).map(([k, v]) => [k, new Map(Object.entries(v))])
+                );
                  // Reinitialize hashRegistry and healthyNodes
                  this.healthyNodeSets = new Map();
                  for (const serviceName of data.hashRegistry || []) {
