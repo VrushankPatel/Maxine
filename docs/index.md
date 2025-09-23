@@ -18,7 +18,7 @@
 
 ## Introduction
 
-Maxine is a Service registry and discovery server that detects and registers each service and device in the network, providing service addresses for client-side discovery to enable fast communication between microservices. It includes optional reverse proxy capabilities for scenarios requiring centralized routing. Maxine SRD solves the problem of hardwiring URLs to establish flawless communication between microservices.
+Maxine is a lightning-fast Service registry and discovery server that detects and registers each service and device in the network, providing service addresses for client-side discovery to enable fast communication between microservices. It includes optional reverse proxy capabilities for scenarios requiring centralized routing. Maxine SRD solves the problem of hardwiring URLs to establish flawless communication between microservices, optimized for high-performance with in-memory LRU caching (100k entries, 1-hour TTL), parallel processing, efficient data structures using Maps and Sets for O(1) lookups, debounced file saves, parallel health checks, connection pooling, circuit breaker for unhealthy nodes, and high-performance mode that disables advanced features for maximum throughput.
 
 Maxine SRD has the ability to locate a network automatically making it so that there is no need for a long configuration setup process. The Service discovery works by services connecting through REST on the network allowing devices or services to connect without any manual intervention.
 
@@ -51,7 +51,16 @@ As we can see, maxine SRD provides service addresses for direct client connectio
 * Also, based on the service's performance diagnostics (If it's down or not working properly), we can stop its registration to the SRD. The client provides functions that can stop sending the heartbeat to the SRD so that the service can be deregistered.
 * Also, If any of the services are hosted on more powerful hardware, then we can make SRD distribute more traffic on that service's nodes than the others. All we have to do is to provide weight property to that service's client. the weight means how much power that service has compared to others. Based on weight property, the SRD will register that service will replications, and traffic will be distributed accordingly.
 
-## Limitations
+## What problems does Maxine solve?
 
-Maxine SRD has no such option like internal scaling, multi-node SRD is under development still.
-SRD can be replicated explicitly but without that, SRD can be a single point of failure in the System.
+* When working with SOA (Service oriented architecture) or microservices, we usually have to establish the inter-service communication by their URL that gets constituted by SSL check, Hostname, port, and path.
+* The host and port are not something that'll be the same every time. Based on the availability of ports, we have to achieve a flexible architecture so, we can choose the ports randomly but what about the service communication, how'd the other services know that some service's address is changed?
+* That's the issue that Maxine solves. No matter where (on which port) the service is running, as long as the MAXINE-CLIENT is added to it, it'll always be discoverable to the SRD. This centralized service store and retrieval architecture make inter-service communication more reliable and robust.
+* Also, based on the service's performance diagnostics (If it's down or not working properly), we can stop its registration to the SRD. The client provides functions that can stop sending the heartbeat to the SRD so that the service can be deregistered.
+* Also, If any of the services are hosted on more powerful hardware, then we can make SRD distribute more traffic on that service's nodes than the others. All we have to do is to provide weight property to that service's client. the weight means how much power that service has compared to others. Based on weight property, the SRD will register that service will replications, and traffic will be distributed accordingly.
+* Maxine now includes health check capabilities to monitor service availability and persistence to survive restarts.
+* Maxine is optimized for high performance with in-memory LRU caching (1M entries, 1-hour TTL), debounced file saves, parallel health checks (every 60 seconds with 50 concurrency), connection pooling, circuit breaker for unhealthy nodes, and efficient load balancing algorithms including Round Robin, Weighted Round Robin, Least Response Time, Consistent Hashing, Rendezvous Hashing, Least Connections, Least Loaded, and Random. High performance mode disables advanced features like tracing, gRPC, etcd, Redis, Kafka, Consul, Kubernetes, mDNS integration, response time tracking and connection counting for maximum throughput. Health checks disabled by default for maximum performance; enable with HEALTH_CHECK_ENABLED=true for automatic service health monitoring.
+* Security is enhanced with JWT authentication and role-based access control (RBAC) for all registry operations.
+* Comprehensive metrics collection provides insights into request counts, latencies, and error rates.
+* Clustering support for multi-core CPU utilization.
+* Configuration via environment variables for flexible deployment.
