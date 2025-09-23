@@ -237,6 +237,7 @@
    - Enhanced healthy nodes filtering using Maps and Sets for O(1) lookups, eliminating array iterations and sorting overhead.
    - Improved load balancing cache keys to include group and tags for accurate caching and reduced cache misses.
    - Added address building cache in discovery controller to reduce repeated string concatenations for common endpoints.
+   - Added availableNodes cache to track healthy nodes excluding maintenance/draining modes, reducing discovery filtering overhead for faster service lookups.
 ### etcd Persistence
 - Maxine supports etcd as a distributed key-value store backend for high availability and consistency.
 - Enable with `ETCD_ENABLED=true` and configure `ETCD_HOST` and `ETCD_PORT`.
