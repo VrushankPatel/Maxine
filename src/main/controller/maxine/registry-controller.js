@@ -4,7 +4,7 @@ const { registryService } = require('../../service/registry-service');
 const { serviceRegistry } = require('../../entity/service-registry');
 const { metricsService } = require('../../service/metrics-service');
 const { discoveryService } = require('../../service/discovery-service');
-const axios = require('axios');
+
 const httpProxy = require('http-proxy');
 const http = require('http');
 const https = require('https');
@@ -78,8 +78,27 @@ const healthController = async (req, res) => {
     }
     const healthPromises = Object.entries(nodes).map(async ([nodeName, node]) => {
         try {
-            const healthUrl = node.address + (node.metadata.healthEndpoint || '');
-            const response = await axios.get(healthUrl, { timeout: 5000 });
+            const healthUrl = node.address + (node.metadata.healthEndpoint || '/health');
+            const url = new URL(healthUrl);
+            const client = url.protocol === 'https:' ? https : http;
+            const response = await new Promise((resolve, reject) => {
+                const req = client.request({
+                    hostname: url.hostname,
+                    port: url.port,
+                    path: url.pathname + url.search,
+                    method: 'GET',
+                    timeout: 5000
+                }, (res) => {
+                    resolve({ status: res.statusCode });
+                    req.destroy();
+                });
+                req.on('error', reject);
+                req.on('timeout', () => {
+                    req.destroy();
+                    reject(new Error('Timeout'));
+                });
+                req.end();
+            });
             // Update registry with healthy status
             const service = serviceRegistry.registry.get(fullServiceName);
             if (service && service.nodes[nodeName]) {
@@ -128,8 +147,27 @@ const bulkHealthController = async (req, res) => {
         }
         const healthPromises = Object.entries(nodes).map(async ([nodeName, node]) => {
             try {
-                const healthUrl = node.address + (node.metadata.healthEndpoint || '');
-                const response = await axios.get(healthUrl, { timeout: 5000 });
+                const healthUrl = node.address + (node.metadata.healthEndpoint || '/health');
+                const url = new URL(healthUrl);
+                const client = url.protocol === 'https:' ? https : http;
+                const response = await new Promise((resolve, reject) => {
+                    const req = client.request({
+                        hostname: url.hostname,
+                        port: url.port,
+                        path: url.pathname + url.search,
+                        method: 'GET',
+                        timeout: 5000
+                    }, (res) => {
+                        resolve({ status: res.statusCode });
+                        req.destroy();
+                    });
+                    req.on('error', reject);
+                    req.on('timeout', () => {
+                        req.destroy();
+                        reject(new Error('Timeout'));
+                    });
+                    req.end();
+                });
                 // Update registry with healthy status
                 const service = serviceRegistry.registry.get(fullServiceName);
                 if (service && service.nodes[nodeName]) {

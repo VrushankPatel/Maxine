@@ -55,7 +55,7 @@ class ServiceRegistry{
             });
             this.redisClient.on('error', (err) => console.error('Redis error:', err));
             this.redisClient.connect().then(() => this.loadFromRedis()).catch(err => console.error('Redis connect error:', err));
-        } else {
+        } else if (config.persistenceEnabled) {
             this.loadFromFile();
         }
         this.circuitBreaker = new Map();
@@ -607,6 +607,7 @@ class ServiceRegistry{
     }
 
     debounceSave = () => {
+        if (!config.persistenceEnabled) return;
         if (this.saveTimeout) {
             clearTimeout(this.saveTimeout);
         }
