@@ -28,14 +28,13 @@ const ipCache = new LRU({ max: 10000, ttl: 900000 });
 
 const buildServiceName = (namespace, region, zone, serviceName, version) => {
     const key = `${namespace}:${region}:${zone}:${serviceName}:${version || ''}`;
-    const hashKey = require('crypto').createHash('md5').update(key).digest('hex');
-    if (serviceNameCache.has(hashKey)) {
-        return serviceNameCache.get(hashKey);
+    if (serviceNameCache.has(key)) {
+        return serviceNameCache.get(key);
     }
     const fullServiceName = (region !== "default" || zone !== "default") ?
         (version ? `${namespace}:${region}:${zone}:${serviceName}:${version}` : `${namespace}:${region}:${zone}:${serviceName}`) :
         (version ? `${namespace}:${serviceName}:${version}` : `${namespace}:${serviceName}`);
-    serviceNameCache.set(hashKey, fullServiceName);
+    serviceNameCache.set(key, fullServiceName);
     return fullServiceName;
 };
 

@@ -113,24 +113,24 @@ class HealthService {
                            }
                     } else {
                         throw new Error('Health check failed');
-                    }
-                } catch (error) {
-                    unhealthyInstances++;
-                    // Update registry with unhealthy status
-                    const service = serviceRegistry.registry.get(serviceName);
-                    const nodeObj = service ? service.nodes[nodeName] : null;
-                     if (nodeObj) {
-                           nodeObj.failureCount = (nodeObj.failureCount || 0) + 1;
-                           nodeObj.lastFailureTime = Date.now();
-                           if (nodeObj.failureCount >= config.failureThreshold) {
-                               nodeObj.healthy = false;
-                                serviceRegistry.removeFromHealthyNodes(serviceName, nodeName);
-                                serviceRegistry.removeFromHashRegistry(serviceName, nodeName);
-                                serviceRegistry.addHealthHistory(serviceName, nodeName, false);
-                                serviceRegistry.debounceSave();
-                                discoveryService.invalidateServiceCache(serviceName);
-                           }
-                       }
+                     }
+                 } catch (error) {
+                     unhealthyInstances++;
+                     // Update registry with unhealthy status
+                     const service = serviceRegistry.registry.get(serviceName);
+                     const nodeObj = service ? service.nodes[nodeName] : null;
+                      if (nodeObj) {
+                            nodeObj.failureCount = (nodeObj.failureCount || 0) + 1;
+                            nodeObj.lastFailureTime = Date.now();
+                            if (nodeObj.failureCount >= config.failureThreshold && !this.selfPreservationMode) {
+                                nodeObj.healthy = false;
+                                 serviceRegistry.removeFromHealthyNodes(serviceName, nodeName);
+                                 serviceRegistry.removeFromHashRegistry(serviceName, nodeName);
+                                 serviceRegistry.addHealthHistory(serviceName, nodeName, false);
+                                 serviceRegistry.debounceSave();
+                                 discoveryService.invalidateServiceCache(serviceName);
+                            }
+                        }
                   }
             } ) );
             allHealthPromises.push(...healthPromises);
