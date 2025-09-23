@@ -39,6 +39,7 @@ const compression = require('compression');
 const swaggerDocument = loadSwaggerYAML();
 const { healthService } = require('./src/main/service/health-service');
 const { serviceRegistry } = require('./src/main/entity/service-registry');
+const dashboardController = require('./src/main/controller/dashboard-controller');
 const path = require("path");
 const currDir = require('./conf');
 const grpc = require('@grpc/grpc-js');
@@ -76,9 +77,10 @@ if (config.clusteringEnabled && cluster.isMaster) {
                            .ifProperty("highPerformanceMode", false)
                                .use(logRequest)
                            .endIfProperty()
-                        .use(authenticationController)
-                        .mapStaticDir(path.join(currDir, "client"))
-                        .mapStaticDirWithRoute('/logs', path.join(currDir,"logs"))
+                         .use(authenticationController)
+                         .use('/dashboard', dashboardController)
+                         .mapStaticDir(path.join(currDir, "client"))
+                         .mapStaticDirWithRoute('/logs', path.join(currDir,"logs"))
                            .ifPropertyOnce("actuatorEnabled")
                                .use(actuator(actuatorConfig))
                            .use('/api', limiter ? limiter : (req, res, next) => next(), maxineApiRoutes)
