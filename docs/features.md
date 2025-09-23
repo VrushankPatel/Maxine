@@ -109,6 +109,16 @@
 - Automatically registers Kubernetes services as Maxine services, using service namespacing and endpoint IPs/ports.
 - Supports dynamic updates when services are added, modified, or removed in the cluster.
 - Enables Maxine to act as a service registry for both traditional and Kubernetes-native microservices architectures.
+### Service Instance Limits
+- Maxine supports configurable limits on the number of instances per service to prevent overload and ensure stability.
+- Set `MAX_INSTANCES_PER_SERVICE` environment variable to define the maximum allowed instances (default: 1000).
+- Registration requests exceeding the limit are rejected with a warning, maintaining service quality under high load.
+- Helps in resource management and prevents cascading failures from excessive service instances.
+### Service Health Score
+- Maxine calculates health scores for service nodes based on failure rates and average response times.
+- Health score = (1 - failureRate) / (avgResponseTime + 1), where higher scores indicate healthier nodes.
+- Enables advanced load balancing strategies that prioritize healthier, more responsive service instances.
+- Provides quantitative metrics for service quality monitoring and automated decision-making in load distribution.
 ### Service API Specs
 - Maxine supports storing and retrieving API specifications for registered services to enable better service contract management.
 - Set API specs (e.g., OpenAPI/Swagger JSON) via `/api/maxine/serviceops/api-spec/set` with serviceName, nodeName, and apiSpec payload.
