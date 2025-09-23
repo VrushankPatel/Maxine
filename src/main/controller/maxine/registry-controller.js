@@ -568,6 +568,30 @@ const pushHealthController = (req, res) => {
     res.status(statusAndMsgs.STATUS_SUCCESS).json({ message: "Health status updated" });
 }
 
+const listServicesByGroupController = (req, res) => {
+    const { group, namespace } = req.query;
+    if (!group) {
+        res.status(statusAndMsgs.STATUS_GENERIC_ERROR).json({ message: "Missing group" });
+        return;
+    }
+    const services = [];
+    for (const [serviceName, service] of serviceRegistry.registry) {
+        if (namespace && !serviceName.startsWith(`${namespace}:`)) continue;
+        const healthyNodes = serviceRegistry.getHealthyNodes(serviceName, group);
+        if (healthyNodes.length > 0) {
+            services.push({
+                serviceName,
+                nodes: healthyNodes.map(node => ({
+                    nodeName: node.nodeName,
+                    address: node.address,
+                    metadata: node.metadata
+                }))
+            });
+        }
+    }
+    res.status(statusAndMsgs.STATUS_SUCCESS).json({ services });
+}
+
 module.exports = {
     registryController,
     serverListController,
@@ -591,5 +615,6 @@ module.exports = {
     dependencyGraphController,
     impactAnalysisController,
     setApiSpecController,
-    getApiSpecController
+    getApiSpecController,
+    listServicesByGroupController
 };

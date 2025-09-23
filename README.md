@@ -73,7 +73,8 @@ As we can see, maxine SRD provides service addresses for direct client connectio
 * **Service Tagging and Filtering**: Services can be tagged via metadata, and discovery can be filtered by tags using the new `/api/maxine/serviceops/discover/filtered` endpoint.
 * **Service Versioning**: Discovery supports version-specific routing via the `version` query parameter, allowing clients to target specific service versions.
 * **Non-Proxy Discovery**: Added `/api/maxine/serviceops/discover/info` endpoint to retrieve service node information without proxying, useful for clients that need the address directly.
- * **Service Changes Watch API**: Added `/api/maxine/serviceops/changes` endpoint to poll for real-time registry changes (register, deregister, health status updates) since a given timestamp.
+         * **Service Changes Watch API**: Added `/api/maxine/serviceops/changes` endpoint to poll for real-time registry changes (register, deregister, health status updates) since a given timestamp.
+         * **Service Groups Listing**: Added `/api/maxine/serviceops/servers/group` endpoint to list all services and their healthy nodes filtered by group.
         * **Least Loaded Load Balancing**: New LL strategy that routes requests to the service node with the least active connections.
         * **Fastest Node Load Balancing**: New FASTEST strategy that always routes to the node with the lowest average response time.
         * **Cache Statistics**: Added `/api/maxine/serviceops/cache/stats` endpoint to monitor discovery cache performance.

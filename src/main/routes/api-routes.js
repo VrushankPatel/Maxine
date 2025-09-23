@@ -1,7 +1,7 @@
 const RouteBuilder = require('../builders/route-builder');
 const bodyParser = require('body-parser');
 const rateLimit = require('express-rate-limit');
-const { serverListController, registryController, deregisterController, healthController, bulkHealthController, pushHealthController, healthHistoryController, metricsController, prometheusMetricsController, cacheStatsController, filteredDiscoveryController, discoveryInfoController, changesController, bulkRegisterController, bulkDeregisterController, setMaintenanceController, setDrainingController, backupController, restoreController, dependencyGraphController, impactAnalysisController, setApiSpecController, getApiSpecController } = require('../controller/maxine/registry-controller');
+const { serverListController, registryController, deregisterController, healthController, bulkHealthController, pushHealthController, healthHistoryController, metricsController, prometheusMetricsController, cacheStatsController, filteredDiscoveryController, discoveryInfoController, changesController, bulkRegisterController, bulkDeregisterController, setMaintenanceController, setDrainingController, backupController, restoreController, dependencyGraphController, impactAnalysisController, setApiSpecController, getApiSpecController, listServicesByGroupController } = require('../controller/maxine/registry-controller');
 const batchDiscoveryController = require('../controller/maxine/batch-discovery-controller');
 const envoyConfigController = require('../controller/maxine/envoy-controller');
 const { setConfig, getConfig, getAllConfig, deleteConfig } = require('../controller/config-control/config-controller');
@@ -44,7 +44,8 @@ let maxineApiRoutes = RouteBuilder.createNewRoute()
                         .stepToRoot()
                          .from("maxine")
                              .from("serviceops")
-                                  .get("servers", authenticationController, limiter, serverListController)
+                                   .get("servers", authenticationController, limiter, serverListController)
+                                   .get("servers/group", authenticationController, limiter, listServicesByGroupController)
                                     .post("register", authenticationController, bodyParser.json(), registryController)
                                    .post("register/bulk", authenticationController, limiter, bodyParser.json(), bulkRegisterController)
                                    .delete("deregister", authenticationController, limiter, bodyParser.json(), deregisterController)
