@@ -93,7 +93,7 @@ As we can see, maxine SRD is working as a true reverse proxy for each servers, a
           * **Audit Logging**: All registry operations (register, deregister) are logged to `logs/audit.log` for compliance and monitoring.
           * **DNS SRV Discovery**: New `/api/maxine/serviceops/discover/dns` endpoint returns DNS SRV-like records for services, useful for DNS-based service discovery.
             * **Traffic Splitting for Versions**: Services can specify `trafficSplit` in metadata to route requests to different versions based on percentages, enabling canary deployments and gradual rollouts.
-            * **CLI Tool**: Added a command-line interface at `bin/cli.js` for managing services (register, deregister, list, health, discover).
+             * **CLI Tool**: Added a command-line interface at `bin/cli.js` for managing services (register, deregister, list, health, discover, metrics).
             * **Lightning-Fast Performance Mode**: High performance mode now skips response time recording and active connection tracking for maximum throughput under heavy load.
             * **gRPC Support**: Added gRPC endpoint for service discovery at port 50051 (configurable via GRPC_PORT), enabled with GRPC_ENABLED=true.
             * **Batch Discovery**: Added `/api/maxine/serviceops/discover/batch` endpoint to discover multiple services in a single request, improving performance for clients needing multiple service addresses.
