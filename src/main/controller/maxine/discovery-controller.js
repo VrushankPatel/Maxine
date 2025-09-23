@@ -40,7 +40,7 @@ const addressResponseSchema = {
         nodeName: { type: 'string' }
     }
 };
-const stringifyAddress = isHighPerformanceMode ? JSON.stringify : stringify(addressResponseSchema);
+const stringifyAddress = stringify(addressResponseSchema);
 
 
 
@@ -89,10 +89,15 @@ const discoveryController = (req, res) => {
     const deployment = req.query.deployment;
     const endPoint = req.query.endPoint || "";
     const reqId = req.ip || 'unknown';
-    let ip = ipCache.get(reqId);
-    if (!ip) {
+    let ip;
+    if (isHighPerformanceMode) {
         ip = req.clientIp || reqId;
-        ipCache.set(reqId, ip);
+    } else {
+        ip = ipCache.get(reqId);
+        if (!ip) {
+            ip = req.clientIp || reqId;
+            ipCache.set(reqId, ip);
+        }
     }
 
     // if serviceName is not there, responding with error
