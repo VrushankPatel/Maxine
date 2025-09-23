@@ -1,14 +1,24 @@
 const { serviceRegistry } = require("../../entity/service-registry");
 
 class AdaptiveDiscovery {
+    constructor() {
+        this.cache = new Map(); // serviceName -> {node, timestamp}
+        this.cacheTTL = 1000; // 1 second
+    }
+
     /**
-     * Selects the best node based on a combination of response time, active connections, and health.
-     * Prioritizes nodes with lower response times and fewer connections.
-     * @param {string} fullServiceName
-     * @returns {object}
-     */
-    getNode(fullServiceName) {
-        const healthyNodes = serviceRegistry.getHealthyNodes(fullServiceName);
+      * Selects the best node based on a combination of response time, active connections, and health.
+      * Prioritizes nodes with lower response times and fewer connections.
+      * @param {string} fullServiceName
+      * @param {string} group
+      * @returns {object}
+      */
+    getNode(fullServiceName, group) {
+        const cached = this.cache.get(fullServiceName);
+        if (cached && (Date.now() - cached.timestamp) < this.cacheTTL) {
+            return cached.node;
+        }
+        const healthyNodes = serviceRegistry.getHealthyNodes(fullServiceName, group);
         if (healthyNodes.length === 0) return null;
 
         let bestNode = null;
@@ -28,11 +38,12 @@ class AdaptiveDiscovery {
             }
         }
 
+        this.cache.set(fullServiceName, { node: bestNode, timestamp: Date.now() });
         return bestNode;
     }
 
     invalidateCache = (fullServiceName) => {
-        // No persistent cache
+        this.cache.delete(fullServiceName);
     }
 }
 

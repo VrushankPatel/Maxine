@@ -8,11 +8,11 @@ class RoundRobinDiscovery{
     /**
       * retrieve the node based on the serviceName passed and returns the node at the index of offset, also increament the offset by 1 to select very second node next time.
       * @param {string} serviceName
-      * @param {string} version
+      * @param {string} group
       * @returns {object}
       */
-    getNode = (fullServiceName) => {
-        const healthyNodes = serviceRegistry.getHealthyNodes(fullServiceName);
+    getNode = (fullServiceName, group) => {
+        const healthyNodes = serviceRegistry.getHealthyNodes(fullServiceName, group);
         if (healthyNodes.length === 0) return null;
         const offset = this.getOffsetAndIncrement(fullServiceName) || 0;
         return healthyNodes[offset % healthyNodes.length];

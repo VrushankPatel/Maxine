@@ -36,9 +36,10 @@ class DiscoveryService{
      * Get fullServiceName and IP and based on the serverSelectionStrategy we've selected, It'll call that discoveryService and retrieve the node from it. (Ex. RoundRobin, Rendezvous, ConsistentHashing).
      * @param {string} fullServiceName
      * @param {string} ip
+     * @param {string} group
      * @returns {object}
      */
-    getNode = (fullServiceName, ip) => {
+    getNode = (fullServiceName, ip, group) => {
          // Check if serviceName is an alias (cached)
          let resolvedServiceName = this.aliasCache.get(fullServiceName);
          if (resolvedServiceName === undefined) {
@@ -61,19 +62,19 @@ class DiscoveryService{
         let node;
         switch(config.serverSelectionStrategy){
             case constants.SSS.RR:
-            node = this.rrd.getNode(fullServiceName);
+            node = this.rrd.getNode(fullServiceName, group);
             break;
 
             case constants.SSS.WRR:
-            node = this.wrrd.getNode(fullServiceName);
+            node = this.wrrd.getNode(fullServiceName, group);
             break;
 
             case constants.SSS.LRT:
-            node = this.lrtd.getNode(fullServiceName);
+            node = this.lrtd.getNode(fullServiceName, group);
             break;
 
             case constants.SSS.FASTEST:
-            node = this.fd.getNode(fullServiceName);
+            node = this.fd.getNode(fullServiceName, group);
             break;
 
             case constants.SSS.CH:
@@ -85,27 +86,27 @@ class DiscoveryService{
             break;
 
             case constants.SSS.LC:
-            node = this.lcd.getNode(fullServiceName);
+            node = this.lcd.getNode(fullServiceName, group);
             break;
 
             case constants.SSS.LL:
-            node = this.lld.getNode(fullServiceName);
+            node = this.lld.getNode(fullServiceName, group);
             break;
 
             case constants.SSS.RANDOM:
-            node = this.rand.getNode(fullServiceName);
+            node = this.rand.getNode(fullServiceName, group);
             break;
 
             case constants.SSS.P2:
-            node = this.p2d.getNode(fullServiceName);
+            node = this.p2d.getNode(fullServiceName, group);
             break;
 
             case constants.SSS.ADAPTIVE:
-            node = this.ad.getNode(fullServiceName);
+            node = this.ad.getNode(fullServiceName, group);
             break;
 
             default:
-            node = this.rrd.getNode(fullServiceName);
+            node = this.rrd.getNode(fullServiceName, group);
         }
 
         if (node) {
