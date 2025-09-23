@@ -376,6 +376,8 @@ class ServiceRegistry{
             if (group) {
                 filtered = filtered.filter(node => node.metadata.group === group);
             }
+            // Sort by priority descending (higher priority first)
+            filtered.sort((a, b) => (b.metadata.priority || 0) - (a.metadata.priority || 0));
             this.healthyCache.set(cacheKey, filtered);
         }
         return this.healthyCache.get(cacheKey);
