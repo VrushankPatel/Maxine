@@ -2,6 +2,7 @@ const { serviceRegistry } = require('../entity/service-registry');
 const { discoveryService } = require('../service/discovery-service');
 const config = require('../config/config');
 const axios = require('axios');
+const net = require('net');
 const pLimit = require('p-limit');
 
 class HealthService {
@@ -30,6 +31,21 @@ class HealthService {
         }
     }
 
+    async checkTcpHealth(host, port) {
+        return new Promise((resolve) => {
+            const socket = net.createConnection({ host, port, timeout: 3000 });
+            socket.on('connect', () => {
+                socket.end();
+                resolve(true);
+            });
+            socket.on('error', () => resolve(false));
+            socket.on('timeout', () => {
+                socket.destroy();
+                resolve(false);
+            });
+        });
+    }
+
     async performHealthChecks() {
         const limit = pLimit(config.healthCheckConcurrency); // Configurable concurrency for health checks
         const services = Object.keys(serviceRegistry.registry);
@@ -44,35 +60,51 @@ class HealthService {
             const healthPromises = Object.entries(nodes).map(([nodeName, node]) => limit(async () => {
                 totalInstances++;
                 try {
-                    const healthUrl = node.address + (node.metadata.healthEndpoint || '');
-                    const response = await axios.get(healthUrl, { timeout: 3000 });
-                    // Update registry with healthy status
-                    const nodeObj = serviceRegistry.registry[serviceName].nodes[nodeName];
-                     if (nodeObj) {
-                          nodeObj.healthy = true;
-                          nodeObj.failureCount = 0;
-                          nodeObj.lastFailureTime = null;
-                          serviceRegistry.addToHealthyNodes(serviceName, nodeName);
-                          serviceRegistry.addToHashRegistry(serviceName, nodeName);
-                          serviceRegistry.debounceSave();
-                          discoveryService.invalidateServiceCache(serviceName);
-                      }
+                    const healthType = node.metadata.healthType || 'http';
+                    let isHealthy = false;
+                    if (healthType === 'tcp') {
+                        // TCP health check
+                        const url = new URL(node.address);
+                        const host = url.hostname;
+                        const port = node.metadata.healthEndpoint ? parseInt(node.metadata.healthEndpoint) : url.port || 80;
+                        isHealthy = await checkTcpHealth(host, port);
+                    } else {
+                        // HTTP health check
+                        const healthUrl = node.address + (node.metadata.healthEndpoint || '/health');
+                        const response = await axios.get(healthUrl, { timeout: 3000 });
+                        isHealthy = response.status >= 200 && response.status < 300;
+                    }
+                    if (isHealthy) {
+                        // Update registry with healthy status
+                        const nodeObj = serviceRegistry.registry[serviceName].nodes[nodeName];
+                         if (nodeObj) {
+                               nodeObj.healthy = true;
+                               nodeObj.failureCount = 0;
+                               nodeObj.lastFailureTime = null;
+                               serviceRegistry.addToHealthyNodes(serviceName, nodeName);
+                               serviceRegistry.addToHashRegistry(serviceName, nodeName);
+                               serviceRegistry.debounceSave();
+                               discoveryService.invalidateServiceCache(serviceName);
+                           }
+                    } else {
+                        throw new Error('Health check failed');
+                    }
                 } catch (error) {
                     unhealthyInstances++;
                     // Update registry with unhealthy status
                     const nodeObj = serviceRegistry.registry[serviceName].nodes[nodeName];
                      if (nodeObj) {
-                          nodeObj.failureCount = (nodeObj.failureCount || 0) + 1;
-                          nodeObj.lastFailureTime = Date.now();
-                          if (nodeObj.failureCount >= config.failureThreshold) {
-                              nodeObj.healthy = false;
-                              serviceRegistry.removeFromHealthyNodes(serviceName, nodeName);
-                              serviceRegistry.removeFromHashRegistry(serviceName, nodeName);
-                              serviceRegistry.debounceSave();
-                              discoveryService.invalidateServiceCache(serviceName);
-                          }
-                      }
-                 }
+                           nodeObj.failureCount = (nodeObj.failureCount || 0) + 1;
+                           nodeObj.lastFailureTime = Date.now();
+                           if (nodeObj.failureCount >= config.failureThreshold) {
+                               nodeObj.healthy = false;
+                               serviceRegistry.removeFromHealthyNodes(serviceName, nodeName);
+                               serviceRegistry.removeFromHashRegistry(serviceName, nodeName);
+                               serviceRegistry.debounceSave();
+                               discoveryService.invalidateServiceCache(serviceName);
+                           }
+                       }
+                  }
             } ) );
             allHealthPromises.push(...healthPromises);
         }

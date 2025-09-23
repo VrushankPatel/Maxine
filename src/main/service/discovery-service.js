@@ -26,7 +26,7 @@ class DiscoveryService{
     rand = new RandomDiscovery();
     p2d = new PowerOfTwoDiscovery();
     ad = new AdaptiveDiscovery();
-    cache = new LRU({ max: 1000000, ttl: config.discoveryCacheTTL });
+    cache = new LRU({ max: 500000, ttl: config.discoveryCacheTTL });
     serviceKeys = new Map(); // Map serviceName to set of cache keys
 
     /**
@@ -101,16 +101,18 @@ class DiscoveryService{
         }
 
         if (nodeName) {
-            this.cache.set(cacheKey, nodeName);
+            const nodes = serviceRegistry.getNodes(fullServiceName);
+            const node = nodes[nodeName];
+            this.cache.set(cacheKey, node);
             // Track keys per service
             if (!this.serviceKeys.has(fullServiceName)) {
                 this.serviceKeys.set(fullServiceName, new Set());
             }
             this.serviceKeys.get(fullServiceName).add(cacheKey);
+            return node;
         }
 
-        const nodes = serviceRegistry.getNodes(fullServiceName);
-        return nodeName && nodes ? nodes[nodeName] : null;
+        return null;
     }
 
     clearCache = () => {

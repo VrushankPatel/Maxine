@@ -82,8 +82,9 @@ const healthController = async (req, res) => {
             const healthUrl = node.address + (node.metadata.healthEndpoint || '');
             const response = await axios.get(healthUrl, { timeout: 5000 });
             // Update registry with healthy status
-            if (serviceRegistry.registry[fullServiceName] && serviceRegistry.registry[fullServiceName].nodes[nodeName]) {
-                const nodeObj = serviceRegistry.registry[fullServiceName].nodes[nodeName];
+            const service = serviceRegistry.registry.get(fullServiceName);
+            if (service && service.nodes[nodeName]) {
+                const nodeObj = service.nodes[nodeName];
                 nodeObj.healthy = true;
                 nodeObj.failureCount = 0;
                 nodeObj.lastFailureTime = null;
@@ -93,8 +94,9 @@ const healthController = async (req, res) => {
             return [nodeName, { status: 'healthy', code: response.status }];
         } catch (error) {
             // Update registry with unhealthy status
-            if (serviceRegistry.registry[fullServiceName] && serviceRegistry.registry[fullServiceName].nodes[nodeName]) {
-                const nodeObj = serviceRegistry.registry[fullServiceName].nodes[nodeName];
+            const service = serviceRegistry.registry.get(fullServiceName);
+            if (service && service.nodes[nodeName]) {
+                const nodeObj = service.nodes[nodeName];
                 nodeObj.healthy = false;
                 nodeObj.failureCount = (nodeObj.failureCount || 0) + 1;
                 nodeObj.lastFailureTime = Date.now();
@@ -160,8 +162,18 @@ const filteredDiscoveryController = (req, res) => {
     }
 
     // Simple round-robin for filtered
-    const offset = (serviceRegistry.registry[fullServiceName] || {}).filteredOffset || 0;
-    serviceRegistry.registry[fullServiceName].filteredOffset = (offset + 1) % filteredNodes.length;
+    const service = serviceRegistry.registry.get(fullServiceName);
+    if (!service) {
+        const latency = Date.now() - startTime;
+        metricsService.recordRequest(serviceName, false, latency);
+        metricsService.recordError('service_unavailable');
+        res.status(statusAndMsgs.SERVICE_UNAVAILABLE).json({
+            "message" : statusAndMsgs.MSG_SERVICE_UNAVAILABLE
+        });
+        return;
+    }
+    const offset = service.filteredOffset || 0;
+    service.filteredOffset = (offset + 1) % filteredNodes.length;
     const selectedNodeName = filteredNodes[offset];
     const serviceNode = nodes[selectedNodeName];
 

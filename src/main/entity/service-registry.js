@@ -9,15 +9,15 @@ if (config.redisEnabled) {
 }
 
 class ServiceRegistry{
-    registry = {};
-    timeResetters = {};
-    hashRegistry = {};
+    registry = new Map();
+    timeResetters = new Map();
+    hashRegistry = new Map();
     healthyNodes = new Map();
     healthyCache = new Map(); // serviceName -> array of healthy node names
-    expandedHealthy = new Map(); // serviceName -> array of nodeNames repeated by weight
     maintenanceNodes = new Map(); // serviceName -> Set of nodeNames in maintenance
-    activeConnections = {};
+    activeConnections = new Map();
     responseTimes = new Map();
+    averageResponseTimes = new Map(); // cache averages
     saveTimeout = null;
     changes = [];
     webhooks = new Map(); // serviceName -> set of webhook URLs
@@ -38,7 +38,7 @@ class ServiceRegistry{
         }
     }
 
-    getRegServers = () => this.registry;
+    getRegServers = () => Object.fromEntries(this.registry);
 
     // Service aliases support
     serviceAliases = new Map(); // alias -> primaryServiceName
@@ -203,7 +203,6 @@ class ServiceRegistry{
             }
         }
         this.healthyCache.delete(serviceName); // invalidate cache
-        this.buildExpandedHealthy(serviceName);
         this.debounceSave();
     }
 
@@ -211,7 +210,13 @@ class ServiceRegistry{
         return this.maintenanceNodes.has(serviceName) && this.maintenanceNodes.get(serviceName).has(nodeName);
     }
 
-    getNodes = (serviceName) => (this.registry[serviceName] || {})["nodes"];
+    getNodes = (serviceName) => {
+
+        const service = this.registry.get(serviceName);
+
+        return service ? service.nodes : {};
+
+    };
 
     getHealthyNodes = (serviceName) => {
         if (!this.healthyCache.has(serviceName)) {
@@ -223,23 +228,11 @@ class ServiceRegistry{
         return this.healthyCache.get(serviceName);
     }
 
-    buildExpandedHealthy = (serviceName) => {
-        const healthy = this.getHealthyNodes(serviceName);
-        const expanded = [];
-        for (const nodeName of healthy) {
-            const node = this.registry[serviceName]?.nodes?.[nodeName];
-            if (node) {
-                const weight = parseInt(node.weight) || 1;
-                // Use a more efficient way to expand
-                expanded.push(...Array(weight).fill(nodeName));
-            }
-        }
-        this.expandedHealthy.set(serviceName, expanded);
-    }
+
 
     initHashRegistry = (serviceName) => {
-        if(!this.hashRegistry[serviceName]){
-            this.hashRegistry[serviceName] = new HashRing({algorithm: 'md5'});
+        if(!this.hashRegistry.has(serviceName)){
+            this.hashRegistry.set(serviceName, new HashRing({algorithm: 'md5'}));
         }
     }
 
@@ -250,16 +243,15 @@ class ServiceRegistry{
         const arr = this.healthyNodes.get(serviceName);
         if (!arr.includes(nodeName)) {
             arr.push(nodeName);
-            // sort by priority desc
-            const nodes = this.registry[serviceName]?.nodes || {};
-            arr.sort((a,b) => {
-                const priA = nodes[a]?.metadata?.priority || 0;
-                const priB = nodes[b]?.metadata?.priority || 0;
-                return priB - priA;
-            });
+        // sort by priority desc
+        const nodes = this.getNodes(serviceName);
+        arr.sort((a,b) => {
+            const priA = nodes[a]?.metadata?.priority || 0;
+            const priB = nodes[b]?.metadata?.priority || 0;
+            return priB - priA;
+        });
         }
         this.healthyCache.delete(serviceName); // invalidate cache
-        this.buildExpandedHealthy(serviceName); // rebuild expanded
         this.addChange('healthy', serviceName, nodeName, { healthy: true });
     }
 
@@ -271,26 +263,28 @@ class ServiceRegistry{
                 arr.splice(index, 1);
             }
             this.healthyCache.delete(serviceName); // invalidate cache
-            this.buildExpandedHealthy(serviceName); // rebuild expanded
             this.addChange('unhealthy', serviceName, nodeName, { healthy: false });
         }
     }
 
     incrementActiveConnections = (serviceName, nodeName) => {
-        if (!this.activeConnections[serviceName]) {
-            this.activeConnections[serviceName] = {};
+        if (!this.activeConnections.has(serviceName)) {
+            this.activeConnections.set(serviceName, new Map());
         }
-        this.activeConnections[serviceName][nodeName] = (this.activeConnections[serviceName][nodeName] || 0) + 1;
+        const serviceConns = this.activeConnections.get(serviceName);
+        serviceConns.set(nodeName, (serviceConns.get(nodeName) || 0) + 1);
     }
 
     decrementActiveConnections = (serviceName, nodeName) => {
-        if (this.activeConnections[serviceName] && this.activeConnections[serviceName][nodeName] > 0) {
-            this.activeConnections[serviceName][nodeName]--;
+        const serviceConns = this.activeConnections.get(serviceName);
+        if (serviceConns && serviceConns.get(nodeName) > 0) {
+            serviceConns.set(nodeName, serviceConns.get(nodeName) - 1);
         }
     }
 
     getActiveConnections = (serviceName, nodeName) => {
-        return this.activeConnections[serviceName] ? this.activeConnections[serviceName][nodeName] || 0 : 0;
+        const serviceConns = this.activeConnections.get(serviceName);
+        return serviceConns ? serviceConns.get(nodeName) || 0 : 0;
     }
 
     recordResponseTime = (serviceName, nodeName, responseTime) => {
@@ -307,33 +301,39 @@ class ServiceRegistry{
         if (times.length > 10) {
             times.shift();
         }
+        // Update cached average
+        if (!this.averageResponseTimes.has(serviceName)) {
+            this.averageResponseTimes.set(serviceName, new Map());
+        }
+        const avgMap = this.averageResponseTimes.get(serviceName);
+        avgMap.set(nodeName, times.reduce((a, b) => a + b, 0) / times.length);
     }
 
     getAverageResponseTime = (serviceName, nodeName) => {
-        if (!this.responseTimes.has(serviceName)) return 0;
-        const serviceTimes = this.responseTimes.get(serviceName);
-        if (!serviceTimes.has(nodeName)) return 0;
-        const times = serviceTimes.get(nodeName);
-        if (times.length === 0) return 0;
-        return times.reduce((a, b) => a + b, 0) / times.length;
+        if (!this.averageResponseTimes.has(serviceName)) return 0;
+        const avgMap = this.averageResponseTimes.get(serviceName);
+        return avgMap.get(nodeName) || 0;
     }
 
     addNodeToHashRegistry = (serviceName, nodeName) => {
         this.initHashRegistry(serviceName);
-        if(this.hashRegistry[serviceName].servers.includes(nodeName)) return;
-        this.hashRegistry[serviceName].add(nodeName);
+        const hashRing = this.hashRegistry.get(serviceName);
+        if(hashRing.servers.includes(nodeName)) return;
+        hashRing.add(nodeName);
         this.debounceSave();
     }
 
     addToHashRegistry = (serviceName, nodeName) => {
         this.initHashRegistry(serviceName);
-        if(this.hashRegistry[serviceName].servers.includes(nodeName)) return;
-        this.hashRegistry[serviceName].add(nodeName);
+        const hashRing = this.hashRegistry.get(serviceName);
+        if(hashRing.servers.includes(nodeName)) return;
+        hashRing.add(nodeName);
     }
 
     removeFromHashRegistry = (serviceName, nodeName) => {
-        if (this.hashRegistry[serviceName]) {
-            this.hashRegistry[serviceName].remove(nodeName);
+        const hashRing = this.hashRegistry.get(serviceName);
+        if (hashRing) {
+            hashRing.remove(nodeName);
         }
     }
 
@@ -348,8 +348,8 @@ class ServiceRegistry{
     saveToFile = async () => {
         try {
             const data = {
-                registry: this.registry,
-                hashRegistry: Object.keys(this.hashRegistry),
+                registry: Object.fromEntries(this.registry),
+                hashRegistry: Array.from(this.hashRegistry.keys()),
                 serviceAliases: Object.fromEntries(this.serviceAliases),
                 serviceDependencies: Object.fromEntries(
                     Array.from(this.serviceDependencies.entries()).map(([k, v]) => [k, Array.from(v)])
@@ -366,8 +366,8 @@ class ServiceRegistry{
         if (!config.redisEnabled) return;
         try {
             const data = {
-                registry: this.registry,
-                hashRegistry: Object.keys(this.hashRegistry),
+                registry: Object.fromEntries(this.registry),
+                hashRegistry: Array.from(this.hashRegistry.keys()),
                 kvStore: Object.fromEntries(this.kvStore)
             };
             await this.redisClient.set('registry', JSON.stringify(data));
@@ -394,7 +394,7 @@ class ServiceRegistry{
             const dataStr = await this.redisClient.get('registry');
             if (dataStr) {
                 const data = JSON.parse(dataStr);
-                this.registry = data.registry || {};
+                this.registry = new Map(Object.entries(data.registry || {}));
                 this.kvStore = new Map(Object.entries(data.kvStore || {}));
                 // Reinitialize hashRegistry and healthyNodes
                 for (const serviceName of data.hashRegistry || []) {
@@ -422,7 +422,7 @@ class ServiceRegistry{
                 const content = fs.readFileSync(filePath, 'utf8').trim();
                 if (content) {
                     const data = JSON.parse(content);
-                    this.registry = data.registry || {};
+                    this.registry = new Map(Object.entries(data.registry || {}));
                     // Load aliases
                     this.serviceAliases = new Map(Object.entries(data.serviceAliases || {}));
                     // Load dependencies

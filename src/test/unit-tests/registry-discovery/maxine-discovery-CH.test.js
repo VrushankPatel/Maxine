@@ -27,8 +27,21 @@ const registryPath = path.join(__dirname, '../../../registry.json');
 if (fs.existsSync(registryPath)) {
     fs.unlinkSync(registryPath);
 }
-serviceRegistry.registry = {};
-serviceRegistry.hashRegistry = {};
+serviceRegistry.registry = new Map();
+serviceRegistry.hashRegistry = new Map();
+serviceRegistry.healthyNodes = new Map();
+serviceRegistry.healthyCache = new Map();
+serviceRegistry.expandedHealthy = new Map();
+serviceRegistry.maintenanceNodes = new Map();
+serviceRegistry.responseTimes = new Map();
+serviceRegistry.activeConnections = new Map();
+serviceRegistry.timeResetters = new Map();
+serviceRegistry.changes = [];
+serviceRegistry.webhooks = new Map();
+serviceRegistry.tagIndex = new Map();
+serviceRegistry.kvStore = new Map();
+serviceRegistry.serviceAliases = new Map();
+serviceRegistry.serviceDependencies = new Map();
 
 // Registering fake server to discover afterwards for tests.
 registryService.registryService(serviceSampleCH);

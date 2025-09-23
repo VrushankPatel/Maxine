@@ -2,7 +2,19 @@ const Service = require("../entity/service-body");
 const { serviceRegistry: sRegistry } = require("../entity/service-registry");
 const { discoveryService } = require("../service/discovery-service");
 const _ = require('lodash');
+const fs = require('fs');
+const path = require('path');
 class RegistryService{
+
+    auditLog = (action, details) => {
+        const logEntry = {
+            timestamp: new Date().toISOString(),
+            action,
+            ...details
+        };
+        const logFile = path.join(__dirname, '../../../logs/audit.log');
+        fs.appendFileSync(logFile, JSON.stringify(logEntry) + '\n');
+    }
 
     registerService = (serviceObj) => {
         const {serviceName, version, namespace, region = "default", zone = "default", nodeName, address, timeOut, weight, metadata, aliases = []} = serviceObj;
@@ -10,23 +22,21 @@ class RegistryService{
             (version ? `${namespace}:${region}:${zone}:${serviceName}:${version}` : `${namespace}:${region}:${zone}:${serviceName}`) :
             (version ? `${namespace}:${serviceName}:${version}` : `${namespace}:${serviceName}`);
 
-        if (!sRegistry.registry[fullServiceName]){
-            sRegistry.registry[fullServiceName] = {offset: 0, nodes: {}};
+        if (!sRegistry.registry.has(fullServiceName)){
+            sRegistry.registry.set(fullServiceName, {offset: 0, nodes: {}});
         }
 
+        const service = sRegistry.registry.get(fullServiceName);
         [...Array(weight).keys()].forEach(index => {
             const subNodeName = `${nodeName}-${index}`;
 
             sRegistry.addNodeToHashRegistry(fullServiceName, subNodeName);
 
-            if(sRegistry.registry[fullServiceName]["nodes"][subNodeName]){
-                clearTimeout(
-                    sRegistry
-                        .timeResetters[sRegistry
-                                        .registry[fullServiceName]["nodes"][subNodeName]["nodeName"]]);
+            if(service.nodes[subNodeName]){
+                clearTimeout(sRegistry.timeResetters.get(subNodeName));
             }
 
-            sRegistry.registry[fullServiceName]["nodes"][subNodeName] = {
+            service.nodes[subNodeName] = {
                 "nodeName" : subNodeName,
                 "parentNode" : nodeName,
                 "address" : address,
@@ -47,28 +57,36 @@ class RegistryService{
                 if (healthService.selfPreservationMode) {
                     // In self-preservation mode, renew the timeout instead of deregistering
                     setTimeout(() => {
-                        delete sRegistry.registry[fullServiceName]["nodes"][subNodeName];
-                        if(Object.keys(sRegistry.registry[fullServiceName]["nodes"]).length === 0){
-                            delete sRegistry.registry[fullServiceName];
+                        const service = sRegistry.registry.get(fullServiceName);
+                        if (service) {
+                            delete service.nodes[subNodeName];
+                            if(Object.keys(service.nodes).length === 0){
+                                sRegistry.registry.delete(fullServiceName);
+                            }
                         }
                         sRegistry.removeNodeFromRegistry(fullServiceName, subNodeName);
-                        if(Object.keys(sRegistry.hashRegistry[fullServiceName]["nodes"]).length === 0){
-                            delete sRegistry.hashRegistry[fullServiceName];
+                        const hashRing = sRegistry.hashRegistry.get(fullServiceName);
+                        if(hashRing && hashRing.servers.length === 0){
+                            sRegistry.hashRegistry.delete(fullServiceName);
                         }
                     }, ((timeOut)*1000)+500);
                     return;
                 }
-                delete sRegistry.registry[fullServiceName]["nodes"][subNodeName];
-                if(Object.keys(sRegistry.registry[fullServiceName]["nodes"]).length === 0){
-                    delete sRegistry.registry[fullServiceName];
+                const service = sRegistry.registry.get(fullServiceName);
+                if (service) {
+                    delete service.nodes[subNodeName];
+                    if(Object.keys(service.nodes).length === 0){
+                        sRegistry.registry.delete(fullServiceName);
+                    }
                 }
                 sRegistry.removeNodeFromRegistry(fullServiceName, subNodeName);
-                if(Object.keys(sRegistry.hashRegistry[fullServiceName]["nodes"]).length === 0){
-                    delete sRegistry.hashRegistry[fullServiceName];
+                const hashRing = sRegistry.hashRegistry.get(fullServiceName);
+                if(hashRing && hashRing.servers.length === 0){
+                    sRegistry.hashRegistry.delete(fullServiceName);
                 }
             }, ((timeOut)*1000)+500);
 
-            sRegistry.timeResetters[subNodeName] = timeResetter;
+            sRegistry.timeResetters.set(subNodeName, timeResetter);
         });
 
         // Register aliases
@@ -82,6 +100,7 @@ class RegistryService{
         }
 
         sRegistry.addChange('register', fullServiceName, nodeName, { address, metadata, aliases });
+        this.auditLog('register', { fullServiceName, nodeName, address, metadata, aliases });
         discoveryService.invalidateServiceCache(fullServiceName);
     }
 
@@ -97,22 +116,24 @@ class RegistryService{
         const fullServiceName = (region !== "default" || zone !== "default") ?
             `${namespace}:${region}:${zone}:${serviceName}` :
             `${namespace}:${serviceName}`;
-        if (!sRegistry.registry[fullServiceName]) return false;
-        const nodes = sRegistry.registry[fullServiceName].nodes;
+        if (!sRegistry.registry.has(fullServiceName)) return false;
+        const service = sRegistry.registry.get(fullServiceName);
+        const nodes = service.nodes;
         const toRemove = Object.keys(nodes).filter(key => nodes[key].parentNode === nodeName);
         toRemove.forEach(subNode => {
-            if (sRegistry.timeResetters[subNode]) {
-                clearTimeout(sRegistry.timeResetters[subNode]);
-                delete sRegistry.timeResetters[subNode];
+            if (sRegistry.timeResetters.has(subNode)) {
+                clearTimeout(sRegistry.timeResetters.get(subNode));
+                sRegistry.timeResetters.delete(subNode);
             }
             delete nodes[subNode];
             sRegistry.removeNodeFromRegistry(fullServiceName, subNode);
         });
         if (Object.keys(nodes).length === 0) {
-            delete sRegistry.registry[fullServiceName];
-            delete sRegistry.hashRegistry[fullServiceName];
+            sRegistry.registry.delete(fullServiceName);
+            sRegistry.hashRegistry.delete(fullServiceName);
         }
         sRegistry.addChange('deregister', fullServiceName, nodeName, {});
+        this.auditLog('deregister', { fullServiceName, nodeName });
         discoveryService.invalidateServiceCache(fullServiceName);
         return true;
     }
