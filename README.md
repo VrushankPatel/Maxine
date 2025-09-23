@@ -168,6 +168,7 @@ Maxine can be configured via environment variables:
     - `KAFKA_ENABLED`: Enable Kafka for event streaming (default: false)
     - `KAFKA_BROKERS`: Kafka brokers (default: localhost:9092)
      - `CIRCUIT_BREAKER_ENABLED`: Enable circuit breaker (default: false, set to true to enable)
+   - `PERSISTENCE_ENABLED`: Enable persistence to file/Redis/etcd (default: true, set to false for in-memory only mode)
 
 ### Run maxine on production.
 
