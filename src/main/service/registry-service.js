@@ -18,7 +18,7 @@ class RegistryService{
     }
 
     registerService = (serviceObj) => {
-        const {serviceName, version, namespace = "default", region = "default", zone = "default", nodeName, address, timeOut, weight, metadata, aliases = []} = serviceObj;
+        const {serviceName, version, namespace = "default", region = "default", zone = "default", nodeName, address, timeOut, weight, metadata, aliases = [], apiSpec} = serviceObj;
         const fullServiceName = (region !== "default" || zone !== "default") ?
             (version ? `${namespace}:${region}:${zone}:${serviceName}:${version}` : `${namespace}:${region}:${zone}:${serviceName}`) :
             (version ? `${namespace}:${serviceName}:${version}` : `${namespace}:${serviceName}`);
@@ -46,7 +46,8 @@ class RegistryService{
                 "healthy" : true,
                 "failureCount" : 0,
                 "lastFailureTime" : null,
-                "metadata" : metadata
+                "metadata" : metadata,
+                "apiSpec" : apiSpec
             }
 
             sRegistry.addToTagIndex(subNodeName, metadata.tags);
