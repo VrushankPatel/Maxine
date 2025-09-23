@@ -12,20 +12,35 @@ const isHighPerformanceMode = config.highPerformanceMode;
 const hasMetrics = config.metricsEnabled;
 const isCircuitBreakerEnabled = config.circuitBreakerEnabled;
 
+// Cache for service name building
+const serviceNameCache = new Map();
+
+const buildServiceName = (namespace, region, zone, serviceName, version) => {
+    const key = `${namespace}:${region}:${zone}:${serviceName}:${version || ''}`;
+    if (serviceNameCache.has(key)) {
+        return serviceNameCache.get(key);
+    }
+    const fullServiceName = (region !== "default" || zone !== "default") ?
+        (version ? `${namespace}:${region}:${zone}:${serviceName}:${version}` : `${namespace}:${region}:${zone}:${serviceName}`) :
+        (version ? `${namespace}:${serviceName}:${version}` : `${namespace}:${serviceName}`);
+    serviceNameCache.set(key, fullServiceName);
+    return fullServiceName;
+};
+
 const http = require('http');
 const https = require('https');
 const proxy = httpProxy.createProxyServer({
     agent: new http.Agent({
         keepAlive: true,
-        maxSockets: 50000, // Optimized for high throughput
-        maxFreeSockets: 25000,
+        maxSockets: 10000, // Optimized for high throughput
+        maxFreeSockets: 5000,
         timeout: config.proxyTimeout,
         keepAliveMsecs: 300000
     }),
     httpsAgent: new https.Agent({
         keepAlive: true,
-        maxSockets: 50000, // Optimized for high throughput
-        maxFreeSockets: 25000,
+        maxSockets: 10000, // Optimized for high throughput
+        maxFreeSockets: 5000,
         timeout: config.proxyTimeout,
         keepAliveMsecs: 300000
     }),
@@ -70,14 +85,11 @@ const discoveryController = (req, res) => {
           return;
       }
 
-    // Build base service name
-    const baseServiceName = (region !== "default" || zone !== "default") ?
-        `${namespace}:${region}:${zone}:${serviceName}` : `${namespace}:${serviceName}`;
-
     // Handle traffic splitting if no version specified
     let selectedVersion = version;
-    let fullServiceName = baseServiceName;
+    let fullServiceName;
     if (!selectedVersion) {
+        const baseServiceName = buildServiceName(namespace, region, zone, serviceName, '');
         const split = serviceRegistry.getTrafficSplit(baseServiceName);
         if (split) {
             const versions = Object.keys(split);
@@ -87,13 +99,15 @@ const discoveryController = (req, res) => {
                 rand -= split[v];
                 if (rand <= 0) {
                     selectedVersion = v;
-                    fullServiceName = `${baseServiceName}:${v}`;
+                    fullServiceName = buildServiceName(namespace, region, zone, serviceName, v);
                     break;
                 }
             }
+        } else {
+            fullServiceName = baseServiceName;
         }
     } else {
-        fullServiceName = `${baseServiceName}:${selectedVersion}`;
+        fullServiceName = buildServiceName(namespace, region, zone, serviceName, selectedVersion);
     }
 
     const serviceNode = discoveryService.getNode(fullServiceName, ip);
