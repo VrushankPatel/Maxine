@@ -125,5 +125,9 @@
   "kvStore": {},
   "trafficSplit": {},
   "healthHistory": {},
+  "maintenanceNodes": {},
+  "drainingNodes": {},
+  "webhooks": {},
+  "tagIndex": {},
   "circuitBreaker": {}
 }
