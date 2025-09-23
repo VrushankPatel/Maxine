@@ -2,12 +2,13 @@ const { serviceRegistry } = require("../../entity/service-registry");
 
 class PowerOfTwoDiscovery {
     /**
-     * Select two random healthy nodes and choose the one with least connections.
-     * @param {string} fullServiceName
-     * @returns {object}
-     */
-    getNode = (fullServiceName) => {
-        const healthyNodes = serviceRegistry.getHealthyNodes(fullServiceName);
+      * Select two random healthy nodes and choose the one with least connections.
+      * @param {string} fullServiceName
+      * @param {string} group
+      * @returns {object}
+      */
+    getNode = (fullServiceName, group) => {
+        const healthyNodes = serviceRegistry.getHealthyNodes(fullServiceName, group);
         if (healthyNodes.length === 0) return null;
         if (healthyNodes.length === 1) {
             return healthyNodes[0];

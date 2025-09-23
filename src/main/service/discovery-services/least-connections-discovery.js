@@ -1,14 +1,23 @@
 const { serviceRegistry } = require("../../entity/service-registry");
 
 class LeastConnectionsDiscovery{
+    constructor() {
+        this.cache = new Map(); // serviceName -> {node, timestamp}
+        this.cacheTTL = 1000; // 1 second
+    }
+
     /**
-     * Select the node with the least active connections
-     * @param {string} serviceName
-     * @param {string} version
-     * @returns {object}
-     */
-    getNode = (fullServiceName) => {
-        const healthyNodes = serviceRegistry.getHealthyNodes(fullServiceName);
+      * Select the node with the least active connections
+      * @param {string} serviceName
+      * @param {string} group
+      * @returns {object}
+      */
+    getNode = (fullServiceName, group) => {
+        const cached = this.cache.get(fullServiceName);
+        if (cached && (Date.now() - cached.timestamp) < this.cacheTTL) {
+            return cached.node;
+        }
+        const healthyNodes = serviceRegistry.getHealthyNodes(fullServiceName, group);
         if (healthyNodes.length === 0) return null;
         let minConnections = Infinity;
         let selectedNode = null;
@@ -19,11 +28,12 @@ class LeastConnectionsDiscovery{
                 selectedNode = node;
             }
         }
+        this.cache.set(fullServiceName, { node: selectedNode, timestamp: Date.now() });
         return selectedNode;
     }
 
     invalidateCache = (fullServiceName) => {
-        // No persistent cache
+        this.cache.delete(fullServiceName);
     }
 }
 

@@ -12,13 +12,13 @@ class LeastResponseTimeDiscovery {
     }
 
     /**
-     * Retrieve the node with the lowest average response time
-     * @param {string} serviceName
-     * @param {string} version
-     * @returns {object}
-     */
-    getNode = (fullServiceName) => {
-        const healthyNodes = serviceRegistry.getHealthyNodes(fullServiceName);
+      * Retrieve the node with the lowest average response time
+      * @param {string} serviceName
+      * @param {string} group
+      * @returns {object}
+      */
+    getNode = (fullServiceName, group) => {
+        const healthyNodes = serviceRegistry.getHealthyNodes(fullServiceName, group);
         if (healthyNodes.length === 0) return null;
 
         // Check cache

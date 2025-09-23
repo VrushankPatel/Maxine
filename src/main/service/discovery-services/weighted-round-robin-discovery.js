@@ -9,11 +9,11 @@ class WeightedRoundRobinDiscovery {
     /**
       * Retrieve the node based on the serviceName passed, using weighted round-robin algorithm
       * @param {string} serviceName
-      * @param {string} version
+      * @param {string} group
       * @returns {object}
       */
-    getNode = (fullServiceName) => {
-        const healthy = serviceRegistry.getHealthyNodes(fullServiceName);
+    getNode = (fullServiceName, group) => {
+        const healthy = serviceRegistry.getHealthyNodes(fullServiceName, group);
         if (healthy.length === 0) return null;
 
         // Build expanded list if not cached or changed

@@ -51,6 +51,7 @@ const discoveryController = (req, res) => {
     const namespace = req.query.namespace || "default";
     const region = req.query.region || "default";
     const zone = req.query.zone || "default";
+    const group = req.query.group;
     const endPoint = req.query.endPoint || "";
     const ip = req.clientIp || (req.clientIp = req.ip ||
         req.connection?.remoteAddress ||

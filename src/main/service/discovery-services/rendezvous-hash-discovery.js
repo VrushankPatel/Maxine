@@ -4,6 +4,11 @@ const { constants } = require("../../util/constants/constants");
 const separator = Buffer.from('\0');
 
 class RendezvousHashDiscovery{
+    constructor() {
+        this.cache = new Map(); // key -> {node, timestamp}
+        this.cacheTTL = 1000; // 1 second
+    }
+
     /**
       * Calls Select method and returns node retrieved from select method.
       * @param {string} serviceName
@@ -12,7 +17,13 @@ class RendezvousHashDiscovery{
       * @returns {object} returns the node by calling select method
       */
     getNode = (fullServiceName, ip) => {
+        const cacheKey = `${fullServiceName}:${ip}`;
+        const cached = this.cache.get(cacheKey);
+        if (cached && (Date.now() - cached.timestamp) < this.cacheTTL) {
+            return cached.node;
+        }
         const targetNode = this.selectNode(ip, fullServiceName);
+        this.cache.set(cacheKey, { node: targetNode, timestamp: Date.now() });
         return targetNode;
     }
 
@@ -54,7 +65,12 @@ class RendezvousHashDiscovery{
     }
 
     invalidateCache = (fullServiceName) => {
-        // Uses serviceRegistry hashRegistry, invalidated there
+        // Clear cache entries for this service
+        for (const key of this.cache.keys()) {
+            if (key.startsWith(`${fullServiceName}:`)) {
+                this.cache.delete(key);
+            }
+        }
     }
 }
 
