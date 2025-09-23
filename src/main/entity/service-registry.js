@@ -21,6 +21,7 @@ class ServiceRegistry{
     timeResetters = new Map();
     hashRegistry = new Map();
     healthyNodes = new Map(); // serviceName -> array of healthy node objects, sorted by priority desc
+    healthyNodesFiltered = new Map(); // serviceName -> array of healthy node objects, healthy, not maintenance, not draining, sorted by priority desc
     healthyCache = new Map(); // serviceName -> array of healthy node objects, filtered maintenance
     healthyNodeSets = new Map(); // serviceName -> Set of nodeNames for O(1) existence check
     maintenanceNodes = new Map(); // serviceName -> Set of nodeNames in maintenance
@@ -60,6 +61,7 @@ class ServiceRegistry{
             this.loadFromFile().catch(err => console.error('Failed to load from file:', err));
         }
         this.circuitBreaker = new Map();
+        this.healthyNodesFiltered = new Map();
     }
 
     setWss(wss) {
@@ -322,11 +324,12 @@ class ServiceRegistry{
         this.circuitBreaker = new Map(
             Object.entries(data.circuitBreaker || {}).map(([k, v]) => [k, new Map(Object.entries(v))])
         );
-         // Reinitialize hashRegistry and healthyNodes
-         this.hashRegistry = new Map();
-         this.healthyNodes = new Map();
-         this.healthyCache = new Map();
-         this.healthyNodeSets = new Map();
+                  // Reinitialize hashRegistry and healthyNodes
+                  this.hashRegistry = new Map();
+                  this.healthyNodes = new Map();
+                  this.healthyNodesFiltered = new Map();
+                  this.healthyCache = new Map();
+                  this.healthyNodeSets = new Map();
          for (const serviceName of data.hashRegistry || []) {
              this.initHashRegistry(serviceName);
              const nodes = this.getNodes(serviceName);
@@ -357,11 +360,31 @@ class ServiceRegistry{
                 this.maintenanceNodes.set(serviceName, new Set());
             }
             this.maintenanceNodes.get(serviceName).add(nodeName);
+            // Remove from filtered
+            if (this.healthyNodesFiltered.has(serviceName)) {
+                const filteredArr = this.healthyNodesFiltered.get(serviceName);
+                const index = filteredArr.findIndex(n => n.nodeName === nodeName);
+                if (index > -1) {
+                    filteredArr.splice(index, 1);
+                }
+            }
         } else {
             if (this.maintenanceNodes.has(serviceName)) {
                 this.maintenanceNodes.get(serviceName).delete(nodeName);
                 if (this.maintenanceNodes.get(serviceName).size === 0) {
                     this.maintenanceNodes.delete(serviceName);
+                }
+            }
+            // Add to filtered if healthy and not draining
+            if (this.healthyNodes.has(serviceName) && this.healthyNodes.get(serviceName).find(n => n.nodeName === nodeName) && !this.isInDraining(serviceName, nodeName)) {
+                if (!this.healthyNodesFiltered.has(serviceName)) {
+                    this.healthyNodesFiltered.set(serviceName, []);
+                }
+                const filteredArr = this.healthyNodesFiltered.get(serviceName);
+                const node = this.healthyNodes.get(serviceName).find(n => n.nodeName === nodeName);
+                if (node && !filteredArr.find(n => n.nodeName === nodeName)) {
+                    filteredArr.push(node);
+                    filteredArr.sort((a, b) => (b.metadata.priority || 0) - (a.metadata.priority || 0));
                 }
             }
         }
@@ -384,11 +407,31 @@ class ServiceRegistry{
                 this.drainingNodes.set(serviceName, new Set());
             }
             this.drainingNodes.get(serviceName).add(nodeName);
+            // Remove from filtered
+            if (this.healthyNodesFiltered.has(serviceName)) {
+                const filteredArr = this.healthyNodesFiltered.get(serviceName);
+                const index = filteredArr.findIndex(n => n.nodeName === nodeName);
+                if (index > -1) {
+                    filteredArr.splice(index, 1);
+                }
+            }
         } else {
             if (this.drainingNodes.has(serviceName)) {
                 this.drainingNodes.get(serviceName).delete(nodeName);
                 if (this.drainingNodes.get(serviceName).size === 0) {
                     this.drainingNodes.delete(serviceName);
+                }
+            }
+            // Add to filtered if healthy and not maintenance
+            if (this.healthyNodes.has(serviceName) && this.healthyNodes.get(serviceName).find(n => n.nodeName === nodeName) && !this.isInMaintenance(serviceName, nodeName)) {
+                if (!this.healthyNodesFiltered.has(serviceName)) {
+                    this.healthyNodesFiltered.set(serviceName, []);
+                }
+                const filteredArr = this.healthyNodesFiltered.get(serviceName);
+                const node = this.healthyNodes.get(serviceName).find(n => n.nodeName === nodeName);
+                if (node && !filteredArr.find(n => n.nodeName === nodeName)) {
+                    filteredArr.push(node);
+                    filteredArr.sort((a, b) => (b.metadata.priority || 0) - (a.metadata.priority || 0));
                 }
             }
         }
@@ -418,18 +461,14 @@ class ServiceRegistry{
         const tagKey = tags && tags.length > 0 ? `:${tags.sort().join(',')}` : '';
         const cacheKey = `${serviceName}${groupKey}${tagKey}`;
         if (!this.healthyCache.has(cacheKey)) {
-            const all = this.healthyNodes.get(serviceName) || [];
-            const maintenance = this.maintenanceNodes.has(serviceName) ? this.maintenanceNodes.get(serviceName) : new Set();
-            const draining = this.drainingNodes.has(serviceName) ? this.drainingNodes.get(serviceName) : new Set();
-            let filtered = all.filter(node => !maintenance.has(node.nodeName) && !draining.has(node.nodeName));
+            const all = this.healthyNodesFiltered.get(serviceName) || [];
+            let filtered = all;
             if (group) {
                 filtered = filtered.filter(node => node.metadata.group === group);
             }
             if (tags && tags.length > 0) {
                 filtered = filtered.filter(node => node.metadata.tags && tags.every(tag => node.metadata.tags.includes(tag)));
             }
-            // Sort by priority descending (higher priority first)
-            filtered.sort((a, b) => (b.metadata.priority || 0) - (a.metadata.priority || 0));
             this.healthyCache.set(cacheKey, filtered);
         }
         return this.healthyCache.get(cacheKey);
@@ -466,6 +505,15 @@ class ServiceRegistry{
             arr.push(node);
             arr.sort((a, b) => (b.metadata.priority || 0) - (a.metadata.priority || 0));
             this.addToHashRegistry(serviceName, nodeName);
+            // Add to filtered if not maintenance and not draining
+            if (!this.isInMaintenance(serviceName, nodeName) && !this.isInDraining(serviceName, nodeName)) {
+                if (!this.healthyNodesFiltered.has(serviceName)) {
+                    this.healthyNodesFiltered.set(serviceName, []);
+                }
+                let filteredArr = this.healthyNodesFiltered.get(serviceName);
+                filteredArr.push(node);
+                filteredArr.sort((a, b) => (b.metadata.priority || 0) - (a.metadata.priority || 0));
+            }
         }
         // Invalidate all cache entries for this service (including groups)
         for (const key of this.healthyCache.keys()) {
@@ -485,6 +533,14 @@ class ServiceRegistry{
                 arr.splice(index, 1);
                 set.delete(nodeName);
                 this.removeFromHashRegistry(serviceName, nodeName);
+                // Remove from filtered
+                if (this.healthyNodesFiltered.has(serviceName)) {
+                    const filteredArr = this.healthyNodesFiltered.get(serviceName);
+                    const filteredIndex = filteredArr.findIndex(n => n.nodeName === nodeName);
+                    if (filteredIndex > -1) {
+                        filteredArr.splice(filteredIndex, 1);
+                    }
+                }
             }
             // Invalidate all cache entries for this service (including groups)
         for (const key of this.healthyCache.keys()) {
@@ -709,20 +765,21 @@ class ServiceRegistry{
                 this.circuitBreaker = new Map(
                     Object.entries(data.circuitBreaker || {}).map(([k, v]) => [k, new Map(Object.entries(v))])
                 );
-                 // Reinitialize hashRegistry and healthyNodes
-                 this.healthyNodeSets = new Map();
-                 for (const serviceName of data.hashRegistry || []) {
-                     this.initHashRegistry(serviceName);
-                     const nodes = this.getNodes(serviceName);
-                     for (const nodeName of Object.keys(nodes || {})) {
-                         this.addNodeToHashRegistry(serviceName, nodeName);
-                         if (nodes[nodeName].healthy !== false) { // assuming healthy is true by default
-                             this.addToHealthyNodes(serviceName, nodeName);
-                             this.addToHashRegistry(serviceName, nodeName);
-                         }
-                         this.addToTagIndex(nodeName, nodes[nodeName].metadata.tags);
-                     }
-                 }
+                  // Reinitialize hashRegistry and healthyNodes
+                  this.healthyNodeSets = new Map();
+                  this.healthyNodesFiltered = new Map();
+                  for (const serviceName of data.hashRegistry || []) {
+                      this.initHashRegistry(serviceName);
+                      const nodes = this.getNodes(serviceName);
+                      for (const nodeName of Object.keys(nodes || {})) {
+                          this.addNodeToHashRegistry(serviceName, nodeName);
+                          if (nodes[nodeName].healthy !== false) { // assuming healthy is true by default
+                              this.addToHealthyNodes(serviceName, nodeName);
+                              this.addToHashRegistry(serviceName, nodeName);
+                          }
+                          this.addToTagIndex(nodeName, nodes[nodeName].metadata.tags);
+                      }
+                  }
             }
         } catch (err) {
             console.error('Failed to load from Redis:', err);
@@ -768,19 +825,20 @@ class ServiceRegistry{
                 this.circuitBreaker = new Map(
                     Object.entries(data.circuitBreaker || {}).map(([k, v]) => [k, new Map(Object.entries(v))])
                 );
-                     // Reinitialize hashRegistry and healthyNodes
-                     this.healthyNodeSets = new Map();
-                     for (const serviceName of data.hashRegistry || []) {
-                         this.initHashRegistry(serviceName);
-                         const nodes = this.getNodes(serviceName);
-                         for (const nodeName of Object.keys(nodes || {})) {
-                             this.addNodeToHashRegistry(serviceName, nodeName);
-                         if (nodes[nodeName].healthy !== false) { // assuming healthy is true by default
-                             this.addToHealthyNodes(serviceName, nodeName);
-                         }
-                         this.addToTagIndex(nodeName, nodes[nodeName].metadata.tags);
-                         }
-                     }
+                      // Reinitialize hashRegistry and healthyNodes
+                      this.healthyNodeSets = new Map();
+                      this.healthyNodesFiltered = new Map();
+                      for (const serviceName of data.hashRegistry || []) {
+                          this.initHashRegistry(serviceName);
+                          const nodes = this.getNodes(serviceName);
+                          for (const nodeName of Object.keys(nodes || {})) {
+                              this.addNodeToHashRegistry(serviceName, nodeName);
+                          if (nodes[nodeName].healthy !== false) { // assuming healthy is true by default
+                              this.addToHealthyNodes(serviceName, nodeName);
+                          }
+                          this.addToTagIndex(nodeName, nodes[nodeName].metadata.tags);
+                          }
+                      }
             }
         } catch (err) {
             console.error('Failed to load from etcd:', err);
