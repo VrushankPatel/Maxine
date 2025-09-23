@@ -230,10 +230,13 @@
   - Caching in load balancing strategies (e.g., Least Response Time, Fastest) for reduced computation overhead.
    - Compression enabled when high performance mode is disabled for reduced response sizes and improved network performance.
     - HTTP/2 support enabled by default for multiplexing and reduced latency over HTTP/1.1.
-    - Optimized string operations in discovery controller to minimize CPU usage.
-    - Native HTTP implementation for health checks eliminates axios dependency overhead.
-    - LRU caching for alias resolutions, IP extractions, and service name building to prevent memory leaks and improve performance under high load.
-    - Configurable persistence control allows disabling file/Redis/etcd saves for pure in-memory operation in high-performance scenarios.
+   - Optimized string operations in discovery controller to minimize CPU usage.
+   - Native HTTP implementation for health checks eliminates axios dependency overhead.
+   - LRU caching for alias resolutions, IP extractions, and service name building to prevent memory leaks and improve performance under high load.
+   - Configurable persistence control allows disabling file/Redis/etcd saves for pure in-memory operation in high-performance scenarios.
+   - Enhanced healthy nodes filtering using Maps and Sets for O(1) lookups, eliminating array iterations and sorting overhead.
+   - Improved load balancing cache keys to include group and tags for accurate caching and reduced cache misses.
+   - Added address building cache in discovery controller to reduce repeated string concatenations for common endpoints.
 ### etcd Persistence
 - Maxine supports etcd as a distributed key-value store backend for high availability and consistency.
 - Enable with `ETCD_ENABLED=true` and configure `ETCD_HOST` and `ETCD_PORT`.

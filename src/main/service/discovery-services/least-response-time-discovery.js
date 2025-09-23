@@ -8,7 +8,11 @@ class LeastResponseTimeDiscovery {
     }
 
     invalidateCache = (fullServiceName) => {
-        this.fastestCache.delete(fullServiceName);
+        for (const key of this.fastestCache.keys()) {
+            if (key.startsWith(`${fullServiceName}:`)) {
+                this.fastestCache.delete(key);
+            }
+        }
     }
 
     /**
@@ -22,8 +26,9 @@ class LeastResponseTimeDiscovery {
         const healthyNodes = serviceRegistry.getHealthyNodes(fullServiceName, group, tags);
         if (healthyNodes.length === 0) return null;
 
+        const cacheKey = `${fullServiceName}:${group || ''}:${tags ? tags.sort().join(',') : ''}`;
         // Check cache
-        const cached = this.fastestCache.get(fullServiceName);
+        const cached = this.fastestCache.get(cacheKey);
         if (cached && (Date.now() - cached.timestamp) < this.cacheTTL) {
             return cached.node;
         }
@@ -46,7 +51,7 @@ class LeastResponseTimeDiscovery {
         }
 
         // Cache the result
-        this.fastestCache.set(fullServiceName, { node: selectedNode, timestamp: Date.now() });
+        this.fastestCache.set(cacheKey, { node: selectedNode, timestamp: Date.now() });
 
         return selectedNode;
     }
