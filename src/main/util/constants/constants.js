@@ -51,7 +51,8 @@ const SSS = new Enums([
     {name: 'RANDOM', code: '4', message: 'Random'},
     {name: 'ADAPTIVE', code: '8', message: 'Adaptive Load Balancing'},
     {name: 'P2', code: '10', message: 'Power of Two Choices'},
-    {name: 'STICKY', code: '11', message: 'Sticky Round Robin'}
+    {name: 'STICKY', code: '11', message: 'Sticky Round Robin'},
+    {name: 'LR', code: '12', message: 'Least Request'}
 ]);
 
 const LOG_FORMATS = new Enums([

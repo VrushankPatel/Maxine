@@ -10,6 +10,7 @@ const { RandomDiscovery } = require("./discovery-services/random-discovery");
 const { PowerOfTwoDiscovery } = require("./discovery-services/power-of-two-discovery");
 const { AdaptiveDiscovery } = require("./discovery-services/adaptive-discovery");
 const { StickyDiscovery } = require("./discovery-services/sticky-discovery");
+const { LeastRequestDiscovery } = require("./discovery-services/least-request-discovery");
 const LRU = require('lru-cache');
 const config = require("../config/config");
 const { constants } = require("../util/constants/constants");
@@ -28,6 +29,7 @@ class DiscoveryService{
     p2d = new PowerOfTwoDiscovery();
     ad = new AdaptiveDiscovery();
     sd = new StickyDiscovery();
+    lrd = new LeastRequestDiscovery();
     strategyMap = new Map([
         [constants.SSS.RR, this.rrd],
         [constants.SSS.WRR, this.wrrd],
@@ -40,7 +42,8 @@ class DiscoveryService{
         [constants.SSS.RANDOM, this.rand],
         [constants.SSS.P2, this.p2d],
         [constants.SSS.ADAPTIVE, this.ad],
-        [constants.SSS.STICKY, this.sd]
+        [constants.SSS.STICKY, this.sd],
+        [constants.SSS.LR, this.lrd]
     ]);
     cache = new LRU({ max: config.discoveryCacheMax, ttl: config.discoveryCacheTTL });
     serviceKeys = new Map(); // Map serviceName to set of cache keys

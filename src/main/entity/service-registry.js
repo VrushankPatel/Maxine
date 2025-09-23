@@ -22,6 +22,7 @@ class ServiceRegistry{
     hashRegistry = new Map();
     healthyNodes = new Map(); // serviceName -> array of healthy node objects, sorted by priority desc
     healthyCache = new Map(); // serviceName -> array of healthy node objects, filtered maintenance
+    sortedHealthyCache = new Map(); // serviceName -> sorted array by priority
     healthyNodeSets = new Map(); // serviceName -> Set of nodeNames for O(1) existence check
     healthyNodesMap = new Map(); // serviceName -> Map<nodeName, node> for O(1) node lookup
     availableNodes = new Map(); // serviceName -> Map<nodeName, node> that are healthy and not in maintenance/draining
@@ -341,9 +342,10 @@ class ServiceRegistry{
                Object.entries(data.availableNodes || {}).map(([k, v]) => [k, new Map(Object.entries(v))])
            );
                    // Reinitialize hashRegistry and healthyNodes
-                   this.hashRegistry = new Map();
-                   this.healthyNodes = new Map();
-                   this.healthyCache = new Map();
+                    this.hashRegistry = new Map();
+                    this.healthyNodes = new Map();
+                    this.healthyCache = new Map();
+                    this.sortedHealthyCache = new Map();
                   this.healthyNodeSets = new Map();
          for (const serviceName of data.hashRegistry || []) {
              this.initHashRegistry(serviceName);
@@ -410,15 +412,16 @@ class ServiceRegistry{
                           groupMap.get(node.metadata.group).add(nodeName);
                       }
                   }
-            }
-        }
-        // Invalidate all cache entries for this service (including groups)
-        for (const key of this.healthyCache.keys()) {
-            if (key === serviceName || key.startsWith(serviceName + ':')) {
-                this.healthyCache.delete(key);
-            }
-        }
-        this.debounceSave();
+             }
+         }
+         // Invalidate all cache entries for this service (including groups)
+         for (const key of this.healthyCache.keys()) {
+             if (key === serviceName || key.startsWith(serviceName + ':')) {
+                 this.healthyCache.delete(key);
+                 this.sortedHealthyCache.delete(key);
+             }
+         }
+         this.debounceSave();
     }
 
     isInMaintenance = (serviceName, nodeName) => {
@@ -467,14 +470,15 @@ class ServiceRegistry{
                        }
                    }
             }
-        }
-        // Invalidate cache
-        for (const key of this.healthyCache.keys()) {
-            if (key === serviceName || key.startsWith(serviceName + ':')) {
-                this.healthyCache.delete(key);
-            }
-        }
-        this.debounceSave();
+         }
+         // Invalidate cache
+         for (const key of this.healthyCache.keys()) {
+             if (key === serviceName || key.startsWith(serviceName + ':')) {
+                 this.healthyCache.delete(key);
+                 this.sortedHealthyCache.delete(key);
+             }
+         }
+         this.debounceSave();
     }
 
     isInDraining = (serviceName, nodeName) => {
@@ -494,7 +498,7 @@ class ServiceRegistry{
         const tagKey = tags && tags.length > 0 ? `:${tags.sort().join(',')}` : '';
         const deploymentKey = deployment ? `:${deployment}` : '';
         const cacheKey = `${serviceName}${groupKey}${tagKey}${deploymentKey}`;
-        if (!this.healthyCache.has(cacheKey)) {
+        if (!this.sortedHealthyCache.has(cacheKey)) {
             let candidates;
             if (group) {
                 candidates = this.groupIndex.get(serviceName)?.get(group) || new Map();
@@ -517,9 +521,9 @@ class ServiceRegistry{
                 filtered = Array.from(candidates.values());
             }
             filtered.sort((a, b) => (b.metadata.priority || 0) - (a.metadata.priority || 0));
-            this.healthyCache.set(cacheKey, filtered);
+            this.sortedHealthyCache.set(cacheKey, filtered);
         }
-        return this.healthyCache.get(cacheKey);
+        return this.sortedHealthyCache.get(cacheKey);
     }
 
 
@@ -573,14 +577,15 @@ class ServiceRegistry{
                       groupMap.get(node.metadata.group).set(nodeName, node);
                   }
               }
-        }
-        // Invalidate all cache entries for this service (including groups)
-        for (const key of this.healthyCache.keys()) {
-            if (key === serviceName || key.startsWith(serviceName + ':')) {
-                this.healthyCache.delete(key);
-            }
-        }
-        this.addChange('healthy', serviceName, nodeName, { healthy: true });
+         }
+         // Invalidate all cache entries for this service (including groups)
+         for (const key of this.healthyCache.keys()) {
+             if (key === serviceName || key.startsWith(serviceName + ':')) {
+                 this.healthyCache.delete(key);
+                 this.sortedHealthyCache.delete(key);
+             }
+         }
+         this.addChange('healthy', serviceName, nodeName, { healthy: true });
     }
 
     removeFromHealthyNodes = (serviceName, nodeName) => {
@@ -606,10 +611,11 @@ class ServiceRegistry{
                  }
                    this.removeFromHashRegistry(serviceName, nodeName);
             }
-            // Invalidate all cache entries for this service (including groups)
+        // Invalidate all cache entries for this service (including groups)
         for (const key of this.healthyCache.keys()) {
             if (key === serviceName || key.startsWith(serviceName + ':')) {
                 this.healthyCache.delete(key);
+                this.sortedHealthyCache.delete(key);
             }
         }
             this.addChange('unhealthy', serviceName, nodeName, { healthy: false });
@@ -1094,6 +1100,7 @@ class ServiceRegistry{
             for (const key of this.healthyCache.keys()) {
                 if (key === serviceName || key.startsWith(serviceName + ':')) {
                     this.healthyCache.delete(key);
+                    this.sortedHealthyCache.delete(key);
                 }
             }
             discoveryService.invalidateServiceCache(serviceName);
