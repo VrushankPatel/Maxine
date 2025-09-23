@@ -15,6 +15,10 @@ class RandomDiscovery{
         const nodes = serviceRegistry.getNodes(fullServiceName);
         return nodes[nodeName] || null;
     }
+
+    invalidateCache = (fullServiceName) => {
+        // No cache
+    }
 }
 
 module.exports = {

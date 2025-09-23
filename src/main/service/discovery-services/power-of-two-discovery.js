@@ -31,6 +31,10 @@ class PowerOfTwoDiscovery {
         const nodes = serviceRegistry.getNodes(fullServiceName);
         return nodes[selectedNodeName] || null;
     }
+
+    invalidateCache = (fullServiceName) => {
+        // No cache
+    }
 }
 
 module.exports = {

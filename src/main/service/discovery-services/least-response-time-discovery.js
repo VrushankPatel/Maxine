@@ -7,6 +7,10 @@ class LeastResponseTimeDiscovery {
         this.offsets = new Map();
     }
 
+    invalidateCache = (fullServiceName) => {
+        this.fastestCache.delete(fullServiceName);
+    }
+
     /**
      * Retrieve the node with the lowest average response time
      * @param {string} serviceName

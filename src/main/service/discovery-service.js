@@ -26,7 +26,7 @@ class DiscoveryService{
     rand = new RandomDiscovery();
     p2d = new PowerOfTwoDiscovery();
     ad = new AdaptiveDiscovery();
-    cache = new LRU({ max: 1000000, ttl: 300000 }); // 5 minute TTL
+    cache = new LRU({ max: 1000000, ttl: config.discoveryCacheTTL });
     serviceKeys = new Map(); // Map serviceName to set of cache keys
     cacheHits = 0;
     cacheMisses = 0;
@@ -127,8 +127,18 @@ class DiscoveryService{
             keys.forEach(key => this.cache.delete(key));
             this.serviceKeys.delete(fullServiceName);
         }
-        // Invalidate WRR expanded list
+        // Invalidate strategy caches
+        this.rrd.invalidateCache(fullServiceName);
         this.wrrd.invalidateCache(fullServiceName);
+        this.lrtd.invalidateCache(fullServiceName);
+        this.fd.invalidateCache(fullServiceName);
+        this.chd.invalidateCache(fullServiceName);
+        this.rhd.invalidateCache(fullServiceName);
+        this.lcd.invalidateCache(fullServiceName);
+        this.lld.invalidateCache(fullServiceName);
+        this.rand.invalidateCache(fullServiceName);
+        this.p2d.invalidateCache(fullServiceName);
+        this.ad.invalidateCache(fullServiceName);
     }
 }
 

@@ -33,6 +33,10 @@ class RoundRobinDiscovery{
         this.offsets.set(fullServiceName, currentOffset + 1);
         return currentOffset;
     }
+
+    invalidateCache = (fullServiceName) => {
+        this.offsets.delete(fullServiceName);
+    }
 }
 
 module.exports = {
