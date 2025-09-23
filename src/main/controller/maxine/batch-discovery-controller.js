@@ -2,7 +2,6 @@ const { statusAndMsgs } = require("../../util/constants/constants");
 const { discoveryService } = require("../../service/discovery-service");
 const { metricsService } = require("../../service/metrics-service");
 const { serviceRegistry } = require("../../entity/service-registry");
-const _ = require('lodash');
 const { info } = require("../../util/logging/logging-util");
 const config = require("../../config/config");
 
@@ -63,7 +62,7 @@ const batchDiscoveryController = (req, res) => {
 
         const serviceNode = discoveryService.getNode(fullServiceName, ip);
 
-        if (_.isEmpty(serviceNode)) {
+        if (!serviceNode) {
             results.push({ serviceName, error: statusAndMsgs.MSG_SERVICE_UNAVAILABLE });
             hasErrors = true;
         } else {

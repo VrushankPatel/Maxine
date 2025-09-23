@@ -2,7 +2,6 @@ const { statusAndMsgs } = require("../../util/constants/constants");
 const { discoveryService } = require("../../service/discovery-service");
 const { metricsService } = require("../../service/metrics-service");
 const { serviceRegistry } = require("../../entity/service-registry");
-const _ = require('lodash');
 const { info } = require("../../util/logging/logging-util");
 const httpProxy = require('http-proxy');
 const rateLimit = require('express-rate-limit');
@@ -89,8 +88,8 @@ const discoveryController = (req, res) => {
 
     const serviceNode = discoveryService.getNode(fullServiceName, ip);
 
-    // no service node is there so, service unavailable is our error response.
-     if(_.isEmpty(serviceNode)){
+     // no service node is there so, service unavailable is our error response.
+      if(!serviceNode){
          if (config.metricsEnabled && !config.highPerformanceMode) {
              const latency = Date.now() - startTime;
              metricsService.recordRequest(serviceName, false, latency);

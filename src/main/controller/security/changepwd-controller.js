@@ -1,7 +1,6 @@
 const { User, admin } = require("../../entity/user");
 const { statusAndMsgs, constants } = require("../../util/constants/constants");
 const { error, info } = require("../../util/logging/logging-util");
-const _ = require('lodash');
 const user = require("../../entity/user");
 
 const changePwdController = (req, res) => {
@@ -12,7 +11,7 @@ const changePwdController = (req, res) => {
         res.status(statusAndMsgs.STATUS_GENERIC_ERROR).json({"message" : statusAndMsgs.MSG_MISSING_PWD});
         return;
     }
-    if (_.isEqual(new User(constants.DEFAULT_ADMIN_USERNAME_PWD, password), admin)){
+    if (new User(constants.DEFAULT_ADMIN_USERNAME_PWD, password).userName === admin.userName && new User(constants.DEFAULT_ADMIN_USERNAME_PWD, password).password === admin.password){
         admin.password = newPassword;
         res.status(200).json({"message" : "successfully updated password"});
         return;

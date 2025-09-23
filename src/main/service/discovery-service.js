@@ -26,7 +26,7 @@ class DiscoveryService{
     rand = new RandomDiscovery();
     p2d = new PowerOfTwoDiscovery();
     ad = new AdaptiveDiscovery();
-    cache = new LRU({ max: 1000000 });
+    cache = new LRU({ max: 1000000, ttl: 300000 }); // 5 minute TTL
     serviceKeys = new Map(); // Map serviceName to set of cache keys
     cacheHits = 0;
     cacheMisses = 0;

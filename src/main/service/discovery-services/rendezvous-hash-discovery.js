@@ -1,5 +1,4 @@
 const { serviceRegistry } = require("../../entity/service-registry");
-const _ = require('lodash');
 const crypto = require('crypto');
 const { constants } = require("../../util/constants/constants");
 const separator = Buffer.from('\0');
