@@ -56,7 +56,7 @@ class ServiceRegistry{
             this.redisClient.on('error', (err) => console.error('Redis error:', err));
             this.redisClient.connect().then(() => this.loadFromRedis()).catch(err => console.error('Redis connect error:', err));
         } else if (config.persistenceEnabled) {
-            this.loadFromFile();
+            this.loadFromFile().catch(err => console.error('Failed to load from file:', err));
         }
         this.circuitBreaker = new Map();
     }
@@ -396,8 +396,16 @@ class ServiceRegistry{
             this.healthyNodes.set(serviceName, []);
             this.healthyNodeSets.set(serviceName, new Set());
         }
-        const arr = this.healthyNodes.get(serviceName);
-        const set = this.healthyNodeSets.get(serviceName);
+        let arr = this.healthyNodes.get(serviceName);
+        let set = this.healthyNodeSets.get(serviceName);
+        if (!arr) {
+            arr = [];
+            this.healthyNodes.set(serviceName, arr);
+        }
+        if (!set) {
+            set = new Set();
+            this.healthyNodeSets.set(serviceName, set);
+        }
         const service = this.registry.get(serviceName);
         if (!service || !service.nodes[nodeName]) return;
         const node = service.nodes[nodeName];
@@ -727,11 +735,11 @@ class ServiceRegistry{
         }
     }
 
-    loadFromFile = () => {
+    loadFromFile = async () => {
         try {
             const filePath = path.join(__dirname, '../../../registry.json');
             if (fs.existsSync(filePath)) {
-                const content = fs.readFileSync(filePath, 'utf8').trim();
+                const content = (await fs.promises.readFile(filePath, 'utf8')).trim();
                 if (content) {
                     const data = JSON.parse(content);
                     this.registry = new Map(Object.entries(data.registry || {}));
