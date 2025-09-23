@@ -6,6 +6,7 @@ const { info } = require("../../util/logging/logging-util");
 const httpProxy = require('http-proxy');
 const rateLimit = require('express-rate-limit');
 const config = require("../../config/config");
+const LRU = require('lru-cache');
 
 // Per-service rate limiter
 const perServiceLimiter = rateLimit({
@@ -21,9 +22,9 @@ const hasMetrics = config.metricsEnabled;
 const isCircuitBreakerEnabled = config.circuitBreakerEnabled;
 
 // Cache for service name building
-const serviceNameCache = new Map();
+const serviceNameCache = new LRU({ max: 10000, ttl: 900000 });
 // Cache for IP extraction
-const ipCache = new Map();
+const ipCache = new LRU({ max: 10000, ttl: 300000 });
 
 const buildServiceName = (namespace, region, zone, serviceName, version) => {
     const key = `${namespace}:${region}:${zone}:${serviceName}:${version || ''}`;

@@ -178,7 +178,7 @@
 
 ### CLI Tool
 - Maxine provides a command-line interface for managing services without direct API calls.
-- Available commands include register, deregister, list, health, discover, and metrics.
+- Available commands include register, deregister, list, health, discover, metrics, backup, restore, and config.
 - Use `node bin/cli.js <command> [options]` to interact with the registry programmatically or for automation.
 
 ### Asynchronous logging
@@ -210,8 +210,9 @@
   - Caching in load balancing strategies (e.g., Least Response Time, Fastest) for reduced computation overhead.
    - Compression enabled when high performance mode is disabled for reduced response sizes and improved network performance.
     - HTTP/2 support enabled by default for multiplexing and reduced latency over HTTP/1.1.
-   - Optimized string operations in discovery controller to minimize CPU usage.
-   - Native HTTP implementation for health checks eliminates axios dependency overhead.
+    - Optimized string operations in discovery controller to minimize CPU usage.
+    - Native HTTP implementation for health checks eliminates axios dependency overhead.
+    - LRU caching for alias resolutions, IP extractions, and service name building to prevent memory leaks and improve performance under high load.
 ### etcd Persistence
 - Maxine supports etcd as a distributed key-value store backend for high availability and consistency.
 - Enable with `ETCD_ENABLED=true` and configure `ETCD_HOST` and `ETCD_PORT`.
