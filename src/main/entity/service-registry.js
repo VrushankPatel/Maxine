@@ -508,25 +508,27 @@ class ServiceRegistry{
             let filtered = [];
             if (tags && tags.length > 0) {
                 // Optimize tag filtering using tagIndex intersection
-                let intersection = null;
+                let intersection = new Set();
+                let first = true;
                 for (const tag of tags) {
                     const set = this.tagIndex.get(tag);
                     if (!set) {
-                        intersection = new Set();
+                        intersection.clear();
                         break;
                     }
-                    if (intersection === null) {
-                        intersection = new Set(set);
+                    if (first) {
+                        set.forEach(x => intersection.add(x));
+                        first = false;
                     } else {
-                        intersection = new Set([...intersection].filter(x => set.has(x)));
+                        for (const x of Array.from(intersection)) {
+                            if (!set.has(x)) intersection.delete(x);
+                        }
                     }
                 }
-                if (intersection) {
-                    for (const nodeName of intersection) {
-                        const node = candidates.get(nodeName);
-                        if (node && (!deployment || node.metadata.deployment === deployment)) {
-                            filtered.push(node);
-                        }
+                for (const nodeName of intersection) {
+                    const node = candidates.get(nodeName);
+                    if (node && (!deployment || node.metadata.deployment === deployment)) {
+                        filtered.push(node);
                     }
                 }
             } else if (deployment) {
