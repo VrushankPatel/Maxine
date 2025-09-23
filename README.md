@@ -132,10 +132,11 @@ As we can see, maxine SRD provides service addresses for direct client connectio
                         * **Multi-Tenancy Support**: Added tenantId parameter to service registration and discovery, allowing services to be isolated by tenant for multi-tenant deployments.
                         * **Blue-Green Deployment Support**: Added deployment metadata field and deployment query parameter for discovery, enabling blue-green and canary deployment strategies by routing traffic to specific deployment versions.
                         * **mDNS Service Discovery**: Added support for advertising services via multicast DNS (mDNS) for local network discovery. Enable with `MDNS_ENABLED=true` to allow clients on the same network to discover services without a central registry query.
-                        * **Eureka Integration**: Added support for importing services from Netflix Eureka registries. Enable with `EUREKA_ENABLED=true` and configure `EUREKA_HOST` and `EUREKA_PORT` for seamless migration from Eureka-based systems.
-                        * **Service Governance**: Implemented registration approval workflows with pending services queue. Enable with `APPROVAL_REQUIRED=true` to require admin approval for new service registrations. New endpoints: `/api/maxine/serviceops/pending` (GET), `/api/maxine/serviceops/approve` (POST), `/api/maxine/serviceops/reject` (POST).
-                        * **Service Testing**: Added `/api/maxine/serviceops/test` endpoint to manually test service health by calling configured health endpoints.
-                        * **Alerting System**: Configurable webhook alerts for service failures. Set `ALERT_WEBHOOK` to receive POST notifications when services fail health checks.
+                         * **Eureka Integration**: Added support for importing services from Netflix Eureka registries. Enable with `EUREKA_ENABLED=true` and configure `EUREKA_HOST` and `EUREKA_PORT` for seamless migration from Eureka-based systems.
+                         * **ECS Integration**: Added support for automatic service discovery from AWS ECS clusters. Enable with `ECS_ENABLED=true` and configure `AWS_REGION` for seamless integration with containerized deployments on ECS.
+                         * **Service Governance**: Implemented registration approval workflows with pending services queue. Enable with `APPROVAL_REQUIRED=true` to require admin approval for new service registrations. New endpoints: `/api/maxine/serviceops/pending` (GET), `/api/maxine/serviceops/approve` (POST), `/api/maxine/serviceops/reject` (POST).
+                         * **Service Testing**: Added `/api/maxine/serviceops/test` endpoint to manually test service health by calling configured health endpoints.
+                         * **Alerting System**: Configurable webhook alerts for service failures. Set `ALERT_WEBHOOK` to receive POST notifications when services fail health checks.
 
 
 ## Setup for development
@@ -203,8 +204,9 @@ Maxine can be configured via environment variables:
        - `EUREKA_ENABLED`: Enable Eureka service import (default: false)
        - `EUREKA_HOST`: Eureka server host (default: localhost)
        - `EUREKA_PORT`: Eureka server port (default: 8761)
-       - `APPROVAL_REQUIRED`: Require admin approval for service registrations (default: false)
-       - `ALERT_WEBHOOK`: Webhook URL for failure alerts (default: null)
+        - `APPROVAL_REQUIRED`: Require admin approval for service registrations (default: false)
+        - `ALERT_WEBHOOK`: Webhook URL for failure alerts (default: null)
+        - `ECS_ENABLED`: Enable AWS ECS service discovery integration (default: false)
 
 ### Run maxine on production.
 
