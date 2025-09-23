@@ -38,7 +38,7 @@ const config = {
      grpcEnabled: process.env.GRPC_ENABLED === 'true',
     grpcPort: process.env.GRPC_PORT ? parseInt(process.env.GRPC_PORT) : 50051,
      tracingEnabled: process.env.TRACING_ENABLED === 'true',
-    http2Enabled: process.env.HTTP2_ENABLED === 'true' || false
+      http2Enabled: process.env.HTTP2_ENABLED !== 'false'
 }
 
 Object.defineProperty(config, "profile", {
