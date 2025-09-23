@@ -50,6 +50,7 @@ class DiscoveryService{
     cacheHits = 0;
     cacheMisses = 0;
     aliasCache = new LRU({ max: Math.max(config.aliasCacheMax, 1000000), ttl: 900000 }); // Cache for alias resolutions, 15 min TTL, at least 1M
+    cacheKeyCache = new LRU({ max: 1000000, ttl: 900000 }); // Cache for cache key building
 
     /**
      * Get fullServiceName and IP and based on the serverSelectionStrategy we've selected, It'll call that discoveryService and retrieve the node from it. (Ex. RoundRobin, Rendezvous, ConsistentHashing).
@@ -74,7 +75,12 @@ class DiscoveryService{
         const groupKey = group ? `:${group}` : '';
         const tagsKey = tags && tags.length > 0 ? `:${tags.sort().join(',')}` : '';
         const deploymentKey = deployment ? `:${deployment}` : '';
-        const cacheKey = usesIp ? `${fullServiceName}:${ip}${groupKey}${tagsKey}${deploymentKey}` : `${fullServiceName}${groupKey}${tagsKey}${deploymentKey}`;
+        const cacheKeyInput = `${fullServiceName}:${usesIp ? ip : ''}:${groupKey}:${tagsKey}:${deploymentKey}`;
+        let cacheKey = this.cacheKeyCache.get(cacheKeyInput);
+        if (!cacheKey) {
+            cacheKey = usesIp ? `${fullServiceName}:${ip}${groupKey}${tagsKey}${deploymentKey}` : `${fullServiceName}${groupKey}${tagsKey}${deploymentKey}`;
+            this.cacheKeyCache.set(cacheKeyInput, cacheKey);
+        }
         const cached = this.cache.get(cacheKey);
         if (cached) {
             this.cacheHits++;
