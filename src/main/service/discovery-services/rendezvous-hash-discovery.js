@@ -6,14 +6,17 @@ const separator = Buffer.from('\0');
 
 class RendezvousHashDiscovery{
     /**
-     * Calls Select method and returns node retrieved from select method.
-     * @param {string} serviceName
-     * @param {string} ip
-     * @param {string} version
-     * @returns {object} returns the node by calling select method
-     */
+      * Calls Select method and returns node retrieved from select method.
+      * @param {string} serviceName
+      * @param {string} ip
+      * @param {string} version
+      * @returns {object} returns the node by calling select method
+      */
     getNode = (fullServiceName, ip) => {
-        return this.selectNode(ip, fullServiceName) || null;
+        const targetNodeId = this.selectNode(ip, fullServiceName);
+        if (!targetNodeId) return null;
+        const nodes = serviceRegistry.getNodes(fullServiceName);
+        return nodes[targetNodeId];
     }
 
     /**

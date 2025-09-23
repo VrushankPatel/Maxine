@@ -11,7 +11,9 @@ class RandomDiscovery{
         const healthyNodeNames = serviceRegistry.getHealthyNodes(fullServiceName);
         if (healthyNodeNames.length === 0) return null;
         const randomIndex = Math.floor(Math.random() * healthyNodeNames.length);
-        return healthyNodeNames[randomIndex];
+        const nodeName = healthyNodeNames[randomIndex];
+        const nodes = serviceRegistry.getNodes(fullServiceName);
+        return nodes[nodeName] || null;
     }
 }
 

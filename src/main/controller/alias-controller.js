@@ -19,7 +19,7 @@ const addAlias = (req, res) => {
         (version ? `${namespace}:${serviceName}:${version}` : `${namespace}:${serviceName}`);
 
     // Check if the primary service exists
-    if (!serviceRegistry.registry[fullServiceName]) {
+    if (!serviceRegistry.registry.has(fullServiceName)) {
         return res.status(statusAndMsgs.STATUS_GENERIC_ERROR).json({
             message: "Primary service does not exist"
         });

@@ -15,7 +15,9 @@ const serviceSampleRH = {
     "version": "1.0",
     "ssl": true,
     "timeOut": 5,
-    "weight": 10
+    "weight": 10,
+    "address": "https://xx.xxx.xx.xx:8082",
+    "metadata": {}
 };
 
 // Clear registry for clean test
@@ -51,6 +53,8 @@ describe(`${fileName} : API /api/maxine/discover with config with Rendezvous Has
     it(`RH discover with NonAPI`, (done) => {
         // Making sure that server selection strategy is RH
         config.serverSelectionStrategy = constants.SSS.RH;
+        // Register service for test
+        registryService.registerService(serviceSampleRH);
         discoveryService.clearCache();
         discoveryService.serviceKeys = new Map();
 

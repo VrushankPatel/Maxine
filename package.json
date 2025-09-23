@@ -25,6 +25,8 @@
   "license": "MIT",
   "bin": "index.js",
   "dependencies": {
+    "@grpc/grpc-js": "^1.14.0",
+    "@grpc/proto-loader": "^0.8.0",
     "axios": "^0.25.0",
     "body-parser": "^1.19.1",
     "compression": "^1.8.1",

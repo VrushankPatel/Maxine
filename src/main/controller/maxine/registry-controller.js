@@ -111,6 +111,57 @@ const healthController = async (req, res) => {
     res.status(statusAndMsgs.STATUS_SUCCESS).json({ serviceName, namespace, health: healthResults });
 }
 
+const bulkHealthController = async (req, res) => {
+    const serviceNames = req.body.serviceNames;
+    const namespace = req.body.namespace || "default";
+    if (!serviceNames || !Array.isArray(serviceNames)) {
+        res.status(statusAndMsgs.STATUS_GENERIC_ERROR).json({ message: "Missing or invalid serviceNames array" });
+        return;
+    }
+    const results = {};
+    for (const serviceName of serviceNames) {
+        const fullServiceName = `${namespace}:${serviceName}`;
+        const nodes = serviceRegistry.getNodes(fullServiceName);
+        if (!nodes || Object.keys(nodes).length === 0) {
+            results[serviceName] = { error: "Service not found" };
+            continue;
+        }
+        const healthPromises = Object.entries(nodes).map(async ([nodeName, node]) => {
+            try {
+                const healthUrl = node.address + (node.metadata.healthEndpoint || '');
+                const response = await axios.get(healthUrl, { timeout: 5000 });
+                // Update registry with healthy status
+                const service = serviceRegistry.registry.get(fullServiceName);
+                if (service && service.nodes[nodeName]) {
+                    const nodeObj = service.nodes[nodeName];
+                    nodeObj.healthy = true;
+                    nodeObj.failureCount = 0;
+                    nodeObj.lastFailureTime = null;
+                    serviceRegistry.addToHealthyNodes(fullServiceName, nodeName);
+                    serviceRegistry.debounceSave();
+                }
+                return [nodeName, { status: 'healthy', code: response.status }];
+            } catch (error) {
+                // Update registry with unhealthy status
+                const service = serviceRegistry.registry.get(fullServiceName);
+                if (service && service.nodes[nodeName]) {
+                    const nodeObj = service.nodes[nodeName];
+                    nodeObj.healthy = false;
+                    nodeObj.failureCount = (nodeObj.failureCount || 0) + 1;
+                    nodeObj.lastFailureTime = Date.now();
+                    serviceRegistry.removeFromHealthyNodes(fullServiceName, nodeName);
+                    serviceRegistry.debounceSave();
+                }
+                return [nodeName, { status: 'unhealthy', error: error.message }];
+            }
+        });
+        const healthResultsArray = await Promise.all(healthPromises);
+        const healthResults = Object.fromEntries(healthResultsArray);
+        results[serviceName] = { namespace, health: healthResults };
+    }
+    res.status(statusAndMsgs.STATUS_SUCCESS).json(results);
+}
+
 const filteredDiscoveryController = (req, res) => {
     const startTime = Date.now();
     const serviceName = req.query.serviceName;
@@ -348,6 +399,7 @@ module.exports = {
     serverListController,
     deregisterController,
     healthController,
+    bulkHealthController,
     metricsController,
     prometheusMetricsController,
     cacheStatsController,
