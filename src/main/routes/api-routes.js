@@ -1,7 +1,7 @@
 const RouteBuilder = require('../builders/route-builder');
 const bodyParser = require('body-parser');
 const rateLimit = require('express-rate-limit');
-const { serverListController, registryController, deregisterController, healthController, bulkHealthController, healthHistoryController, metricsController, prometheusMetricsController, cacheStatsController, filteredDiscoveryController, discoveryInfoController, changesController, bulkRegisterController, bulkDeregisterController, setMaintenanceController, backupController, restoreController } = require('../controller/maxine/registry-controller');
+const { serverListController, registryController, deregisterController, healthController, bulkHealthController, healthHistoryController, metricsController, prometheusMetricsController, cacheStatsController, filteredDiscoveryController, discoveryInfoController, changesController, bulkRegisterController, bulkDeregisterController, setMaintenanceController, backupController, restoreController, dependencyGraphController, impactAnalysisController } = require('../controller/maxine/registry-controller');
 const batchDiscoveryController = require('../controller/maxine/batch-discovery-controller');
 const envoyConfigController = require('../controller/maxine/envoy-controller');
 const { setConfig, getConfig, getAllConfig, deleteConfig } = require('../controller/config-control/config-controller');
@@ -73,8 +73,10 @@ let maxineApiRoutes = RouteBuilder.createNewRoute()
                                       .get("kv/get", authenticationController, limiter, getKv)
                                       .get("kv/all", authenticationController, limiter, getAllKv)
                                       .delete("kv/delete", authenticationController, limiter, bodyParser.json(), deleteKv)
-                                      .get("backup", authenticationController, limiter, backupController)
-                                      .post("restore", authenticationController, limiter, bodyParser.json(), restoreController)
+                                       .get("backup", authenticationController, limiter, backupController)
+                                       .post("restore", authenticationController, limiter, bodyParser.json(), restoreController)
+                                       .get("dependency/graph", authenticationController, limiter, dependencyGraphController)
+                                       .get("impact/analysis", authenticationController, limiter, impactAnalysisController)
                             .stepBack()
                             .post("signin", bodyParser.json(), signInController)
                             .put("change-password", bodyParser.json(), changePwdController)
