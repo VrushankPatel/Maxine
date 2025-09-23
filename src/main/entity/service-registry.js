@@ -507,10 +507,27 @@ class ServiceRegistry{
             }
             let filtered = [];
             if (tags && tags.length > 0) {
-                for (const [nodeName, node] of candidates) {
-                    if (!node.metadata.tags || !tags.every(tag => node.metadata.tags.includes(tag))) continue;
-                    if (deployment && node.metadata.deployment !== deployment) continue;
-                    filtered.push(node);
+                // Optimize tag filtering using tagIndex intersection
+                let intersection = null;
+                for (const tag of tags) {
+                    const set = this.tagIndex.get(tag);
+                    if (!set) {
+                        intersection = new Set();
+                        break;
+                    }
+                    if (intersection === null) {
+                        intersection = new Set(set);
+                    } else {
+                        intersection = new Set([...intersection].filter(x => set.has(x)));
+                    }
+                }
+                if (intersection) {
+                    for (const nodeName of intersection) {
+                        const node = candidates.get(nodeName);
+                        if (node && (!deployment || node.metadata.deployment === deployment)) {
+                            filtered.push(node);
+                        }
+                    }
                 }
             } else if (deployment) {
                 for (const [nodeName, node] of candidates) {
