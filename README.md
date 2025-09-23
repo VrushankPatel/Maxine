@@ -139,7 +139,7 @@ As we can see, maxine SRD provides service addresses for direct client connectio
 
 Maxine can be configured via environment variables:
 
-  - `CLUSTERING_ENABLED`: Enable clustering (default: true)
+  - `CLUSTERING_ENABLED`: Enable clustering (default: false)
   - `NUM_WORKERS`: Number of worker processes (default: CPU cores)
   - `LOG_ASYNC`: Enable async logging (default: true)
   - `HEARTBEAT_TIMEOUT`: Heartbeat timeout in seconds (default: 5)
@@ -149,7 +149,9 @@ Maxine can be configured via environment variables:
     - `HEALTH_CHECK_ENABLED`: Enable health checks (default: false, set to true to enable)
    - `SERVER_SELECTION_STRATEGY`: Load balancing strategy (RR, WRR, LRT, CH, RH, LC, LL, RANDOM, P2, ADAPTIVE, STICKY) (default: RR)
  - `LOG_FORMAT`: Log format (JSON or PLAIN) (default: JSON)
-   - `DISCOVERY_CACHE_TTL`: Discovery cache TTL in ms (default: 3600000)
+    - `DISCOVERY_CACHE_TTL`: Discovery cache TTL in ms (default: 3600000)
+    - `DISCOVERY_CACHE_MAX`: Discovery cache max entries (default: 10000)
+    - `ALIAS_CACHE_MAX`: Alias cache max entries (default: 10000)
   - `FAILURE_THRESHOLD`: Health check failure threshold (default: 3)
   - `REDIS_ENABLED`: Enable Redis for distributed registry (default: false)
   - `REDIS_HOST`: Redis host (default: localhost)
