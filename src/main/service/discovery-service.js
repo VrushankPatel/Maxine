@@ -9,6 +9,7 @@ const { LeastLoadedDiscovery } = require("./discovery-services/least-loaded-disc
 const { RandomDiscovery } = require("./discovery-services/random-discovery");
 const { PowerOfTwoDiscovery } = require("./discovery-services/power-of-two-discovery");
 const { AdaptiveDiscovery } = require("./discovery-services/adaptive-discovery");
+const { StickyDiscovery } = require("./discovery-services/sticky-discovery");
 const LRU = require('lru-cache');
 const config = require("../config/config");
 const { constants } = require("../util/constants/constants");
@@ -26,6 +27,7 @@ class DiscoveryService{
     rand = new RandomDiscovery();
     p2d = new PowerOfTwoDiscovery();
     ad = new AdaptiveDiscovery();
+    sd = new StickyDiscovery();
     cache = new LRU({ max: 1000000, ttl: config.discoveryCacheTTL });
     serviceKeys = new Map(); // Map serviceName to set of cache keys
     cacheHits = 0;
@@ -101,12 +103,16 @@ class DiscoveryService{
             node = this.p2d.getNode(fullServiceName, group);
             break;
 
-            case constants.SSS.ADAPTIVE:
-            node = this.ad.getNode(fullServiceName, group);
-            break;
+             case constants.SSS.ADAPTIVE:
+             node = this.ad.getNode(fullServiceName, group);
+             break;
 
-            default:
-            node = this.rrd.getNode(fullServiceName, group);
+             case constants.SSS.STICKY:
+             node = this.sd.getNode(fullServiceName, ip, group);
+             break;
+
+             default:
+             node = this.rrd.getNode(fullServiceName, group);
         }
 
         if (node) {
@@ -142,9 +148,10 @@ class DiscoveryService{
         this.rhd.invalidateCache(fullServiceName);
         this.lcd.invalidateCache(fullServiceName);
         this.lld.invalidateCache(fullServiceName);
-        this.rand.invalidateCache(fullServiceName);
-        this.p2d.invalidateCache(fullServiceName);
-        this.ad.invalidateCache(fullServiceName);
+         this.rand.invalidateCache(fullServiceName);
+         this.p2d.invalidateCache(fullServiceName);
+         this.ad.invalidateCache(fullServiceName);
+         this.sd.invalidateCache(fullServiceName);
     }
 }
 
