@@ -42,18 +42,19 @@ class DiscoveryService{
      * @returns {object}
      */
     getNode = (fullServiceName, ip, group) => {
-         // Check if serviceName is an alias (cached)
-         let resolvedServiceName = this.aliasCache.get(fullServiceName);
-         if (resolvedServiceName === undefined) {
-             resolvedServiceName = serviceRegistry.getServiceByAlias(fullServiceName);
-             this.aliasCache.set(fullServiceName, resolvedServiceName);
-         }
-         if (resolvedServiceName !== fullServiceName) {
-             fullServiceName = resolvedServiceName;
-         }
+          // Check if serviceName is an alias (cached)
+          let resolvedServiceName = this.aliasCache.get(fullServiceName);
+          if (resolvedServiceName === undefined) {
+              resolvedServiceName = serviceRegistry.getServiceByAlias(fullServiceName);
+              this.aliasCache.set(fullServiceName, resolvedServiceName);
+          }
+          if (resolvedServiceName !== fullServiceName) {
+              fullServiceName = resolvedServiceName;
+          }
 
-        const usesIp = [constants.SSS.CH, constants.SSS.RH].includes(config.serverSelectionStrategy);
-        const cacheKey = usesIp ? `${fullServiceName}:${ip}` : fullServiceName;
+        const usesIp = [constants.SSS.CH, constants.SSS.RH, constants.SSS.STICKY].includes(config.serverSelectionStrategy);
+        const groupKey = group ? `:${group}` : '';
+        const cacheKey = usesIp ? `${fullServiceName}:${ip}${groupKey}` : `${fullServiceName}${groupKey}`;
         const cached = this.cache.get(cacheKey);
         if (cached) {
             this.cacheHits++;
