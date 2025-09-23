@@ -1,7 +1,7 @@
 const RouteBuilder = require('../builders/route-builder');
 const bodyParser = require('body-parser');
 const rateLimit = require('express-rate-limit');
-const { serverListController, registryController, deregisterController, healthController, bulkHealthController, pushHealthController, healthHistoryController, metricsController, prometheusMetricsController, cacheStatsController, filteredDiscoveryController, discoveryInfoController, changesController, changesSSEController, bulkRegisterController, bulkDeregisterController, setMaintenanceController, setDrainingController, backupController, restoreController, dependencyGraphController, impactAnalysisController, setApiSpecController, getApiSpecController, listServicesByGroupController, updateMetadataController } = require('../controller/maxine/registry-controller');
+const { serverListController, registryController, deregisterController, healthController, bulkHealthController, pushHealthController, healthHistoryController, metricsController, prometheusMetricsController, cacheStatsController, filteredDiscoveryController, discoveryInfoController, changesController, changesSSEController, bulkRegisterController, bulkDeregisterController, setMaintenanceController, setDrainingController, backupController, restoreController, dependencyGraphController, impactAnalysisController, setApiSpecController, getApiSpecController, listServicesByGroupController, updateMetadataController, databaseDiscoveryController } = require('../controller/maxine/registry-controller');
 const batchDiscoveryController = require('../controller/maxine/batch-discovery-controller');
 const envoyConfigController = require('../controller/maxine/envoy-controller');
 const { setConfig, getConfig, getAllConfig, deleteConfig } = require('../controller/config-control/config-controller');
@@ -56,6 +56,7 @@ let maxineApiRoutes = RouteBuilder.createNewRoute()
                                     .get("discover/info", authenticationController, discoveryLimiter, discoveryInfoController)
                                     .get("discover/filtered", authenticationController, discoveryLimiter, filteredDiscoveryController)
                                     .get("discover/dns", authenticationController, discoveryLimiter, dnsController)
+                                    .get("discover/database", authenticationController, discoveryLimiter, databaseDiscoveryController)
                                     .get("health", authenticationController, limiter, healthController)
                                     .post("health/bulk", authenticationController, limiter, bodyParser.json(), bulkHealthController)
                                     .post("health/push", authenticationController, limiter, bodyParser.json(), pushHealthController)
