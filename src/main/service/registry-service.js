@@ -1,6 +1,7 @@
 const Service = require("../entity/service-body");
 const { serviceRegistry: sRegistry } = require("../entity/service-registry");
 const { discoveryService } = require("../service/discovery-service");
+const config = require("../config/config");
 const fs = require('fs');
 const path = require('path');
 class RegistryService{
@@ -28,6 +29,11 @@ class RegistryService{
         }
 
         const service = sRegistry.registry.get(fullServiceName);
+        const currentNodesCount = Object.keys(service.nodes).length;
+        if (currentNodesCount + weight > config.maxInstancesPerService) {
+            console.warn(`Service ${fullServiceName} has reached max instances limit (${config.maxInstancesPerService})`);
+            return; // Reject registration
+        }
         [...Array(weight).keys()].forEach(index => {
             const subNodeName = `${nodeName}-${index}`;
 

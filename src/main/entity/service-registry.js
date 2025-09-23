@@ -30,6 +30,7 @@ class ServiceRegistry{
     activeConnections = new Map(); // key: `${serviceName}:${nodeName}`, value: count
     responseTimes = new Map();
     averageResponseTimes = new Map(); // cache averages
+    healthScore = new Map(); // key: `${serviceName}:${nodeName}`, value: score
     saveTimeout = null;
     changes = [];
     webhooks = new Map(); // serviceName -> set of webhook URLs
@@ -594,6 +595,23 @@ class ServiceRegistry{
     getAverageResponseTime = (serviceName, nodeName) => {
         const key = `${serviceName}:${nodeName}`;
         return this.averageResponseTimes.get(key) || 0;
+    }
+
+    calculateHealthScore = (serviceName, nodeName) => {
+        const key = `${serviceName}:${nodeName}`;
+        const service = this.registry.get(serviceName);
+        if (!service || !service.nodes[nodeName]) return 0;
+        const node = service.nodes[nodeName];
+        const failureRate = node.failureCount / (node.failureCount + 1); // approximate
+        const avgResponseTime = this.getAverageResponseTime(serviceName, nodeName);
+        const score = (1 - failureRate) / (avgResponseTime + 1);
+        this.healthScore.set(key, score);
+        return score;
+    }
+
+    getHealthScore = (serviceName, nodeName) => {
+        const key = `${serviceName}:${nodeName}`;
+        return this.healthScore.get(key) || this.calculateHealthScore(serviceName, nodeName);
     }
 
     addNodeToHashRegistry = (serviceName, nodeName) => {
