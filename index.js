@@ -121,6 +121,11 @@ if (config.clusteringEnabled && cluster.isMaster) {
         require('./src/main/service/mdns-service');
     }
 
+    // Initialize ECS service if enabled
+    if (config.ecsEnabled) {
+        require('./src/main/service/ecs-service');
+    }
+
     // WebSocket server for real-time changes (disabled in high performance mode)
     if (!config.highPerformanceMode) {
         const wss = new WebSocket.Server({ server });

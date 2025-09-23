@@ -54,7 +54,8 @@ const config = {
            eurekaHost: process.env.EUREKA_HOST || 'localhost',
            eurekaPort: process.env.EUREKA_PORT ? parseInt(process.env.EUREKA_PORT) : 8761,
            approvalRequired: process.env.APPROVAL_REQUIRED === 'true',
-           alertWebhook: process.env.ALERT_WEBHOOK
+            alertWebhook: process.env.ALERT_WEBHOOK,
+            ecsEnabled: process.env.ECS_ENABLED === 'true' && !highPerfDefault
 }
 
 Object.defineProperty(config, "profile", {
