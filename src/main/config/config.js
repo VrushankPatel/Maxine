@@ -5,12 +5,12 @@ const config = {
     heartBeatTimeout: process.env.HEARTBEAT_TIMEOUT ? parseInt(process.env.HEARTBEAT_TIMEOUT) : 5,
     logJsonPrettify: process.env.LOG_JSON_PRETTIFY === 'true' ? true : false,
     actuatorEnabled: process.env.ACTUATOR_ENABLED === 'false' ? false : true,
-    statusMonitorEnabled: process.env.STATUS_MONITOR_ENABLED === 'false' ? false : true,
+    statusMonitorEnabled: process.env.STATUS_MONITOR_ENABLED === 'true' || false,
     serverSelectionStrategy: process.env.SERVER_SELECTION_STRATEGY ? constants.SSS[process.env.SERVER_SELECTION_STRATEGY] || constants.SSS.RR : constants.SSS.RR,
     logFormat: process.env.LOG_FORMAT === 'PLAIN' ? constants.LOG_FORMATS.PLAIN : constants.LOG_FORMATS.JSON,
       discoveryCacheTTL: process.env.DISCOVERY_CACHE_TTL ? parseInt(process.env.DISCOVERY_CACHE_TTL) : 600000,
     failureThreshold: process.env.FAILURE_THRESHOLD ? parseInt(process.env.FAILURE_THRESHOLD) : 3,
-    clusteringEnabled: process.env.CLUSTERING_ENABLED === 'true' && !process.argv.some(arg => arg.includes('mocha')),
+    clusteringEnabled: process.env.CLUSTERING_ENABLED !== 'false' && !process.argv.some(arg => arg.includes('mocha')),
     numWorkers: process.env.NUM_WORKERS ? parseInt(process.env.NUM_WORKERS) : require('os').cpus().length,
      healthCheckEnabled: process.env.HEALTH_CHECK_ENABLED === 'true' || false,
      redisEnabled: process.env.REDIS_ENABLED === 'true' || false,
@@ -32,13 +32,13 @@ const config = {
            healthCheckConcurrency: process.env.HEALTH_CHECK_CONCURRENCY ? parseInt(process.env.HEALTH_CHECK_CONCURRENCY) : 200,
      defaultProxyMode: process.env.DEFAULT_PROXY_MODE === 'true' || false,
      proxyTimeout: process.env.PROXY_TIMEOUT ? parseInt(process.env.PROXY_TIMEOUT) : 10000,
-     circuitBreakerEnabled: process.env.CIRCUIT_BREAKER_ENABLED !== 'false',
+      circuitBreakerEnabled: process.env.CIRCUIT_BREAKER_ENABLED === 'true' || false,
      circuitBreakerFailureThreshold: process.env.CIRCUIT_BREAKER_FAILURE_THRESHOLD ? parseInt(process.env.CIRCUIT_BREAKER_FAILURE_THRESHOLD) : 5,
      circuitBreakerTimeout: process.env.CIRCUIT_BREAKER_TIMEOUT ? parseInt(process.env.CIRCUIT_BREAKER_TIMEOUT) : 60000,
     grpcEnabled: process.env.GRPC_ENABLED === 'true' || false,
     grpcPort: process.env.GRPC_PORT ? parseInt(process.env.GRPC_PORT) : 50051,
     tracingEnabled: process.env.TRACING_ENABLED === 'true' || false,
-    http2Enabled: process.env.HTTP2_ENABLED !== 'false'
+    http2Enabled: process.env.HTTP2_ENABLED === 'true' || false
 }
 
 Object.defineProperty(config, "profile", {
