@@ -62,12 +62,12 @@ class HealthService {
                 try {
                     const healthType = node.metadata.healthType || 'http';
                     let isHealthy = false;
-                    if (healthType === 'tcp') {
-                        // TCP health check
-                        const url = new URL(node.address);
-                        const host = url.hostname;
-                        const port = node.metadata.healthEndpoint ? parseInt(node.metadata.healthEndpoint) : url.port || 80;
-                        isHealthy = await checkTcpHealth(host, port);
+                     if (healthType === 'tcp') {
+                         // TCP health check
+                         const url = new URL(node.address);
+                         const host = url.hostname;
+                         const port = node.metadata.healthEndpoint ? parseInt(node.metadata.healthEndpoint) : url.port || 80;
+                         isHealthy = await this.checkTcpHealth(host, port);
                     } else {
                         // HTTP health check
                         const healthUrl = node.address + (node.metadata.healthEndpoint || '/health');
@@ -76,7 +76,8 @@ class HealthService {
                     }
                     if (isHealthy) {
                         // Update registry with healthy status
-                        const nodeObj = serviceRegistry.registry[serviceName].nodes[nodeName];
+                        const service = serviceRegistry.registry.get(serviceName);
+                        const nodeObj = service ? service.nodes[nodeName] : null;
                          if (nodeObj) {
                                nodeObj.healthy = true;
                                nodeObj.failureCount = 0;
@@ -92,7 +93,8 @@ class HealthService {
                 } catch (error) {
                     unhealthyInstances++;
                     // Update registry with unhealthy status
-                    const nodeObj = serviceRegistry.registry[serviceName].nodes[nodeName];
+                    const service = serviceRegistry.registry.get(serviceName);
+                    const nodeObj = service ? service.nodes[nodeName] : null;
                      if (nodeObj) {
                            nodeObj.failureCount = (nodeObj.failureCount || 0) + 1;
                            nodeObj.lastFailureTime = Date.now();

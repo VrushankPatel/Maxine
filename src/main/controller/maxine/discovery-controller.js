@@ -1,6 +1,7 @@
 const { statusAndMsgs } = require("../../util/constants/constants");
 const { discoveryService } = require("../../service/discovery-service");
 const { metricsService } = require("../../service/metrics-service");
+const { serviceRegistry } = require("../../entity/service-registry");
 const _ = require('lodash');
 const { info } = require("../../util/logging/logging-util");
 const httpProxy = require('http-proxy');
@@ -14,18 +15,18 @@ const proxy = httpProxy.createProxyServer({
         keepAlive: true,
         maxSockets: 10000, // Optimized for high throughput without memory issues
         maxFreeSockets: 5000,
-        timeout: 10000,
+        timeout: config.proxyTimeout,
         keepAliveMsecs: 10000
     }),
     httpsAgent: new https.Agent({
         keepAlive: true,
         maxSockets: 10000, // Optimized for high throughput without memory issues
         maxFreeSockets: 5000,
-        timeout: 10000,
+        timeout: config.proxyTimeout,
         keepAliveMsecs: 10000
     }),
-    proxyTimeout: 10000, // 10 second timeout for proxy requests
-    timeout: 10000
+    proxyTimeout: config.proxyTimeout, // timeout for proxy requests
+    timeout: config.proxyTimeout
 });
 
 proxy.on('error', (err, req, res) => {
@@ -61,9 +62,31 @@ const discoveryController = (req, res) => {
      }
 
     // now, retrieving the serviceNode from the registry
-    const fullServiceName = (region !== "default" || zone !== "default") ?
+    let fullServiceName = (region !== "default" || zone !== "default") ?
         (version ? `${namespace}:${region}:${zone}:${serviceName}:${version}` : `${namespace}:${region}:${zone}:${serviceName}`) :
         (version ? `${namespace}:${serviceName}:${version}` : `${namespace}:${serviceName}`);
+
+    // Handle traffic splitting if no version specified
+    if (!version) {
+        const baseServiceName = (region !== "default" || zone !== "default") ?
+            `${namespace}:${region}:${zone}:${serviceName}` : `${namespace}:${serviceName}`;
+        const split = serviceRegistry.getTrafficSplit(baseServiceName);
+        if (split) {
+            const versions = Object.keys(split);
+            const total = Object.values(split).reduce((a, b) => a + b, 0);
+            let rand = Math.random() * total;
+            for (const v of versions) {
+                rand -= split[v];
+                if (rand <= 0) {
+                    version = v;
+                    fullServiceName = (region !== "default" || zone !== "default") ?
+                        `${namespace}:${region}:${zone}:${serviceName}:${version}` : `${namespace}:${serviceName}:${version}`;
+                    break;
+                }
+            }
+        }
+    }
+
     const serviceNode = discoveryService.getNode(fullServiceName, ip);
 
     // no service node is there so, service unavailable is our error response.
@@ -91,11 +114,11 @@ const discoveryController = (req, res) => {
      }
 
     // Increment active connections
-    const { serviceRegistry } = require("../../entity/service-registry");
     serviceRegistry.incrementActiveConnections(fullServiceName, serviceNode.nodeName);
 
+    const proxyTimeout = serviceNode.metadata.proxyTimeout || config.proxyTimeout;
     try {
-        proxy.web(req, res, { target: addressToRedirect, changeOrigin: true });
+        proxy.web(req, res, { target: addressToRedirect, changeOrigin: true, timeout: proxyTimeout });
     } catch (err) {
          console.error('Proxy setup error:', err);
          if (config.metricsEnabled && !config.highPerformanceMode) {
@@ -115,11 +138,10 @@ const discoveryController = (req, res) => {
          if (config.metricsEnabled && !config.highPerformanceMode) {
              metricsService.recordRequest(serviceName, success, latency);
          }
-         if (success) {
-             // Record response time for LRT algorithm
-             const { serviceRegistry } = require("../../entity/service-registry");
-             serviceRegistry.recordResponseTime(fullServiceName, serviceNode.nodeName, latency);
-         }
+          if (success) {
+              // Record response time for LRT algorithm
+              serviceRegistry.recordResponseTime(fullServiceName, serviceNode.nodeName, latency);
+          }
          serviceRegistry.decrementActiveConnections(fullServiceName, serviceNode.nodeName);
      });
     res.on('close', () => {

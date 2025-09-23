@@ -38,12 +38,20 @@ class RendezvousHashDiscovery{
     }
 
     /**
-     * Returns rank by simple hash of nodeId and ip.
-     * @param {string} nodeId
-     * @param {string} ip
-     * @returns {number} return rank by simple hash of nodeId and ip.
-     */
-    rank = (nodeId, ip) => nodeId.split('').reduce((a, b) => a + b.charCodeAt(0), 0) + ip.split('').reduce((a, b) => a + b.charCodeAt(0), 0);
+      * Returns rank by hash of nodeId and ip.
+      * @param {string} nodeId
+      * @param {string} ip
+      * @returns {number} return rank by hash of nodeId and ip.
+      */
+    rank = (nodeId, ip) => this.hashString(nodeId + ip);
+
+    hashString = (str) => {
+        let hash = 5381;
+        for (let i = 0; i < str.length; i++) {
+            hash = ((hash << 5) + hash) + str.charCodeAt(i);
+        }
+        return hash;
+    }
 }
 
 module.exports = {
