@@ -96,7 +96,12 @@ if (config.clusteringEnabled && cluster.isMaster) {
                            loggingUtil.initApp();
                        })
                         .invoke(() => console.log('app built'))
-                       .getApp();
+                        .getApp();
+
+    // Initialize Kubernetes service if enabled
+    if (config.kubernetesEnabled) {
+        const { k8sService } = require('./src/main/service/k8s-service');
+    }
 
     // WebSocket server for real-time changes (disabled in high performance mode)
     if (!config.highPerformanceMode) {

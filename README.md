@@ -115,9 +115,10 @@ As we can see, maxine SRD provides service addresses for direct client connectio
                     * **Service Dependency Graph**: Added `/api/maxine/serviceops/dependency/graph` endpoint to retrieve the service dependency graph, showing which services depend on others.
                     * **Impact Analysis**: Added `/api/maxine/serviceops/impact/analysis` endpoint to analyze the impact of a service failure by listing all services that depend on it.
                     * **Python Client SDK**: Added a Python client SDK in `client-sdk/python/` for easy integration with Maxine registry from Python applications.
-                * **Service API Specs**: Services can now register their API specifications (e.g., OpenAPI/Swagger) via the `/api/maxine/serviceops/api-spec/set` endpoint, and retrieve them via `/api/maxine/serviceops/api-spec/get`. This enables better service contract management and API documentation.
-                 * **Service Tag Filtering**: Discovery requests can now filter services by tags using the `tags` query parameter. Services must have all specified tags in their metadata to be discoverable.
-                 * **Service Metadata Updates**: Added `/api/maxine/serviceops/metadata/update` endpoint to update service instance metadata without re-registration, allowing dynamic changes to weights, health endpoints, and other properties.
+                    * **Service API Specs**: Services can now register their API specifications (e.g., OpenAPI/Swagger) via the `/api/maxine/serviceops/api-spec/set` endpoint, and retrieve them via `/api/maxine/serviceops/api-spec/get`. This enables better service contract management and API documentation.
+                  * **Service Tag Filtering**: Discovery requests can now filter services by tags using the `tags` query parameter. Services must have all specified tags in their metadata to be discoverable.
+                  * **Service Metadata Updates**: Added `/api/maxine/serviceops/metadata/update` endpoint to update service instance metadata without re-registration, allowing dynamic changes to weights, health endpoints, and other properties.
+                    * **Kubernetes Integration**: Added support for automatic service discovery from Kubernetes clusters. Enable with `KUBERNETES_ENABLED=true` to watch K8s services and endpoints, registering them in Maxine for seamless integration with containerized deployments.
 
 
 ## Setup for development
@@ -172,9 +173,10 @@ Maxine can be configured via environment variables:
     - `ETCD_ENABLED`: Enable etcd for distributed persistence (default: false)
     - `ETCD_HOST`: etcd host (default: localhost)
     - `ETCD_PORT`: etcd port (default: 2379)
-    - `KAFKA_ENABLED`: Enable Kafka for event streaming (default: false)
-    - `KAFKA_BROKERS`: Kafka brokers (default: localhost:9092)
-      - `CIRCUIT_BREAKER_ENABLED`: Enable circuit breaker (default: true, set to false to disable)
+     - `KAFKA_ENABLED`: Enable Kafka for event streaming (default: false)
+     - `KAFKA_BROKERS`: Kafka brokers (default: localhost:9092)
+       - `CIRCUIT_BREAKER_ENABLED`: Enable circuit breaker (default: true, set to false to disable)
+     - `KUBERNETES_ENABLED`: Enable Kubernetes service discovery integration (default: false)
    - `PERSISTENCE_ENABLED`: Enable persistence to file/Redis/etcd (default: true, set to false for in-memory only mode)
 
 ### Run maxine on production.
