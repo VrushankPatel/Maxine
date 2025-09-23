@@ -606,6 +606,43 @@ const updateMetadataController = (req, res) => {
     res.status(statusAndMsgs.STATUS_SUCCESS).json({ message: "Metadata updated" });
 }
 
+const changesSSEController = (req, res) => {
+    res.writeHead(200, {
+        'Content-Type': 'text/event-stream',
+        'Cache-Control': 'no-cache',
+        'Connection': 'keep-alive',
+        'Access-Control-Allow-Origin': '*',
+        'Access-Control-Allow-Headers': 'Cache-Control',
+    });
+    const since = parseInt(req.query.since) || 0;
+    let lastIndex = serviceRegistry.changes.findIndex(c => c.timestamp > since);
+    if (lastIndex === -1) lastIndex = serviceRegistry.changes.length;
+
+    const sendChange = (change) => {
+        res.write(`data: ${JSON.stringify(change)}\n\n`);
+    };
+
+    // Send initial changes since 'since'
+    for (let i = lastIndex; i < serviceRegistry.changes.length; i++) {
+        sendChange(serviceRegistry.changes[i]);
+    }
+
+    // Then send new ones every second
+    const interval = setInterval(() => {
+        if (serviceRegistry.changes.length > lastIndex) {
+            for (let i = lastIndex; i < serviceRegistry.changes.length; i++) {
+                sendChange(serviceRegistry.changes[i]);
+            }
+            lastIndex = serviceRegistry.changes.length;
+        }
+    }, 1000);
+
+    req.on('close', () => {
+        clearInterval(interval);
+        res.end();
+    });
+}
+
 module.exports = {
     registryController,
     serverListController,
@@ -620,6 +657,7 @@ module.exports = {
     filteredDiscoveryController,
     discoveryInfoController,
     changesController,
+    changesSSEController,
     bulkRegisterController,
     bulkDeregisterController,
     setMaintenanceController,
