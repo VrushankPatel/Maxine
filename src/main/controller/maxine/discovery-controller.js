@@ -7,6 +7,10 @@ const httpProxy = require('http-proxy');
 const rateLimit = require('express-rate-limit');
 const config = require("../../config/config");
 
+// Cache config values for performance
+const isHighPerformanceMode = config.highPerformanceMode;
+const hasMetrics = config.metricsEnabled;
+
 const http = require('http');
 const https = require('https');
 const proxy = httpProxy.createProxyServer({
@@ -50,15 +54,15 @@ const discoveryController = (req, res) => {
     || req.connection.socket.remoteAddress);
 
     // if serviceName is not there, responding with error
-     if(!serviceName) {
-         if (config.metricsEnabled && !config.highPerformanceMode) {
-             const latency = Date.now() - startTime;
-             metricsService.recordRequest(serviceName, false, latency);
-             metricsService.recordError('missing_service_name');
-         }
-         res.status(statusAndMsgs.STATUS_GENERIC_ERROR).json({"message" : statusAndMsgs.MSG_DISCOVER_MISSING_DATA});
-         return;
-     }
+      if(!serviceName) {
+          if (hasMetrics && !isHighPerformanceMode) {
+              const latency = Date.now() - startTime;
+              metricsService.recordRequest(serviceName, false, latency);
+              metricsService.recordError('missing_service_name');
+          }
+          res.status(statusAndMsgs.STATUS_GENERIC_ERROR).json({"message" : statusAndMsgs.MSG_DISCOVER_MISSING_DATA});
+          return;
+      }
 
     // Build base service name
     const baseServiceName = (region !== "default" || zone !== "default") ?
@@ -86,70 +90,70 @@ const discoveryController = (req, res) => {
 
     const serviceNode = discoveryService.getNode(fullServiceName, ip);
 
-     // no service node is there so, service unavailable is our error response.
-      if(!serviceNode){
-         if (config.metricsEnabled && !config.highPerformanceMode) {
-             const latency = Date.now() - startTime;
-             metricsService.recordRequest(serviceName, false, latency);
-             metricsService.recordError('service_unavailable');
-         }
-         res.status(statusAndMsgs.SERVICE_UNAVAILABLE).json({
-             "message" : statusAndMsgs.MSG_SERVICE_UNAVAILABLE
-         });
-         return;
-     }
+      // no service node is there so, service unavailable is our error response.
+       if(!serviceNode){
+          if (hasMetrics && !isHighPerformanceMode) {
+              const latency = Date.now() - startTime;
+              metricsService.recordRequest(serviceName, false, latency);
+              metricsService.recordError('service_unavailable');
+          }
+          res.status(statusAndMsgs.SERVICE_UNAVAILABLE).json({
+              "message" : statusAndMsgs.MSG_SERVICE_UNAVAILABLE
+          });
+          return;
+      }
     const addressToRedirect = serviceNode.address + (endPoint.length > 0 ? (endPoint[0] == "/" ? endPoint : `/${endPoint}`) : "");
 
-    // Check if client wants address only (no proxy)
-     if (req.query.proxy === 'false') {
-         if (config.metricsEnabled && !config.highPerformanceMode) {
-             const latency = Date.now() - startTime;
-             metricsService.recordRequest(serviceName, true, latency);
-         }
-         res.json({ address: addressToRedirect, nodeName: serviceNode.nodeName });
-         return;
-     }
+      // Check if client wants address only (no proxy)
+      if (req.query.proxy === 'false') {
+          if (hasMetrics && !isHighPerformanceMode) {
+              const latency = Date.now() - startTime;
+              metricsService.recordRequest(serviceName, true, latency);
+          }
+          res.json({ address: addressToRedirect, nodeName: serviceNode.nodeName });
+          return;
+      }
 
-     // Increment active connections
-     if (!config.highPerformanceMode) {
-         serviceRegistry.incrementActiveConnections(fullServiceName, serviceNode.nodeName);
-     }
+      // Increment active connections
+      if (!isHighPerformanceMode) {
+          serviceRegistry.incrementActiveConnections(fullServiceName, serviceNode.nodeName);
+      }
 
     const proxyTimeout = serviceNode.metadata.proxyTimeout || config.proxyTimeout;
     try {
         proxy.web(req, res, { target: addressToRedirect, changeOrigin: true, timeout: proxyTimeout });
-    } catch (err) {
-         console.error('Proxy setup error:', err);
-         if (config.metricsEnabled && !config.highPerformanceMode) {
-             const latency = Date.now() - startTime;
-             metricsService.recordRequest(serviceName, false, latency);
-             metricsService.recordError('proxy_error');
-         }
-         serviceRegistry.decrementActiveConnections(fullServiceName, serviceNode.nodeName);
-         res.status(500).json({ message: 'Proxy Error' });
-         return;
-     }
+     } catch (err) {
+          console.error('Proxy setup error:', err);
+          if (hasMetrics && !isHighPerformanceMode) {
+              const latency = Date.now() - startTime;
+              metricsService.recordRequest(serviceName, false, latency);
+              metricsService.recordError('proxy_error');
+          }
+          serviceRegistry.decrementActiveConnections(fullServiceName, serviceNode.nodeName);
+          res.status(500).json({ message: 'Proxy Error' });
+          return;
+      }
 
-    // Record metrics and response time on response finish
-     res.on('finish', () => {
-         const latency = Date.now() - startTime;
-         const success = res.statusCode >= 200 && res.statusCode < 300;
-         if (config.metricsEnabled && !config.highPerformanceMode) {
-             metricsService.recordRequest(serviceName, success, latency);
-         }
-           if (success && !config.highPerformanceMode) {
-               // Record response time for LRT algorithm
-               serviceRegistry.recordResponseTime(fullServiceName, serviceNode.nodeName, latency);
+     // Record metrics and response time on response finish
+      res.on('finish', () => {
+          const latency = Date.now() - startTime;
+          const success = res.statusCode >= 200 && res.statusCode < 300;
+          if (hasMetrics && !isHighPerformanceMode) {
+              metricsService.recordRequest(serviceName, success, latency);
+          }
+            if (success && !isHighPerformanceMode) {
+                // Record response time for LRT algorithm
+                serviceRegistry.recordResponseTime(fullServiceName, serviceNode.nodeName, latency);
+            }
+           if (!isHighPerformanceMode) {
+               serviceRegistry.decrementActiveConnections(fullServiceName, serviceNode.nodeName);
            }
-          if (!config.highPerformanceMode) {
+       });
+      res.on('close', () => {
+          if (!isHighPerformanceMode) {
               serviceRegistry.decrementActiveConnections(fullServiceName, serviceNode.nodeName);
           }
       });
-     res.on('close', () => {
-         if (!config.highPerformanceMode) {
-             serviceRegistry.decrementActiveConnections(fullServiceName, serviceNode.nodeName);
-         }
-     });
 }
 
 module.exports = discoveryController

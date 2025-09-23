@@ -30,6 +30,7 @@ class DiscoveryService{
     serviceKeys = new Map(); // Map serviceName to set of cache keys
     cacheHits = 0;
     cacheMisses = 0;
+    aliasCache = new Map(); // Cache for alias resolutions
 
     /**
      * Get fullServiceName and IP and based on the serverSelectionStrategy we've selected, It'll call that discoveryService and retrieve the node from it. (Ex. RoundRobin, Rendezvous, ConsistentHashing).
@@ -38,11 +39,15 @@ class DiscoveryService{
      * @returns {object}
      */
     getNode = (fullServiceName, ip) => {
-        // Check if serviceName is an alias
-        const resolvedServiceName = serviceRegistry.getServiceByAlias(fullServiceName);
-        if (resolvedServiceName !== fullServiceName) {
-            fullServiceName = resolvedServiceName;
-        }
+         // Check if serviceName is an alias (cached)
+         let resolvedServiceName = this.aliasCache.get(fullServiceName);
+         if (resolvedServiceName === undefined) {
+             resolvedServiceName = serviceRegistry.getServiceByAlias(fullServiceName);
+             this.aliasCache.set(fullServiceName, resolvedServiceName);
+         }
+         if (resolvedServiceName !== fullServiceName) {
+             fullServiceName = resolvedServiceName;
+         }
 
         const usesIp = [constants.SSS.CH, constants.SSS.RH].includes(config.serverSelectionStrategy);
         const cacheKey = usesIp ? `${fullServiceName}:${ip}` : fullServiceName;
