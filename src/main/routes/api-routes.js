@@ -2,6 +2,8 @@ const RouteBuilder = require('../builders/route-builder');
 const bodyParser = require('body-parser');
 const rateLimit = require('express-rate-limit');
 const { serverListController, registryController, deregisterController, healthController, bulkHealthController, healthHistoryController, metricsController, prometheusMetricsController, cacheStatsController, filteredDiscoveryController, discoveryInfoController, changesController, bulkRegisterController, bulkDeregisterController, setMaintenanceController } = require('../controller/maxine/registry-controller');
+const batchDiscoveryController = require('../controller/maxine/batch-discovery-controller');
+const envoyConfigController = require('../controller/maxine/envoy-controller');
 const { setConfig, getConfig, getAllConfig, deleteConfig } = require('../controller/config-control/config-controller');
 const { addWebhook, removeWebhook, getWebhooks } = require('../controller/webhook-controller');
 const { addAlias, removeAlias, getAliases } = require('../controller/alias-controller');
@@ -43,18 +45,20 @@ let maxineApiRoutes = RouteBuilder.createNewRoute()
                                   .post("register/bulk", authenticationController, limiter, bodyParser.json(), bulkRegisterController)
                                   .delete("deregister", authenticationController, limiter, bodyParser.json(), deregisterController)
                                   .delete("deregister/bulk", authenticationController, limiter, bodyParser.json(), bulkDeregisterController)
-                                  .get("discover", authenticationController, discoveryLimiter, discoveryController)
-                                   .get("discover/info", authenticationController, discoveryLimiter, discoveryInfoController)
-                                   .get("discover/filtered", authenticationController, discoveryLimiter, filteredDiscoveryController)
-                                   .get("discover/dns", authenticationController, discoveryLimiter, dnsController)
+                                   .get("discover", authenticationController, discoveryLimiter, discoveryController)
+                                    .post("discover/batch", authenticationController, discoveryLimiter, bodyParser.json(), batchDiscoveryController)
+                                    .get("discover/info", authenticationController, discoveryLimiter, discoveryInfoController)
+                                    .get("discover/filtered", authenticationController, discoveryLimiter, filteredDiscoveryController)
+                                    .get("discover/dns", authenticationController, discoveryLimiter, dnsController)
                                     .get("health", authenticationController, limiter, healthController)
                                     .post("health/bulk", authenticationController, limiter, bodyParser.json(), bulkHealthController)
                                     .get("health/history", authenticationController, limiter, healthHistoryController)
                                      .get("metrics", authenticationController, limiter, metricsController)
                                      .get("metrics/prometheus", authenticationController, limiter, prometheusMetricsController)
                                      .get("cache/stats", authenticationController, limiter, cacheStatsController)
-                                    .get("changes", authenticationController, limiter, changesController)
-                                    .post("webhooks/add", authenticationController, limiter, bodyParser.json(), addWebhook)
+                                     .get("changes", authenticationController, limiter, changesController)
+                                     .get("envoy/config", authenticationController, limiter, envoyConfigController)
+                                     .post("webhooks/add", authenticationController, limiter, bodyParser.json(), addWebhook)
                                     .delete("webhooks/remove", authenticationController, limiter, bodyParser.json(), removeWebhook)
                                     .get("webhooks", authenticationController, limiter, getWebhooks)
                                     .post("aliases/add", authenticationController, limiter, bodyParser.json(), addAlias)
