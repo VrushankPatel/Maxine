@@ -18,7 +18,8 @@
 - Traffic splitting for versions allows services to define `trafficSplit` in metadata to route percentages of requests to different versions, enabling canary deployments and gradual rollouts.
 - If discovery finds the single service node with that serviceName, then It'll simply redirect that request to that service's URL.
 - If there are multiple nodes of the same service in the registry, then discovery has to distribute the traffic across all of them, that's where Maxine's load balancer comes to rescue.
-- Filtered discovery allows routing to services based on tags, enabling environment-specific or feature-specific routing via `/api/maxine/serviceops/discover/filtered?serviceName=<name>&tags=<tag1>,<tag2>`.
+ - Filtered discovery allows routing to services based on tags, enabling environment-specific or feature-specific routing via `/api/maxine/serviceops/discover/filtered?serviceName=<name>&tags=<tag1>,<tag2>`.
+ - Service groups listing allows retrieving all services and their healthy nodes filtered by group via `/api/maxine/serviceops/servers/group?group=<group>&namespace=<namespace>`.
 ### Health checks
 - Maxine provides comprehensive health monitoring for registered services with both on-demand, background, and push-based checks.
 - The health check endpoint `/api/maxine/serviceops/health?serviceName=<name>` performs parallel HTTP requests to all nodes of the specified service and reports their status.
