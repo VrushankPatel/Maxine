@@ -211,6 +211,70 @@ class ServiceRegistry{
         return Object.fromEntries(this.kvStore);
     }
 
+    // Backup and restore
+    backup = () => {
+        return {
+            registry: Object.fromEntries(this.registry),
+            hashRegistry: Array.from(this.hashRegistry.keys()),
+            serviceAliases: Object.fromEntries(this.serviceAliases),
+            serviceDependencies: Object.fromEntries(
+                Array.from(this.serviceDependencies.entries()).map(([k, v]) => [k, Array.from(v)])
+            ),
+            kvStore: Object.fromEntries(this.kvStore),
+            trafficSplit: Object.fromEntries(this.trafficSplit),
+            healthHistory: Object.fromEntries(
+                Array.from(this.healthHistory.entries()).map(([k, v]) => [k, Object.fromEntries(v)])
+            ),
+            maintenanceNodes: Object.fromEntries(
+                Array.from(this.maintenanceNodes.entries()).map(([k, v]) => [k, Array.from(v)])
+            ),
+            webhooks: Object.fromEntries(
+                Array.from(this.webhooks.entries()).map(([k, v]) => [k, Array.from(v)])
+            ),
+            tagIndex: Object.fromEntries(
+                Array.from(this.tagIndex.entries()).map(([k, v]) => [k, Array.from(v)])
+            )
+        };
+    }
+
+    restore = (data) => {
+        this.registry = new Map(Object.entries(data.registry || {}));
+        this.serviceAliases = new Map(Object.entries(data.serviceAliases || {}));
+        this.serviceDependencies = new Map(
+            Object.entries(data.serviceDependencies || {}).map(([k, v]) => [k, new Set(v)])
+        );
+        this.kvStore = new Map(Object.entries(data.kvStore || {}));
+        this.trafficSplit = new Map(Object.entries(data.trafficSplit || {}));
+        this.healthHistory = new Map(
+            Object.entries(data.healthHistory || {}).map(([k, v]) => [k, new Map(Object.entries(v))])
+        );
+        this.maintenanceNodes = new Map(
+            Object.entries(data.maintenanceNodes || {}).map(([k, v]) => [k, new Set(v)])
+        );
+        this.webhooks = new Map(
+            Object.entries(data.webhooks || {}).map(([k, v]) => [k, new Set(v)])
+        );
+        this.tagIndex = new Map(
+            Object.entries(data.tagIndex || {}).map(([k, v]) => [k, new Set(v)])
+        );
+        // Reinitialize hashRegistry and healthyNodes
+        this.hashRegistry = new Map();
+        this.healthyNodes = new Map();
+        this.healthyCache = new Map();
+        for (const serviceName of data.hashRegistry || []) {
+            this.initHashRegistry(serviceName);
+            const nodes = this.getNodes(serviceName);
+            for (const nodeName of Object.keys(nodes || {})) {
+                this.addNodeToHashRegistry(serviceName, nodeName);
+                if (nodes[nodeName].healthy !== false) {
+                    this.addToHealthyNodes(serviceName, nodeName);
+                }
+                this.addToTagIndex(nodeName, nodes[nodeName].metadata.tags);
+            }
+        }
+        this.debounceSave();
+    }
+
     setTrafficSplit = (baseServiceName, split) => {
         this.trafficSplit.set(baseServiceName, split);
         this.debounceSave();

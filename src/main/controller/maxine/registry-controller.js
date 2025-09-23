@@ -410,6 +410,27 @@ const healthHistoryController = (req, res) => {
     res.status(statusAndMsgs.STATUS_SUCCESS).json({ serviceName, nodeName, namespace, history });
 }
 
+const backupController = (req, res) => {
+    const data = serviceRegistry.backup();
+    res.setHeader('Content-Disposition', 'attachment; filename="maxine-backup.json"');
+    res.setHeader('Content-Type', 'application/json');
+    res.status(statusAndMsgs.STATUS_SUCCESS).json(data);
+}
+
+const restoreController = (req, res) => {
+    const data = req.body;
+    if (!data || typeof data !== 'object') {
+        res.status(statusAndMsgs.STATUS_GENERIC_ERROR).json({ message: "Invalid backup data" });
+        return;
+    }
+    try {
+        serviceRegistry.restore(data);
+        res.status(statusAndMsgs.STATUS_SUCCESS).json({ message: "Registry restored successfully" });
+    } catch (error) {
+        res.status(statusAndMsgs.STATUS_GENERIC_ERROR).json({ message: "Failed to restore registry", error: error.message });
+    }
+}
+
 module.exports = {
     registryController,
     serverListController,
@@ -425,5 +446,7 @@ module.exports = {
     changesController,
     bulkRegisterController,
     bulkDeregisterController,
-    setMaintenanceController
+    setMaintenanceController,
+    backupController,
+    restoreController
 };

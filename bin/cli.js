@@ -91,6 +91,38 @@ async function metrics() {
     }
 }
 
+async function backup() {
+    const { file } = args;
+    if (!file) {
+        console.error('Usage: cli backup --file <filename>');
+        process.exit(1);
+    }
+    try {
+        const res = await api.get('/api/maxine/serviceops/backup');
+        const fs = require('fs');
+        fs.writeFileSync(file, JSON.stringify(res.data, null, 2));
+        console.log('Backup saved to', file);
+    } catch (err) {
+        console.error('Error:', err.response?.data || err.message);
+    }
+}
+
+async function restore() {
+    const { file } = args;
+    if (!file) {
+        console.error('Usage: cli restore --file <filename>');
+        process.exit(1);
+    }
+    try {
+        const fs = require('fs');
+        const data = JSON.parse(fs.readFileSync(file, 'utf8'));
+        const res = await api.post('/api/maxine/serviceops/restore', data);
+        console.log('Restore successful:', res.data);
+    } catch (err) {
+        console.error('Error:', err.response?.data || err.message);
+    }
+}
+
 switch (command) {
     case 'register':
         register();
@@ -110,8 +142,14 @@ switch (command) {
     case 'metrics':
         metrics();
         break;
+    case 'backup':
+        backup();
+        break;
+    case 'restore':
+        restore();
+        break;
     default:
         console.log('Usage: cli <command> [options]');
-        console.log('Commands: register, deregister, list, health, discover, metrics');
+        console.log('Commands: register, deregister, list, health, discover, metrics, backup, restore');
         console.log('Options: --url <baseUrl>');
 }
