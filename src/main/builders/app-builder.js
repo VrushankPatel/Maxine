@@ -36,11 +36,20 @@ class ExpressAppBuilder{
     addCors = () => this.use(cors());
 
     /**
-     * Add condition property check but will enable the checker to check property only once, then condition check will be disabled.
-     * @param {string} property
-     * @param {any} value
+     * Add compression middleware
      * @returns {object: ExpressAppBuilder}
      */
+    addCompression(){
+        const compression = require('compression');
+        return this.use(compression());
+    }
+
+    /**
+     * Add condition property check but will enable the checker to check property only once, then condition check will be disabled.
+      * @param {string} property
+      * @param {any} value
+      * @returns {object: ExpressAppBuilder}
+      */
     ifPropertyOnce(property, value = true){
         this.conditionStack.push(config[property] === value);
         this.checkOnceOnly = true;

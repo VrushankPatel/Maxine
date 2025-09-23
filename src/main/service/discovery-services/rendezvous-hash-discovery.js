@@ -25,7 +25,7 @@ class RendezvousHashDiscovery{
      * @returns {object} select the node based on IP Hashing
      */
     selectNode(ip, fullServiceName) {
-        let targetNodeId, targetNodeRank = 0;
+        let targetNodeId, targetNodeRank = -1;
         const healthyNodeNames = serviceRegistry.getHealthyNodes(fullServiceName);
         for (let nodeId of healthyNodeNames) {
             let nodeRank = this.rank(nodeId, ip);

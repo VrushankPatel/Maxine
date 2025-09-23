@@ -1,7 +1,7 @@
 openapi: 3.0.1
 info:
   title: Maxine API
-  version: v1
+  version: v1.1
   description: >-
     Maxine is a service discovery and a naming server for microservices that
     solves the issue of hard-wiring urls by hostnames and ports.
@@ -311,8 +311,58 @@ paths:
              content:
                application/json:
                  example: '{"message": "Missing serviceName"}'
+          x-codegen-request-body-name: service
+     /api/maxine/serviceops/discover/dns:
+       get:
+         summary: >-
+           Get DNS SRV-like records for a service.
+         tags:
+           - "ServiceOps"
+         operationId: Maxine service discover dns
+         parameters:
+           - in: query
+             name: serviceName
+             schema:
+               type: string
+             required: true
+           - in: query
+             name: version
+             schema:
+               type: string
+             required: false
+           - in: query
+             name: namespace
+             schema:
+               type: string
+             required: false
+           - in: query
+             name: region
+             schema:
+               type: string
+             required: false
+           - in: query
+             name: zone
+             schema:
+               type: string
+             required: false
+         responses:
+           '200':
+             description: OK
+             content:
+               application/json:
+                 example: '{"srvRecords": [{"name": "db-service", "host": "192.168.0.1", "port": 8080, "priority": 0, "weight": 1}]}'
+           '400':
+             description: Bad Request
+             content:
+               application/json:
+                 example: '{"message": "Missing serviceName"}'
+           '404':
+             description: Service Not Found
+             content:
+               application/json:
+                 example: '{"message": "Service not found"}'
          x-codegen-request-body-name: service
-   /api/maxine/serviceops/servers:
+    /api/maxine/serviceops/servers:
     get:
       summary: >-
         Get all the registered servers in Maxine service registry if there are

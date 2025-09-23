@@ -14,18 +14,18 @@ const proxy = httpProxy.createProxyServer({
         keepAlive: true,
         maxSockets: 10000, // Optimized for high throughput without memory issues
         maxFreeSockets: 5000,
-        timeout: 60000,
-        keepAliveMsecs: 60000
+        timeout: 10000,
+        keepAliveMsecs: 10000
     }),
     httpsAgent: new https.Agent({
         keepAlive: true,
         maxSockets: 10000, // Optimized for high throughput without memory issues
         maxFreeSockets: 5000,
-        timeout: 60000,
-        keepAliveMsecs: 60000
+        timeout: 10000,
+        keepAliveMsecs: 10000
     }),
-    proxyTimeout: 60000, // 60 second timeout for proxy requests
-    timeout: 60000
+    proxyTimeout: 10000, // 10 second timeout for proxy requests
+    timeout: 10000
 });
 
 proxy.on('error', (err, req, res) => {

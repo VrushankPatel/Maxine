@@ -7,6 +7,7 @@ const { addWebhook, removeWebhook, getWebhooks } = require('../controller/webhoo
 const { addAlias, removeAlias, getAliases } = require('../controller/alias-controller');
 const { setKv, getKv, deleteKv, getAllKv } = require('../controller/kv-controller');
 const discoveryController = require('../controller/maxine/discovery-controller');
+const dnsController = require('../controller/maxine/dns-controller');
 const { signInController } = require('../controller/uac/signin-controller');
 const { logsLinkGenController, recentLogsController, recentLogsClearController } = require('../controller/log-control/logs-controller');
 const { configuratorController, configurationController } = require('../controller/config-control/configurator-controller');
@@ -43,8 +44,9 @@ let maxineApiRoutes = RouteBuilder.createNewRoute()
                                   .delete("deregister", authenticationController, limiter, bodyParser.json(), deregisterController)
                                   .delete("deregister/bulk", authenticationController, limiter, bodyParser.json(), bulkDeregisterController)
                                   .get("discover", authenticationController, discoveryLimiter, discoveryController)
-                                  .get("discover/info", authenticationController, discoveryLimiter, discoveryInfoController)
-                                  .get("discover/filtered", authenticationController, discoveryLimiter, filteredDiscoveryController)
+                                   .get("discover/info", authenticationController, discoveryLimiter, discoveryInfoController)
+                                   .get("discover/filtered", authenticationController, discoveryLimiter, filteredDiscoveryController)
+                                   .get("discover/dns", authenticationController, discoveryLimiter, dnsController)
                                    .get("health", authenticationController, limiter, healthController)
                                      .get("metrics", authenticationController, limiter, metricsController)
                                      .get("metrics/prometheus", authenticationController, limiter, prometheusMetricsController)
