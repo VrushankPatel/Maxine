@@ -25,7 +25,9 @@ const config = {
        healthCheckConcurrency: process.env.HEALTH_CHECK_CONCURRENCY ? parseInt(process.env.HEALTH_CHECK_CONCURRENCY) : 2000,
     proxyTimeout: process.env.PROXY_TIMEOUT ? parseInt(process.env.PROXY_TIMEOUT) : 10000,
     grpcEnabled: process.env.GRPC_ENABLED === 'true' || false,
-    grpcPort: process.env.GRPC_PORT ? parseInt(process.env.GRPC_PORT) : 50051
+    grpcPort: process.env.GRPC_PORT ? parseInt(process.env.GRPC_PORT) : 50051,
+    tracingEnabled: process.env.TRACING_ENABLED === 'true' || false,
+    http2Enabled: process.env.HTTP2_ENABLED === 'true' || false
 }
 
 Object.defineProperty(config, "profile", {

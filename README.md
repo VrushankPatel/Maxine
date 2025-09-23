@@ -97,7 +97,8 @@ As we can see, maxine SRD is working as a true reverse proxy for each servers, a
             * **Lightning-Fast Performance Mode**: High performance mode now skips response time recording and active connection tracking for maximum throughput under heavy load.
             * **gRPC Support**: Added gRPC endpoint for service discovery at port 50051 (configurable via GRPC_PORT), enabled with GRPC_ENABLED=true.
             * **Batch Discovery**: Added `/api/maxine/serviceops/discover/batch` endpoint to discover multiple services in a single request, improving performance for clients needing multiple service addresses.
-            * **Envoy Configuration Generation**: Added `/api/maxine/serviceops/envoy/config` endpoint to generate Envoy proxy configuration for all registered services, enabling seamless integration with service mesh architectures.
+             * **Envoy Configuration Generation**: Added `/api/maxine/serviceops/envoy/config` endpoint to generate Envoy proxy configuration for all registered services, enabling seamless integration with service mesh architectures.
+             * **OpenTelemetry Tracing**: Added support for distributed tracing using OpenTelemetry with Jaeger exporter for better observability in microservices architectures. Enable with `TRACING_ENABLED=true` and configure `JAEGER_ENDPOINT`.
 
 ## Setup for development
 
@@ -139,8 +140,11 @@ Maxine can be configured via environment variables:
  - `RATE_LIMIT_WINDOW_MS`: Rate limit window in milliseconds (default: 900000)
    - `HEALTH_CHECK_INTERVAL`: Health check interval in milliseconds (default: 30000)
    - `HEALTH_CHECK_CONCURRENCY`: Maximum concurrent health checks (default: 2000)
-   - `GRPC_ENABLED`: Enable gRPC discovery service (default: false)
-   - `GRPC_PORT`: gRPC server port (default: 50051)
+  - `GRPC_ENABLED`: Enable gRPC discovery service (default: false)
+  - `GRPC_PORT`: gRPC server port (default: 50051)
+  - `TRACING_ENABLED`: Enable OpenTelemetry tracing (default: false)
+  - `JAEGER_ENDPOINT`: Jaeger exporter endpoint (default: http://localhost:14268/api/traces)
+  - `HTTP2_ENABLED`: Enable HTTP/2 support (default: false)
 
 ### Run maxine on production.
 

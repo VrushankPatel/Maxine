@@ -1,4 +1,24 @@
 require('./src/main/util/logging/log-generic-exceptions')();
+const config = require('./src/main/config/config');
+
+// Initialize OpenTelemetry tracing if enabled
+if (config.tracingEnabled) {
+    const { NodeSDK } = require('@opentelemetry/sdk-node');
+    const { getNodeAutoInstrumentations } = require('@opentelemetry/auto-instrumentations-node');
+    const { JaegerExporter } = require('@opentelemetry/exporter-jaeger');
+
+    const sdk = new NodeSDK({
+        serviceName: 'maxine-service-registry',
+        traceExporter: new JaegerExporter({
+            endpoint: process.env.JAEGER_ENDPOINT || 'http://localhost:14268/api/traces',
+        }),
+        instrumentations: [getNodeAutoInstrumentations()],
+    });
+
+    sdk.start();
+    console.log('OpenTelemetry tracing enabled');
+}
+
 const cluster = require('cluster');
 const os = require('os');
 const loggingUtil = require('./src/main/util/logging/logging-util');
@@ -18,7 +38,6 @@ const rateLimit = require('express-rate-limit');
 const compression = require('compression');
 const swaggerDocument = loadSwaggerYAML();
 const { healthService } = require('./src/main/service/health-service');
-const config = require('./src/main/config/config');
 const path = require("path");
 const currDir = require('./conf');
 const grpc = require('@grpc/grpc-js');
