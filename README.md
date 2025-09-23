@@ -102,7 +102,7 @@ As we can see, maxine SRD is working as a true reverse proxy for each servers, a
                * **Backup and Restore**: Added `/api/maxine/serviceops/backup` endpoint to export the entire registry state as JSON, and `/api/maxine/serviceops/restore` to import and restore from a backup. Useful for disaster recovery and migration. CLI commands `backup` and `restore` are also available.
                * **etcd Persistence**: Added etcd support for distributed key-value storage of the registry, providing high availability and consistency. Enable with `ETCD_ENABLED=true` and configure `ETCD_HOST` and `ETCD_PORT`.
                * **Kafka Event Streaming**: Added Kafka integration for real-time event streaming of registry changes (register, deregister, health updates). Enable with `KAFKA_ENABLED=true` and configure `KAFKA_BROKERS`.
-                * **Performance Optimizations**: Reduced default health check concurrency from 2000 to 200 to prevent overload, increased discovery cache TTL to 10 minutes, cached config checks and alias resolutions for faster lookups, enabled HTTP/2 by default for improved performance over HTTP/1.1.
+                * **Performance Optimizations**: Reduced default health check concurrency from 2000 to 200 to prevent overload, increased discovery cache TTL to 10 minutes, cached config checks and alias resolutions for faster lookups, enabled HTTP/2 by default for improved performance over HTTP/1.1, optimized IP extraction caching in discovery controller, and precomputed service name building to reduce string operations.
 
 
 ## Setup for development
