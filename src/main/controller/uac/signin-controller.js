@@ -2,7 +2,6 @@ const { User, admin } = require("../../entity/user");
 const { generateAccessToken } = require("../../security/jwt");
 const { statusAndMsgs } = require("../../util/constants/constants");
 const { error } = require("../../util/logging/logging-util");
-const _ = require('lodash');
 
 const signInController = (req, res) => {
     const {userName, password} = req.body;
@@ -11,7 +10,7 @@ const signInController = (req, res) => {
         res.status(statusAndMsgs.STATUS_GENERIC_ERROR).json({"message" : statusAndMsgs.MSG_MISSING_UNAME_PWD});
         return;
     }
-    if (_.isEqual(new User(userName, password), admin)){
+    if (new User(userName, password).userName === admin.userName && new User(userName, password).password === admin.password){
         const token = generateAccessToken(req.body);
         res.json({"accessToken" : token});
         return;

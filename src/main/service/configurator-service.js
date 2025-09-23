@@ -1,10 +1,9 @@
 const { constants } = require("../util/constants/constants");
-const _ = require('lodash');
 const config = require("../config/config");
 
 class ConfiguratorService{
     updateLoggingType(logAsync) {
-        if(!_.isBoolean(logAsync)) return constants.CODE_TYPE_ERROR;
+        if(typeof logAsync !== 'boolean') return constants.CODE_TYPE_ERROR;
         config.logAsync = logAsync;
         return constants.CODE_SUCCESS;
     }
@@ -17,21 +16,21 @@ class ConfiguratorService{
     }
 
     updateLogJsonPrettify(logJsonPrettify) {
-        if(!_.isBoolean(logJsonPrettify)) return constants.CODE_TYPE_ERROR;
+        if(typeof logJsonPrettify !== 'boolean') return constants.CODE_TYPE_ERROR;
         config.logJsonPrettify = logJsonPrettify;
         return constants.CODE_SUCCESS;
     }
 
     updateServerSelectionStrategy(serverSelectionStrategy){
         const serverSelStrat = constants.SSS[serverSelectionStrategy];
-        if(_.isUndefined(serverSelStrat)) return constants.CODE_INVALID_DATA;
+        if(serverSelStrat === undefined) return constants.CODE_INVALID_DATA;
         config.serverSelectionStrategy = serverSelStrat;
         return constants.CODE_SUCCESS;
     }
 
     updateLogFormat(logFormat){
         const loggingFormat = constants.LOG_FORMATS[logFormat]
-        if(_.isUndefined(loggingFormat)) return constants.CODE_INVALID_DATA;
+        if(loggingFormat === undefined) return constants.CODE_INVALID_DATA;
         config.logFormat = loggingFormat;
         return constants.CODE_SUCCESS;
     }

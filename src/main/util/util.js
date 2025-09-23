@@ -2,7 +2,6 @@ const date = require('date-and-time');
 const JsonBuilder = require('../builders/json-builder');
 const config = require('../config/config');
 const { constants } = require('./constants/constants');
-const _ = require('lodash');
 const YAML = require('yamljs');
 
 const getCurrentDate = () => date.format(new Date(), constants.REQUEST_LOG_TIMESTAMP_FORMAT);
@@ -51,7 +50,7 @@ function plainLogBuilder(logLevel, logType, statusAndMsgs, req, msg = ""){
                 .concat(` [ ${req.originalUrl} ] |`)
                 .concat(` HTTP/${req.httpVersion} |`);
     }
-    if(!_.isEmpty(msg)) log = log.concat(` | ${JSON.stringify(msg)} |`);
+    if(msg) log = log.concat(` | ${JSON.stringify(msg)} |`);
     log = log.concat(` [ ${new Date().toUTCString()} ] `);
     return log;
 }

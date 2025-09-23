@@ -5,7 +5,6 @@ const { serviceRegistry } = require('../../entity/service-registry');
 const { metricsService } = require('../../service/metrics-service');
 const { discoveryService } = require('../../service/discovery-service');
 const axios = require('axios');
-const _ = require('lodash');
 const httpProxy = require('http-proxy');
 const http = require('http');
 const https = require('https');
@@ -200,8 +199,8 @@ const filteredDiscoveryController = (req, res) => {
     let filteredNodes = healthyNodeNames;
     if (tags && tags.length > 0) {
         const taggedSets = tags.map(tag => serviceRegistry.tagIndex.get(tag) || new Set());
-        const taggedNodes = _.intersection(...taggedSets.map(s => Array.from(s)));
-        filteredNodes = healthyNodeNames.filter(nodeName => taggedNodes.includes(nodeName));
+        const taggedNodes = taggedSets.reduce((acc, set) => new Set([...acc].filter(x => set.has(x))), taggedSets[0] || new Set());
+        filteredNodes = healthyNodeNames.filter(nodeName => taggedNodes.has(nodeName));
     }
 
     if (filteredNodes.length === 0) {
@@ -324,7 +323,7 @@ const discoveryInfoController = (req, res) => {
 
     const serviceNode = discoveryService.getNode(serviceName, ip, version, namespace);
 
-    if(_.isEmpty(serviceNode)){
+    if(!serviceNode){
         const latency = Date.now() - startTime;
         metricsService.recordRequest(serviceName, false, latency);
         metricsService.recordError('service_unavailable');

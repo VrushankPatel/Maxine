@@ -1,7 +1,6 @@
 const Service = require("../entity/service-body");
 const { serviceRegistry: sRegistry } = require("../entity/service-registry");
 const { discoveryService } = require("../service/discovery-service");
-const _ = require('lodash');
 const fs = require('fs');
 const path = require('path');
 class RegistryService{
@@ -108,7 +107,7 @@ class RegistryService{
 
     registryService = (serviceObj) => {
         let service = Service.buildByObj(serviceObj);
-        if(!service || _.isNull(service)) return;
+        if(!service) return;
         this.registerService(service);
         service.registeredAt = new Date().toLocaleString();
         return service;

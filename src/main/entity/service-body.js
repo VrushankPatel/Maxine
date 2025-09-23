@@ -1,7 +1,6 @@
 const config = require("../config/config");
 const { statusAndMsgs, constants } = require("../util/constants/constants");
 const { error } = require("../util/logging/logging-util");
-const _ = require('lodash');
 
 class Service{
     hostName;
@@ -31,7 +30,7 @@ class Service{
         service.metadata = metadata || {};
         service.aliases = aliases || [];
         hostName = hostName || "";
-        port = _.isUndefined(port) || _.isString(port) && _.isEmpty(port) ? "" : `:${port}`;
+        port = port === undefined || (typeof port === 'string' && !port) ? "" : `:${port}`;
         path = path || "";
         path = path[0] === "/" ? path : "/" + path;
         path = path[path.length-1] == "/" ? path.slice(0, path.length - 1) : path;
@@ -42,7 +41,7 @@ class Service{
     }
 
     validate(){
-        const areNotStrings = !(_.isString(this.hostName) && _.isString(this.nodeName) && _.isString(this.serviceName));
+        const areNotStrings = !(typeof this.hostName === 'string' && typeof this.nodeName === 'string' && typeof this.serviceName === 'string');
         const isInvalidWeight = this.weight > constants.MAX_SERVER_WEIGHT;
         const areInvalidStrings = !this.serviceName || !this.hostName || !this.nodeName;
         if(areNotStrings || isInvalidWeight || areInvalidStrings){
