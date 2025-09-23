@@ -16,7 +16,7 @@ class LeastResponseTimeDiscovery {
     }
 
     /**
-      * Retrieve the node with the lowest average response time
+      * Retrieve the node with the best health score (includes response time and failure rate)
       * @param {string} serviceName
       * @param {string} group
       * @param {array} tags
@@ -34,18 +34,18 @@ class LeastResponseTimeDiscovery {
         }
 
         let selectedNode = null;
-        let minResponseTime = Infinity;
+        let maxHealthScore = -Infinity;
 
         for (const node of healthyNodes) {
-            const avgResponseTime = serviceRegistry.getAverageResponseTime(fullServiceName, node.nodeName);
-            if (avgResponseTime < minResponseTime) {
-                minResponseTime = avgResponseTime;
+            const healthScore = serviceRegistry.getHealthScore(fullServiceName, node.nodeName);
+            if (healthScore > maxHealthScore) {
+                maxHealthScore = healthScore;
                 selectedNode = node;
             }
         }
 
-        // If no response times recorded, fall back to round-robin
-        if (!selectedNode || minResponseTime === Infinity) {
+        // If no health scores, fall back to round-robin
+        if (!selectedNode || maxHealthScore === -Infinity) {
             const offset = this.getOffsetAndIncrement(fullServiceName);
             selectedNode = healthyNodes[offset % healthyNodes.length];
         }
