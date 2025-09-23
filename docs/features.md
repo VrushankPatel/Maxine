@@ -74,7 +74,8 @@
       - Least Loaded: Routes requests to the service node with the least active connections.
       - Random: Randomly selects a healthy node for each request.
       - Power of Two Choices: Selects two random healthy nodes and chooses the one with fewer active connections.
-      - Adaptive: Combines response time and connection metrics to select the optimal node for each request.
+       - Adaptive: Combines response time and connection metrics to select the optimal node for each request.
+       - Sticky Round Robin: Routes the same client IP to the same node for session affinity, falling back to round robin for new clients.
 ### HeartBeat
 - As we know that in order to let the service registry know that the service is alive, service has to send the heartbeat to the registry and after certain period of time (timeout), that service will be removed from the registry automatically so becore that service gets deregistered from registry, the service has to send the heartbeat again, That's why we call it a heart beat because it literally keeps beating in a period of time, Let's understand what is this heartbeat.
 - Heartbeat in maxine is a special kind of request that contains all the meta data about the service.
