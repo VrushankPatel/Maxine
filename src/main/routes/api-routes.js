@@ -1,7 +1,7 @@
 const RouteBuilder = require('../builders/route-builder');
 const bodyParser = require('body-parser');
 const rateLimit = require('express-rate-limit');
-const { serverListController, registryController, deregisterController, healthController, bulkHealthController, healthHistoryController, metricsController, prometheusMetricsController, cacheStatsController, filteredDiscoveryController, discoveryInfoController, changesController, bulkRegisterController, bulkDeregisterController, setMaintenanceController, backupController, restoreController, dependencyGraphController, impactAnalysisController } = require('../controller/maxine/registry-controller');
+const { serverListController, registryController, deregisterController, healthController, bulkHealthController, pushHealthController, healthHistoryController, metricsController, prometheusMetricsController, cacheStatsController, filteredDiscoveryController, discoveryInfoController, changesController, bulkRegisterController, bulkDeregisterController, setMaintenanceController, backupController, restoreController, dependencyGraphController, impactAnalysisController } = require('../controller/maxine/registry-controller');
 const batchDiscoveryController = require('../controller/maxine/batch-discovery-controller');
 const envoyConfigController = require('../controller/maxine/envoy-controller');
 const { setConfig, getConfig, getAllConfig, deleteConfig } = require('../controller/config-control/config-controller');
@@ -56,6 +56,7 @@ let maxineApiRoutes = RouteBuilder.createNewRoute()
                                     .get("discover/dns", authenticationController, discoveryLimiter, dnsController)
                                     .get("health", authenticationController, limiter, healthController)
                                     .post("health/bulk", authenticationController, limiter, bodyParser.json(), bulkHealthController)
+                                    .post("health/push", authenticationController, limiter, bodyParser.json(), pushHealthController)
                                     .get("health/history", authenticationController, limiter, healthHistoryController)
                                      .get("metrics", authenticationController, limiter, metricsController)
                                      .get("metrics/prometheus", authenticationController, limiter, prometheusMetricsController)

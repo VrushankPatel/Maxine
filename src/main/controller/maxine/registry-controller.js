@@ -449,12 +449,48 @@ const impactAnalysisController = (req, res) => {
     res.status(statusAndMsgs.STATUS_SUCCESS).json({ serviceName, impactedServices: impacted });
 }
 
+const pushHealthController = (req, res) => {
+    const { serviceName, nodeName, status, namespace } = req.body;
+    if (!serviceName || !nodeName || !status) {
+        res.status(statusAndMsgs.STATUS_GENERIC_ERROR).json({ message: "Missing serviceName, nodeName, or status" });
+        return;
+    }
+    if (!['healthy', 'unhealthy'].includes(status)) {
+        res.status(statusAndMsgs.STATUS_GENERIC_ERROR).json({ message: "Status must be 'healthy' or 'unhealthy'" });
+        return;
+    }
+    const fullServiceName = namespace ? `${namespace}:${serviceName}` : serviceName;
+    const service = serviceRegistry.registry.get(fullServiceName);
+    if (!service || !service.nodes[nodeName]) {
+        res.status(statusAndMsgs.SERVICE_UNAVAILABLE).json({ message: "Service or node not found" });
+        return;
+    }
+    const nodeObj = service.nodes[nodeName];
+    if (status === 'healthy') {
+        nodeObj.healthy = true;
+        nodeObj.failureCount = 0;
+        nodeObj.lastFailureTime = null;
+        serviceRegistry.addToHealthyNodes(fullServiceName, nodeName);
+        serviceRegistry.addHealthHistory(fullServiceName, nodeName, true);
+    } else {
+        nodeObj.healthy = false;
+        nodeObj.failureCount = (nodeObj.failureCount || 0) + 1;
+        nodeObj.lastFailureTime = Date.now();
+        serviceRegistry.removeFromHealthyNodes(fullServiceName, nodeName);
+        serviceRegistry.addHealthHistory(fullServiceName, nodeName, false);
+    }
+    serviceRegistry.debounceSave();
+    discoveryService.invalidateServiceCache(fullServiceName);
+    res.status(statusAndMsgs.STATUS_SUCCESS).json({ message: "Health status updated" });
+}
+
 module.exports = {
     registryController,
     serverListController,
     deregisterController,
     healthController,
     bulkHealthController,
+    pushHealthController,
     healthHistoryController,
     metricsController,
     prometheusMetricsController,
