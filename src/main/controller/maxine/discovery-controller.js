@@ -76,6 +76,7 @@ const discoveryController = (req, res) => {
 
     // Handle traffic splitting if no version specified
     let selectedVersion = version;
+    let fullServiceName = baseServiceName;
     if (!selectedVersion) {
         const split = serviceRegistry.getTrafficSplit(baseServiceName);
         if (split) {
@@ -86,14 +87,14 @@ const discoveryController = (req, res) => {
                 rand -= split[v];
                 if (rand <= 0) {
                     selectedVersion = v;
+                    fullServiceName = `${baseServiceName}:${v}`;
                     break;
                 }
             }
         }
+    } else {
+        fullServiceName = `${baseServiceName}:${selectedVersion}`;
     }
-
-    // Build full service name
-    const fullServiceName = selectedVersion ? `${baseServiceName}:${selectedVersion}` : baseServiceName;
 
     const serviceNode = discoveryService.getNode(fullServiceName, ip);
 
