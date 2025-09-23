@@ -1,6 +1,7 @@
 const Service = require("../entity/service-body");
 const { serviceRegistry: sRegistry } = require("../entity/service-registry");
 const { discoveryService } = require("../service/discovery-service");
+const { healthService } = require("../service/health-service");
 const config = require("../config/config");
 const fs = require('fs');
 const path = require('path');
@@ -63,7 +64,6 @@ class RegistryService{
 
             const timeResetter = setTimeout(() => {
                 // Check self-preservation mode
-                const { healthService } = require("../service/health-service");
                 if (healthService.selfPreservationMode) {
                     // In self-preservation mode, renew the timeout instead of deregistering
                     setTimeout(() => {
