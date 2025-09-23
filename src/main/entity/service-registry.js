@@ -618,7 +618,7 @@ class ServiceRegistry{
             } else {
                 this.saveToFile();
             }
-        }, 500); // debounce for 500ms
+        }, 2000); // debounce for 2s
     }
 
     loadFromRedis = async () => {

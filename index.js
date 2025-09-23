@@ -96,7 +96,7 @@ if (config.clusteringEnabled && cluster.isMaster) {
                        .getApp();
 
     // WebSocket server for real-time changes
-    const wss = new WebSocket.Server({ server: app.listen(8080) }); // Assuming port 8080
+    const wss = new WebSocket.Server({ port: 8081 }); // Use different port
 
     wss.on('connection', (ws) => {
         console.log('WebSocket client connected');
