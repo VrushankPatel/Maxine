@@ -8,20 +8,18 @@ class LeastConnectionsDiscovery{
      * @returns {object}
      */
     getNode = (fullServiceName) => {
-        const healthyNodeNames = serviceRegistry.getHealthyNodes(fullServiceName);
-        if (healthyNodeNames.length === 0) return null;
+        const healthyNodes = serviceRegistry.getHealthyNodes(fullServiceName);
+        if (healthyNodes.length === 0) return null;
         let minConnections = Infinity;
-        let selectedNodeName = null;
-        for (const nodeName of healthyNodeNames) {
-            const connections = serviceRegistry.getActiveConnections(fullServiceName, nodeName);
+        let selectedNode = null;
+        for (const node of healthyNodes) {
+            const connections = serviceRegistry.getActiveConnections(fullServiceName, node.nodeName);
             if (connections < minConnections) {
                 minConnections = connections;
-                selectedNodeName = nodeName;
+                selectedNode = node;
             }
         }
-        if (!selectedNodeName) return null;
-        const nodes = serviceRegistry.getNodes(fullServiceName);
-        return nodes[selectedNodeName] || null;
+        return selectedNode;
     }
 
     invalidateCache = (fullServiceName) => {

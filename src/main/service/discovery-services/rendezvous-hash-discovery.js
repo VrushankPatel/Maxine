@@ -12,10 +12,8 @@ class RendezvousHashDiscovery{
       * @returns {object} returns the node by calling select method
       */
     getNode = (fullServiceName, ip) => {
-        const targetNodeId = this.selectNode(ip, fullServiceName);
-        if (!targetNodeId) return null;
-        const nodes = serviceRegistry.getNodes(fullServiceName);
-        return nodes[targetNodeId];
+        const targetNode = this.selectNode(ip, fullServiceName);
+        return targetNode;
     }
 
     /**
@@ -27,16 +25,16 @@ class RendezvousHashDiscovery{
      * @returns {object} select the node based on IP Hashing
      */
     selectNode(ip, fullServiceName) {
-        let targetNodeId, targetNodeRank = -1;
-        const healthyNodeNames = serviceRegistry.getHealthyNodes(fullServiceName);
-        for (let nodeId of healthyNodeNames) {
-            let nodeRank = this.rank(nodeId, ip);
+        let targetNode, targetNodeRank = -1;
+        const healthyNodes = serviceRegistry.getHealthyNodes(fullServiceName);
+        for (let node of healthyNodes) {
+            let nodeRank = this.rank(node.nodeName, ip);
             if (nodeRank > targetNodeRank) {
-                targetNodeId = nodeId;
+                targetNode = node;
                 targetNodeRank = nodeRank;
             }
         }
-        return targetNodeId || null;
+        return targetNode || null;
     }
 
     /**

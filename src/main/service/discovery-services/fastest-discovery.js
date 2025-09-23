@@ -13,37 +13,35 @@ class FastestDiscovery {
      * @returns {object}
      */
     getNode = (fullServiceName) => {
-        const healthyNodeNames = serviceRegistry.getHealthyNodes(fullServiceName);
-        if (healthyNodeNames.length === 0) return null;
+        const healthyNodes = serviceRegistry.getHealthyNodes(fullServiceName);
+        if (healthyNodes.length === 0) return null;
 
         // Check cache
         const cached = this.fastestCache.get(fullServiceName);
         if (cached && (Date.now() - cached.timestamp) < this.cacheTTL) {
-            const nodes = serviceRegistry.getNodes(fullServiceName);
-            return nodes[cached.nodeName] || null;
+            return cached.node;
         }
 
-        let selectedNodeName = null;
+        let selectedNode = null;
         let minResponseTime = Infinity;
 
-        for (const nodeName of healthyNodeNames) {
-            const avgResponseTime = serviceRegistry.getAverageResponseTime(fullServiceName, nodeName);
+        for (const node of healthyNodes) {
+            const avgResponseTime = serviceRegistry.getAverageResponseTime(fullServiceName, node.nodeName);
             if (avgResponseTime < minResponseTime) {
                 minResponseTime = avgResponseTime;
-                selectedNodeName = nodeName;
+                selectedNode = node;
             }
         }
 
         // If no response times, pick first
-        if (!selectedNodeName || minResponseTime === Infinity) {
-            selectedNodeName = healthyNodeNames[0];
+        if (!selectedNode || minResponseTime === Infinity) {
+            selectedNode = healthyNodes[0];
         }
 
         // Cache the result
-        this.fastestCache.set(fullServiceName, { nodeName: selectedNodeName, timestamp: Date.now() });
+        this.fastestCache.set(fullServiceName, { node: selectedNode, timestamp: Date.now() });
 
-        const nodes = serviceRegistry.getNodes(fullServiceName);
-        return nodes[selectedNodeName] || null;
+        return selectedNode;
     }
 
     invalidateCache = (fullServiceName) => {

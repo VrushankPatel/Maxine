@@ -8,32 +8,27 @@ class AdaptiveDiscovery {
      * @returns {object}
      */
     getNode(fullServiceName) {
-        const healthyNodeNames = serviceRegistry.getHealthyNodes(fullServiceName);
-        if (healthyNodeNames.length === 0) return null;
+        const healthyNodes = serviceRegistry.getHealthyNodes(fullServiceName);
+        if (healthyNodes.length === 0) return null;
 
-        const nodes = serviceRegistry.getNodes(fullServiceName);
-        let bestNodeName = null;
+        let bestNode = null;
         let bestScore = Infinity;
 
-        for (const nodeName of healthyNodeNames) {
-            const node = nodes[nodeName];
-            if (!node) continue;
-
-            const avgResponseTime = serviceRegistry.getAverageResponseTime(fullServiceName, nodeName) || 100; // default 100ms
-            const activeConnections = serviceRegistry.getActiveConnections(fullServiceName, nodeName);
-            const weight = parseInt(node.weight) || 1;
+        for (const node of healthyNodes) {
+            const avgResponseTime = serviceRegistry.getAverageResponseTime(fullServiceName, node.nodeName) || 100; // default 100ms
+            const activeConnections = serviceRegistry.getActiveConnections(fullServiceName, node.nodeName);
+            const weight = parseInt(node.metadata?.weight) || 1;
 
             // Score: lower is better. Combines response time and connections, adjusted by weight
             const score = (avgResponseTime / weight) + (activeConnections * 10);
 
             if (score < bestScore) {
                 bestScore = score;
-                bestNodeName = nodeName;
+                bestNode = node;
             }
         }
 
-        if (!bestNodeName) return null;
-        return nodes[bestNodeName] || null;
+        return bestNode;
     }
 
     invalidateCache = (fullServiceName) => {

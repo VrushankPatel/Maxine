@@ -25,19 +25,15 @@ class WeightedRoundRobinDiscovery {
         if (!expanded || expanded.length === 0) return null;
 
         const offset = this.getOffsetAndIncrement(fullServiceName);
-        const nodeName = expanded[offset % expanded.length];
-        const nodes = serviceRegistry.getNodes(fullServiceName);
-        return nodes[nodeName] || null;
+        return expanded[offset % expanded.length];
     }
 
     buildExpandedList = (fullServiceName, healthy) => {
-        const nodes = serviceRegistry.getNodes(fullServiceName);
         const expanded = [];
-        for (const nodeName of healthy) {
-            const node = nodes[nodeName];
-            const weight = parseInt(node?.weight) || 1;
+        for (const node of healthy) {
+            const weight = parseInt(node.metadata?.weight) || 1;
             for (let i = 0; i < weight; i++) {
-                expanded.push(nodeName);
+                expanded.push(node);
             }
         }
         this.expandedLists.set(fullServiceName, expanded);
