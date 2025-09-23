@@ -1,9 +1,10 @@
-const { info, audit } = require('../../util/logging/logging-util');
+const { info, audit, consoleError } = require('../../util/logging/logging-util');
 const { statusAndMsgs } = require('../../util/constants/constants');
 const { registryService } = require('../../service/registry-service');
 const { serviceRegistry } = require('../../entity/service-registry');
 const { metricsService } = require('../../service/metrics-service');
 const { discoveryService } = require('../../service/discovery-service');
+const { buildFullServiceName } = require("../../util/util");
 const config = require('../../config/config');
 
 const statsController = (req, res) => {
@@ -27,13 +28,144 @@ const statsController = (req, res) => {
         }
         stats.healthyNodes += healthy;
         stats.unhealthyNodes += unhealthy;
+        const uptime = serviceRegistry.getServiceUptime(serviceName);
         stats.services[serviceName] = {
             totalNodes: nodeCount,
             healthyNodes: healthy,
-            unhealthyNodes: unhealthy
+            unhealthyNodes: unhealthy,
+            uptime: uptime
         };
     }
     res.json(stats);
+};
+
+const slaController = (req, res) => {
+    const serviceName = req.query.serviceName;
+    const nodeName = req.query.nodeName;
+    const services = serviceRegistry.getRegServers();
+    const slaData = {};
+
+    if (serviceName && nodeName) {
+        // Specific node SLA
+        const history = serviceRegistry.getHealthHistory(serviceName, nodeName);
+        const totalChecks = history.length;
+        const healthyChecks = history.filter(h => h.status).length;
+        const uptime = totalChecks > 0 ? (healthyChecks / totalChecks) * 100 : 0;
+        const avgResponseTime = serviceRegistry.getAverageResponseTime(serviceName, nodeName);
+        slaData[serviceName] = {
+            [nodeName]: {
+                uptime: uptime.toFixed(2) + '%',
+                averageResponseTime: avgResponseTime.toFixed(2) + 'ms',
+                totalChecks,
+                healthyChecks
+            }
+        };
+    } else if (serviceName) {
+        // Service SLA
+        const service = services[serviceName];
+        if (service) {
+            slaData[serviceName] = {};
+            for (const [nName, node] of Object.entries(service.nodes)) {
+                const history = serviceRegistry.getHealthHistory(serviceName, nName);
+                const totalChecks = history.length;
+                const healthyChecks = history.filter(h => h.status).length;
+                const uptime = totalChecks > 0 ? (healthyChecks / totalChecks) * 100 : 0;
+                const avgResponseTime = serviceRegistry.getAverageResponseTime(serviceName, nName);
+                slaData[serviceName][nName] = {
+                    uptime: uptime.toFixed(2) + '%',
+                    averageResponseTime: avgResponseTime.toFixed(2) + 'ms',
+                    totalChecks,
+                    healthyChecks
+                };
+            }
+        }
+    } else {
+        // All services SLA
+        for (const [sName, service] of Object.entries(services)) {
+            slaData[sName] = {};
+            for (const [nName, node] of Object.entries(service.nodes)) {
+                const history = serviceRegistry.getHealthHistory(sName, nName);
+                const totalChecks = history.length;
+                const healthyChecks = history.filter(h => h.status).length;
+                const uptime = totalChecks > 0 ? (healthyChecks / totalChecks) * 100 : 0;
+                const avgResponseTime = serviceRegistry.getAverageResponseTime(sName, nName);
+                slaData[sName][nName] = {
+                    uptime: uptime.toFixed(2) + '%',
+                    averageResponseTime: avgResponseTime.toFixed(2) + 'ms',
+                    totalChecks,
+                    healthyChecks
+                };
+            }
+        }
+    }
+    res.json(slaData);
+};
+
+const healthScoreController = (req, res) => {
+    const serviceName = req.query.serviceName;
+    const nodeName = req.query.nodeName;
+    const services = serviceRegistry.getRegServers();
+    const healthScores = {};
+
+    if (serviceName && nodeName) {
+        // Specific node health score
+        const score = serviceRegistry.getHealthScore(serviceName, nodeName);
+        healthScores[serviceName] = {
+            [nodeName]: score
+        };
+    } else if (serviceName) {
+        // Service health scores
+        const service = services[serviceName];
+        if (service) {
+            healthScores[serviceName] = {};
+            for (const nName of Object.keys(service.nodes)) {
+                healthScores[serviceName][nName] = serviceRegistry.getHealthScore(serviceName, nName);
+            }
+        }
+    } else {
+        // All services health scores
+        for (const [sName, service] of Object.entries(services)) {
+            healthScores[sName] = {};
+            for (const nName of Object.keys(service.nodes)) {
+                healthScores[sName][nName] = serviceRegistry.getHealthScore(sName, nName);
+            }
+        }
+    }
+    res.json(healthScores);
+};
+
+const autoscalingController = (req, res) => {
+    const { serviceName, action, reason } = req.body;
+    // Trigger auto-scaling action, e.g., call webhook or internal logic
+    const webhooks = serviceRegistry.getWebhooks(serviceName);
+    webhooks.forEach(url => {
+        const axios = require('axios');
+        axios.post(url, { serviceName, action, reason, timestamp: new Date().toISOString() }).catch(err => {
+            consoleError('Autoscaling webhook failed:', err.message);
+        });
+    });
+    res.json({ message: 'Autoscaling triggered', serviceName, action });
+};
+
+const chaosController = (req, res) => {
+    const { serviceName, nodeName, action } = req.body;
+    // Simulate chaos: mark unhealthy, delay, etc.
+    if (action === 'fail') {
+        const service = serviceRegistry.registry.get(serviceName);
+        if (service && service.nodes[nodeName]) {
+            service.nodes[nodeName].healthy = false;
+            serviceRegistry.removeFromHealthyNodes(serviceName, nodeName);
+            serviceRegistry.addChange('unhealthy', serviceName, nodeName, { simulated: true });
+        }
+    } else if (action === 'recover') {
+        const service = serviceRegistry.registry.get(serviceName);
+        if (service && service.nodes[nodeName]) {
+            service.nodes[nodeName].healthy = true;
+            serviceRegistry.addToHealthyNodes(serviceName, nodeName);
+            serviceRegistry.addChange('healthy', serviceName, nodeName, { simulated: true });
+        }
+    }
+    res.json({ message: 'Chaos action applied', serviceName, nodeName, action });
 };
 
 const httpProxy = require('http-proxy');
@@ -60,17 +192,29 @@ const proxy = httpProxy.createProxyServer({
 });
 
 proxy.on('error', (err, req, res) => {
-    console.error('Proxy error:', err);
+    consoleError('Proxy error:', err);
     if (!res.headersSent) {
         res.status(502).json({ message: 'Bad Gateway' });
     }
 });
 
 const registryController = (req, res) => {
-    const serviceResponse = registryService.registryService(req.body);
+    const { serviceName, namespace = "default", leaseTime } = req.body;
+    const fullServiceName = `${namespace}:${serviceName}`;
+    const existingNodes = serviceRegistry.getNodes(fullServiceName);
+    const nodeCount = existingNodes ? Object.keys(existingNodes).length : 0;
+    if (nodeCount >= config.maxInstancesPerService) {
+        res.status(statusAndMsgs.STATUS_GENERIC_ERROR).json({"message" : `Maximum instances per service (${config.maxInstancesPerService}) exceeded`});
+        return;
+    }
+    const serviceResponse = registryService.registerService(req.body);
     if(!serviceResponse){
         res.status(statusAndMsgs.STATUS_GENERIC_ERROR).json({"message" : statusAndMsgs.MSG_INVALID_SERVICE_DATA});
         return;
+    }
+    // Set lease if provided
+    if (leaseTime) {
+        serviceRegistry.setLease(fullServiceName, serviceResponse.nodeName, leaseTime);
     }
     audit(`REGISTER: service ${serviceResponse.serviceName} node ${serviceResponse.nodeName} at ${serviceResponse.address}`);
     res.status(statusAndMsgs.STATUS_SUCCESS).json(serviceResponse);
@@ -80,6 +224,67 @@ const registryController = (req, res) => {
 const serverListController = (_req, res) => {
     res.type('application/json');
     res.send(JSON.stringify(serviceRegistry.getRegServers()));
+}
+
+const renewLeaseController = (req, res) => {
+    const { serviceName, nodeName, namespace = "default" } = req.body;
+    if (!serviceName || !nodeName) {
+        res.status(statusAndMsgs.STATUS_GENERIC_ERROR).json({ message: "Missing serviceName or nodeName" });
+        return;
+    }
+    const fullServiceName = `${namespace}:${serviceName}`;
+    serviceRegistry.renewLease(fullServiceName, nodeName);
+    res.status(statusAndMsgs.STATUS_SUCCESS).json({ message: "Lease renewed" });
+}
+
+const heartbeatController = (req, res) => {
+    const { serviceName, nodeName, namespace = "default", version } = req.body;
+    if (!serviceName || !nodeName) {
+        res.status(statusAndMsgs.STATUS_GENERIC_ERROR).json({ message: "Missing serviceName or nodeName" });
+        return;
+    }
+    const datacenter = req.body.datacenter || "default";
+    const fullServiceName = buildFullServiceName(serviceName, namespace, datacenter, version);
+    const service = serviceRegistry.registry.get(fullServiceName);
+    if (!service) {
+        res.status(statusAndMsgs.SERVICE_UNAVAILABLE).json({ message: "Service not found" });
+        return;
+    }
+    // Find all nodes with this nodeName or parentNode
+    let nodesToRenew;
+    if (config.lightningMode) {
+        nodesToRenew = Array.from(service.nodes.values()).filter(n => n.nodeName === nodeName || n.parentNode === nodeName).map(n => n.nodeName);
+    } else {
+        nodesToRenew = Object.keys(service.nodes).filter(n => service.nodes[n].nodeName === nodeName || service.nodes[n].parentNode === nodeName);
+    }
+    if (nodesToRenew.length === 0) {
+        res.status(statusAndMsgs.SERVICE_UNAVAILABLE).json({ message: "Node not found" });
+        return;
+    }
+    for (const n of nodesToRenew) {
+        if (config.lightningMode) {
+            // Lightning mode: just update timestamp
+            serviceRegistry.lastHeartbeats.set(n, Date.now());
+            serviceRegistry.nodeToService.set(n, fullServiceName);
+        } else {
+            const timeResetter = serviceRegistry.timeResetters.get(n);
+            if (timeResetter) {
+                clearTimeout(timeResetter);
+            }
+            let node;
+            node = service.nodes[n];
+            const newTimeout = setTimeout(() => {
+                // Deregister after timeout
+                delete service.nodes[n];
+                if (Object.keys(service.nodes).length === 0) {
+                    serviceRegistry.registry.delete(fullServiceName);
+                }
+                serviceRegistry.removeNodeFromRegistry(fullServiceName, n);
+            }, (node.timeOut || config.heartBeatTimeout) * 1000);
+            serviceRegistry.timeResetters.set(n, newTimeout);
+        }
+    }
+    res.status(statusAndMsgs.STATUS_SUCCESS).json({ message: "Heartbeat received" });
 }
 
 const deregisterController = (req, res) => {
@@ -110,7 +315,7 @@ const healthController = async (req, res) => {
         res.status(statusAndMsgs.SERVICE_UNAVAILABLE).json({ message: "Service not found" });
         return;
     }
-    const limit = pLimit(50);
+    const limit = pLimit(config.healthCheckConcurrency);
     const healthPromises = Object.entries(nodes).map(([nodeName, node]) => limit(async () => {
         try {
             const healthUrl = node.address + (node.metadata.healthEndpoint || '/health');
@@ -180,7 +385,7 @@ const bulkHealthController = async (req, res) => {
             results[serviceName] = { error: "Service not found" };
             continue;
         }
-        const limit = pLimit(50);
+    const limit = pLimit(config.healthCheckConcurrency);
         const healthPromises = Object.entries(nodes).map(([nodeName, node]) => limit(async () => {
             try {
                 const healthUrl = node.address + (node.metadata.healthEndpoint || '/health');
@@ -312,7 +517,7 @@ const filteredDiscoveryController = (req, res) => {
     try {
         proxy.web(req, res, { target: addressToRedirect, changeOrigin: true });
     } catch (err) {
-        console.error('Proxy setup error:', err);
+        consoleError('Proxy setup error:', err);
         const latency = Date.now() - startTime;
         metricsService.recordRequest(serviceName, false, latency);
         metricsService.recordError('proxy_error');
@@ -336,33 +541,15 @@ const metricsController = (req, res) => {
     res.status(statusAndMsgs.STATUS_SUCCESS).json(metricsService.getMetrics());
 }
 
-const prometheusMetricsController = (req, res) => {
-    const metrics = metricsService.getMetrics();
-    let prometheusOutput = '';
-
-    // Request counts
-    for (const [service, count] of Object.entries(metrics.requestCounts || {})) {
-        prometheusOutput += `# HELP maxine_requests_total Total number of requests for service\n`;
-        prometheusOutput += `# TYPE maxine_requests_total counter\n`;
-        prometheusOutput += `maxine_requests_total{service="${service}"} ${count}\n`;
+const prometheusMetricsController = async (req, res) => {
+    try {
+        const prometheusOutput = await metricsService.getPrometheusMetrics();
+        res.set('Content-Type', 'text/plain; charset=utf-8');
+        res.send(prometheusOutput);
+    } catch (err) {
+        consoleError('Error getting Prometheus metrics:', err);
+        res.status(500).json({ error: 'Failed to get metrics' });
     }
-
-    // Error counts
-    for (const [error, count] of Object.entries(metrics.errorCounts || {})) {
-        prometheusOutput += `# HELP maxine_errors_total Total number of errors\n`;
-        prometheusOutput += `# TYPE maxine_errors_total counter\n`;
-        prometheusOutput += `maxine_errors_total{error="${error}"} ${count}\n`;
-    }
-
-    // Latencies
-    for (const [service, latency] of Object.entries(metrics.averageLatencies || {})) {
-        prometheusOutput += `# HELP maxine_request_duration_seconds Average request duration in seconds\n`;
-        prometheusOutput += `# TYPE maxine_request_duration_seconds gauge\n`;
-        prometheusOutput += `maxine_request_duration_seconds{service="${service}"} ${latency / 1000}\n`;
-    }
-
-    res.set('Content-Type', 'text/plain; charset=utf-8');
-    res.send(prometheusOutput);
 }
 
 const cacheStatsController = (req, res) => {
@@ -541,15 +728,38 @@ const setApiSpecController = (req, res) => {
         res.status(statusAndMsgs.STATUS_GENERIC_ERROR).json({ message: "Missing serviceName or nodeName" });
         return;
     }
+    // Basic validation: check if apiSpec is valid JSON
+    let parsedSpec;
+    try {
+        parsedSpec = JSON.parse(apiSpec);
+    } catch (err) {
+        res.status(statusAndMsgs.STATUS_GENERIC_ERROR).json({ message: "Invalid API spec: must be valid JSON" });
+        return;
+    }
+    // Optional: check for OpenAPI version
+    if (!parsedSpec.openapi && !parsedSpec.swagger) {
+        res.status(statusAndMsgs.STATUS_GENERIC_ERROR).json({ message: "Invalid API spec: missing openapi or swagger version" });
+        return;
+    }
+    // Additional validation: check for required fields
+    if (!parsedSpec.info || !parsedSpec.info.title || !parsedSpec.paths) {
+        res.status(statusAndMsgs.STATUS_GENERIC_ERROR).json({ message: "Invalid API spec: missing required fields (info.title, paths)" });
+        return;
+    }
+    // Check if paths is not empty
+    if (Object.keys(parsedSpec.paths).length === 0) {
+        res.status(statusAndMsgs.STATUS_GENERIC_ERROR).json({ message: "Invalid API spec: paths cannot be empty" });
+        return;
+    }
     const fullServiceName = namespace ? `${namespace}:${serviceName}` : serviceName;
     const service = serviceRegistry.registry.get(fullServiceName);
     if (!service || !service.nodes[nodeName]) {
         res.status(statusAndMsgs.SERVICE_UNAVAILABLE).json({ message: "Service or node not found" });
         return;
     }
-    service.nodes[nodeName].apiSpec = apiSpec;
+    service.nodes[nodeName].apiSpec = parsedSpec;
     serviceRegistry.debounceSave();
-    res.status(statusAndMsgs.STATUS_SUCCESS).json({ message: "API spec updated" });
+    res.status(statusAndMsgs.STATUS_SUCCESS).json({ message: "API spec updated and validated" });
 }
 
 const getApiSpecController = (req, res) => {
@@ -721,8 +931,314 @@ const testServiceController = async (req, res) => {
     }
 };
 
+const addServiceTemplateController = (req, res) => {
+    const { name, template } = req.body;
+    if (!name || !template) {
+        res.status(statusAndMsgs.STATUS_GENERIC_ERROR).json({ message: "Missing name or template" });
+        return;
+    }
+    serviceRegistry.addServiceTemplate(name, template);
+    res.status(statusAndMsgs.STATUS_SUCCESS).json({ message: "Template added" });
+};
+
+const getServiceTemplateController = (req, res) => {
+    const { name } = req.params;
+    const template = serviceRegistry.getServiceTemplate(name);
+    if (!template) {
+        res.status(statusAndMsgs.STATUS_NOT_FOUND).json({ message: "Template not found" });
+        return;
+    }
+    res.status(statusAndMsgs.STATUS_SUCCESS).json({ template });
+};
+
+const deleteServiceTemplateController = (req, res) => {
+    const { name } = req.params;
+    const deleted = serviceRegistry.deleteServiceTemplate(name);
+    if (!deleted) {
+        res.status(statusAndMsgs.STATUS_NOT_FOUND).json({ message: "Template not found" });
+        return;
+    }
+    res.status(statusAndMsgs.STATUS_SUCCESS).json({ message: "Template deleted" });
+};
+
+const listServiceTemplatesController = (req, res) => {
+    const templates = serviceRegistry.listServiceTemplates();
+    res.status(statusAndMsgs.STATUS_SUCCESS).json({ templates });
+};
+
+const setServiceIntentionController = (req, res) => {
+    const { source, destination, action } = req.body;
+    if (!source || !destination || !['allow', 'deny'].includes(action)) {
+        res.status(statusAndMsgs.STATUS_GENERIC_ERROR).json({ message: "Invalid parameters" });
+        return;
+    }
+    serviceRegistry.setServiceIntention(source, destination, action);
+    res.status(statusAndMsgs.STATUS_SUCCESS).json({ message: "Service intention set" });
+};
+
+const getServiceIntentionController = (req, res) => {
+    const { source, destination } = req.query;
+    if (!source || !destination) {
+        res.status(statusAndMsgs.STATUS_GENERIC_ERROR).json({ message: "Missing parameters" });
+        return;
+    }
+    const action = serviceRegistry.getServiceIntention(source, destination);
+    res.status(statusAndMsgs.STATUS_SUCCESS).json({ source, destination, action });
+};
+
+const addAclPolicyController = (req, res) => {
+    const { name, policy } = req.body;
+    if (!name || !policy) {
+        res.status(statusAndMsgs.STATUS_GENERIC_ERROR).json({ message: "Missing name or policy" });
+        return;
+    }
+    serviceRegistry.addAclPolicy(name, policy);
+    res.status(statusAndMsgs.STATUS_SUCCESS).json({ message: "ACL policy added" });
+};
+
+const getAclPolicyController = (req, res) => {
+    const { name } = req.params;
+    const policy = serviceRegistry.getAclPolicy(name);
+    if (!policy) {
+        res.status(statusAndMsgs.STATUS_NOT_FOUND).json({ message: "ACL policy not found" });
+        return;
+    }
+    res.status(statusAndMsgs.STATUS_SUCCESS).json({ name, policy });
+};
+
+const deleteAclPolicyController = (req, res) => {
+    const { name } = req.params;
+    const deleted = serviceRegistry.deleteAclPolicy(name);
+    if (!deleted) {
+        res.status(statusAndMsgs.STATUS_NOT_FOUND).json({ message: "ACL policy not found" });
+        return;
+    }
+    res.status(statusAndMsgs.STATUS_SUCCESS).json({ message: "ACL policy deleted" });
+};
+
+const listAclPoliciesController = (req, res) => {
+    const policies = serviceRegistry.listAclPolicies();
+    res.status(statusAndMsgs.STATUS_SUCCESS).json(policies);
+};
+
+const addToBlacklistController = (req, res) => {
+    const { serviceName, nodeName } = req.body;
+    if (!serviceName || !nodeName) {
+        res.status(statusAndMsgs.STATUS_GENERIC_ERROR).json({ message: "Missing serviceName or nodeName" });
+        return;
+    }
+    serviceRegistry.addToBlacklist(serviceName, nodeName);
+    res.status(statusAndMsgs.STATUS_SUCCESS).json({ message: "Node added to blacklist" });
+};
+
+const removeFromBlacklistController = (req, res) => {
+    const { serviceName, nodeName } = req.body;
+    if (!serviceName || !nodeName) {
+        res.status(statusAndMsgs.STATUS_GENERIC_ERROR).json({ message: "Missing serviceName or nodeName" });
+        return;
+    }
+    serviceRegistry.removeFromBlacklist(serviceName, nodeName);
+    res.status(statusAndMsgs.STATUS_SUCCESS).json({ message: "Node removed from blacklist" });
+};
+
+const getBlacklistedNodesController = (req, res) => {
+    const { serviceName } = req.params;
+    const blacklisted = serviceRegistry.getBlacklistedNodes(serviceName);
+    res.status(statusAndMsgs.STATUS_SUCCESS).json({ blacklisted });
+};
+
+const getServiceUptimeController = (req, res) => {
+    const { serviceName } = req.params;
+    const uptime = serviceRegistry.getServiceUptime(serviceName);
+    if (uptime === null) {
+        res.status(statusAndMsgs.STATUS_NOT_FOUND).json({ message: "Service not found" });
+        return;
+    }
+    res.status(statusAndMsgs.STATUS_SUCCESS).json({ serviceName, uptimeMs: uptime, uptimeHuman: `${Math.floor(uptime / 1000)}s` });
+};
+
+const setCanaryController = (req, res) => {
+    const { serviceName, percentage, canaryNodes } = req.body;
+    if (!serviceName || percentage === undefined || !Array.isArray(canaryNodes)) {
+        res.status(statusAndMsgs.STATUS_GENERIC_ERROR).json({ message: "Missing serviceName, percentage, or canaryNodes array" });
+        return;
+    }
+    if (percentage < 0 || percentage > 100) {
+        res.status(statusAndMsgs.STATUS_GENERIC_ERROR).json({ message: "Percentage must be between 0 and 100" });
+        return;
+    }
+    serviceRegistry.setCanary(serviceName, percentage, canaryNodes);
+    res.status(statusAndMsgs.STATUS_SUCCESS).json({ message: "Canary configuration set" });
+};
+
+const discoverWeightedController = (req, res) => {
+    const serviceName = req.query.serviceName;
+    if (!serviceName) {
+        res.status(statusAndMsgs.STATUS_GENERIC_ERROR).json({ message: "Missing serviceName" });
+        return;
+    }
+    const node = serviceRegistry.getRandomNode(serviceName, 'weighted');
+    if (!node) {
+        res.status(statusAndMsgs.SERVICE_UNAVAILABLE).json({ message: "Service unavailable" });
+        return;
+    }
+    res.json({ address: node.address, nodeName: node.nodeName, healthy: true });
+};
+
+const discoverLeastConnectionsController = (req, res) => {
+    const serviceName = req.query.serviceName;
+    if (!serviceName) {
+        res.status(statusAndMsgs.STATUS_GENERIC_ERROR).json({ message: "Missing serviceName" });
+        return;
+    }
+    const node = serviceRegistry.getRandomNode(serviceName, 'least-connections');
+    if (!node) {
+        res.status(statusAndMsgs.SERVICE_UNAVAILABLE).json({ message: "Service unavailable" });
+        return;
+    }
+    res.json({ address: node.address, nodeName: node.nodeName, healthy: true });
+};
+
+const setBlueGreenController = (req, res) => {
+    const { serviceName, blueNodes, greenNodes, activeColor } = req.body;
+    if (!serviceName || !Array.isArray(blueNodes) || !Array.isArray(greenNodes)) {
+        res.status(statusAndMsgs.STATUS_GENERIC_ERROR).json({ message: "Missing serviceName, blueNodes, or greenNodes arrays" });
+        return;
+    }
+    serviceRegistry.setBlueGreen(serviceName, blueNodes, greenNodes, activeColor || 'blue');
+    res.status(statusAndMsgs.STATUS_SUCCESS).json({ message: "Blue-green configuration set" });
+};
+
+// Additional controllers for full mode features
+const addFederatedRegistryController = (req, res) => {
+    const { name, url } = req.body;
+    if (!name || !url) {
+        res.status(statusAndMsgs.STATUS_GENERIC_ERROR).json({ message: "Missing name or url" });
+        return;
+    }
+    serviceRegistry.addFederatedRegistry(name, url);
+    res.status(statusAndMsgs.STATUS_SUCCESS).json({ message: "Federated registry added" });
+};
+
+const removeFederatedRegistryController = (req, res) => {
+    const { name } = req.body;
+    if (!name) {
+        res.status(statusAndMsgs.STATUS_GENERIC_ERROR).json({ message: "Missing name" });
+        return;
+    }
+    serviceRegistry.removeFederatedRegistry(name);
+    res.status(statusAndMsgs.STATUS_SUCCESS).json({ message: "Federated registry removed" });
+};
+
+const startTraceController = (req, res) => {
+    const { operation, id } = req.body;
+    if (!operation || !id) {
+        res.status(statusAndMsgs.STATUS_GENERIC_ERROR).json({ message: "Missing operation or id" });
+        return;
+    }
+    serviceRegistry.startTrace(operation, id);
+    res.status(statusAndMsgs.STATUS_SUCCESS).json({ message: "Trace started" });
+};
+
+const addTraceEventController = (req, res) => {
+    const { id, event } = req.body;
+    if (!id || !event) {
+        res.status(statusAndMsgs.STATUS_GENERIC_ERROR).json({ message: "Missing id or event" });
+        return;
+    }
+    serviceRegistry.addTraceEvent(id, event);
+    res.status(statusAndMsgs.STATUS_SUCCESS).json({ message: "Trace event added" });
+};
+
+const endTraceController = (req, res) => {
+    const { id } = req.body;
+    if (!id) {
+        res.status(statusAndMsgs.STATUS_GENERIC_ERROR).json({ message: "Missing id" });
+        return;
+    }
+    serviceRegistry.endTrace(id);
+    res.status(statusAndMsgs.STATUS_SUCCESS).json({ message: "Trace ended" });
+};
+
+const getTraceController = (req, res) => {
+    const { id } = req.params;
+    const trace = serviceRegistry.getTrace(id);
+    res.status(statusAndMsgs.STATUS_SUCCESS).json(trace);
+};
+
+const setACLController = (req, res) => {
+    const { serviceName, allow, deny } = req.body;
+    if (!serviceName) {
+        res.status(statusAndMsgs.STATUS_GENERIC_ERROR).json({ message: "Missing serviceName" });
+        return;
+    }
+    serviceRegistry.setACL(serviceName, allow || [], deny || []);
+    res.status(statusAndMsgs.STATUS_SUCCESS).json({ message: "ACL set" });
+};
+
+const getACLController = (req, res) => {
+    const { serviceName } = req.params;
+    const acl = serviceRegistry.getACL(serviceName);
+    res.status(statusAndMsgs.STATUS_SUCCESS).json(acl);
+};
+
+const setIntentionController = (req, res) => {
+    const { source, destination, action } = req.body;
+    if (!source || !destination || !action) {
+        res.status(statusAndMsgs.STATUS_GENERIC_ERROR).json({ message: "Missing source, destination, or action" });
+        return;
+    }
+    serviceRegistry.setIntention(source, destination, action);
+    res.status(statusAndMsgs.STATUS_SUCCESS).json({ message: "Intention set" });
+};
+
+const getIntentionController = (req, res) => {
+    const { source, destination } = req.params;
+    const intention = serviceRegistry.getIntention(source, destination);
+    res.status(statusAndMsgs.STATUS_SUCCESS).json({ intention });
+};
+
+const addServiceToBlacklistController = (req, res) => {
+    const { serviceName } = req.body;
+    if (!serviceName) {
+        res.status(statusAndMsgs.STATUS_GENERIC_ERROR).json({ message: "Missing serviceName" });
+        return;
+    }
+    serviceRegistry.addToBlacklist(serviceName);
+    res.status(statusAndMsgs.STATUS_SUCCESS).json({ message: "Service added to blacklist" });
+};
+
+const removeServiceFromBlacklistController = (req, res) => {
+    const { serviceName } = req.body;
+    if (!serviceName) {
+        res.status(statusAndMsgs.STATUS_GENERIC_ERROR).json({ message: "Missing serviceName" });
+        return;
+    }
+    serviceRegistry.removeFromBlacklist(serviceName);
+    res.status(statusAndMsgs.STATUS_SUCCESS).json({ message: "Service removed from blacklist" });
+};
+
+const isServiceBlacklistedController = (req, res) => {
+    const { serviceName } = req.params;
+    const blacklisted = serviceRegistry.isBlacklisted(serviceName);
+    res.status(statusAndMsgs.STATUS_SUCCESS).json({ blacklisted });
+};
+
+
+
+
+
+
+
+
+
+
+
+
 module.exports = {
     registryController,
+    renewLeaseController,
+    heartbeatController,
     serverListController,
     deregisterController,
     healthController,
@@ -750,8 +1266,43 @@ module.exports = {
     updateMetadataController,
     databaseDiscoveryController,
     statsController,
+    slaController,
+    healthScoreController,
+    autoscalingController,
+    chaosController,
     pendingServicesController,
     approveServiceController,
     rejectServiceController,
-    testServiceController
+    testServiceController,
+    addServiceTemplateController,
+    getServiceTemplateController,
+    deleteServiceTemplateController,
+    listServiceTemplatesController,
+    setServiceIntentionController,
+    getServiceIntentionController,
+    addAclPolicyController,
+    getAclPolicyController,
+    deleteAclPolicyController,
+    listAclPoliciesController,
+    addToBlacklistController,
+    removeFromBlacklistController,
+    getBlacklistedNodesController,
+    getServiceUptimeController,
+    setCanaryController,
+    discoverWeightedController,
+    discoverLeastConnectionsController,
+    setBlueGreenController,
+    addFederatedRegistryController,
+    removeFederatedRegistryController,
+    startTraceController,
+    addTraceEventController,
+    endTraceController,
+    getTraceController,
+    setACLController,
+    getACLController,
+    setIntentionController,
+    getIntentionController,
+    addServiceToBlacklistController,
+    removeServiceFromBlacklistController,
+    isServiceBlacklistedController
 };

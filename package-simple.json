@@ -1,0 +1,18 @@
+{
+  "name": "maxine-simple",
+  "version": "1.0.0",
+  "description": "Lightning-fast Service Registry",
+  "main": "index-simple.js",
+  "scripts": {
+    "start": "node index-simple.js",
+    "test": "echo 'Tests would go here'"
+  },
+  "dependencies": {
+    "express": "^4.19.2",
+    "lru-cache": "^10.2.2",
+    "winston": "^3.13.0"
+  },
+  "keywords": ["service-registry", "discovery", "microservices"],
+  "author": "Maxine Team",
+  "license": "MIT"
+}

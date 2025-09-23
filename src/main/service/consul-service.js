@@ -2,6 +2,7 @@ const consul = require('consul');
 const { serviceRegistry } = require('../entity/service-registry');
 const { registryService } = require('./registry-service');
 const config = require('../config/config');
+const { consoleError } = require('../util/logging/logging-util');
 
 class ConsulService {
     constructor() {
@@ -27,7 +28,7 @@ class ConsulService {
         });
 
         watcher.on('error', (err) => {
-            console.error('Consul watch error:', err);
+            consoleError('Consul watch error:', err);
         });
     }
 
@@ -56,7 +57,7 @@ class ConsulService {
             // Get service instances from Consul
             this.consulClient.catalog.service.nodes(serviceName, (err, result) => {
                 if (err) {
-                    console.error('Consul service nodes error:', err);
+                    consoleError('Consul service nodes error:', err);
                     return;
                 }
 

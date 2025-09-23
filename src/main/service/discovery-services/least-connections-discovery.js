@@ -13,12 +13,12 @@ class LeastConnectionsDiscovery{
       * @param {array} tags
       * @returns {object}
       */
-    getNode = (fullServiceName, group, tags) => {
+    getNode = (fullServiceName, group, tags, deployment, filter) => {
         const cached = this.cache.get(fullServiceName);
         if (cached && (Date.now() - cached.timestamp) < this.cacheTTL) {
             return cached.node;
         }
-        const healthyNodes = serviceRegistry.getHealthyNodes(fullServiceName, group, tags);
+        const healthyNodes = serviceRegistry.getHealthyNodes(fullServiceName, group, tags, deployment, filter);
         if (healthyNodes.length === 0) return null;
         let minConnections = Infinity;
         let selectedNode = null;

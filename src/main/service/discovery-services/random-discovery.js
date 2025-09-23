@@ -1,5 +1,16 @@
 const { serviceRegistry } = require("../../entity/service-registry");
 
+// Fast LCG PRNG for better performance
+let lcgSeed = Date.now();
+const lcgA = 1664525;
+const lcgC = 1013904223;
+const lcgM = 4294967296;
+
+const fastRandom = () => {
+    lcgSeed = (lcgA * lcgSeed + lcgC) % lcgM;
+    return lcgSeed / lcgM;
+};
+
 class RandomDiscovery{
     /**
       * retrieve a random node based on the serviceName passed
@@ -8,10 +19,10 @@ class RandomDiscovery{
       * @param {array} tags
       * @returns {object}
       */
-    getNode = (fullServiceName, group, tags) => {
-        const healthyNodes = serviceRegistry.getHealthyNodes(fullServiceName, group, tags);
+    getNode = (fullServiceName, group, tags, deployment, filter) => {
+        const healthyNodes = serviceRegistry.getHealthyNodes(fullServiceName, group, tags, deployment, filter);
         if (healthyNodes.length === 0) return null;
-        const randomIndex = Math.floor(Math.random() * healthyNodes.length);
+        const randomIndex = (fastRandom() * healthyNodes.length) | 0;
         return healthyNodes[randomIndex];
     }
 

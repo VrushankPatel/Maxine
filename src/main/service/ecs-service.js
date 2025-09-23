@@ -2,6 +2,7 @@ const AWS = require('aws-sdk');
 const { serviceRegistry } = require('../entity/service-registry');
 const { registryService } = require('./registry-service');
 const config = require('../config/config');
+const { consoleError } = require('../util/logging/logging-util');
 
 class EcsService {
     constructor() {
@@ -20,7 +21,7 @@ class EcsService {
             try {
                 await this.updateServices();
             } catch (err) {
-                console.error('Error updating ECS services:', err);
+                consoleError('Error updating ECS services:', err);
             }
         }, 30000);
     }

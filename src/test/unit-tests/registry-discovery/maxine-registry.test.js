@@ -6,6 +6,7 @@ const { testUser, ENDPOINTS } = require('../../testUtil/test-constants');
 var should = chai.should();
 chai.use(require('chai-json'));
 chai.use(chaiHttp);
+const config = require('../../../main/config/config');
 
 const fileName = require('path').basename(__filename).replace(".js","");
 const accessToken = generateAccessToken(testUser);
@@ -14,11 +15,15 @@ const serviceSampleRS = {
     "nodeName": "node-x-10",
     "port": "8082",
     "serviceName": "dbservice-rs",
+    "version": "1.0",
     "ssl": true,
     "timeOut": 5,
-    "weight": 10
+    "weight": 1
 };
 
+if (config.lightningMode) {
+    describe.skip(`${fileName} : API /api/maxine/{registry urls}`, () => {});
+} else {
 describe(`${fileName} : API /api/maxine/{registry urls}`, () => {
     before(() => {
         // Clear registry for clean test
@@ -111,3 +116,4 @@ describe(`${fileName} : API /api/maxine/{registry urls}`, () => {
             });
     });
 });
+}

@@ -1,10 +1,10 @@
 const jwt = require('jsonwebtoken');
-const LRU = require('lru-cache');
+const { LRUCache } = require('lru-cache');
 const { admin, User } = require('../../entity/user');
 const { statusAndMsgs, constants } = require('../../util/constants/constants');
 
 // Cache for verified JWT tokens to improve performance
-const tokenCache = new LRU({ max: 10000, ttl: 15 * 60 * 1000 }); // 15 minutes TTL
+const tokenCache = new LRUCache({ max: 10000, ttl: 15 * 60 * 1000 }); // 15 minutes TTL
 
 function authenticationController(req, res, next) {
     let authRequired = false;
@@ -22,7 +22,7 @@ function authenticationController(req, res, next) {
     const authHeader = req.headers['authorization'];
     const token = authHeader && authHeader.split(' ')[1];
 
-    if (!token){
+    if (!token || token.trim() === ''){
         res.status(statusAndMsgs.STATUS_UNAUTHORIZED).json({"message" : statusAndMsgs.MSG_UNAUTHORIZED});
         return;
     }

@@ -1,5 +1,16 @@
 const { serviceRegistry } = require("../../entity/service-registry");
 
+// Fast LCG PRNG
+let lcgSeed = Date.now();
+const lcgA = 1664525;
+const lcgC = 1013904223;
+const lcgM = 4294967296;
+
+const fastRandom = () => {
+    lcgSeed = (lcgA * lcgSeed + lcgC) % lcgM;
+    return lcgSeed / lcgM;
+};
+
 class PowerOfTwoDiscovery {
     /**
       * Select two random healthy nodes and choose the one with least connections.
@@ -8,18 +19,18 @@ class PowerOfTwoDiscovery {
       * @param {array} tags
       * @returns {object}
       */
-    getNode = (fullServiceName, group, tags) => {
-        const healthyNodes = serviceRegistry.getHealthyNodes(fullServiceName, group, tags);
+    getNode = (fullServiceName, group, tags, deployment, filter) => {
+        const healthyNodes = serviceRegistry.getHealthyNodes(fullServiceName, group, tags, deployment, filter);
         if (healthyNodes.length === 0) return null;
         if (healthyNodes.length === 1) {
             return healthyNodes[0];
         }
 
         // Select two random nodes
-        const idx1 = Math.floor(Math.random() * healthyNodes.length);
-        let idx2 = Math.floor(Math.random() * healthyNodes.length);
+        const idx1 = (fastRandom() * healthyNodes.length) | 0;
+        let idx2 = (fastRandom() * healthyNodes.length) | 0;
         while (idx2 === idx1) {
-            idx2 = Math.floor(Math.random() * healthyNodes.length);
+            idx2 = (fastRandom() * healthyNodes.length) | 0;
         }
 
         const node1 = healthyNodes[idx1];

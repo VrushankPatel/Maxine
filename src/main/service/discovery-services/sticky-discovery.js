@@ -13,8 +13,8 @@ class StickyDiscovery {
      * @param {array} tags
      * @returns {object}
      */
-    getNode = (fullServiceName, ip, group, tags) => {
-        const healthyNodes = serviceRegistry.getHealthyNodes(fullServiceName, group, tags);
+    getNode = (fullServiceName, ip, group, tags, deployment, filter) => {
+        const healthyNodes = serviceRegistry.getHealthyNodes(fullServiceName, group, tags, deployment, filter);
         if (healthyNodes.length === 0) return null;
 
         const tagKey = tags && tags.length > 0 ? `:${tags.sort().join(',')}` : '';

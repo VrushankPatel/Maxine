@@ -2,6 +2,7 @@ const k8s = require('@kubernetes/client-node');
 const { serviceRegistry } = require('../entity/service-registry');
 const { registryService } = require('./registry-service');
 const config = require('../config/config');
+const { consoleError } = require('../util/logging/logging-util');
 
 class K8sService {
     constructor() {
@@ -28,7 +29,7 @@ class K8sService {
                 this.deregisterK8sService(obj);
             }
         }, (err) => {
-            console.error('Error watching services:', err);
+            consoleError('Error watching services:', err);
         });
     }
 
@@ -42,7 +43,7 @@ class K8sService {
                 this.removeEndpoints(obj);
             }
         }, (err) => {
-            console.error('Error watching endpoints:', err);
+            consoleError('Error watching endpoints:', err);
         });
     }
 
@@ -55,7 +56,7 @@ class K8sService {
         this.k8sApi.readNamespacedEndpoints(k8sService.metadata.name, k8sService.metadata.namespace).then((res) => {
             this.updateEndpoints(res.body);
         }).catch((err) => {
-            console.error('Error reading endpoints:', err);
+            consoleError('Error reading endpoints:', err);
         });
     }
 

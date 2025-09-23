@@ -3,7 +3,7 @@ const { serviceRegistry } = require("../../entity/service-registry");
 class LeastResponseTimeDiscovery {
     constructor() {
         this.fastestCache = new Map(); // serviceName -> {nodeName, timestamp}
-        this.cacheTTL = 1000; // 1 second
+        this.cacheTTL = 5000; // 5 seconds
         this.offsets = new Map();
     }
 
@@ -22,8 +22,8 @@ class LeastResponseTimeDiscovery {
       * @param {array} tags
       * @returns {object}
       */
-    getNode = (fullServiceName, group, tags) => {
-        const healthyNodes = serviceRegistry.getHealthyNodes(fullServiceName, group, tags);
+    getNode = (fullServiceName, group, tags, deployment, filter) => {
+        const healthyNodes = serviceRegistry.getHealthyNodes(fullServiceName, group, tags, deployment, filter);
         if (healthyNodes.length === 0) return null;
 
         const cacheKey = `${fullServiceName}:${group || ''}:${tags ? tags.sort().join(',') : ''}`;

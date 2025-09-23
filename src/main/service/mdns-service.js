@@ -1,6 +1,7 @@
 const mdns = require('multicast-dns');
 const { serviceRegistry } = require('../entity/service-registry');
 const config = require('../config/config');
+const { consoleLog } = require('../util/logging/logging-util');
 
 class MDNSService {
     constructor() {
@@ -75,14 +76,14 @@ class MDNSService {
         });
 
         this.advertisedServices.add(serviceName);
-        console.log(`Advertised service ${serviceName} via mDNS`);
+        consoleLog(`Advertised service ${serviceName} via mDNS`);
     }
 
     unadvertiseService(serviceName) {
         if (!this.advertisedServices.has(serviceName)) return;
         // mDNS doesn't have unadvertise, but we can stop responding
         this.advertisedServices.delete(serviceName);
-        console.log(`Unadvertised service ${serviceName} via mDNS`);
+        consoleLog(`Unadvertised service ${serviceName} via mDNS`);
     }
 }
 

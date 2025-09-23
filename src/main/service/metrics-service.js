@@ -1,5 +1,45 @@
 class MetricsService {
     constructor() {
+        // Initialize Prometheus metrics if enabled
+        if (require('../config/config').prometheusEnabled) {
+            const promClient = require('prom-client');
+            this.register = new promClient.Registry();
+
+            // Add default metrics
+            promClient.collectDefaultMetrics({ register: this.register });
+
+            // Custom metrics
+            this.requestTotal = new promClient.Counter({
+                name: 'maxine_requests_total',
+                help: 'Total number of requests',
+                labelNames: ['service', 'method', 'status'],
+                registers: [this.register]
+            });
+
+            this.requestDuration = new promClient.Histogram({
+                name: 'maxine_request_duration_seconds',
+                help: 'Request duration in seconds',
+                labelNames: ['service', 'method'],
+                buckets: [0.001, 0.005, 0.01, 0.05, 0.1, 0.5, 1, 2.5, 5, 10],
+                registers: [this.register]
+            });
+
+            this.activeConnections = new promClient.Gauge({
+                name: 'maxine_active_connections',
+                help: 'Number of active connections',
+                labelNames: ['service'],
+                registers: [this.register]
+            });
+
+            this.serviceInstances = new promClient.Gauge({
+                name: 'maxine_service_instances',
+                help: 'Number of instances per service',
+                labelNames: ['service', 'status'],
+                registers: [this.register]
+            });
+        }
+
+        // Legacy metrics for backward compatibility
         this.metrics = {
             totalRequests: 0,
             successfulRequests: 0,
@@ -14,7 +54,23 @@ class MetricsService {
         this.latencyIndex = 0;
     }
 
-    recordRequest(serviceName, success, latency) {
+    recordRequest(serviceName, success, latency, method = 'GET') {
+        // Update Prometheus metrics
+        if (this.requestTotal) {
+            this.requestTotal.inc({
+                service: serviceName,
+                method: method,
+                status: success ? 'success' : 'error'
+            });
+        }
+        if (this.requestDuration) {
+            this.requestDuration.observe({
+                service: serviceName,
+                method: method
+            }, latency / 1000);
+        }
+
+        // Legacy metrics for backward compatibility
         this.metrics.totalRequests++;
         if (success) {
             this.metrics.successfulRequests++;
@@ -57,6 +113,26 @@ class MetricsService {
             uptime: process.uptime(),
             memoryUsage: process.memoryUsage()
         };
+    }
+
+    async getPrometheusMetrics() {
+        if (this.register) {
+            return await this.register.metrics();
+        }
+        return '';
+    }
+
+    updateActiveConnections(serviceName, count) {
+        if (this.activeConnections) {
+            this.activeConnections.set({ service: serviceName }, count);
+        }
+    }
+
+    updateServiceInstances(serviceName, healthyCount, totalCount) {
+        if (this.serviceInstances) {
+            this.serviceInstances.set({ service: serviceName, status: 'healthy' }, healthyCount);
+            this.serviceInstances.set({ service: serviceName, status: 'total' }, totalCount);
+        }
     }
 }
 

@@ -1,7 +1,6 @@
 version: 2.1
 
 orbs:
-  heroku: circleci/heroku@1.2.6
   grafana: grafana/k6@1.1.3
 
 jobs:
@@ -89,16 +88,4 @@ workflows:
       # - load-test:
       #     requires:
       #       - test
-  deploy_and_ltest:
-    jobs:
-      - heroku/deploy-via-git:
-          filters:
-            branches:
-              only:
-                - release
-      # - grafana/k6:
-      #     requires:
-      #       - heroku/deploy-via-git
-      #     cloud: true
-      #     script: src/test/load-test/performance-test.js
-      #     arguments: --quiet
+

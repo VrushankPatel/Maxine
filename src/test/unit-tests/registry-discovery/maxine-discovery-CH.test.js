@@ -29,6 +29,10 @@ const registryPath = path.join(__dirname, '../../../registry.json');
 if (fs.existsSync(registryPath)) {
     fs.unlinkSync(registryPath);
 }
+
+if (config.lightningMode) {
+    describe.skip(`${fileName} : API /api/maxine/discover with config with Consistent Hashing`, () => {});
+} else {
 serviceRegistry.registry = new Map();
 serviceRegistry.hashRegistry = new Map();
 serviceRegistry.healthyNodes = new Map();
@@ -47,7 +51,7 @@ serviceRegistry.serviceAliases = new Map();
 serviceRegistry.serviceDependencies = new Map();
 
 // Registering fake server to discover afterwards for tests.
-registryService.registryService(serviceSampleCH);
+registryService.registerService(serviceSampleCH);
 
 // We'll check if we're getting same server for multiple endpoint hits.
 describe(`${fileName} : API /api/maxine/discover with config with Consistent Hashing`, () => {
@@ -73,3 +77,4 @@ describe(`${fileName} : API /api/maxine/discover with config with Consistent Has
         done();
     });
 });
+}

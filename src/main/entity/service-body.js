@@ -10,6 +10,7 @@ class Service{
     namespace;
     region;
     zone;
+    datacenter;
     tenantId;
     timeOut;
     weight;
@@ -17,15 +18,16 @@ class Service{
     metadata;
 
     static buildByObj(obj){
-        let {hostName, nodeName, port, serviceName, version, namespace, region, zone, tenantId, timeOut, weight, ssl, path, metadata, aliases, apiSpec} = obj;
+        let {host, hostName, nodeName, port, serviceName, version, namespace, region, zone, datacenter, tenantId, timeOut, weight, ssl, path, metadata, aliases, apiSpec} = obj;
         const service = new Service();
-        service.hostName = hostName;
+        service.hostName = host || hostName;
         service.nodeName = nodeName;
         service.serviceName = serviceName;
-        service.version = version || "1.0";
+        service.version = version;
         service.namespace = namespace || "default";
         service.region = region || "default";
         service.zone = zone || "default";
+        service.datacenter = datacenter || "default";
         service.tenantId = tenantId || "default";
         service.timeOut = Math.abs(parseInt(timeOut)) || config.heartBeatTimeout;
         service.weight = Math.abs(parseInt(weight)) || 1;

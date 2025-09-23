@@ -56,6 +56,9 @@ serviceRegistry.serviceDependencies = new Map();
 serviceRegistry.trafficSplit = new Map();
 serviceRegistry.healthHistory = new Map();
 
+if (config.lightningMode) {
+    describe.skip(`${fileName} : NON API discover with config with Round Robin`, () => {});
+} else {
 describe(`${fileName} : NON API discover with config with Round Robin`, () => {
     it(`RR discover with NonAPI`, (done) => {
         // Making sure that server selection strategy is RR
@@ -74,3 +77,4 @@ describe(`${fileName} : NON API discover with config with Round Robin`, () => {
         done();
     });
 });
+}

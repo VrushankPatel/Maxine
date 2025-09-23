@@ -4,6 +4,7 @@ package maxine;
 
 service DiscoveryService {
   rpc Discover (DiscoverRequest) returns (DiscoverResponse);
+  rpc WatchServices (WatchRequest) returns (stream ServiceUpdate);
 }
 
 message DiscoverRequest {
@@ -20,4 +21,15 @@ message DiscoverResponse {
   string address = 1;
   string nodeName = 2;
   string message = 3;
+}
+
+message WatchRequest {
+  string serviceName = 1;
+}
+
+message ServiceUpdate {
+  string serviceName = 1;
+  string action = 2;
+  string nodeName = 3;
+  string address = 4;
 }
