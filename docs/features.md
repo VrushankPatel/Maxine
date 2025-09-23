@@ -53,9 +53,11 @@
 - Admin user can perform all operations, while regular users can only read service information and metrics.
 
 ### Client SDK
-- Maxine provides a JavaScript/Node.js client SDK located in `client-sdk/` for easy integration.
-- The SDK supports all major operations: register, deregister, discover, health checks, and metrics retrieval.
-- Example usage:
+- Maxine provides client SDKs for multiple languages for easy integration.
+- **JavaScript/Node.js SDK**: Located in `client-sdk/` for Node.js applications.
+- **Python SDK**: Located in `client-sdk/python/` for Python applications.
+- Both SDKs support all major operations: register, deregister, discover, health checks, and metrics retrieval.
+- JavaScript SDK Example:
   ```javascript
   const MaxineClient = require('./client-sdk');
 
@@ -71,6 +73,20 @@
 
   // Discover a service
   const service = await client.discover('my-service');
+  ```
+- Python SDK Example:
+  ```python
+  from maxine_client import MaxineClient
+
+  client = MaxineClient('http://localhost:8080')
+
+  # Register a service
+  response = client.register_service('my-service', 'http://localhost:3000')
+  print(response)
+
+  # Discover a service
+  service = client.discover_service('my-service')
+  print(service)
   ```
 
 ### WebSocket Real-time Updates
