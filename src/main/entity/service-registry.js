@@ -24,6 +24,7 @@ class ServiceRegistry{
     healthyNodesFiltered = new Map(); // serviceName -> array of healthy node objects, healthy, not maintenance, not draining, sorted by priority desc
     healthyCache = new Map(); // serviceName -> array of healthy node objects, filtered maintenance
     healthyNodeSets = new Map(); // serviceName -> Set of nodeNames for O(1) existence check
+    healthyNodesMap = new Map(); // serviceName -> Map<nodeName, node> for O(1) node lookup
     maintenanceNodes = new Map(); // serviceName -> Set of nodeNames in maintenance
     drainingNodes = new Map(); // serviceName -> Set of nodeNames in draining mode
     activeConnections = new Map();
@@ -486,9 +487,11 @@ class ServiceRegistry{
         if (!this.healthyNodes.has(serviceName)) {
             this.healthyNodes.set(serviceName, []);
             this.healthyNodeSets.set(serviceName, new Set());
+            this.healthyNodesMap.set(serviceName, new Map());
         }
         let arr = this.healthyNodes.get(serviceName);
         let set = this.healthyNodeSets.get(serviceName);
+        let map = this.healthyNodesMap.get(serviceName);
         if (!arr) {
             arr = [];
             this.healthyNodes.set(serviceName, arr);
@@ -497,11 +500,16 @@ class ServiceRegistry{
             set = new Set();
             this.healthyNodeSets.set(serviceName, set);
         }
+        if (!map) {
+            map = new Map();
+            this.healthyNodesMap.set(serviceName, map);
+        }
         const service = this.registry.get(serviceName);
         if (!service || !service.nodes[nodeName]) return;
         const node = service.nodes[nodeName];
         if (!set.has(nodeName)) {
             set.add(nodeName);
+            map.set(nodeName, node);
             arr.push(node);
             arr.sort((a, b) => (b.metadata.priority || 0) - (a.metadata.priority || 0));
             this.addToHashRegistry(serviceName, nodeName);
@@ -528,10 +536,12 @@ class ServiceRegistry{
         if (this.healthyNodes.has(serviceName)) {
             const arr = this.healthyNodes.get(serviceName);
             const set = this.healthyNodeSets.get(serviceName);
+            const map = this.healthyNodesMap.get(serviceName);
             const index = arr.findIndex(n => n.nodeName === nodeName);
             if (index > -1) {
                 arr.splice(index, 1);
                 set.delete(nodeName);
+                map.delete(nodeName);
                 this.removeFromHashRegistry(serviceName, nodeName);
                 // Remove from filtered
                 if (this.healthyNodesFiltered.has(serviceName)) {
