@@ -1,6 +1,6 @@
 const { constants } = require("../util/constants/constants");
 
-const highPerfDefault = process.env.HIGH_PERFORMANCE_MODE === 'true' || process.env.HIGH_PERFORMANCE_MODE === undefined;
+const highPerfDefault = process.env.HIGH_PERFORMANCE_MODE !== 'false';
 
 const config = {
     logAsync: process.env.LOG_ASYNC === 'false' ? false : true,
