@@ -874,6 +874,26 @@ class ServiceRegistry{
         return false;
     }
 
+    updateNodeMetadata = (serviceName, nodeName, metadata) => {
+        const service = this.registry.get(serviceName);
+        if (service && service.nodes[nodeName]) {
+            service.nodes[nodeName].metadata = { ...service.nodes[nodeName].metadata, ...metadata };
+            // Update tag index if tags changed
+            if (metadata.tags) {
+                this.removeFromTagIndex(nodeName, service.nodes[nodeName].metadata.tags);
+                this.addToTagIndex(nodeName, metadata.tags);
+            }
+            this.debounceSave();
+            // Invalidate caches
+            for (const key of this.healthyCache.keys()) {
+                if (key === serviceName || key.startsWith(serviceName + ':')) {
+                    this.healthyCache.delete(key);
+                }
+            }
+            discoveryService.invalidateServiceCache(serviceName);
+        }
+    }
+
     onCircuitSuccess(serviceName, nodeName) {
         const cb = this.getCircuitBreaker(serviceName, nodeName);
         if (cb.state === 'half-open') {
