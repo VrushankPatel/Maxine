@@ -52,12 +52,12 @@ const serverListController = (_req, res) => {
 }
 
 const deregisterController = (req, res) => {
-    const { serviceName, nodeName, namespace } = req.body;
+    const { serviceName, nodeName, namespace, tenantId } = req.body;
     if (!serviceName || !nodeName) {
         res.status(statusAndMsgs.STATUS_GENERIC_ERROR).json({ message: "Missing serviceName or nodeName" });
         return;
     }
-    const success = registryService.deregisterService(serviceName, nodeName, namespace);
+    const success = registryService.deregisterService(serviceName, nodeName, namespace, undefined, undefined, tenantId);
     if (success) {
         res.status(statusAndMsgs.STATUS_SUCCESS).json({ message: "Deregistered successfully" });
     } else {

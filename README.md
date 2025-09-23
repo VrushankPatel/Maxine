@@ -127,6 +127,8 @@ As we can see, maxine SRD provides service addresses for direct client connectio
                       * **Service Health Score**: Implemented health score calculation for service nodes based on failure rate and average response time, enabling better load balancing decisions and service quality monitoring.
                       * **Web Dashboard**: Added a simple web dashboard at `/dashboard` for monitoring registered services, nodes, and health status.
                       * **Database Discovery**: Added `/api/maxine/serviceops/discover/database` endpoint to discover database services. Services registered with `metadata.type='database'` can be discovered with connection details including host, port, database name, credentials, and type.
+                      * **Multi-Tenancy Support**: Added tenantId parameter to service registration and discovery, allowing services to be isolated by tenant for multi-tenant deployments.
+                      * **Blue-Green Deployment Support**: Added deployment metadata field and deployment query parameter for discovery, enabling blue-green and canary deployment strategies by routing traffic to specific deployment versions.
 
 
 ## Setup for development

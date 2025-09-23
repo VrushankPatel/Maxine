@@ -487,10 +487,11 @@ class ServiceRegistry{
 
     };
 
-    getHealthyNodes = (serviceName, group, tags) => {
+    getHealthyNodes = (serviceName, group, tags, deployment) => {
         const groupKey = group ? `:${group}` : '';
         const tagKey = tags && tags.length > 0 ? `:${tags.sort().join(',')}` : '';
-        const cacheKey = `${serviceName}${groupKey}${tagKey}`;
+        const deploymentKey = deployment ? `:${deployment}` : '';
+        const cacheKey = `${serviceName}${groupKey}${tagKey}${deploymentKey}`;
         if (!this.healthyCache.has(cacheKey)) {
             let candidates;
             if (group) {
@@ -502,6 +503,7 @@ class ServiceRegistry{
             for (const nodeName of candidates) {
                 const node = this.healthyNodesMap.get(serviceName).get(nodeName);
                 if (tags && tags.length > 0 && (!node.metadata.tags || !tags.every(tag => node.metadata.tags.includes(tag)))) continue;
+                if (deployment && node.metadata.deployment !== deployment) continue;
                 filtered.push(node);
             }
             filtered.sort((a, b) => (b.metadata.priority || 0) - (a.metadata.priority || 0));

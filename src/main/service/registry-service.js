@@ -19,10 +19,11 @@ class RegistryService{
     }
 
     registerService = (serviceObj) => {
-        const {serviceName, version, namespace = "default", region = "default", zone = "default", nodeName, address, timeOut, weight, metadata, aliases = [], apiSpec} = serviceObj;
+        const {serviceName, version, namespace = "default", region = "default", zone = "default", tenantId = "default", nodeName, address, timeOut, weight, metadata, aliases = [], apiSpec} = serviceObj;
+        const tenantPrefix = tenantId !== "default" ? `${tenantId}:` : '';
         const fullServiceName = (region !== "default" || zone !== "default") ?
-            (version ? `${namespace}:${region}:${zone}:${serviceName}:${version}` : `${namespace}:${region}:${zone}:${serviceName}`) :
-            (version ? `${namespace}:${serviceName}:${version}` : `${namespace}:${serviceName}`);
+            (version ? `${tenantPrefix}${namespace}:${region}:${zone}:${serviceName}:${version}` : `${tenantPrefix}${namespace}:${region}:${zone}:${serviceName}`) :
+            (version ? `${tenantPrefix}${namespace}:${serviceName}:${version}` : `${tenantPrefix}${namespace}:${serviceName}`);
 
         if (!sRegistry.registry.has(fullServiceName)){
             sRegistry.registry.set(fullServiceName, {offset: 0, nodes: {}});
@@ -101,8 +102,8 @@ class RegistryService{
         if (aliases && Array.isArray(aliases)) {
             for (const alias of aliases) {
                 const fullAliasName = (region !== "default" || zone !== "default") ?
-                    (version ? `${namespace}:${region}:${zone}:${alias}:${version}` : `${namespace}:${region}:${zone}:${alias}`) :
-                    (version ? `${namespace}:${alias}:${version}` : `${namespace}:${alias}`);
+                    (version ? `${tenantPrefix}${namespace}:${region}:${zone}:${alias}:${version}` : `${tenantPrefix}${namespace}:${region}:${zone}:${alias}`) :
+                    (version ? `${tenantPrefix}${namespace}:${alias}:${version}` : `${tenantPrefix}${namespace}:${alias}`);
                 sRegistry.addServiceAlias(fullAliasName, fullServiceName);
             }
         }
@@ -120,10 +121,11 @@ class RegistryService{
         return service;
     }
 
-    deregisterService = (serviceName, nodeName, namespace = "default", region = "default", zone = "default") => {
+    deregisterService = (serviceName, nodeName, namespace = "default", region = "default", zone = "default", tenantId = "default") => {
+        const tenantPrefix = tenantId !== "default" ? `${tenantId}:` : '';
         const fullServiceName = (region !== "default" || zone !== "default") ?
-            `${namespace}:${region}:${zone}:${serviceName}` :
-            `${namespace}:${serviceName}`;
+            `${tenantPrefix}${namespace}:${region}:${zone}:${serviceName}` :
+            `${tenantPrefix}${namespace}:${serviceName}`;
         if (!sRegistry.registry.has(fullServiceName)) return false;
         const service = sRegistry.registry.get(fullServiceName);
         const nodes = service.nodes;
