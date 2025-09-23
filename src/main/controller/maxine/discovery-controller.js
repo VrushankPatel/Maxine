@@ -60,15 +60,12 @@ const discoveryController = (req, res) => {
          return;
      }
 
-    // now, retrieving the serviceNode from the registry
-    let fullServiceName = (region !== "default" || zone !== "default") ?
-        (version ? `${namespace}:${region}:${zone}:${serviceName}:${version}` : `${namespace}:${region}:${zone}:${serviceName}`) :
-        (version ? `${namespace}:${serviceName}:${version}` : `${namespace}:${serviceName}`);
+    // Build base service name
+    const baseServiceName = (region !== "default" || zone !== "default") ?
+        `${namespace}:${region}:${zone}:${serviceName}` : `${namespace}:${serviceName}`;
 
     // Handle traffic splitting if no version specified
     if (!version) {
-        const baseServiceName = (region !== "default" || zone !== "default") ?
-            `${namespace}:${region}:${zone}:${serviceName}` : `${namespace}:${serviceName}`;
         const split = serviceRegistry.getTrafficSplit(baseServiceName);
         if (split) {
             const versions = Object.keys(split);
@@ -78,13 +75,14 @@ const discoveryController = (req, res) => {
                 rand -= split[v];
                 if (rand <= 0) {
                     version = v;
-                    fullServiceName = (region !== "default" || zone !== "default") ?
-                        `${namespace}:${region}:${zone}:${serviceName}:${version}` : `${namespace}:${serviceName}:${version}`;
                     break;
                 }
             }
         }
     }
+
+    // Build full service name
+    let fullServiceName = version ? `${baseServiceName}:${version}` : baseServiceName;
 
     const serviceNode = discoveryService.getNode(fullServiceName, ip);
 

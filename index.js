@@ -42,6 +42,7 @@ const path = require("path");
 const currDir = require('./conf');
 const grpc = require('@grpc/grpc-js');
 const protoLoader = require('@grpc/proto-loader');
+const spdy = require('spdy');
 
 if (config.clusteringEnabled && cluster.isMaster) {
     console.log(`Master ${process.pid} is running`);
@@ -63,28 +64,28 @@ if (config.clusteringEnabled && cluster.isMaster) {
         message: 'Too many requests from this IP, please try again later.'
     });
     const app = ExpressAppBuilder.createNewApp()
-                      .ifProperty("highPerformanceMode", false).addCompression()
+                      .addCompression()
                       .addCors()
                       .ifPropertyOnce("statusMonitorEnabled")
                           .use(expressStatusMonitor(statusMonitorConfig))
                       .use(logRequest)
                      .use(authenticationController)
-                     .mapStaticDir(path.join(currDir, "client"))
-                     .mapStaticDirWithRoute('/logs', path.join(currDir,"logs"))
-                       .ifPropertyOnce("actuatorEnabled")
-                           .use(actuator(actuatorConfig))
-                       .use('/api', limiter, maxineApiRoutes)
-                    .ifPropertyOnce('profile','dev')
-                        .use('/api-spec', swaggerUi.serve, swaggerUi.setup(swaggerDocument))
-                        .use('/shutdown', process.exit)
-                    .blockUnknownUrls()
-                    .use(logWebExceptions)
-                     .listen(constants.PORT, () => {
-                         if (config.clusteringEnabled) {
-                             console.log(`Worker ${process.pid} started`);
-                         }
-                         loggingUtil.initApp();
-                     })
+                      .mapStaticDir(path.join(currDir, "client"))
+                      .mapStaticDirWithRoute('/logs', path.join(currDir,"logs"))
+                        .ifPropertyOnce("actuatorEnabled")
+                            .use(actuator(actuatorConfig))
+                        .use('/api', limiter, maxineApiRoutes)
+                     .ifPropertyOnce('profile','dev')
+                         .use('/api-spec', swaggerUi.serve, swaggerUi.setup(swaggerDocument))
+                         .use('/shutdown', process.exit)
+                     .blockUnknownUrls()
+                     .use(logWebExceptions)
+                      .listenOrSpdy(constants.PORT, () => {
+                          if (config.clusteringEnabled) {
+                              console.log(`Worker ${process.pid} started`);
+                          }
+                          loggingUtil.initApp();
+                      })
                      .getApp();
 
     if (config.grpcEnabled) {
