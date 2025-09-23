@@ -121,12 +121,13 @@ As we can see, maxine SRD provides service addresses for direct client connectio
                     * **Impact Analysis**: Added `/api/maxine/serviceops/impact/analysis` endpoint to analyze the impact of a service failure by listing all services that depend on it.
                     * **Python Client SDK**: Added a Python client SDK in `client-sdk/python/` for easy integration with Maxine registry from Python applications.
                     * **Service API Specs**: Services can now register their API specifications (e.g., OpenAPI/Swagger) via the `/api/maxine/serviceops/api-spec/set` endpoint, and retrieve them via `/api/maxine/serviceops/api-spec/get`. This enables better service contract management and API documentation.
-                  * **Service Tag Filtering**: Discovery requests can now filter services by tags using the `tags` query parameter. Services must have all specified tags in their metadata to be discoverable.
-                  * **Service Metadata Updates**: Added `/api/maxine/serviceops/metadata/update` endpoint to update service instance metadata without re-registration, allowing dynamic changes to weights, health endpoints, and other properties.
-                    * **Kubernetes Integration**: Added support for automatic service discovery from Kubernetes clusters. Enable with `KUBERNETES_ENABLED=true` to watch K8s services and endpoints, registering them in Maxine for seamless integration with containerized deployments.
-                     * **Service Instance Limits**: Added `MAX_INSTANCES_PER_SERVICE` environment variable to limit the number of instances per service (default 1000), preventing overload and improving stability.
-                     * **Service Health Score**: Implemented health score calculation for service nodes based on failure rate and average response time, enabling better load balancing decisions and service quality monitoring.
-                     * **Web Dashboard**: Added a simple web dashboard at `/dashboard` for monitoring registered services, nodes, and health status.
+                   * **Service Tag Filtering**: Discovery requests can now filter services by tags using the `tags` query parameter. Services must have all specified tags in their metadata to be discoverable.
+                   * **Service Metadata Updates**: Added `/api/maxine/serviceops/metadata/update` endpoint to update service instance metadata without re-registration, allowing dynamic changes to weights, health endpoints, and other properties.
+                     * **Kubernetes Integration**: Added support for automatic service discovery from Kubernetes clusters. Enable with `KUBERNETES_ENABLED=true` to watch K8s services and endpoints, registering them in Maxine for seamless integration with containerized deployments.
+                      * **Service Instance Limits**: Added `MAX_INSTANCES_PER_SERVICE` environment variable to limit the number of instances per service (default 1000), preventing overload and improving stability.
+                      * **Service Health Score**: Implemented health score calculation for service nodes based on failure rate and average response time, enabling better load balancing decisions and service quality monitoring.
+                      * **Web Dashboard**: Added a simple web dashboard at `/dashboard` for monitoring registered services, nodes, and health status.
+                      * **Database Discovery**: Added `/api/maxine/serviceops/discover/database` endpoint to discover database services. Services registered with `metadata.type='database'` can be discovered with connection details including host, port, database name, credentials, and type.
 
 
 ## Setup for development
