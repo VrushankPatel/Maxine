@@ -24,11 +24,11 @@ const hasMetrics = config.metricsEnabled;
 const isCircuitBreakerEnabled = config.circuitBreakerEnabled;
 
 // Cache for IP extraction
-const ipCache = new LRU({ max: 1000000, ttl: 900000 });
+const ipCache = new LRU({ max: 100000, ttl: 900000 });
 // Cache for address building
-const addressCache = new LRU({ max: 1000000, ttl: 900000 });
+const addressCache = new LRU({ max: 100000, ttl: 900000 });
 // Cache for cache key building
-const cacheKeyCache = new LRU({ max: 1000000, ttl: 900000 });
+const cacheKeyCache = new LRU({ max: 100000, ttl: 900000 });
 // Cache for traffic splitting
 const trafficSplitCache = new LRU({ max: 100000, ttl: 300000 }); // 5 min TTL
 
