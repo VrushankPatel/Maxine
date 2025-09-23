@@ -35,6 +35,7 @@ class ServiceRegistry{
     changes = [];
     webhooks = new Map(); // serviceName -> set of webhook URLs
     tagIndex = new Map(); // tag -> Set of nodeNames
+    groupIndex = new Map(); // serviceName -> group -> Set of nodeNames
     kvStore = new Map(); // key -> value
     trafficSplit = new Map(); // baseServiceName -> {version: percent}
     healthHistory = new Map(); // serviceName -> nodeName -> array of {timestamp, status}
@@ -289,9 +290,29 @@ class ServiceRegistry{
              webhooks: Object.fromEntries(
                  Array.from(this.webhooks.entries()).map(([k, v]) => [k, Array.from(v)])
              ),
-             tagIndex: Object.fromEntries(
-                 Array.from(this.tagIndex.entries()).map(([k, v]) => [k, Array.from(v)])
-             ),
+                 tagIndex: Object.fromEntries(
+                     Array.from(this.tagIndex.entries()).map(([k, v]) => [k, Array.from(v)])
+                 ),
+                 groupIndex: Object.fromEntries(
+                     Array.from(this.groupIndex.entries()).map(([k, v]) => [k, Object.fromEntries(
+                         Array.from(v.entries()).map(([k2, v2]) => [k2, Array.from(v2)])
+                     )])
+                 ),
+                 groupIndex: Object.fromEntries(
+                     Array.from(this.groupIndex.entries()).map(([k, v]) => [k, Object.fromEntries(
+                         Array.from(v.entries()).map(([k2, v2]) => [k2, Array.from(v2)])
+                     )])
+                 ),
+                 groupIndex: Object.fromEntries(
+                     Array.from(this.groupIndex.entries()).map(([k, v]) => [k, Object.fromEntries(
+                         Array.from(v.entries()).map(([k2, v2]) => [k2, Array.from(v2)])
+                     )])
+                 ),
+              groupIndex: Object.fromEntries(
+                  Array.from(this.groupIndex.entries()).map(([k, v]) => [k, Object.fromEntries(
+                      Array.from(v.entries()).map(([k2, v2]) => [k2, Array.from(v2)])
+                  )])
+              ),
               circuitBreaker: Object.fromEntries(this.circuitBreaker),
               availableNodes: Object.fromEntries(
                   Array.from(this.availableNodes.entries()).map(([k, v]) => [k, Array.from(v)])
@@ -322,9 +343,14 @@ class ServiceRegistry{
         this.webhooks = new Map(
             Object.entries(data.webhooks || {}).map(([k, v]) => [k, new Set(v)])
         );
-         this.tagIndex = new Map(
-             Object.entries(data.tagIndex || {}).map(([k, v]) => [k, new Set(v)])
-         );
+          this.tagIndex = new Map(
+              Object.entries(data.tagIndex || {}).map(([k, v]) => [k, new Set(v)])
+          );
+          this.groupIndex = new Map(
+              Object.entries(data.groupIndex || {}).map(([k, v]) => [k, new Map(
+                  Object.entries(v).map(([k2, v2]) => [k2, new Set(v2)])
+              )])
+          );
           this.circuitBreaker = new Map(Object.entries(data.circuitBreaker || {}));
           this.availableNodes = new Map(
               Object.entries(data.availableNodes || {}).map(([k, v]) => [k, new Set(v)])
@@ -368,19 +394,36 @@ class ServiceRegistry{
             if (this.availableNodes.has(serviceName)) {
                 this.availableNodes.get(serviceName).delete(nodeName);
             }
+            // Remove from group index
+            if (this.groupIndex.has(serviceName)) {
+                const groupMap = this.groupIndex.get(serviceName);
+                if (node.metadata.group && groupMap.has(node.metadata.group)) {
+                    groupMap.get(node.metadata.group).delete(nodeName);
+                    if (groupMap.get(node.metadata.group).size === 0) groupMap.delete(node.metadata.group);
+                }
+                if (groupMap.size === 0) this.groupIndex.delete(serviceName);
+            }
         } else {
             if (this.maintenanceNodes.has(serviceName)) {
                 this.maintenanceNodes.get(serviceName).delete(nodeName);
                 if (this.maintenanceNodes.get(serviceName).size === 0) {
                     this.maintenanceNodes.delete(serviceName);
                 }
-                // Add to available if healthy and not draining
-                if (this.healthyNodeSets.has(serviceName) && this.healthyNodeSets.get(serviceName).has(nodeName) && !this.isInDraining(serviceName, nodeName)) {
-                    if (!this.availableNodes.has(serviceName)) {
-                        this.availableNodes.set(serviceName, new Set());
-                    }
-                    this.availableNodes.get(serviceName).add(nodeName);
-                }
+                 // Add to available if healthy and not draining
+                 if (this.healthyNodeSets.has(serviceName) && this.healthyNodeSets.get(serviceName).has(nodeName) && !this.isInDraining(serviceName, nodeName)) {
+                     if (!this.availableNodes.has(serviceName)) {
+                         this.availableNodes.set(serviceName, new Set());
+                     }
+                     this.availableNodes.get(serviceName).add(nodeName);
+                     // Add to group index
+                     const node = this.healthyNodesMap.get(serviceName).get(nodeName);
+                     if (node && node.metadata.group) {
+                         if (!this.groupIndex.has(serviceName)) this.groupIndex.set(serviceName, new Map());
+                         const groupMap = this.groupIndex.get(serviceName);
+                         if (!groupMap.has(node.metadata.group)) groupMap.set(node.metadata.group, new Set());
+                         groupMap.get(node.metadata.group).add(nodeName);
+                     }
+                 }
             }
         }
         // Invalidate all cache entries for this service (including groups)
@@ -406,19 +449,36 @@ class ServiceRegistry{
             if (this.availableNodes.has(serviceName)) {
                 this.availableNodes.get(serviceName).delete(nodeName);
             }
+            // Remove from group index
+            if (this.groupIndex.has(serviceName)) {
+                const groupMap = this.groupIndex.get(serviceName);
+                if (node.metadata.group && groupMap.has(node.metadata.group)) {
+                    groupMap.get(node.metadata.group).delete(nodeName);
+                    if (groupMap.get(node.metadata.group).size === 0) groupMap.delete(node.metadata.group);
+                }
+                if (groupMap.size === 0) this.groupIndex.delete(serviceName);
+            }
         } else {
             if (this.drainingNodes.has(serviceName)) {
                 this.drainingNodes.get(serviceName).delete(nodeName);
                 if (this.drainingNodes.get(serviceName).size === 0) {
                     this.drainingNodes.delete(serviceName);
                 }
-                // Add to available if healthy and not maintenance
-                if (this.healthyNodeSets.has(serviceName) && this.healthyNodeSets.get(serviceName).has(nodeName) && !this.isInMaintenance(serviceName, nodeName)) {
-                    if (!this.availableNodes.has(serviceName)) {
-                        this.availableNodes.set(serviceName, new Set());
-                    }
-                    this.availableNodes.get(serviceName).add(nodeName);
-                }
+                 // Add to available if healthy and not maintenance
+                 if (this.healthyNodeSets.has(serviceName) && this.healthyNodeSets.get(serviceName).has(nodeName) && !this.isInMaintenance(serviceName, nodeName)) {
+                     if (!this.availableNodes.has(serviceName)) {
+                         this.availableNodes.set(serviceName, new Set());
+                     }
+                     this.availableNodes.get(serviceName).add(nodeName);
+                     // Add to group index
+                     const node = this.healthyNodesMap.get(serviceName).get(nodeName);
+                     if (node && node.metadata.group) {
+                         if (!this.groupIndex.has(serviceName)) this.groupIndex.set(serviceName, new Map());
+                         const groupMap = this.groupIndex.get(serviceName);
+                         if (!groupMap.has(node.metadata.group)) groupMap.set(node.metadata.group, new Set());
+                         groupMap.get(node.metadata.group).add(nodeName);
+                     }
+                 }
             }
         }
         // Invalidate cache
@@ -447,11 +507,15 @@ class ServiceRegistry{
         const tagKey = tags && tags.length > 0 ? `:${tags.sort().join(',')}` : '';
         const cacheKey = `${serviceName}${groupKey}${tagKey}`;
         if (!this.healthyCache.has(cacheKey)) {
-            const availSet = this.availableNodes.get(serviceName) || new Set();
+            let candidates;
+            if (group) {
+                candidates = this.groupIndex.get(serviceName)?.get(group) || new Set();
+            } else {
+                candidates = this.availableNodes.get(serviceName) || new Set();
+            }
             let filtered = [];
-            for (const nodeName of availSet) {
+            for (const nodeName of candidates) {
                 const node = this.healthyNodesMap.get(serviceName).get(nodeName);
-                if (group && node.metadata.group !== group) continue;
                 if (tags && tags.length > 0 && (!node.metadata.tags || !tags.every(tag => node.metadata.tags.includes(tag)))) continue;
                 filtered.push(node);
             }
@@ -505,10 +569,17 @@ class ServiceRegistry{
             arr.push(node);
             arr.sort((a, b) => (b.metadata.priority || 0) - (a.metadata.priority || 0));
               this.addToHashRegistry(serviceName, nodeName);
-            // Add to available if not in maintenance or draining
-            if (!this.isInMaintenance(serviceName, nodeName) && !this.isInDraining(serviceName, nodeName)) {
-                avail.add(nodeName);
-            }
+             // Add to available if not in maintenance or draining
+             if (!this.isInMaintenance(serviceName, nodeName) && !this.isInDraining(serviceName, nodeName)) {
+                 avail.add(nodeName);
+                 // Add to group index
+                 if (node.metadata.group) {
+                     if (!this.groupIndex.has(serviceName)) this.groupIndex.set(serviceName, new Map());
+                     const groupMap = this.groupIndex.get(serviceName);
+                     if (!groupMap.has(node.metadata.group)) groupMap.set(node.metadata.group, new Set());
+                     groupMap.get(node.metadata.group).add(nodeName);
+                 }
+             }
         }
         // Invalidate all cache entries for this service (including groups)
         for (const key of this.healthyCache.keys()) {
@@ -528,10 +599,19 @@ class ServiceRegistry{
             const index = arr.findIndex(n => n.nodeName === nodeName);
             if (index > -1) {
                 arr.splice(index, 1);
-                set.delete(nodeName);
-                map.delete(nodeName);
-                avail.delete(nodeName);
-                  this.removeFromHashRegistry(serviceName, nodeName);
+                 set.delete(nodeName);
+                 map.delete(nodeName);
+                 avail.delete(nodeName);
+                 // Remove from group index
+                 if (this.groupIndex.has(serviceName)) {
+                     const groupMap = this.groupIndex.get(serviceName);
+                     if (node.metadata.group && groupMap.has(node.metadata.group)) {
+                         groupMap.get(node.metadata.group).delete(nodeName);
+                         if (groupMap.get(node.metadata.group).size === 0) groupMap.delete(node.metadata.group);
+                     }
+                     if (groupMap.size === 0) this.groupIndex.delete(serviceName);
+                 }
+                   this.removeFromHashRegistry(serviceName, nodeName);
             }
             // Invalidate all cache entries for this service (including groups)
         for (const key of this.healthyCache.keys()) {
@@ -933,10 +1013,28 @@ class ServiceRegistry{
                     this.webhooks = new Map(
                         Object.entries(data.webhooks || {}).map(([k, v]) => [k, new Set(v)])
                     );
-                    // Load tag index
-                    this.tagIndex = new Map(
-                        Object.entries(data.tagIndex || {}).map(([k, v]) => [k, new Set(v)])
-                    );
+                 // Load tag index
+                 this.tagIndex = new Map(
+                     Object.entries(data.tagIndex || {}).map(([k, v]) => [k, new Set(v)])
+                 );
+                 // Load group index
+                 this.groupIndex = new Map(
+                     Object.entries(data.groupIndex || {}).map(([k, v]) => [k, new Map(
+                         Object.entries(v).map(([k2, v2]) => [k2, new Set(v2)])
+                     )])
+                 );
+                 // Load group index
+                 this.groupIndex = new Map(
+                     Object.entries(data.groupIndex || {}).map(([k, v]) => [k, new Map(
+                         Object.entries(v).map(([k2, v2]) => [k2, new Set(v2)])
+                     )])
+                 );
+                 // Load group index
+                 this.groupIndex = new Map(
+                     Object.entries(data.groupIndex || {}).map(([k, v]) => [k, new Map(
+                         Object.entries(v).map(([k2, v2]) => [k2, new Set(v2)])
+                     )])
+                 );
                   // Load circuit breaker
                   this.circuitBreaker = new Map(Object.entries(data.circuitBreaker || {}));
                   // Load available nodes
