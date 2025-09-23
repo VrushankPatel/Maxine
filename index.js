@@ -1,8 +1,8 @@
 require('./src/main/util/logging/log-generic-exceptions')();
 const config = require('./src/main/config/config');
 
-// Initialize OpenTelemetry tracing if enabled
-if (config.tracingEnabled) {
+// Initialize OpenTelemetry tracing if enabled and not in high performance mode
+if (config.tracingEnabled && !config.highPerformanceMode) {
     const { NodeSDK } = require('@opentelemetry/sdk-node');
     const { getNodeAutoInstrumentations } = require('@opentelemetry/auto-instrumentations-node');
     const { JaegerExporter } = require('@opentelemetry/exporter-jaeger');
@@ -95,18 +95,21 @@ if (config.clusteringEnabled && cluster.isMaster) {
                         .invoke(() => console.log('app built'))
                        .getApp();
 
-    // WebSocket server for real-time changes
-    const wss = new WebSocket.Server({ port: 8081 }); // Use different port
+    // WebSocket server for real-time changes (disabled in high performance mode)
+    let wss;
+    if (!config.highPerformanceMode) {
+        wss = new WebSocket.Server({ port: 8081 }); // Use different port
 
-    wss.on('connection', (ws) => {
-        console.log('WebSocket client connected');
-        ws.on('message', (message) => {
-            console.log('Received:', message);
+        wss.on('connection', (ws) => {
+            console.log('WebSocket client connected');
+            ws.on('message', (message) => {
+                console.log('Received:', message);
+            });
+            ws.on('close', () => {
+                console.log('WebSocket client disconnected');
+            });
         });
-        ws.on('close', () => {
-            console.log('WebSocket client disconnected');
-        });
-    });
+    }
 
     // Broadcast changes
     const { serviceRegistry } = require('./src/main/entity/service-registry');
@@ -114,11 +117,13 @@ if (config.clusteringEnabled && cluster.isMaster) {
         return function(type, serviceName, nodeName, data) {
             originalAddChange.call(this, type, serviceName, nodeName, data);
             // Broadcast to all WebSocket clients
-            wss.clients.forEach(client => {
-                if (client.readyState === WebSocket.OPEN) {
-                    client.send(JSON.stringify({ type, serviceName, nodeName, data, timestamp: Date.now() }));
-                }
-            });
+            if (wss) {
+                wss.clients.forEach(client => {
+                    if (client.readyState === WebSocket.OPEN) {
+                        client.send(JSON.stringify({ type, serviceName, nodeName, data, timestamp: Date.now() }));
+                    }
+                });
+            }
         };
     })(serviceRegistry.addChange);
 

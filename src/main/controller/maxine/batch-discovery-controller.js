@@ -27,7 +27,7 @@ const batchDiscoveryController = (req, res) => {
     let hasErrors = false;
 
     for (const serviceReq of services) {
-        const { serviceName, version, namespace = "default", region = "default", zone = "default", endPoint = "" } = serviceReq;
+        let { serviceName, version, namespace = "default", region = "default", zone = "default", endPoint = "" } = serviceReq;
 
         if (!serviceName) {
             results.push({ serviceName: serviceReq.serviceName || 'unknown', error: 'Missing serviceName' });
