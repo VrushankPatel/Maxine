@@ -839,10 +839,8 @@ class ServiceRegistry{
                           }
                           this.addToTagIndex(nodeName, nodes[nodeName].metadata.tags);
                            }
-                       }
-                 // Load circuit breaker
-                 this.circuitBreaker = new Map(Object.entries(data.circuitBreaker || {}));
-             }
+                  }
+              }
          } catch (err) {
              console.error('Failed to load from etcd:', err);
          }
