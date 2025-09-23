@@ -146,8 +146,8 @@
   - In-memory LRU caching for discovery operations with configurable TTL (10min) and increased size (1M entries) to reduce lookup times and support high-throughput scenarios.
   - Healthy nodes cache eliminates filtering overhead, ensuring sub-millisecond service discovery lookups.
   - Debounced asynchronous file saves to minimize I/O blocking during high-frequency registrations with persistence across restarts.
-  - Background parallel health checks with configurable interval (default 30 seconds) and concurrency (default 200) using native HTTP modules for reduced overhead and maintain service status without request latency impact.
-  - Aggressive connection pooling for HTTP proxying (50,000 max sockets, keep-alive) to handle thousands of concurrent requests.
+  - Background parallel health checks with configurable interval (default 60 seconds) and concurrency (default 50) using native HTTP modules for reduced overhead and maintain service status without request latency impact.
+  - Aggressive connection pooling for HTTP proxying (10,000 max sockets, keep-alive) to handle thousands of concurrent requests.
   - Circuit breaker with failure counting automatically isolates unhealthy nodes while allowing recovery.
   - Configurable API rate limiting (default 10,000 requests per 15 minutes per IP) prevents abuse and ensures stability under load.
   - High performance mode disables logging for discovery endpoints to reduce overhead under extreme load.

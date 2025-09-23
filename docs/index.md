@@ -18,7 +18,7 @@
 
 ## Introduction
 
-Maxine is a Service registry and a discovery server that detects and registers each service and device in the network and works as a reverse proxy to make each service available by its name. Maxine SRD solves the problem of hardwiring URLs to establish flawless communication between microservices.
+Maxine is a Service registry and discovery server that detects and registers each service and device in the network, providing service addresses for client-side discovery to enable fast communication between microservices. It includes optional reverse proxy capabilities for scenarios requiring centralized routing. Maxine SRD solves the problem of hardwiring URLs to establish flawless communication between microservices.
 
 Maxine SRD has the ability to locate a network automatically making it so that there is no need for a long configuration setup process. The Service discovery works by services connecting through REST on the network allowing devices or services to connect without any manual intervention.
 
@@ -27,9 +27,9 @@ Maxine SRD has the ability to locate a network automatically making it so that t
 1. Assuming that the Maxine SRD server is up and running and all the services or microservices in the network have MAXINE-CLIENT added as a dependency in it, below is the explaination of how Maxine SRD works.
 2. The Maxine client installed in all the services will start sending the heartbeat (A special request that'll have all the necessary metadata of that service to let the other services connect) to the Maxine SRD.
 3. The SRD server will extract the service metadata from that request payload and will save it in the in-memory database (to reduce the latency), The server will also run a thread that'll remove that service metadata after the given timeout in the metadata (If not provided, then default heartbeat timeout will be used). SRD will store the data by keeping the serviceName as the primary key so that by the serviceName, its URL can be discovered.
-4. After this, all the services that want to intercommunicate inside its network, They'll connect to that service via the Maxine client, and here, it'll use the serviceName instead of the service URL, and the Maxine API client will pass that request to SRD.
-5. SRD will receive the request and will extract the serviceName from it. It'll discover if that service is stored there in the registry, If it is, then it'll redirect the request to that service's URL.
-6. If that service name has multiple nodes in the registry, then SRD will distribute the traffic across all the nodes of that service by maxine's inbuilt load balancer.
+4. After this, all the services that want to intercommunicate with the service inside its network, They'll connect to that service via the Maxine client, using the serviceName instead of the service URL. The Maxine API client will query SRD for the service address.
+5. SRD will receive the request and will extract the serviceName from it. It'll discover if that service is stored there in the registry, If it is, then it'll return the service's address to the client for direct connection. Optionally, if proxy mode is enabled (proxy=true), it can proxy the request to the service.
+6. If that service name has multiple nodes in the registry, then SRD will select a node based on the load balancing strategy and return its address.
 
 Below is a tiny animation that explains how maxine registers all the services in the network by their HEARTBEATs sent by the maxine client.
 <br/><br/>
@@ -42,7 +42,7 @@ Once the services are registered, Below is the animation that shows how services
 <br/><br/>
 <img src="img/anim/maxine-discovery.gif" />
 <br/><br/>
-As we can see, maxine SRD is working as a reverse proxy for each servers, and redirecting all the requests to the respective servers by searching for their URLS in registery by using the serviceName as a key.
+As we can see, maxine SRD provides service addresses for direct client connections, enabling fast and efficient inter-service communication. When proxy mode is used, it acts as a reverse proxy, routing requests to the appropriate servers.
 ## What problems does Maxine solve?
 
 * When working with SOA (Service oriented architecture) or microservices, we usually have to establish the inter-service communication by their URL that gets constituted by SSL check, Hostname, port, and path.
