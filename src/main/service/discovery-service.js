@@ -60,16 +60,18 @@ class DiscoveryService{
      * @param {string} deployment
      * @returns {object}
      */
-     getNode = (fullServiceName, ip, group, tags, deployment) => {
-          // Check if serviceName is an alias (cached)
-          let resolvedServiceName = this.aliasCache.get(fullServiceName);
-          if (resolvedServiceName === undefined) {
-              resolvedServiceName = serviceRegistry.getServiceByAlias(fullServiceName);
-              this.aliasCache.set(fullServiceName, resolvedServiceName);
-          }
-          if (resolvedServiceName !== fullServiceName) {
-              fullServiceName = resolvedServiceName;
-          }
+    getNode = (fullServiceName, ip, group, tags, deployment) => {
+           // Check if serviceName is an alias (cached) - disabled in high performance mode
+           if (!config.highPerformanceMode) {
+               let resolvedServiceName = this.aliasCache.get(fullServiceName);
+               if (resolvedServiceName === undefined) {
+                   resolvedServiceName = serviceRegistry.getServiceByAlias(fullServiceName);
+                   this.aliasCache.set(fullServiceName, resolvedServiceName);
+               }
+               if (resolvedServiceName !== fullServiceName) {
+                   fullServiceName = resolvedServiceName;
+               }
+           }
 
         const usesIp = [constants.SSS.CH, constants.SSS.RH, constants.SSS.STICKY].includes(config.serverSelectionStrategy);
         const groupKey = group ? `:${group}` : '';
