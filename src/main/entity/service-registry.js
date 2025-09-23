@@ -24,6 +24,7 @@ class ServiceRegistry{
     tagIndex = new Map(); // tag -> Set of nodeNames
     kvStore = new Map(); // key -> value
     trafficSplit = new Map(); // baseServiceName -> {version: percent}
+    healthHistory = new Map(); // serviceName -> nodeName -> array of {timestamp, status}
 
     constructor() {
         if (config.redisEnabled) {
@@ -166,6 +167,28 @@ class ServiceRegistry{
             }
         }
         return dependents;
+    }
+
+    addHealthHistory = (serviceName, nodeName, status) => {
+        if (!this.healthHistory.has(serviceName)) {
+            this.healthHistory.set(serviceName, new Map());
+        }
+        const serviceHistory = this.healthHistory.get(serviceName);
+        if (!serviceHistory.has(nodeName)) {
+            serviceHistory.set(nodeName, []);
+        }
+        const history = serviceHistory.get(nodeName);
+        history.push({ timestamp: Date.now(), status });
+        // Keep last 100 entries
+        if (history.length > 100) {
+            history.shift();
+        }
+    }
+
+    getHealthHistory = (serviceName, nodeName) => {
+        if (!this.healthHistory.has(serviceName)) return [];
+        const serviceHistory = this.healthHistory.get(serviceName);
+        return serviceHistory.get(nodeName) || [];
     }
 
     // Key-Value store
@@ -365,7 +388,10 @@ class ServiceRegistry{
                     Array.from(this.serviceDependencies.entries()).map(([k, v]) => [k, Array.from(v)])
                 ),
                 kvStore: Object.fromEntries(this.kvStore),
-                trafficSplit: Object.fromEntries(this.trafficSplit)
+                trafficSplit: Object.fromEntries(this.trafficSplit),
+                healthHistory: Object.fromEntries(
+                    Array.from(this.healthHistory.entries()).map(([k, v]) => [k, Object.fromEntries(v)])
+                )
             };
             await fs.promises.writeFile(path.join(__dirname, '../../../registry.json'), JSON.stringify(data, null, 2));
         } catch (err) {
@@ -384,7 +410,10 @@ class ServiceRegistry{
                     Array.from(this.serviceDependencies.entries()).map(([k, v]) => [k, Array.from(v)])
                 ),
                 kvStore: Object.fromEntries(this.kvStore),
-                trafficSplit: Object.fromEntries(this.trafficSplit)
+                trafficSplit: Object.fromEntries(this.trafficSplit),
+                healthHistory: Object.fromEntries(
+                    Array.from(this.healthHistory.entries()).map(([k, v]) => [k, Object.fromEntries(v)])
+                )
             };
             await this.redisClient.set('registry', JSON.stringify(data));
         } catch (err) {
@@ -421,6 +450,10 @@ class ServiceRegistry{
                 this.kvStore = new Map(Object.entries(data.kvStore || {}));
                 // Load traffic split
                 this.trafficSplit = new Map(Object.entries(data.trafficSplit || {}));
+                // Load health history
+                this.healthHistory = new Map(
+                    Object.entries(data.healthHistory || {}).map(([k, v]) => [k, new Map(Object.entries(v))])
+                );
                 // Reinitialize hashRegistry and healthyNodes
                 for (const serviceName of data.hashRegistry || []) {
                     this.initHashRegistry(serviceName);
@@ -458,6 +491,10 @@ class ServiceRegistry{
                     this.kvStore = new Map(Object.entries(data.kvStore || {}));
                     // Load traffic split
                     this.trafficSplit = new Map(Object.entries(data.trafficSplit || {}));
+                    // Load health history
+                    this.healthHistory = new Map(
+                        Object.entries(data.healthHistory || {}).map(([k, v]) => [k, new Map(Object.entries(v))])
+                    );
                     // Reinitialize hashRegistry and healthyNodes
                     for (const serviceName of data.hashRegistry || []) {
                         this.initHashRegistry(serviceName);
@@ -466,7 +503,6 @@ class ServiceRegistry{
                             this.addNodeToHashRegistry(serviceName, nodeName);
                         if (nodes[nodeName].healthy !== false) { // assuming healthy is true by default
                             this.addToHealthyNodes(serviceName, nodeName);
-                            this.addToHashRegistry(serviceName, nodeName);
                         }
                         this.addToTagIndex(nodeName, nodes[nodeName].metadata.tags);
                         }

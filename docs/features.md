@@ -25,6 +25,7 @@
   - Background health checks run continuously every 30 seconds to maintain up-to-date service status without impacting request latency.
 - Health status is cached in optimized data structures, enabling circuit breaker functionality with failure counting that automatically skips unhealthy nodes during discovery.
 - Circuit breaker includes automatic recovery when services become healthy again, improving overall system reliability and performance.
+- Health check history is tracked for each service node, accessible via `/api/maxine/serviceops/health/history?serviceName=<name>&nodeName=<node>` to monitor service stability over time.
 ### Metrics
 - Maxine provides comprehensive metrics collection for monitoring performance and usage.
   - The metrics endpoint `/api/maxine/serviceops/metrics` returns real-time statistics including:

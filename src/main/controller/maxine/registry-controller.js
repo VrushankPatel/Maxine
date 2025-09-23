@@ -120,7 +120,7 @@ const bulkHealthController = async (req, res) => {
     }
     const results = {};
     for (const serviceName of serviceNames) {
-        const fullServiceName = `${namespace}:${serviceName}`;
+    const fullServiceName = version ? `${namespace}:${serviceName}:${version}` : `${namespace}:${serviceName}`;
         const nodes = serviceRegistry.getNodes(fullServiceName);
         if (!nodes || Object.keys(nodes).length === 0) {
             results[serviceName] = { error: "Service not found" };
@@ -165,6 +165,7 @@ const bulkHealthController = async (req, res) => {
 const filteredDiscoveryController = (req, res) => {
     const startTime = Date.now();
     const serviceName = req.query.serviceName;
+    const version = req.query.version || "1.0";
     const namespace = req.query.namespace || "default";
     const tags = req.query.tags ? req.query.tags.split(',') : [];
     const endPoint = req.query.endPoint || "";
@@ -394,12 +395,26 @@ const setMaintenanceController = (req, res) => {
     res.status(statusAndMsgs.STATUS_SUCCESS).json({ message: "Maintenance mode updated" });
 }
 
+const healthHistoryController = (req, res) => {
+    const serviceName = req.query.serviceName;
+    const nodeName = req.query.nodeName;
+    const namespace = req.query.namespace || "default";
+    if (!serviceName || !nodeName) {
+        res.status(statusAndMsgs.STATUS_GENERIC_ERROR).json({ message: "Missing serviceName or nodeName" });
+        return;
+    }
+    const fullServiceName = `${namespace}:${serviceName}`;
+    const history = serviceRegistry.getHealthHistory(fullServiceName, nodeName);
+    res.status(statusAndMsgs.STATUS_SUCCESS).json({ serviceName, nodeName, namespace, history });
+}
+
 module.exports = {
     registryController,
     serverListController,
     deregisterController,
     healthController,
     bulkHealthController,
+    healthHistoryController,
     metricsController,
     prometheusMetricsController,
     cacheStatsController,

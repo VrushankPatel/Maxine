@@ -1,4 +1,146 @@
 {
-  "registry": {},
-  "hashRegistry": []
+  "registry": {
+    "default:dbservice:1.0": {
+      "offset": 0,
+      "nodes": {
+        "node-x-10-0": {
+          "nodeName": "node-x-10-0",
+          "parentNode": "node-x-10",
+          "address": "https://httpbin.org/status/200",
+          "timeOut": 50,
+          "registeredAt": 1758603054608,
+          "healthy": true,
+          "failureCount": 0,
+          "lastFailureTime": null,
+          "metadata": {
+            "healthEndpoint": ""
+          }
+        },
+        "node-x-10-1": {
+          "nodeName": "node-x-10-1",
+          "parentNode": "node-x-10",
+          "address": "https://httpbin.org/status/200",
+          "timeOut": 50,
+          "registeredAt": 1758603054609,
+          "healthy": true,
+          "failureCount": 0,
+          "lastFailureTime": null,
+          "metadata": {
+            "healthEndpoint": ""
+          }
+        },
+        "node-x-10-2": {
+          "nodeName": "node-x-10-2",
+          "parentNode": "node-x-10",
+          "address": "https://httpbin.org/status/200",
+          "timeOut": 50,
+          "registeredAt": 1758603054611,
+          "healthy": true,
+          "failureCount": 0,
+          "lastFailureTime": null,
+          "metadata": {
+            "healthEndpoint": ""
+          }
+        },
+        "node-x-10-3": {
+          "nodeName": "node-x-10-3",
+          "parentNode": "node-x-10",
+          "address": "https://httpbin.org/status/200",
+          "timeOut": 50,
+          "registeredAt": 1758603054612,
+          "healthy": true,
+          "failureCount": 0,
+          "lastFailureTime": null,
+          "metadata": {
+            "healthEndpoint": ""
+          }
+        },
+        "node-x-10-4": {
+          "nodeName": "node-x-10-4",
+          "parentNode": "node-x-10",
+          "address": "https://httpbin.org/status/200",
+          "timeOut": 50,
+          "registeredAt": 1758603054613,
+          "healthy": true,
+          "failureCount": 0,
+          "lastFailureTime": null,
+          "metadata": {
+            "healthEndpoint": ""
+          }
+        },
+        "node-x-10-5": {
+          "nodeName": "node-x-10-5",
+          "parentNode": "node-x-10",
+          "address": "https://httpbin.org/status/200",
+          "timeOut": 50,
+          "registeredAt": 1758603054614,
+          "healthy": true,
+          "failureCount": 0,
+          "lastFailureTime": null,
+          "metadata": {
+            "healthEndpoint": ""
+          }
+        },
+        "node-x-10-6": {
+          "nodeName": "node-x-10-6",
+          "parentNode": "node-x-10",
+          "address": "https://httpbin.org/status/200",
+          "timeOut": 50,
+          "registeredAt": 1758603054615,
+          "healthy": true,
+          "failureCount": 0,
+          "lastFailureTime": null,
+          "metadata": {
+            "healthEndpoint": ""
+          }
+        },
+        "node-x-10-7": {
+          "nodeName": "node-x-10-7",
+          "parentNode": "node-x-10",
+          "address": "https://httpbin.org/status/200",
+          "timeOut": 50,
+          "registeredAt": 1758603054616,
+          "healthy": true,
+          "failureCount": 0,
+          "lastFailureTime": null,
+          "metadata": {
+            "healthEndpoint": ""
+          }
+        },
+        "node-x-10-8": {
+          "nodeName": "node-x-10-8",
+          "parentNode": "node-x-10",
+          "address": "https://httpbin.org/status/200",
+          "timeOut": 50,
+          "registeredAt": 1758603054617,
+          "healthy": true,
+          "failureCount": 0,
+          "lastFailureTime": null,
+          "metadata": {
+            "healthEndpoint": ""
+          }
+        },
+        "node-x-10-9": {
+          "nodeName": "node-x-10-9",
+          "parentNode": "node-x-10",
+          "address": "https://httpbin.org/status/200",
+          "timeOut": 50,
+          "registeredAt": 1758603054617,
+          "healthy": true,
+          "failureCount": 0,
+          "lastFailureTime": null,
+          "metadata": {
+            "healthEndpoint": ""
+          }
+        }
+      }
+    }
+  },
+  "hashRegistry": [
+    "default:dbservice:1.0"
+  ],
+  "serviceAliases": {},
+  "serviceDependencies": {},
+  "kvStore": {},
+  "trafficSplit": {}
 }
