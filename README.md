@@ -97,8 +97,10 @@ As we can see, maxine SRD is working as a true reverse proxy for each servers, a
             * **Lightning-Fast Performance Mode**: High performance mode now skips response time recording and active connection tracking for maximum throughput under heavy load.
             * **gRPC Support**: Added gRPC endpoint for service discovery at port 50051 (configurable via GRPC_PORT), enabled with GRPC_ENABLED=true.
             * **Batch Discovery**: Added `/api/maxine/serviceops/discover/batch` endpoint to discover multiple services in a single request, improving performance for clients needing multiple service addresses.
-             * **Envoy Configuration Generation**: Added `/api/maxine/serviceops/envoy/config` endpoint to generate Envoy proxy configuration for all registered services, enabling seamless integration with service mesh architectures.
-             * **OpenTelemetry Tracing**: Added support for distributed tracing using OpenTelemetry with Jaeger exporter for better observability in microservices architectures. Enable with `TRACING_ENABLED=true` and configure `JAEGER_ENDPOINT`.
+              * **Envoy Configuration Generation**: Added `/api/maxine/serviceops/envoy/config` endpoint to generate Envoy proxy configuration for all registered services, enabling seamless integration with service mesh architectures.
+              * **OpenTelemetry Tracing**: Added support for distributed tracing using OpenTelemetry with Jaeger exporter for better observability in microservices architectures. Enable with `TRACING_ENABLED=true` and configure `JAEGER_ENDPOINT`.
+              * **Backup and Restore**: Added `/api/maxine/serviceops/backup` endpoint to export the entire registry state as JSON, and `/api/maxine/serviceops/restore` to import and restore from a backup. Useful for disaster recovery and migration. CLI commands `backup` and `restore` are also available.
+
 
 ## Setup for development
 
