@@ -1,6 +1,10 @@
 const jwt = require('jsonwebtoken');
+const LRU = require('lru-cache');
 const { admin, User } = require('../../entity/user');
 const { statusAndMsgs, constants } = require('../../util/constants/constants');
+
+// Cache for verified JWT tokens to improve performance
+const tokenCache = new LRU({ max: 10000, ttl: 15 * 60 * 1000 }); // 15 minutes TTL
 
 function authenticationController(req, res, next) {
     let authRequired = false;
@@ -23,6 +27,14 @@ function authenticationController(req, res, next) {
         return;
     }
 
+    // Check cache first
+    const cachedUser = tokenCache.get(token);
+    if (cachedUser) {
+        req.user = cachedUser;
+        next();
+        return;
+    }
+
     jwt.verify(token, constants.SECRET, (err, user) => {
         if (err) {
             err.message.includes("jwt expired") ?
@@ -34,6 +46,7 @@ function authenticationController(req, res, next) {
         const userObj = User.createUserFromObj(user);
         if (userObj.userName === admin.userName && userObj.password === admin.password && userObj.role === 'admin') {
             req.user = userObj;
+            tokenCache.set(token, userObj);
             next();
             return;
         }
@@ -41,6 +54,7 @@ function authenticationController(req, res, next) {
         // For other users, check if role allows
         if (userObj.role === 'admin' || userObj.role === 'user') {
             req.user = userObj;
+            tokenCache.set(token, userObj);
             next();
             return;
         }
