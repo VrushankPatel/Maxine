@@ -14,7 +14,7 @@ const config = {
          discoveryCacheMax: process.env.DISCOVERY_CACHE_MAX ? parseInt(process.env.DISCOVERY_CACHE_MAX) : 100000,
          aliasCacheMax: process.env.ALIAS_CACHE_MAX ? parseInt(process.env.ALIAS_CACHE_MAX) : 100000,
     failureThreshold: process.env.FAILURE_THRESHOLD ? parseInt(process.env.FAILURE_THRESHOLD) : 3,
-    clusteringEnabled: process.env.CLUSTERING_ENABLED !== 'false' && !highPerfDefault && !process.argv.some(arg => arg.includes('mocha')),
+    clusteringEnabled: process.env.CLUSTERING_ENABLED !== 'false' && !process.argv.some(arg => arg.includes('mocha')),
     numWorkers: process.env.NUM_WORKERS ? parseInt(process.env.NUM_WORKERS) : require('os').cpus().length,
       healthCheckEnabled: process.env.HEALTH_CHECK_ENABLED === 'true',
       redisEnabled: process.env.REDIS_ENABLED === 'true' && !highPerfDefault,

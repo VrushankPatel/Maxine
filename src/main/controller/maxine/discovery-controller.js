@@ -24,13 +24,13 @@ const hasMetrics = config.metricsEnabled;
 const isCircuitBreakerEnabled = config.circuitBreakerEnabled;
 
 // Cache for IP extraction
-const ipCache = new LRU({ max: isHighPerformanceMode ? 50000 : 100000, ttl: 900000 });
+const ipCache = new LRU({ max: isHighPerformanceMode ? 100000 : 100000, ttl: 900000 });
 // Cache for address building
-const addressCache = new LRU({ max: isHighPerformanceMode ? 50000 : 100000, ttl: 900000 });
+const addressCache = new LRU({ max: isHighPerformanceMode ? 100000 : 100000, ttl: 900000 });
 // Cache for cache key building
-const cacheKeyCache = new LRU({ max: isHighPerformanceMode ? 50000 : 100000, ttl: 900000 });
+const cacheKeyCache = new LRU({ max: isHighPerformanceMode ? 100000 : 100000, ttl: 900000 });
 // Cache for traffic splitting
-const trafficSplitCache = new LRU({ max: isHighPerformanceMode ? 50000 : 100000, ttl: 300000 }); // 5 min TTL
+const trafficSplitCache = new LRU({ max: isHighPerformanceMode ? 100000 : 100000, ttl: 300000 }); // 5 min TTL
 
 // Fast JSON stringify schemas
 const addressResponseSchema = {
@@ -191,7 +191,7 @@ const discoveryController = (req, res) => {
                 const latency = Date.now() - startTime;
                 metricsService.recordRequest(serviceName, true, latency);
             }
-            res.send(stringifyAddress({ address: addressToRedirect, nodeName: serviceNode.nodeName }));
+            res.send(isHighPerformanceMode ? JSON.stringify({ address: addressToRedirect, nodeName: serviceNode.nodeName }) : stringifyAddress({ address: addressToRedirect, nodeName: serviceNode.nodeName }));
             return;
         }
 
