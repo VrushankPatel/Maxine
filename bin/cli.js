@@ -123,6 +123,133 @@ async function restore() {
     }
 }
 
+async function aliases() {
+    const { action, alias, primaryServiceName } = args;
+    if (action === 'add') {
+        if (!alias || !primaryServiceName) {
+            console.error('Usage: cli aliases --action add --alias <alias> --primaryServiceName <name>');
+            process.exit(1);
+        }
+        try {
+            const res = await api.post('/api/maxine/serviceops/aliases/add', { alias, primaryServiceName });
+            console.log('Alias added:', res.data);
+        } catch (err) {
+            console.error('Error:', err.response?.data || err.message);
+        }
+    } else if (action === 'remove') {
+        if (!alias) {
+            console.error('Usage: cli aliases --action remove --alias <alias>');
+            process.exit(1);
+        }
+        try {
+            const res = await api.delete('/api/maxine/serviceops/aliases/remove', { data: { alias } });
+            console.log('Alias removed:', res.data);
+        } catch (err) {
+            console.error('Error:', err.response?.data || err.message);
+        }
+    } else if (action === 'list') {
+        if (!primaryServiceName) {
+            console.error('Usage: cli aliases --action list --primaryServiceName <name>');
+            process.exit(1);
+        }
+        try {
+            const res = await api.get(`/api/maxine/serviceops/aliases?serviceName=${primaryServiceName}`);
+            console.log(JSON.stringify(res.data, null, 2));
+        } catch (err) {
+            console.error('Error:', err.response?.data || err.message);
+        }
+    } else {
+        console.error('Usage: cli aliases --action <add|remove|list> [options]');
+    }
+}
+
+async function webhooks() {
+    const { action, serviceName, url } = args;
+    if (action === 'add') {
+        if (!serviceName || !url) {
+            console.error('Usage: cli webhooks --action add --serviceName <name> --url <url>');
+            process.exit(1);
+        }
+        try {
+            const res = await api.post('/api/maxine/serviceops/webhooks/add', { serviceName, url });
+            console.log('Webhook added:', res.data);
+        } catch (err) {
+            console.error('Error:', err.response?.data || err.message);
+        }
+    } else if (action === 'remove') {
+        if (!serviceName || !url) {
+            console.error('Usage: cli webhooks --action remove --serviceName <name> --url <url>');
+            process.exit(1);
+        }
+        try {
+            const res = await api.delete('/api/maxine/serviceops/webhooks/remove', { data: { serviceName, url } });
+            console.log('Webhook removed:', res.data);
+        } catch (err) {
+            console.error('Error:', err.response?.data || err.message);
+        }
+    } else if (action === 'list') {
+        if (!serviceName) {
+            console.error('Usage: cli webhooks --action list --serviceName <name>');
+            process.exit(1);
+        }
+        try {
+            const res = await api.get(`/api/maxine/serviceops/webhooks?serviceName=${serviceName}`);
+            console.log(JSON.stringify(res.data, null, 2));
+        } catch (err) {
+            console.error('Error:', err.response?.data || err.message);
+        }
+    } else {
+        console.error('Usage: cli webhooks --action <add|remove|list> [options]');
+    }
+}
+
+async function kv() {
+    const { action, key, value } = args;
+    if (action === 'set') {
+        if (!key || value === undefined) {
+            console.error('Usage: cli kv --action set --key <key> --value <value>');
+            process.exit(1);
+        }
+        try {
+            const res = await api.post('/api/maxine/serviceops/kv/set', { key, value });
+            console.log('KV set:', res.data);
+        } catch (err) {
+            console.error('Error:', err.response?.data || err.message);
+        }
+    } else if (action === 'get') {
+        if (!key) {
+            console.error('Usage: cli kv --action get --key <key>');
+            process.exit(1);
+        }
+        try {
+            const res = await api.get(`/api/maxine/serviceops/kv/get?key=${key}`);
+            console.log(res.data.value);
+        } catch (err) {
+            console.error('Error:', err.response?.data || err.message);
+        }
+    } else if (action === 'delete') {
+        if (!key) {
+            console.error('Usage: cli kv --action delete --key <key>');
+            process.exit(1);
+        }
+        try {
+            const res = await api.delete('/api/maxine/serviceops/kv/delete', { data: { key } });
+            console.log('KV deleted:', res.data);
+        } catch (err) {
+            console.error('Error:', err.response?.data || err.message);
+        }
+    } else if (action === 'list') {
+        try {
+            const res = await api.get('/api/maxine/serviceops/kv/all');
+            console.log(JSON.stringify(res.data, null, 2));
+        } catch (err) {
+            console.error('Error:', err.response?.data || err.message);
+        }
+    } else {
+        console.error('Usage: cli kv --action <set|get|delete|list> [options]');
+    }
+}
+
 async function config() {
     const { key, value } = args;
     if (value !== undefined) {
@@ -177,11 +304,20 @@ switch (command) {
     case 'restore':
         restore();
         break;
+    case 'aliases':
+        aliases();
+        break;
+    case 'webhooks':
+        webhooks();
+        break;
+    case 'kv':
+        kv();
+        break;
     case 'config':
         config();
         break;
     default:
         console.log('Usage: cli <command> [options]');
-        console.log('Commands: register, deregister, list, health, discover, metrics, backup, restore, config');
+        console.log('Commands: register, deregister, list, health, discover, metrics, backup, restore, aliases, webhooks, kv, config');
         console.log('Options: --url <baseUrl>');
 }

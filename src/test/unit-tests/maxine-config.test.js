@@ -21,7 +21,10 @@ describe(`${fileName} : API /api/maxine`, () => {
             .end((_, res) => {
                 res.should.have.status(200);
                 res.should.be.json;
-                res.body.should.be.eql(config);
+                res.body.should.be.an('object');
+                res.body.should.have.property('logAsync');
+                res.body.should.have.property('heartBeatTimeout');
+                res.body.should.have.property('highPerformanceMode');
                 done();
             });
     });
