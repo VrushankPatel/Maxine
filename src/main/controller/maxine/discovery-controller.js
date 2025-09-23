@@ -48,10 +48,11 @@ const discoveryController = (req, res) => {
     const region = req.query.region || "default";
     const zone = req.query.zone || "default";
     const endPoint = req.query.endPoint || "";
-    const ip = req.clientIp || (req.clientIp = req.ip
-    || req.connection.remoteAddress
-    || req.socket.remoteAddress
-    || req.connection.socket.remoteAddress);
+    const ip = req.clientIp || (req.clientIp = req.ip ||
+        req.connection?.remoteAddress ||
+        req.socket?.remoteAddress ||
+        req.connection?.socket?.remoteAddress ||
+        'unknown');
 
     // if serviceName is not there, responding with error
       if(!serviceName) {
@@ -69,7 +70,8 @@ const discoveryController = (req, res) => {
         `${namespace}:${region}:${zone}:${serviceName}` : `${namespace}:${serviceName}`;
 
     // Handle traffic splitting if no version specified
-    if (!version) {
+    let selectedVersion = version;
+    if (!selectedVersion) {
         const split = serviceRegistry.getTrafficSplit(baseServiceName);
         if (split) {
             const versions = Object.keys(split);
@@ -78,7 +80,7 @@ const discoveryController = (req, res) => {
             for (const v of versions) {
                 rand -= split[v];
                 if (rand <= 0) {
-                    version = v;
+                    selectedVersion = v;
                     break;
                 }
             }
@@ -86,7 +88,7 @@ const discoveryController = (req, res) => {
     }
 
     // Build full service name
-    let fullServiceName = version ? `${baseServiceName}:${version}` : baseServiceName;
+    const fullServiceName = selectedVersion ? `${baseServiceName}:${selectedVersion}` : baseServiceName;
 
     const serviceNode = discoveryService.getNode(fullServiceName, ip);
 
