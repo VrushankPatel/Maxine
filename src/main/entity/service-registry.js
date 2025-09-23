@@ -346,7 +346,12 @@ class ServiceRegistry{
                 }
             }
         }
-        this.healthyCache.delete(serviceName); // invalidate cache
+        // Invalidate all cache entries for this service (including groups)
+        for (const key of this.healthyCache.keys()) {
+            if (key === serviceName || key.startsWith(serviceName + ':')) {
+                this.healthyCache.delete(key);
+            }
+        }
         this.debounceSave();
     }
 
@@ -400,7 +405,12 @@ class ServiceRegistry{
             arr.sort((a, b) => (b.metadata.priority || 0) - (a.metadata.priority || 0));
             this.addToHashRegistry(serviceName, nodeName);
         }
-        this.healthyCache.delete(serviceName); // invalidate cache
+        // Invalidate all cache entries for this service (including groups)
+        for (const key of this.healthyCache.keys()) {
+            if (key === serviceName || key.startsWith(serviceName + ':')) {
+                this.healthyCache.delete(key);
+            }
+        }
         this.addChange('healthy', serviceName, nodeName, { healthy: true });
     }
 
@@ -414,7 +424,12 @@ class ServiceRegistry{
                 set.delete(nodeName);
                 this.removeFromHashRegistry(serviceName, nodeName);
             }
-            this.healthyCache.delete(serviceName); // invalidate cache
+            // Invalidate all cache entries for this service (including groups)
+        for (const key of this.healthyCache.keys()) {
+            if (key === serviceName || key.startsWith(serviceName + ':')) {
+                this.healthyCache.delete(key);
+            }
+        }
             this.addChange('unhealthy', serviceName, nodeName, { healthy: false });
         }
     }
