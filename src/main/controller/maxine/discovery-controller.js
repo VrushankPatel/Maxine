@@ -40,7 +40,7 @@ const addressResponseSchema = {
         nodeName: { type: 'string' }
     }
 };
-const stringifyAddress = stringify(addressResponseSchema);
+const stringifyAddress = isHighPerformanceMode ? JSON.stringify : stringify(addressResponseSchema);
 
 
 
@@ -106,10 +106,10 @@ const discoveryController = (req, res) => {
           return;
       }
 
-    // Handle traffic splitting if no version specified
+    // Handle traffic splitting if no version specified (disabled in high performance mode)
     let selectedVersion = version;
         let fullServiceName;
-        if (!selectedVersion) {
+        if (!selectedVersion && !isHighPerformanceMode) {
             const baseServiceName = buildServiceNameCached(tenantId, namespace, region, zone, serviceName, '');
             const splitKey = baseServiceName;
             let splitResult = trafficSplitCache.get(splitKey);
