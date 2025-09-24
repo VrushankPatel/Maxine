@@ -261,6 +261,24 @@ Response:
 }
 ```
 
+##### Get Anomalies
+```http
+GET /anomalies
+```
+
+Response:
+```json
+{
+  "anomalies": [
+    {
+      "serviceName": "my-service",
+      "type": "high_circuit_failures",
+      "value": 15
+    }
+  ]
+}
+```
+
 ##### Set Traffic Distribution (Canary Deployments)
 ```http
 POST /traffic/set
