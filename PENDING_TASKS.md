@@ -235,9 +235,9 @@
      - [x] Log API key usage and rate limit hits
      - [x] Implement structured audit logs with compliance-ready format
      - [x] Add audit log aggregation and alerting for security incidents
-   - Integrate with External Security Systems:
-     - LDAP integration for enterprise user authentication
-     - SAML 2.0 support for single sign-on
+- [x] Integrate with External Security Systems:
+   - [x] LDAP integration for enterprise user authentication
+   - SAML 2.0 support for single sign-on (pending)
 
 ### Next High Priority Tasks
 - [x] Implement API Key Management and Rate Limiting
