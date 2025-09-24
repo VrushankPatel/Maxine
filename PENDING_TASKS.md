@@ -76,12 +76,12 @@
     - Test performance impact of advanced health checks and event streaming
     - Validate scalability with increased service registrations and health monitoring
 
- ### Medium Priority
- - Implement Service Mesh Enhancements: Advanced service mesh features like traffic splitting, canary deployments, and fault injection
- - Implement Multi-Cluster Federation: Enhanced federation with conflict resolution and cross-cluster service discovery
- - Implement Advanced Security: OAuth2 integration, fine-grained ACLs, and encrypted communication
- - Implement Observability Enhancements: Distributed tracing integration, log aggregation, and advanced monitoring dashboards
- - Optimize Memory Usage: Add memory profiling and optimization for large-scale deployments with thousands of services
+  ### Medium Priority
+  - Implement Advanced Security: OAuth2 integration, fine-grained ACLs, and encrypted communication
+  - Implement Observability Enhancements: Distributed tracing integration with OpenTelemetry, log aggregation, and advanced monitoring dashboards
+  - Optimize Memory Usage: Add memory profiling and optimization for large-scale deployments with thousands of services
+  - Implement Kubernetes Operator: Create a custom Kubernetes operator for automated Maxine deployment and management
+  - Add Advanced Monitoring Dashboard: Build a web-based dashboard for real-time service registry monitoring, metrics visualization, and alerting
 
  ### Low Priority
  - Update Client SDKs: Add new features like tags support and WebSocket client examples
@@ -105,11 +105,11 @@
 
 ## Next Steps
 
-### High Priority
-- Implement MQTT event publishing for broader event streaming support
-- Add event persistence and replay for missed events
-- Enhance WebSocket authentication and authorization
-- Add comprehensive monitoring and alerting for WebSocket connections
+  ### High Priority
+ - Enhance WebSocket authentication and authorization (add role-based access, token refresh)
+ - Add comprehensive monitoring and alerting for WebSocket connections (metrics for active connections, event rates)
+ - Implement advanced service mesh features (traffic splitting, canary deployments)
+ - Add multi-cluster federation with conflict resolution
 
 ### Medium Priority
 - Implement advanced service mesh features (traffic splitting, canary deployments)
