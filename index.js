@@ -2870,7 +2870,10 @@ if (config.ultraFastMode) {
         .blockUnknownUrls()
         .invoke(() => console.log('before listen'));
 
-    if (true) {
+    if (config.isTestMode) {
+        // In test mode, export the app directly without starting server
+        module.exports = builder.getApp();
+    } else {
         builder.listenOrSpdy(constants.PORT, () => {
             console.log('Maxine lightning-fast server listening on port', constants.PORT);
             console.log('Full mode: comprehensive features with optimized performance');
@@ -3001,5 +3004,5 @@ if (config.ultraFastMode) {
     });
 
     module.exports = builder.server;
-}
+    }
 }

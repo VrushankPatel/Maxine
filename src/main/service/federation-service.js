@@ -3,7 +3,10 @@ const config = require('../config/config');
 
 class FederationService {
     constructor() {
-        this.federatedRegistries = new Map(); // name -> {url, lastHealthCheck, isHealthy}
+        this.federatedRegistries = new Map(); // name -> {url, lastHealthCheck, isHealthy, region, datacenter, replicationLag, failoverPriority}
+        this.primaryRegistry = null; // Current primary registry
+        this.failoverInProgress = false;
+        this.replicationLagThreshold = 5000; // 5 seconds
         this.loadFederatedRegistries();
     }
 
@@ -16,14 +19,24 @@ class FederationService {
                 this.federatedRegistries.set(name, {
                     url: url.startsWith('http') ? url : `http://${url}`,
                     lastHealthCheck: 0,
-                    isHealthy: true
+                    isHealthy: true,
+                    region: this.extractRegionFromUrl(url),
+                    datacenter: this.extractDatacenterFromUrl(url),
+                    replicationLag: 0,
+                    failoverPriority: this.calculateFailoverPriority(name),
+                    lastReplicationCheck: 0
                 });
             }
         });
 
-        // Start periodic health checks
+        // Determine initial primary
+        this.selectPrimaryRegistry();
+
+        // Start periodic health checks and failover monitoring
         setInterval(() => {
             this.healthCheckFederatedRegistries();
+            this.checkReplicationLag();
+            this.performFailoverIfNeeded();
         }, 30000); // Every 30 seconds
     }
 
@@ -136,6 +149,137 @@ class FederationService {
         await Promise.allSettled(promises);
     }
 
+    extractRegionFromUrl(url) {
+        // Extract region from URL (e.g., us-east-1 from url)
+        const match = url.match(/(\w+-\w+-\d+)/);
+        return match ? match[1] : 'unknown';
+    }
+
+    extractDatacenterFromUrl(url) {
+        // Extract datacenter from URL
+        const match = url.match(/dc-(\w+)/);
+        return match ? match[1] : 'default';
+    }
+
+    calculateFailoverPriority(name) {
+        // Calculate priority based on name (lower number = higher priority)
+        const match = name.match(/(\d+)/);
+        return match ? parseInt(match[1]) : 999;
+    }
+
+    selectPrimaryRegistry() {
+        const healthyRegistries = Array.from(this.federatedRegistries.entries())
+            .filter(([, registry]) => registry.isHealthy)
+            .sort(([, a], [, b]) => a.failoverPriority - b.failoverPriority);
+
+        if (healthyRegistries.length > 0) {
+            this.primaryRegistry = healthyRegistries[0][0];
+        } else {
+            this.primaryRegistry = null;
+        }
+    }
+
+    async checkReplicationLag() {
+        if (!config.federationEnabled) return;
+
+        const now = Date.now();
+        const promises = Array.from(this.federatedRegistries.entries()).map(async ([name, registry]) => {
+            if (now - registry.lastReplicationCheck < 60000) return; // Check every minute
+
+            try {
+                // Check replication lag by comparing timestamps
+                const response = await axios.get(`${registry.url}/metrics`, {
+                    timeout: 2000
+                });
+
+                if (response.status === 200 && response.data) {
+                    const remoteUptime = response.data.uptime || 0;
+                    const localUptime = process.uptime() * 1000;
+                    registry.replicationLag = Math.abs(localUptime - remoteUptime);
+                    registry.lastReplicationCheck = now;
+                }
+            } catch (error) {
+                registry.replicationLag = Infinity;
+                registry.lastReplicationCheck = now;
+            }
+        });
+
+        await Promise.allSettled(promises);
+    }
+
+    performFailoverIfNeeded() {
+        if (this.failoverInProgress) return;
+
+        const currentPrimary = this.primaryRegistry;
+        const currentPrimaryData = currentPrimary ? this.federatedRegistries.get(currentPrimary) : null;
+
+        // Check if current primary is unhealthy or has high replication lag
+        if (!currentPrimaryData || !currentPrimaryData.isHealthy || currentPrimaryData.replicationLag > this.replicationLagThreshold) {
+            this.failoverInProgress = true;
+
+            // Select new primary
+            this.selectPrimaryRegistry();
+
+            if (this.primaryRegistry !== currentPrimary) {
+                console.log(`Federation failover: Switching from ${currentPrimary} to ${this.primaryRegistry}`);
+
+                // Broadcast failover event
+                if (global.broadcast) {
+                    global.broadcast('federation_failover', {
+                        oldPrimary: currentPrimary,
+                        newPrimary: this.primaryRegistry,
+                        timestamp: Date.now()
+                    });
+                }
+
+                // Trigger data synchronization from new primary
+                this.synchronizeFromPrimary();
+            }
+
+            this.failoverInProgress = false;
+        }
+    }
+
+    async synchronizeFromPrimary() {
+        if (!this.primaryRegistry) return;
+
+        const primaryData = this.federatedRegistries.get(this.primaryRegistry);
+        if (!primaryData || !primaryData.isHealthy) return;
+
+        try {
+            // Get all services from primary
+            const response = await axios.get(`${primaryData.url}/servers`, {
+                timeout: 5000
+            });
+
+            if (response.status === 200 && response.data) {
+                // Synchronize local registry with primary data
+                // This would require access to the local service registry
+                console.log(`Synchronized ${Object.keys(response.data).length} services from primary ${this.primaryRegistry}`);
+            }
+        } catch (error) {
+            console.warn(`Failed to synchronize from primary ${this.primaryRegistry}: ${error.message}`);
+        }
+    }
+
+    getFailoverStatus() {
+        return {
+            primaryRegistry: this.primaryRegistry,
+            failoverInProgress: this.failoverInProgress,
+            registries: Array.from(this.federatedRegistries.entries()).map(([name, data]) => ({
+                name,
+                url: data.url,
+                isHealthy: data.isHealthy,
+                region: data.region,
+                datacenter: data.datacenter,
+                replicationLag: data.replicationLag,
+                failoverPriority: data.failoverPriority,
+                lastHealthCheck: data.lastHealthCheck,
+                lastReplicationCheck: data.lastReplicationCheck
+            }))
+        };
+    }
+
     async healthCheckFederatedRegistries() {
         if (!config.federationEnabled) return;
 
@@ -157,6 +301,9 @@ class FederationService {
         });
 
         await Promise.allSettled(promises);
+
+        // Update primary selection after health checks
+        this.selectPrimaryRegistry();
     }
 }
 

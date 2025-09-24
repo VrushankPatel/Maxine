@@ -513,6 +513,101 @@ router.delete('/federation/remove', rawBodyParser, (req, res, next) => {
     res.send(stringifyDeregister({ success: true }));
 });
 
+router.get('/federation/status', (req, res) => {
+    const federationService = require('../service/federation-service');
+    const status = federationService.getFailoverStatus();
+    res.json(status);
+});
+
+router.get('/service-mesh/metrics', (req, res) => {
+    const { serviceMeshMetricsController } = require('../controller/maxine/envoy-controller');
+    serviceMeshMetricsController(req, res);
+});
+
+router.get('/anomalies', (req, res) => {
+    const anomalies = getServiceRegistry().getAnomalies();
+    res.json({ anomalies });
+});
+
+// Distributed tracing endpoints
+const traces = new Map(); // In-memory trace storage
+
+router.post('/trace/start', rawBodyParser, (req, res, next) => {
+    try {
+        req.body = JSON.parse(req.body.toString());
+    } catch (e) {
+        return res.status(400).end('{"message":"Invalid JSON"}');
+    }
+    next();
+}, (req, res) => {
+    const { id, operation } = req.body;
+    if (!id || !operation) {
+        return res.status(400).json({ error: 'Missing id or operation' });
+    }
+    traces.set(id, {
+        id,
+        operation,
+        startTime: Date.now(),
+        events: [],
+        status: 'active'
+    });
+    res.json({ success: true });
+});
+
+router.post('/trace/event', rawBodyParser, (req, res, next) => {
+    try {
+        req.body = JSON.parse(req.body.toString());
+    } catch (e) {
+        return res.status(400).end('{"message":"Invalid JSON"}');
+    }
+    next();
+}, (req, res) => {
+    const { id, event } = req.body;
+    if (!id || !event) {
+        return res.status(400).json({ error: 'Missing id or event' });
+    }
+    const trace = traces.get(id);
+    if (!trace) {
+        return res.status(404).json({ error: 'Trace not found' });
+    }
+    trace.events.push({
+        event,
+        timestamp: Date.now()
+    });
+    res.json({ success: true });
+});
+
+router.post('/trace/end', rawBodyParser, (req, res, next) => {
+    try {
+        req.body = JSON.parse(req.body.toString());
+    } catch (e) {
+        return res.status(400).end('{"message":"Invalid JSON"}');
+    }
+    next();
+}, (req, res) => {
+    const { id } = req.body;
+    if (!id) {
+        return res.status(400).json({ error: 'Missing id' });
+    }
+    const trace = traces.get(id);
+    if (!trace) {
+        return res.status(404).json({ error: 'Trace not found' });
+    }
+    trace.endTime = Date.now();
+    trace.duration = trace.endTime - trace.startTime;
+    trace.status = 'completed';
+    res.json({ success: true });
+});
+
+router.get('/trace/:id', (req, res) => {
+    const { id } = req.params;
+    const trace = traces.get(id);
+    if (!trace) {
+        return res.status(404).json({ error: 'Trace not found' });
+    }
+    res.json(trace);
+});
+
 router.get('/federated/discover', (req, res) => {
     const serviceName = req.query.serviceName;
     if (!serviceName) {

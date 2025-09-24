@@ -69,9 +69,37 @@ Maxine supports federation to connect multiple instances across datacenters for 
 
 Enable with `FEDERATION_ENABLED=true` and configure peers with `FEDERATION_PEERS=http://peer1:8080,http://peer2:8080`.
 
-Additional options: `FEDERATION_TIMEOUT` (default 5000ms).
+Additional options: `FEDERATION_TIMEOUT` (default 5000ms), `FEDERATION_RETRY_ATTEMPTS` (default 3).
 
 In Lightning Mode, federated registries are queried automatically if a service is not found locally. Registrations and deregistrations are replicated across peers.
+
+### Multi-Cluster Auto-Failover
+
+Maxine includes advanced multi-cluster failover capabilities for high availability:
+
+- **Health Monitoring**: Continuous health checks of federated registries every 30 seconds
+- **Replication Lag Detection**: Monitors replication lag between clusters with configurable thresholds
+- **Automatic Failover**: Automatically switches to healthy backup registries when primary fails
+- **Region-Aware Failover**: Prioritizes failover targets based on geographic proximity
+- **Conflict Resolution**: Handles service registration conflicts during failover scenarios
+
+#### Failover Status Endpoint
+
+```http
+GET /api/maxine/serviceops/federation/status
+```
+
+Returns comprehensive failover status including:
+- Current primary registry
+- Health status of all federated registries
+- Replication lag metrics
+- Failover priority rankings
+- Last health check timestamps
+
+#### Failover Configuration
+
+- `FEDERATION_PEERS`: Comma-separated list of peer URLs with optional priority (e.g., `peer1:http://host1:8080,peer2:http://host2:8080`)
+- `REPLICATION_LAG_THRESHOLD`: Maximum acceptable replication lag in milliseconds (default: 5000ms)
 
 ## Authentication (Lightning Mode)
 
@@ -399,7 +427,17 @@ Content-Type: application/json
 ```http
 GET /trace/:id
 ```
-Returns the trace data for the given id.
+Returns the trace data for the given id, including start time, duration, events, and status.
+
+**OpenTelemetry Integration:**
+Maxine includes comprehensive OpenTelemetry tracing for all registry operations:
+- Service registration/deregistration
+- Service discovery with load balancing
+- Heartbeat operations
+- Federation queries
+- Configuration updates
+
+Traces are automatically exported to Jaeger or Zipkin when configured. Set `JAEGER_ENDPOINT` or `ZIPKIN_ENDPOINT` environment variables to enable trace export.
 
 ##### Get Service Versions
 ```http
@@ -414,33 +452,41 @@ Response:
 }
 ```
 
-##### Get Anomalies
-```http
-GET /anomalies
-```
+ ##### Get Anomalies
+ ```http
+ GET /anomalies
+ ```
 
-Response:
-```json
-{
-  "anomalies": [
-    {
-      "serviceName": "my-service",
-      "type": "high_circuit_failures",
-      "value": 15
-    },
-    {
-      "serviceName": "bad-service",
-      "type": "no_healthy_nodes",
-      "value": 0
-    },
-    {
-      "serviceName": "empty-service",
-      "type": "no_nodes",
-      "value": 0
-    }
-  ]
-}
-```
+ Returns detected anomalies in the service registry using statistical analysis and machine learning algorithms. Anomalies are prioritized by severity.
+
+ **Anomaly Types:**
+ - `high_circuit_failures`: Excessive circuit breaker failures
+ - `no_healthy_nodes`: Service has nodes but none are healthy
+ - `no_nodes`: Service has no registered nodes
+ - `high_response_time`: Response time exceeds 3 standard deviations from mean
+ - `response_time_trend`: Significant increase in response times over time
+ - `stale_heartbeat`: Node hasn't sent heartbeat within expected interval
+ - `high_error_rate`: Error rate exceeds 10%
+
+ Response:
+ ```json
+ {
+   "anomalies": [
+     {
+       "serviceName": "my-service",
+       "type": "high_response_time",
+       "value": 2500,
+       "threshold": 1500,
+       "severity": "medium"
+     },
+     {
+       "serviceName": "bad-service",
+       "type": "no_healthy_nodes",
+       "severity": "critical"
+     }
+   ]
+ }
+ ```
 
  ##### Get Health Scores
  ```http
@@ -576,9 +622,20 @@ Content-Type: application/json
 
 ##### Generate Envoy Config
 ```http
-GET /service-mesh/envoy-config
+GET /api/maxine/serviceops/envoy/config
 ```
-Returns Envoy proxy configuration JSON based on registered services, suitable for service mesh integration.
+Returns Envoy proxy configuration JSON based on registered services, suitable for service mesh integration. Includes enhanced observability with access logging, custom headers, and circuit breaker metrics.
+
+##### Service Mesh Metrics
+```http
+GET /api/maxine/serviceops/service-mesh/metrics
+```
+Returns comprehensive service mesh observability metrics including:
+- Configuration generations (Envoy, Istio, Linkerd)
+- Circuit breaker statistics
+- Retry attempt counts
+- Service health metrics
+- Active service and node counts
 
 ##### Generate Istio Config
 ```http

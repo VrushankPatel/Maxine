@@ -92,7 +92,7 @@ const createRedisRateLimiter = (options = {}) => {
         }
     };
 };
-const envoyConfigController = require('../controller/maxine/envoy-controller');
+const { envoyConfigController, serviceMeshMetricsController } = require('../controller/maxine/envoy-controller');
 const istioConfigController = require('../controller/maxine/istio-controller');
 const linkerdConfigController = require('../controller/maxine/linkerd-controller');
 const traefikConfigController = require('../controller/maxine/traefik-controller');
@@ -219,6 +219,7 @@ if (!config.ultraFastMode && !isLightningMode) {
                                       .get("changes", authenticationController, limiter, changesController)
                                       .get("changes/sse", authenticationController, limiter, changesSSEController)
                                         .get("envoy/config", authenticationController, limiter, envoyConfigController)
+                                        .get("service-mesh/metrics", authenticationController, limiter, serviceMeshMetricsController)
                                         .get("istio/config", authenticationController, limiter, istioConfigController)
                                         .get("linkerd/config", authenticationController, limiter, linkerdConfigController)
                                         .get("traefik/config", authenticationController, limiter, traefikConfigController)
@@ -275,6 +276,7 @@ if (!config.ultraFastMode && !isLightningMode) {
                                               .post("federation/add", authenticationController, requireRole('admin'), limiter, bodyParser.json(), federationController.addFederatedRegistry)
                                               .post("federation/remove", authenticationController, requireRole('admin'), limiter, bodyParser.json(), federationController.removeFederatedRegistry)
                                               .get("federation", authenticationController, limiter, federationController.getFederatedRegistries)
+                                              .get("federation/status", authenticationController, limiter, federationController.getFailoverStatus)
                                              .post("trace/start", authenticationController, limiter, bodyParser.json(), startTraceController)
                                              .post("trace/event", authenticationController, limiter, bodyParser.json(), addTraceEventController)
                                              .post("trace/end", authenticationController, limiter, bodyParser.json(), endTraceController)
