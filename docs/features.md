@@ -375,7 +375,7 @@
 - Authentication is handled via the `/api/maxine/signin` endpoint with admin credentials.
 ### Performance Optimizations
 - Optimized data structures using Maps and arrays for O(1) lookups and operations.
-- Fast LCG PRNG for efficient random load balancing.
+- Fast LCG PRNG for efficient random and geo-aware load balancing.
 - Efficient round-robin implementation with array indexing.
 - Simplified registry for minimal overhead.
 - Pre-allocated response buffers for zero-allocation responses.
@@ -391,7 +391,7 @@
     ### Lightning Mode
      - Maxine lightning mode provides ultra-fast service discovery with core features for maximum performance.
      - Enabled by default for maximum performance, providing sub-millisecond service discovery with minimal overhead.
-     - Core features: register, heartbeat, deregister, discover with round-robin/random/weighted-random/least-connections/ip-hash load balancing, health, metrics, federation, ACLs, intentions, service blacklists, active health checks, events.
+      - Core features: register, heartbeat, deregister, discover with round-robin/random/weighted-random/least-connections/ip-hash/geo-aware load balancing, health, metrics, federation, ACLs, intentions, service blacklists, active health checks, events.
      - Uses optimized data structures (Map<serviceName, array>) for O(1) operations.
      - Fast JSON serialization for reduced response overhead.
      - Single-process mode for shared registry.
