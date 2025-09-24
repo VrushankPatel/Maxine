@@ -287,6 +287,7 @@ const normalDiscovery = (req, res) => {
         const endPoint = req.query.endPoint || "";
         const count = parseInt(req.query.count) || 1;
         const clientId = req.query.clientId;
+        const sourceService = req.query.sourceService;
      const reqId = req.ip || 'unknown';
      let ip;
      if (!isUltraFastMode) {
@@ -356,35 +357,59 @@ const normalDiscovery = (req, res) => {
               (selectedVersion ? `${namespace}:${serviceName}:${selectedVersion}` : `${namespace}:${serviceName}`);
       }
 
-    let serviceNodes;
-    if (count > 1) {
-        serviceNodes = serviceRegistry.getHealthyNodes(fullServiceName, null, null, null, null, null).slice(0, count);
-        if (serviceNodes.length === 0) {
-            if (hasMetrics && !isHighPerformanceMode && !isUltraFastMode) {
-                const latency = Date.now() - startTime;
-                metricsService.recordRequest(serviceName, false, latency);
-                metricsService.recordError('service_unavailable');
-            }
-            res.status(statusAndMsgs.SERVICE_UNAVAILABLE).json({
-                "message" : statusAndMsgs.MSG_SERVICE_UNAVAILABLE
-            });
-            return;
-        }
-    } else {
-        const serviceNode = discoveryService.getNode(fullServiceName, ip, null, null, null, null, clientId);
-        serviceNodes = serviceNode ? [serviceNode] : [];
-        if (serviceNodes.length === 0) {
-            if (hasMetrics && !isHighPerformanceMode && !isUltraFastMode) {
-                const latency = Date.now() - startTime;
-                metricsService.recordRequest(serviceName, false, latency);
-                metricsService.recordError('service_unavailable');
-            }
-            res.status(statusAndMsgs.SERVICE_UNAVAILABLE).json({
-                "message" : statusAndMsgs.MSG_SERVICE_UNAVAILABLE
-            });
-            return;
-        }
-    }
+     let serviceNodes;
+     if (count > 1) {
+         serviceNodes = serviceRegistry.getHealthyNodes(fullServiceName, null, null, null, null, null).slice(0, count);
+         if (serviceNodes.length === 0) {
+             if (hasMetrics && !isHighPerformanceMode && !isUltraFastMode) {
+                 const latency = Date.now() - startTime;
+                 metricsService.recordRequest(serviceName, false, latency);
+                 metricsService.recordError('service_unavailable');
+             }
+             res.status(statusAndMsgs.SERVICE_UNAVAILABLE).json({
+                 "message" : statusAndMsgs.MSG_SERVICE_UNAVAILABLE
+             });
+             return;
+         }
+     } else {
+         const serviceNode = discoveryService.getNode(fullServiceName, ip, null, null, null, null, clientId);
+         serviceNodes = serviceNode ? [serviceNode] : [];
+         if (serviceNodes.length === 0) {
+             if (hasMetrics && !isHighPerformanceMode && !isUltraFastMode) {
+                 const latency = Date.now() - startTime;
+                 metricsService.recordRequest(serviceName, false, latency);
+                 metricsService.recordError('service_unavailable');
+             }
+             res.status(statusAndMsgs.SERVICE_UNAVAILABLE).json({
+                 "message" : statusAndMsgs.MSG_SERVICE_UNAVAILABLE
+             });
+             return;
+         }
+     }
+
+     // ACL and Intention enforcement
+     if (sourceService) {
+         const acl = serviceRegistry.getACL(fullServiceName);
+         if (acl.deny.includes(sourceService) || (acl.allow.length > 0 && !acl.allow.includes(sourceService))) {
+             if (hasMetrics && !isHighPerformanceMode && !isUltraFastMode) {
+                 const latency = Date.now() - startTime;
+                 metricsService.recordRequest(serviceName, false, latency);
+                 metricsService.recordError('access_denied_acl');
+             }
+             res.status(403).json({ message: "Access denied by ACL" });
+             return;
+         }
+         const intention = serviceRegistry.getServiceIntention(sourceService, fullServiceName);
+         if (intention === 'deny') {
+             if (hasMetrics && !isHighPerformanceMode && !isUltraFastMode) {
+                 const latency = Date.now() - startTime;
+                 metricsService.recordRequest(serviceName, false, latency);
+                 metricsService.recordError('access_denied_intention');
+             }
+             res.status(403).json({ message: "Access denied by intention" });
+             return;
+         }
+     }
 
          // For multiple nodes, always return addresses
          if (count > 1 || req.query.proxy === 'false' || (req.query.proxy === undefined && !config.defaultProxyMode)) {
@@ -530,6 +555,21 @@ const lightningDiscovery = (req, res) => {
         const namespace = req.query.namespace || "default";
         const datacenter = req.query.datacenter || "default";
         const fullServiceName = datacenter !== "default" ? `${datacenter}:${namespace}:${serviceName}` : `${namespace}:${serviceName}`;
+        const sourceService = req.query.sourceService;
+
+        // ACL and Intention enforcement
+        if (sourceService) {
+            const acl = serviceRegistry.getACL(fullServiceName);
+            if (acl.deny.includes(sourceService) || (acl.allow.length > 0 && !acl.allow.includes(sourceService))) {
+                res.status(403).end('{"message": "Access denied by ACL"}');
+                return;
+            }
+            const intention = serviceRegistry.getServiceIntention(sourceService, fullServiceName);
+            if (intention === 'deny') {
+                res.status(403).end('{"message": "Access denied by intention"}');
+                return;
+            }
+        }
 
         // Simplified for lightning: assume default namespace/datacenter, no version
         const strategy = req.query.strategy || 'round-robin';

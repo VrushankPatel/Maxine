@@ -103,7 +103,7 @@ if (config.lightningMode) {
 
     // Rate limiting
     const rateLimitMap = new Map(); // ip -> { count, resetTime }
-    const rateLimitMax = 1000;
+    const rateLimitMax = 10000;
     const rateLimitWindow = 15 * 60 * 1000; // 15 minutes
 
     // Handler functions - only core features for lightning speed

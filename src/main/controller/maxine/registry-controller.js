@@ -1172,7 +1172,7 @@ const setACLController = (req, res) => {
         res.status(statusAndMsgs.STATUS_GENERIC_ERROR).json({ message: "Missing serviceName" });
         return;
     }
-    serviceRegistry.setACL(serviceName, allow || [], deny || []);
+    serviceRegistry.setACL(serviceName, { allow: allow || [], deny: deny || [] });
     res.status(statusAndMsgs.STATUS_SUCCESS).json({ message: "ACL set" });
 };
 
