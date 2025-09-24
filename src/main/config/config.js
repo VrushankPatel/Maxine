@@ -25,7 +25,7 @@ const ultraFastMode = process.env.ULTRA_FAST_MODE === 'true' || ultraFastDefault
 
 const config = {
     isTestMode: isTestMode,
-    ultraFastMode: ultraFastDefault,
+    ultraFastMode: ultraFastMode,
     extremeFastMode: extremeFastDefault,
     lightningMode: lightningMode,
     logAsync: process.env.LOG_ASYNC === 'false' ? false : true,
