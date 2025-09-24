@@ -1,7 +1,7 @@
 const { User, admin } = require("../../entity/user");
 const { generateAccessToken } = require("../../security/jwt");
 const { statusAndMsgs } = require("../../util/constants/constants");
-const { error } = require("../../util/logging/logging-util");
+const { error, audit } = require("../../util/logging/logging-util");
 
 const signInController = (req, res) => {
     const {userName, password} = req.body;
@@ -13,9 +13,11 @@ const signInController = (req, res) => {
     if (new User(userName, password).userName === admin.userName && new User(userName, password).password === admin.password){
         const userWithRole = { ...req.body, role: admin.role };
         const token = generateAccessToken(userWithRole);
+        audit(`LOGIN_SUCCESS: user ${userName}`);
         res.json({"accessToken" : token});
         return;
     }
+    audit(`LOGIN_FAILED: user ${userName}`);
     res.status(statusAndMsgs.STATUS_UNAUTHORIZED).json({"message" : statusAndMsgs.MSG_UNAUTHORIZED});
 }
 

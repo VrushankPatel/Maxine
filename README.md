@@ -217,6 +217,45 @@ GET /trace/:id
 ```
 Returns the trace data for the given id.
 
+##### Set Service Config
+```http
+POST /api/maxine/serviceops/config/set
+Content-Type: application/json
+
+{
+  "serviceName": "my-service",
+  "key": "timeout",
+  "value": 5000,
+  "namespace": "default",
+  "region": "us-east",
+  "zone": "zone1"
+}
+```
+
+##### Get Service Config
+```http
+GET /api/maxine/serviceops/config/get?serviceName=my-service&key=timeout&namespace=default&region=us-east&zone=zone1
+```
+
+##### Get All Service Configs
+```http
+GET /api/maxine/serviceops/config/all?serviceName=my-service&namespace=default&region=us-east&zone=zone1
+```
+
+##### Delete Service Config
+```http
+DELETE /api/maxine/serviceops/config/delete
+Content-Type: application/json
+
+{
+  "serviceName": "my-service",
+  "key": "timeout",
+  "namespace": "default",
+  "region": "us-east",
+  "zone": "zone1"
+}
+```
+
 ##### Generate Envoy Config
 ```http
 GET /service-mesh/envoy-config
@@ -360,6 +399,37 @@ The server broadcasts the following events as JSON messages:
     "event": "service_unhealthy",
     "data": {
       "nodeId": "my-service:localhost:3000"
+    },
+    "timestamp": 1640995200000
+  }
+  ```
+
+- `config_changed`: When a service configuration is updated
+  ```json
+  {
+    "event": "config_changed",
+    "data": {
+      "serviceName": "my-service",
+      "key": "timeout",
+      "value": 5000,
+      "namespace": "default",
+      "region": "us-east",
+      "zone": "zone1"
+    },
+    "timestamp": 1640995200000
+  }
+  ```
+
+- `config_deleted`: When a service configuration is deleted
+  ```json
+  {
+    "event": "config_deleted",
+    "data": {
+      "serviceName": "my-service",
+      "key": "timeout",
+      "namespace": "default",
+      "region": "us-east",
+      "zone": "zone1"
     },
     "timestamp": 1640995200000
   }

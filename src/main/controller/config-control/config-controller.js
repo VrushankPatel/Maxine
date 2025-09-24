@@ -1,5 +1,6 @@
 const { configService } = require("../../service/config-service");
 const { statusAndMsgs } = require("../../util/constants/constants");
+const { audit } = require("../../util/logging/logging-util");
 
 const setConfig = (req, res) => {
     const { serviceName, key, value, namespace, region, zone } = req.body;
@@ -7,6 +8,7 @@ const setConfig = (req, res) => {
         return res.status(statusAndMsgs.STATUS_GENERIC_ERROR).json({ message: "serviceName and key are required" });
     }
     configService.setConfig(serviceName, key, value, namespace, region, zone);
+    audit(`CONFIG_SET: service ${serviceName} key ${key} value ${JSON.stringify(value)} namespace ${namespace} region ${region} zone ${zone}`);
     res.status(statusAndMsgs.STATUS_SUCCESS).json({ message: "Config set successfully" });
 };
 
@@ -40,6 +42,7 @@ const deleteConfig = (req, res) => {
     if (!deleted) {
         return res.status(statusAndMsgs.STATUS_NOT_FOUND).json({ message: "Config not found" });
     }
+    audit(`CONFIG_DELETE: service ${serviceName} key ${key} namespace ${namespace} region ${region} zone ${zone}`);
     res.status(statusAndMsgs.STATUS_SUCCESS).json({ message: "Config deleted successfully" });
 };
 
