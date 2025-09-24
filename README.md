@@ -673,6 +673,7 @@ Maxine provides a GraphQL API for flexible queries and mutations. The GraphQL pl
 - `services`: Get all registered services
 - `service(serviceName: String!)`: Get a specific service
 - `discover(serviceName: String!, ip: String, group: String, tags: [String], deployment: String, filter: String)`: Discover a service instance
+- `healthScores(serviceName: String!)`: Get health scores for all nodes in a service
 
 **Mutations:**
 - `register(serviceName: String!, nodeName: String!, address: String!, metadata: String)`: Register a service
