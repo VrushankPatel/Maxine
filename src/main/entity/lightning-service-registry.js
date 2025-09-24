@@ -32,6 +32,13 @@ class LightningServiceRegistry {
         this.discoveryCache = new LRUCache({ max: 50000, maxAge: 15000 }); // 15 second cache for better performance and freshness
         this.cacheTTL = 15000;
 
+        // Redis distributed caching
+        this.redisCacheEnabled = config.redisCacheEnabled;
+        this.redisClient = null;
+        this.redisCachePrefix = 'maxine:discovery:';
+        this.redisCacheHits = 0;
+        this.redisCacheMisses = 0;
+
         // Adaptive caching with ML-inspired access pattern analysis
         this.accessPatterns = new Map(); // service -> { count, lastAccess, emaFrequency }
         this.adaptiveCacheEnabled = true;
@@ -113,6 +120,8 @@ class LightningServiceRegistry {
             this.deregisterCounter = this.meter.createCounter('maxine_service_deregister_total', { description: 'Total number of service deregistrations' });
             this.cacheHitCounter = this.meter.createCounter('maxine_cache_hit_total', { description: 'Total cache hits' });
             this.cacheMissCounter = this.meter.createCounter('maxine_cache_miss_total', { description: 'Total cache misses' });
+            this.redisCacheHitCounter = this.meter.createCounter('maxine_redis_cache_hit_total', { description: 'Total Redis cache hits' });
+            this.redisCacheMissCounter = this.meter.createCounter('maxine_redis_cache_miss_total', { description: 'Total Redis cache misses' });
             this.servicesGauge = this.meter.createObservableGauge('maxine_services_total', { description: 'Total number of services' });
             this.nodesGauge = this.meter.createObservableGauge('maxine_nodes_total', { description: 'Total number of nodes' });
 
@@ -537,6 +546,10 @@ class LightningServiceRegistry {
     }
 
     getRandomNode(serviceName, strategy = 'round-robin', clientId = null, tags = [], version = null, environment = null) {
+        // Skip tracing in lightning mode for maximum performance
+        if (config.lightningMode) {
+            return this.getRandomNodeNoTrace(serviceName, strategy, clientId, tags, version, environment);
+        }
         const tracer = trace.getTracer('maxine-registry', '1.0.0');
         return tracer.startActiveSpan('getRandomNode', (span) => {
             span.setAttribute('service.name', serviceName);
@@ -563,6 +576,52 @@ class LightningServiceRegistry {
                     span.end();
                     return cached.node || cached;
                 }
+
+            // Check Redis distributed cache if enabled
+            if (this.redisCacheEnabled) {
+                if (!this.redisClient) {
+                    try {
+                        const redis = require('redis');
+                        this.redisClient = redis.createClient({
+                            host: config.redisHost,
+                            port: config.redisPort,
+                            password: config.redisPassword || undefined,
+                        });
+                        this.redisClient.on('error', (err) => {
+                            console.error('Redis client error:', err);
+                        });
+                    } catch (err) {
+                        console.warn('Redis not available for distributed caching');
+                        this.redisCacheEnabled = false;
+                    }
+                }
+                if (this.redisClient) {
+                    try {
+                        const redisKey = this.redisCachePrefix + cacheKey;
+                        const cachedData = await this.redisClient.get(redisKey);
+                        if (cachedData) {
+                            const parsed = JSON.parse(cachedData);
+                            const now = Date.now();
+                            if (now - parsed.timestamp <= parsed.ttl) {
+                                // Store in local cache
+                                this.discoveryCache.set(cacheKey, parsed.node);
+                                this.redisCacheHits++;
+                                this.updateAccessPattern(serviceName);
+                                if (this.redisCacheHitCounter) {
+                                    this.redisCacheHitCounter.add(1, { service: serviceName, strategy });
+                                }
+                                span.end();
+                                return parsed.node;
+                            } else {
+                                // Expired, delete from Redis
+                                await this.redisClient.del(redisKey);
+                            }
+                        }
+                    } catch (err) {
+                        // Ignore Redis errors
+                    }
+                }
+            }
 
                 const service = this.services.get(serviceName);
                 if (!service || service.availableNodesArray.length === 0) {
@@ -639,6 +698,16 @@ class LightningServiceRegistry {
                 const bgNode = this.getBlueGreenNode(serviceName);
                 if (bgNode && !this.isCircuitOpen(serviceName, bgNode.nodeName)) {
                     this.discoveryCache.set(cacheKey, bgNode, { ttl: adaptiveTTL });
+                    // Set in Redis distributed cache if enabled
+                    if (this.redisCacheEnabled && this.redisClient) {
+                        try {
+                            const redisKey = this.redisCachePrefix + cacheKey;
+                            const cacheData = JSON.stringify({ node: bgNode, timestamp: Date.now(), ttl: adaptiveTTL });
+                            this.redisClient.setEx(redisKey, Math.ceil(adaptiveTTL / 1000), cacheData);
+                        } catch (err) {
+                            // Ignore Redis errors
+                        }
+                    }
                     span.end();
                     return bgNode;
                 }
@@ -650,6 +719,16 @@ class LightningServiceRegistry {
                         const canaryNode = this.getCanaryNode(serviceName);
                         if (canaryNode && !this.isCircuitOpen(serviceName, canaryNode.nodeName)) {
                             this.discoveryCache.set(cacheKey, canaryNode, { ttl: adaptiveTTL });
+                            // Set in Redis distributed cache if enabled
+                            if (this.redisCacheEnabled && this.redisClient) {
+                                try {
+                                    const redisKey = this.redisCachePrefix + cacheKey;
+                                    const cacheData = JSON.stringify({ node: canaryNode, timestamp: Date.now(), ttl: adaptiveTTL });
+                                    this.redisClient.setEx(redisKey, Math.ceil(adaptiveTTL / 1000), cacheData);
+                                } catch (err) {
+                                    // Ignore Redis errors
+                                }
+                            }
                             span.end();
                             return canaryNode;
                         }
@@ -663,34 +742,279 @@ class LightningServiceRegistry {
                     node = strategyFunc(service, availableNodes, clientId);
                     if (node) {
                         this.discoveryCache.set(cacheKey, node, { ttl: adaptiveTTL });
+                        // Set in Redis distributed cache if enabled
+                        if (this.redisCacheEnabled && this.redisClient) {
+                            try {
+                                const redisKey = this.redisCachePrefix + cacheKey;
+                                const cacheData = JSON.stringify({ node, timestamp: Date.now(), ttl: adaptiveTTL });
+                                this.redisClient.setEx(redisKey, Math.ceil(adaptiveTTL / 1000), cacheData);
+                            } catch (err) {
+                                // Ignore Redis errors
+                            }
+                        }
                     }
                  } else {
-                     node = this.strategies['round-robin'](service, availableNodes, clientId);
-                     if (node) {
-                         this.discoveryCache.set(cacheKey, node, { ttl: adaptiveTTL });
-                     }
-                 }
+                      node = this.strategies['round-robin'](service, availableNodes, clientId);
+                      if (node) {
+                          this.discoveryCache.set(cacheKey, node, { ttl: adaptiveTTL });
+                          // Set in Redis distributed cache if enabled
+                          if (this.redisCacheEnabled && this.redisClient) {
+                              try {
+                                  const redisKey = this.redisCachePrefix + cacheKey;
+                                  const cacheData = JSON.stringify({ node, timestamp: Date.now(), ttl: adaptiveTTL });
+                                  this.redisClient.setEx(redisKey, Math.ceil(adaptiveTTL / 1000), cacheData);
+                              } catch (err) {
+                                  // Ignore Redis errors
+                              }
+                          }
+                      }
+                  }
 
-                 // Increment counters
-                 if (this.discoverCounter) {
-                     this.discoverCounter.add(1, { service: serviceName, strategy });
-                 }
-                 if (!cached && this.cacheMissCounter) {
-                     this.cacheMissCounter.add(1, { service: serviceName, strategy });
-                 }
+                  // Increment counters
+                  if (this.discoverCounter) {
+                      this.discoverCounter.add(1, { service: serviceName, strategy });
+                  }
+                  if (!cached && this.cacheMissCounter) {
+                      this.cacheMissCounter.add(1, { service: serviceName, strategy });
+                  }
+                  if (this.redisCacheEnabled && !cached && this.redisCacheMissCounter) {
+                      this.redisCacheMissCounter.add(1, { service: serviceName, strategy });
+                  }
 
                  span.end();
                  return node;
-            } catch (error) {
-                span.recordException(error);
-                span.setStatus({ code: 2, message: error.message });
-                span.end();
-                throw error;
-            }
-        });
-    }
+             } catch (error) {
+                 span.recordException(error);
+                 span.setStatus({ code: 2, message: error.message });
+                 span.end();
+                 throw error;
+             }
+         });
+     }
 
-    simpleHash(str) {
+     getRandomNodeNoTrace(serviceName, strategy = 'round-robin', clientId = null, tags = [], version = null, environment = null) {
+         try {
+             // Resolve alias
+             if (!this.services.has(serviceName)) {
+                 serviceName = this.aliases.get(serviceName) || serviceName;
+             }
+
+             const cacheKey = `${serviceName}:${strategy}:${clientId || ''}:${tags.join(',')}:${version || ''}:${environment || ''}`;
+             const cached = this.discoveryCache.get(cacheKey);
+             if (cached) {
+                 // Update access pattern for adaptive caching
+                 this.updateAccessPattern(serviceName);
+                 if (this.cacheHitCounter) {
+                     this.cacheHitCounter.add(1, { service: serviceName, strategy });
+                 }
+                 return cached.node || cached;
+             }
+
+            // Check Redis distributed cache if enabled
+            if (this.redisCacheEnabled) {
+                if (!this.redisClient) {
+                    try {
+                        const redis = require('redis');
+                        this.redisClient = redis.createClient({
+                            host: config.redisHost,
+                            port: config.redisPort,
+                            password: config.redisPassword || undefined,
+                        });
+                        this.redisClient.on('error', (err) => {
+                            console.error('Redis client error:', err);
+                        });
+                    } catch (err) {
+                        console.warn('Redis not available for distributed caching');
+                        this.redisCacheEnabled = false;
+                    }
+                }
+                if (this.redisClient) {
+                    try {
+                        const redisKey = this.redisCachePrefix + cacheKey;
+                        const cachedData = this.redisClient.getSync ? this.redisClient.getSync(redisKey) : null; // Synchronous for performance
+                        if (cachedData) {
+                            const parsed = JSON.parse(cachedData);
+                            const now = Date.now();
+                            if (now - parsed.timestamp <= parsed.ttl) {
+                                // Store in local cache
+                                this.discoveryCache.set(cacheKey, parsed.node);
+                                this.redisCacheHits++;
+                                this.updateAccessPattern(serviceName);
+                                if (this.redisCacheHitCounter) {
+                                    this.redisCacheHitCounter.add(1, { service: serviceName, strategy });
+                                }
+                                return parsed.node;
+                            } else {
+                                // Expired, delete from Redis
+                                this.redisClient.delSync ? this.redisClient.delSync(redisKey) : null;
+                            }
+                        }
+                    } catch (err) {
+                        // Ignore Redis errors
+                    }
+                }
+            }
+
+             const service = this.services.get(serviceName);
+             if (!service || service.availableNodesArray.length === 0) {
+                 return null;
+             }
+
+             // availableNodesArray already excludes maintenance and open circuits
+             let availableNodes = service.availableNodesArray;
+             if (availableNodes.length === 0) {
+                 return null;
+             }
+
+             // Combined filtering using indexes for O(1) performance if not lightning mode
+             if (!config.lightningMode && (tags.length > 0 || version || environment)) {
+                 let candidateNodeNames = new Set(availableNodes.map(n => n.nodeName));
+                 if (tags.length > 0) {
+                     for (const tag of tags) {
+                         const tagSet = this.tagIndex.get(tag);
+                         if (!tagSet) {
+                             candidateNodeNames = new Set(); // no nodes have this tag
+                             break;
+                         }
+                         // Intersect
+                         const newCandidates = new Set();
+                         for (const nodeName of candidateNodeNames) {
+                             if (tagSet.has(nodeName)) {
+                                 newCandidates.add(nodeName);
+                             }
+                         }
+                         candidateNodeNames = newCandidates;
+                     }
+                 }
+                 if (version) {
+                     const verSet = this.versionIndex.get(version);
+                     if (verSet) {
+                         const newCandidates = new Set();
+                         for (const nodeName of candidateNodeNames) {
+                             if (verSet.has(nodeName)) {
+                                 newCandidates.add(nodeName);
+                             }
+                         }
+                         candidateNodeNames = newCandidates;
+                     } else {
+                         candidateNodeNames = new Set(); // no nodes have this version
+                     }
+                 }
+                 if (environment) {
+                     const envSet = this.environmentIndex.get(environment);
+                     if (envSet) {
+                         const newCandidates = new Set();
+                         for (const nodeName of candidateNodeNames) {
+                             if (envSet.has(nodeName)) {
+                                 newCandidates.add(nodeName);
+                             }
+                         }
+                         candidateNodeNames = newCandidates;
+                     } else {
+                         candidateNodeNames = new Set(); // no nodes have this environment
+                     }
+                 }
+                 availableNodes = availableNodes.filter(node => candidateNodeNames.has(node.nodeName));
+                 if (availableNodes.length === 0) {
+                     return null;
+                 }
+             }
+
+             // Update access pattern for cache miss
+             const adaptiveTTL = this.updateAccessPattern(serviceName);
+
+             // Check for blue-green deployment
+             const bgNode = this.getBlueGreenNode(serviceName);
+             if (bgNode && !this.isCircuitOpen(serviceName, bgNode.nodeName)) {
+                 this.discoveryCache.set(cacheKey, bgNode, { ttl: adaptiveTTL });
+                 // Set in Redis distributed cache if enabled
+                 if (this.redisCacheEnabled && this.redisClient) {
+                     try {
+                         const redisKey = this.redisCachePrefix + cacheKey;
+                         const cacheData = JSON.stringify({ node: bgNode, timestamp: Date.now(), ttl: adaptiveTTL });
+                         this.redisClient.setEx(redisKey, Math.ceil(adaptiveTTL / 1000), cacheData);
+                     } catch (err) {
+                         // Ignore Redis errors
+                     }
+                 }
+                 return bgNode;
+             }
+
+             // Check for canary deployment
+             const canaryConfig = this.canaryConfigs.get(serviceName);
+             if (canaryConfig) {
+                 if (Math.random() * 100 < canaryConfig.percentage) {
+                     const canaryNode = this.getCanaryNode(serviceName);
+                     if (canaryNode && !this.isCircuitOpen(serviceName, canaryNode.nodeName)) {
+                         this.discoveryCache.set(cacheKey, canaryNode, { ttl: adaptiveTTL });
+                         // Set in Redis distributed cache if enabled
+                         if (this.redisCacheEnabled && this.redisClient) {
+                             try {
+                                 const redisKey = this.redisCachePrefix + cacheKey;
+                                 const cacheData = JSON.stringify({ node: canaryNode, timestamp: Date.now(), ttl: adaptiveTTL });
+                                 this.redisClient.setEx(redisKey, Math.ceil(adaptiveTTL / 1000), cacheData);
+                             } catch (err) {
+                                 // Ignore Redis errors
+                             }
+                         }
+                         return canaryNode;
+                     }
+                 }
+             }
+
+             // Use strategy
+             const strategyFunc = this.strategies[strategy];
+             let node;
+             if (strategyFunc) {
+                 node = strategyFunc(service, availableNodes, clientId);
+                 if (node) {
+                     this.discoveryCache.set(cacheKey, node, { ttl: adaptiveTTL });
+                     // Set in Redis distributed cache if enabled
+                     if (this.redisCacheEnabled && this.redisClient) {
+                         try {
+                             const redisKey = this.redisCachePrefix + cacheKey;
+                             const cacheData = JSON.stringify({ node, timestamp: Date.now(), ttl: adaptiveTTL });
+                             this.redisClient.setEx(redisKey, Math.ceil(adaptiveTTL / 1000), cacheData);
+                         } catch (err) {
+                             // Ignore Redis errors
+                         }
+                     }
+                 }
+             } else {
+                 node = this.strategies['round-robin'](service, availableNodes, clientId);
+                 if (node) {
+                     this.discoveryCache.set(cacheKey, node, { ttl: adaptiveTTL });
+                     // Set in Redis distributed cache if enabled
+                     if (this.redisCacheEnabled && this.redisClient) {
+                         try {
+                             const redisKey = this.redisCachePrefix + cacheKey;
+                             const cacheData = JSON.stringify({ node, timestamp: Date.now(), ttl: adaptiveTTL });
+                             this.redisClient.setEx(redisKey, Math.ceil(adaptiveTTL / 1000), cacheData);
+                         } catch (err) {
+                             // Ignore Redis errors
+                         }
+                     }
+                 }
+             }
+
+             // Increment counters
+             if (this.discoverCounter) {
+                 this.discoverCounter.add(1, { service: serviceName, strategy });
+             }
+             if (!cached && this.cacheMissCounter) {
+                 this.cacheMissCounter.add(1, { service: serviceName, strategy });
+             }
+             if (this.redisCacheEnabled && !cached && this.redisCacheMissCounter) {
+                 this.redisCacheMissCounter.add(1, { service: serviceName, strategy });
+             }
+
+             return node;
+         } catch (error) {
+             return null;
+         }
+     }
+
+     simpleHash(str) {
         let hash = 0;
         for (let i = 0; i < str.length; i++) {
             const char = str.charCodeAt(i);
