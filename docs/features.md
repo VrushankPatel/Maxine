@@ -322,6 +322,7 @@
         - Least Request: Routes requests to the node with the fewest active connections for minimal active connections.
         - IP Hash: Routes requests based on a hash of the service name for consistent node selection, useful for caching scenarios.
         - Predictive: Uses time-series trend analysis of response times to select nodes with improving performance trends.
+        - AI-Driven: Uses reinforcement learning (Q-learning) to optimize routing decisions based on historical performance data, learning from response times and failures to select optimal nodes.
 ### HeartBeat
 - As we know that in order to let the service registry know that the service is alive, service has to send the heartbeat to the registry and after certain period of time (timeout), that service will be removed from the registry automatically so becore that service gets deregistered from registry, the service has to send the heartbeat again, That's why we call it a heart beat because it literally keeps beating in a period of time, Let's understand what is this heartbeat.
 - Heartbeat in maxine is a special kind of request that contains all the meta data about the service.
