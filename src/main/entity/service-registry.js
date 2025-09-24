@@ -186,7 +186,7 @@ class ServiceRegistry extends EventEmitter {
             const serviceData = this.ultraFastHealthyNodes.get(serviceName);
             if (!serviceData || serviceData.array.length === 0) return null;
             // Use cached available nodes to avoid filtering on each call
-            const availableNodes = serviceData.available || serviceData.array.filter(node => !this.isInMaintenance(serviceName, node.nodeName) && !this.isDraining(serviceName, node.nodeName));
+            const availableNodes = serviceData.available || serviceData.array.filter(node => !this.isInMaintenance(serviceName, node.nodeName) && !this.isInDraining(serviceName, node.nodeName));
             if (availableNodes.length === 0) return null;
             // Use fast LCG random for maximum performance
             const randomIndex = (fastRandom() * availableNodes.length) | 0;
@@ -1330,7 +1330,7 @@ class ServiceRegistry extends EventEmitter {
                     serviceData.nodes.set(nodeName, node);
                     serviceData.array.push(node);
                     // Update available nodes
-                    serviceData.available = serviceData.array.filter(n => !this.isInMaintenance(serviceName, n.nodeName) && !this.isDraining(serviceName, n.nodeName));
+                    serviceData.available = serviceData.array.filter(n => !this.isInMaintenance(serviceName, n.nodeName) && !this.isInDraining(serviceName, n.nodeName));
                 }
             }
             // Skip all notifications and changes in fast modes
@@ -1415,7 +1415,7 @@ class ServiceRegistry extends EventEmitter {
                         }
                         serviceData.array.pop();
                         // Update available nodes
-                        serviceData.available = serviceData.array.filter(n => !this.isInMaintenance(serviceName, n.nodeName) && !this.isDraining(serviceName, n.nodeName));
+                        serviceData.available = serviceData.array.filter(n => !this.isInMaintenance(serviceName, n.nodeName) && !this.isInDraining(serviceName, n.nodeName));
                     }
                 }
             }

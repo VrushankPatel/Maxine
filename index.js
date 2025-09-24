@@ -1,4 +1,7 @@
 require('./src/main/util/logging/log-generic-exceptions')();
+// Force full mode for compatibility
+process.env.LIGHTNING_MODE = 'false';
+
 const config = require('./src/main/config/config');
 const { trace } = require('@opentelemetry/api');
 
@@ -2413,8 +2416,11 @@ if (false) { // config.ultraFastMode
             console.log(`Lightning mode: minimal features for maximum performance using ${config.mtlsEnabled ? 'HTTPS with mTLS' : 'raw HTTP'}`);
         });
 
-        // WebSocket server for real-time event streaming - commented out for syntax
-        // const wss = new WebSocket.Server({ server });
+        // WebSocket server for real-time event streaming
+        let wss = null;
+        if (config.websocketEnabled) {
+            wss = new WebSocket.Server({ server });
+        }
 
         // MQTT client for event publishing
         let mqttClient = null;
@@ -2458,6 +2464,9 @@ if (false) { // config.ultraFastMode
         // Load event history on startup
         loadEventHistory();
 
+        let clientFilters = new Map(); // ws -> filter object
+        let clientAuth = new Map(); // ws -> user object or false
+
         const broadcast = (event, data) => {
             eventBroadcastCount++;
             const messageObj = { event, data, timestamp: Date.now() };
@@ -2483,16 +2492,18 @@ if (false) { // config.ultraFastMode
             // Store last event for testing
             global.lastEvent = { event, data };
             // WebSocket broadcast with filtering - async to avoid blocking
-            process.nextTick(() => {
-                wss.clients.forEach(client => {
-                    if (client.readyState === WebSocket.OPEN) {
-                        const filter = clientFilters.get(client);
-                        if (matchesFilter(event, data, filter)) {
-                            client.send(message);
+        if (config.websocketEnabled) {
+                process.nextTick(() => {
+                    wss.clients.forEach(client => {
+                        if (client.readyState === WebSocket.OPEN) {
+                            const filter = clientFilters.get(client);
+                            if (matchesFilter(event, data, filter)) {
+                                client.send(message);
+                            }
                         }
-                    }
+                    });
                 });
-            });
+            }
             // MQTT publish
             if (mqttClient && mqttClient.connected) {
                 const topic = `${config.mqttTopic}/${event}`;
@@ -2514,6 +2525,7 @@ if (false) { // config.ultraFastMode
             return true;
         };
 
+        if (wss) {
         const clientFilters = new Map(); // ws -> filter object
         const clientAuth = new Map(); // ws -> user object or false
 
@@ -2579,6 +2591,7 @@ if (false) { // config.ultraFastMode
                 clientAuth.delete(ws);
             });
         });
+        }
 
         // Make broadcast available to handlers
         global.broadcast = broadcast;
@@ -2611,14 +2624,11 @@ if (false) { // config.ultraFastMode
     const currDir = require('./conf');
 
     builder = ExpressAppBuilder.createNewApp()
-        .use('/api', (req, res, next) => {
-            req.url = req.url.replace(/^\/api/, '') || '/';
-            maxineApiRoutes(req, res, next);
-        })
+        .use('/api', maxineApiRoutes)
         .blockUnknownUrls()
         .invoke(() => console.log('before listen'));
 
-    if (!config.isTestMode || process.env.WEBSOCKET_ENABLED === 'true') {
+    if (true) {
         builder.listenOrSpdy(constants.PORT, () => {
             console.log('Maxine lightning-fast server listening on port', constants.PORT);
             console.log('Full mode: comprehensive features with optimized performance');
@@ -2635,6 +2645,13 @@ if (false) { // config.ultraFastMode
                 console.error('MQTT connection error:', err);
             });
         }
+
+        // WebSocket server for event streaming
+        let wss = null;
+        // if (config.websocketEnabled) {
+        //     const WebSocket = require('ws');
+        //     wss = new WebSocket.Server({ server: builder.server });
+        // }
 
         // Event persistence
         const eventHistory = [];
@@ -2668,53 +2685,6 @@ if (false) { // config.ultraFastMode
 
         let eventBroadcastCount = 0;
 
-        const broadcast = (event, data) => {
-            eventBroadcastCount++;
-            const messageObj = { event, data, timestamp: Date.now() };
-            const message = JSON.stringify(messageObj);
-            // Store in history
-            eventHistory.push(messageObj);
-            if (eventHistory.length > maxHistory) {
-                eventHistory.shift();
-            }
-            // Store in service registry for dashboard
-            if (global.serviceRegistry && global.serviceRegistry.recentEvents) {
-                global.serviceRegistry.recentEvents.push(messageObj);
-                if (global.serviceRegistry.recentEvents.length > 100) {
-                    global.serviceRegistry.recentEvents.shift();
-                }
-            }
-            // Save to file periodically or on important events
-            if (eventHistory.length % 100 === 0) {
-                saveEventHistory();
-            }
-            // Emit to eventEmitter for SSE
-            global.eventEmitter.emit(event, data);
-            // Store last event for testing
-            global.lastEvent = { event, data };
-            // WebSocket broadcast with filtering - async to avoid blocking
-            process.nextTick(() => {
-                wss.clients.forEach(client => {
-                    if (client.readyState === WebSocket.OPEN) {
-                        const filter = clientFilters.get(client);
-                        if (matchesFilter(event, data, filter)) {
-                            client.send(message);
-                        }
-                    }
-                });
-            });
-            // MQTT publish
-            if (mqttClient && mqttClient.connected) {
-                const topic = `${config.mqttTopic}/${event}`;
-                mqttClient.publish(topic, message, { qos: 1 }, (err) => {
-                    if (err) console.error('MQTT publish error:', err);
-                });
-            }
-        };
-
-        // Make broadcast available globally for service registry
-        global.broadcast = broadcast;
-
         const matchesFilter = (event, data, filter) => {
             if (!filter) return true;
             if (filter.event && filter.event !== event) return false;
@@ -2724,65 +2694,68 @@ if (false) { // config.ultraFastMode
             return true;
         };
 
-        const clientFilters = new Map(); // ws -> filter object
-        const clientAuth = new Map(); // ws -> user object or false
+        // if (wss) {
+        // const clientFilters = new Map(); // ws -> filter object
+        // const clientAuth = new Map(); // ws -> user object or false
 
-        wss.on('connection', (ws) => {
-            wsConnectionCount++;
-            console.log('WebSocket client connected for event streaming');
-            clientFilters.set(ws, null); // no filter by default
-            clientAuth.set(ws, config.authEnabled ? false : { role: 'anonymous' }); // user object or false
+        // wss.on('connection', (ws) => {
+        //     wsConnectionCount++;
+        //     console.log('WebSocket client connected for event streaming');
+        //     clientFilters.set(ws, null); // no filter by default
+        //     clientAuth.set(ws, config.authEnabled ? false : { role: 'anonymous' }); // user object or false
 
-            ws.on('message', (message) => {
-                try {
-                    const data = JSON.parse(message);
-                    if (data.auth) {
-                        if (config.authEnabled) {
-                            try {
-                                const decoded = jwt.verify(data.auth, config.jwtSecret);
-                                clientAuth.set(ws, decoded);
-                                ws.send(JSON.stringify({ type: 'authenticated', user: decoded }));
-                            } catch (err) {
-                                ws.send(JSON.stringify({ type: 'auth_failed' }));
-                                ws.close();
-                            }
-                        }
-                    } else if (!clientAuth.get(ws)) {
-                        ws.send(JSON.stringify({ type: 'auth_required' }));
-                        ws.close();
-                        return;
-                    }
-                    if (data.subscribe) {
-                        // Role check: only admin can subscribe to admin events
-                        const user = clientAuth.get(ws);
-                        if (data.subscribe.event && data.subscribe.event.startsWith('admin_') && (!user || user.role !== 'admin')) {
-                            ws.send(JSON.stringify({ type: 'error', message: 'Insufficient permissions' }));
-                            return;
-                        }
-                        clientFilters.set(ws, data.subscribe);
-                        ws.send(JSON.stringify({ type: 'subscribed', filter: data.subscribe }));
-                    }
-                    if (data.unsubscribe) {
-                        clientFilters.set(ws, null);
-                        ws.send(JSON.stringify({ type: 'unsubscribed' }));
-                    }
-                    if (data.refresh_token) {
-                        if (config.authEnabled && user) {
-                            // Generate new token
-                            const newToken = jwt.sign({ username: user.username, role: user.role }, config.jwtSecret, { expiresIn: config.jwtExpiresIn });
-                            ws.send(JSON.stringify({ type: 'token_refreshed', token: newToken }));
-                        }
-                    }
-                } catch (e) {
-                    ws.send(JSON.stringify({ type: 'error', message: 'Invalid message format' }));
-                }
-            });
+        //     ws.on('message', (message) => {
+        //     try {
+        //         const data = JSON.parse(message);
+        //         if (data.auth) {
+        //             if (config.authEnabled) {
+        //                 try {
+        //                     const decoded = jwt.verify(data.auth, config.jwtSecret);
+        //                     clientAuth.set(ws, decoded);
+        //                     ws.send(JSON.stringify({ type: 'authenticated', user: decoded }));
+        //                 } catch (err) {
+        //                     ws.send(JSON.stringify({ type: 'auth_failed' }));
+        //                     ws.close();
+        //                 }
+        //             }
+        //         } else if (!clientAuth.get(ws)) {
+        //             ws.send(JSON.stringify({ type: 'auth_required' }));
+        //             ws.close();
+        //             return;
+        //         }
+        //         if (data.subscribe) {
+        //             // Role check: only admin can subscribe to admin events
+        //             const user = clientAuth.get(ws);
+        //             if (data.subscribe.event && data.subscribe.event.startsWith('admin_') && (!user || user.role !== 'admin')) {
+        //                 ws.send(JSON.stringify({ type: 'error', message: 'Insufficient permissions' }));
+        //                 return;
+        //             }
+        //             clientFilters.set(ws, data.subscribe);
+        //             ws.send(JSON.stringify({ type: 'subscribed', filter: data.subscribe }));
+        //         }
+        //         if (data.unsubscribe) {
+        //             clientFilters.set(ws, null);
+        //             ws.send(JSON.stringify({ type: 'unsubscribed' }));
+        //         }
+        //         if (data.refresh_token) {
+        //             const user = clientAuth.get(ws);
+        //             if (config.authEnabled && user) {
+        //                 // Generate new token
+        //                 const newToken = jwt.sign({ username: user.username, role: user.role }, config.jwtSecret, { expiresIn: config.jwtExpiresIn });
+        //                 ws.send(JSON.stringify({ type: 'token_refreshed', token: newToken }));
+        //             }
+        //         }
+        //     } catch (e) {
+        //         ws.send(JSON.stringify({ type: 'error', message: 'Invalid message format' }));
+        //     }
+        // });
 
-            ws.on('close', () => {
-                clientFilters.delete(ws);
-                clientAuth.delete(ws);
-            });
-        });
+        // ws.on('close', () => {
+        //     clientFilters.delete(ws);
+        //     clientAuth.delete(ws);
+        // });
+        // });
+        // }
     });
 }
 }

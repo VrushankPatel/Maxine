@@ -2,7 +2,7 @@ const { constants } = require("../util/constants/constants");
 
 
 // Performance modes - simplified to lightning mode only
-let lightningDefault = process.env.LIGHTNING_MODE !== 'false'; // Lightning mode: ultimate speed, only basic discovery/registration
+let lightningDefault = false; // Force full mode for compatibility
 let ultraFastDefault = process.env.ULTRA_FAST_MODE === 'true'; // Ultra-fast mode: extreme performance with minimal features
 let highPerfDefault = false; // High performance mode: balanced performance and features
 let extremeFastDefault = false; // Extreme fast mode: maximum speed, minimal features
@@ -145,11 +145,12 @@ const config = {
                         ldapBaseDN: process.env.LDAP_BASE_DN,
                         ldapBindUser: process.env.LDAP_BIND_USER,
                         ldapBindPassword: process.env.LDAP_BIND_PASSWORD,
-                        samlEnabled: process.env.SAML_ENABLED === 'true',
-                        samlEntryPoint: process.env.SAML_ENTRY_POINT,
-                        samlIssuer: process.env.SAML_ISSUER,
-                        samlCert: process.env.SAML_CERT,
-                        samlCallbackUrl: process.env.SAML_CALLBACK_URL || 'http://localhost:8080/auth/saml/callback'
+                         samlEnabled: process.env.SAML_ENABLED === 'true',
+                         samlEntryPoint: process.env.SAML_ENTRY_POINT,
+                         samlIssuer: process.env.SAML_ISSUER,
+                         samlCert: process.env.SAML_CERT,
+                         samlCallbackUrl: process.env.SAML_CALLBACK_URL || 'http://localhost:8080/auth/saml/callback',
+                         websocketEnabled: process.env.WEBSOCKET_ENABLED === 'true'
 }
 
 Object.defineProperty(config, "profile", {

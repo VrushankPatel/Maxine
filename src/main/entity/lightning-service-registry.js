@@ -249,6 +249,20 @@ class LightningServiceRegistry {
         });
     }
 
+    addToHealthyNodes(serviceName, nodeName) {
+        const service = this.services.get(serviceName);
+        if (!service) return;
+        const node = service.nodes.get(nodeName);
+        if (!node) return;
+        if (!service.healthyNodes.has(node)) {
+            service.healthyNodes.add(node);
+            service.healthyNodesArray.push(node);
+            if (!this.isCircuitOpen(serviceName, nodeName) && !this.maintenanceNodes.has(nodeName)) {
+                service.availableNodesArray.push(node);
+            }
+        }
+    }
+
     deregister(serviceName, nodeName) {
         const tracer = trace.getTracer('maxine-registry', '1.0.0');
         return tracer.startActiveSpan('deregister', (span) => {

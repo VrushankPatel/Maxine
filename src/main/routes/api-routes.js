@@ -23,7 +23,6 @@ const { addWebhook, removeWebhook, getWebhooks } = require('../controller/webhoo
 const { addAlias, removeAlias, getAliases } = require('../controller/alias-controller');
 const { setKv, getKv, deleteKv, getAllKv } = require('../controller/kv-controller');
 const { addDependency, removeDependency, getDependencies, getDependents, getDependencyGraph, detectCycles } = require('../controller/dependency-controller');
-const dependencyGraphController = require('../controller/dependency-graph-controller');
 const discoveryController = require('../controller/maxine/discovery-controller');
 const dashboardController = require('../controller/dashboard-controller');
 const dnsController = require('../controller/maxine/dns-controller');
