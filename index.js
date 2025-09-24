@@ -81,7 +81,9 @@ if (config.lightningMode) {
             requests: { type: 'number' },
             errors: { type: 'number' },
             services: { type: 'number' },
-            nodes: { type: 'number' }
+            nodes: { type: 'number' },
+            persistenceEnabled: { type: 'boolean' },
+            persistenceType: { type: 'string' }
         }
     };
     const stringifyMetrics = stringify(metricsResponseSchema);
@@ -179,8 +181,10 @@ if (config.lightningMode) {
         const uptime = process.uptime();
         const services = serviceRegistry.servicesCount;
         const nodes = serviceRegistry.nodesCount;
+        const persistenceEnabled = config.persistenceEnabled;
+        const persistenceType = config.persistenceType;
         res.writeHead(200, { 'Content-Type': 'application/json' });
-        res.end(stringifyMetrics({ uptime, requests: requestCount, errors: errorCount, services, nodes }));
+        res.end(stringifyMetrics({ uptime, requests: requestCount, errors: errorCount, services, nodes, persistenceEnabled, persistenceType }));
     };
 
     routes.set('POST /register', handleRegister);
@@ -190,6 +194,39 @@ if (config.lightningMode) {
     routes.set('GET /servers', handleServers);
     routes.set('GET /health', handleHealth);
     routes.set('GET /metrics', handleMetrics);
+
+    // Persistence endpoints
+    routes.set('GET /backup', (req, res, query, body) => {
+        if (!config.persistenceEnabled) {
+            res.writeHead(400, { 'Content-Type': 'application/json' });
+            res.end('{"error": "Persistence not enabled"}');
+            return;
+        }
+        try {
+            const data = serviceRegistry.getRegistryData();
+            res.writeHead(200, { 'Content-Type': 'application/json' });
+            res.end(JSON.stringify(data));
+        } catch (err) {
+            res.writeHead(500, { 'Content-Type': 'application/json' });
+            res.end('{"error": "Backup failed"}');
+        }
+    });
+
+    routes.set('POST /restore', (req, res, query, body) => {
+        if (!config.persistenceEnabled) {
+            res.writeHead(400, { 'Content-Type': 'application/json' });
+            res.end('{"error": "Persistence not enabled"}');
+            return;
+        }
+        try {
+            serviceRegistry.setRegistryData(body);
+            res.writeHead(200, { 'Content-Type': 'application/json' });
+            res.end('{"success": true}');
+        } catch (err) {
+            res.writeHead(500, { 'Content-Type': 'application/json' });
+            res.end('{"error": "Restore failed"}');
+        }
+    });
 
     // Actuator endpoints for compatibility
     routes.set('GET /api/actuator/health', (req, res, query, body) => {
