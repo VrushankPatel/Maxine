@@ -46,7 +46,8 @@
 - [x] Add predictive load balancing with trend analysis: Enhanced predictive strategy with slope calculation of response time trends for better node selection.
 - [x] Implement Object Pooling: Added object pooling for response objects (register, discover, success, health, metrics) to reduce GC pressure and improve performance under high load.
  - [x] Implement Service Health Prediction: Added /predict-health endpoint using time-series analysis for proactive monitoring and failure prediction.
- - [x] Implement Service Dependency Auto-Detection: Added /record-call endpoint for services to report outbound calls, enabling automatic dependency detection based on traffic patterns with configurable thresholds and cleanup intervals.
+  - [x] Implement Service Dependency Auto-Detection: Added /record-call endpoint for services to report outbound calls, enabling automatic dependency detection based on traffic patterns with configurable thresholds and cleanup intervals.
+  - [x] Enhance Service Dependency Auto-Detection: Added periodic automatic dependency analysis in Lightning Mode, cleanup of old call logs, and /dependency/analyze endpoint for manual analysis triggering.
 - [x] Implement SIMD Operations: Added SIMD-inspired fast min and sum operations for bulk data processing in load balancing calculations (least-response-time, adaptive strategies) to reduce latency in high-throughput scenarios.
 - [x] Implement Adaptive Caching: Added ML-inspired adaptive caching with exponential moving average for access patterns, dynamically adjusting cache TTL based on service access frequency to optimize cache performance.
 - [x] Implement Advanced Rate Limiting: Added Redis-backed distributed rate limiting with atomic Redis operations for fair resource allocation across multiple Maxine instances.
@@ -680,3 +681,23 @@
 - Added power-of-two-choices load balancing strategy for better load distribution
 - Performance further improved to 0.74ms avg, 1.41ms p95, 62k req/s
 - Verified current performance metrics and updated documentation
+
+## Next Steps
+
+### High Priority
+- Implement Advanced Service Configuration Validation: Add schema validation for service configurations to prevent misconfigurations and improve reliability
+- Add Service Version Compatibility Checking: Implement version compatibility matrix for service dependencies to prevent breaking changes
+- Implement Service Call Tracing with Correlation IDs: Add distributed tracing with correlation IDs for end-to-end request tracking across service calls
+- Add Service Performance Profiling: Implement built-in performance profiling tools for identifying bottlenecks in service communication
+
+### Medium Priority
+- Implement Advanced Service Discovery Filters: Add complex filtering capabilities for service discovery based on custom metadata, geographic location, and performance metrics
+- Add Service Dependency Impact Simulation: Implement what-if analysis for service failures to predict cascading effects
+- Implement Service Auto-Recovery: Add automatic recovery mechanisms for failed services with configurable retry policies
+- Add Service Communication Encryption: Implement end-to-end encryption for service-to-service communication beyond mTLS
+
+### Low Priority
+- Implement Service Catalog UI: Create a web-based service catalog interface for browsing and managing registered services
+- Add Service Documentation Generation: Automatic generation of service documentation from registered API specs
+- Implement Service Testing Framework: Built-in integration testing tools for service interactions
+- Add Service Monitoring Dashboards: Customizable dashboards for service health and performance monitoring
