@@ -15,7 +15,7 @@ A minimal, high-performance service discovery and registry for microservices.
 - **API Key Management**: Generate, validate, and revoke API keys with per-key rate limiting for secure service access
 - **Access Control Lists (ACLs)**: Fine-grained permissions for service discovery access
 - **Service Intentions**: Define allowed communication patterns between services
-- **Service Dependencies**: Manage service dependencies with cycle detection and graph visualization
+ - **Service Dependencies**: Manage service dependencies with cycle detection, graph visualization, and automatic dependency detection through call logging
 - **Metrics**: Basic /metrics endpoint with request counts, errors, uptime, and basic stats including cache performance metrics
 - **Audit Logging**: Comprehensive logging of all registry operations using Winston, including user actions, system events, and security incidents with log rotation and export capabilities
 - **Persistence**: Optional persistence to survive restarts with file-based, Redis, memory-mapped (mmap), or shared memory (shm) storage
@@ -692,17 +692,29 @@ GET /config/all?serviceName=my-service
 DELETE /config/delete?serviceName=my-service&key=timeout
 ```
 
-##### Record Response Time
-```http
-POST /record-response-time
-Content-Type: application/json
+ ##### Record Response Time
+ ```http
+ POST /record-response-time
+ Content-Type: application/json
 
-{
-  "nodeId": "my-service:localhost:3000",
-  "responseTime": 150
-}
-```
-Records the response time for a node to enable predictive load balancing based on historical performance data.
+ {
+   "nodeId": "my-service:localhost:3000",
+   "responseTime": 150
+ }
+ ```
+ Records the response time for a node to enable predictive load balancing based on historical performance data.
+
+ ##### Record Service Call
+ ```http
+ POST /record-call
+ Content-Type: application/json
+
+ {
+   "callerService": "web-service",
+   "calledService": "api-service"
+ }
+ ```
+ Records a service call for automatic dependency detection. Services can report their outbound calls to enable auto-detection of service dependencies.
 
 ##### Add Service Dependency
 ```http

@@ -270,6 +270,22 @@ router.post('/response-time', rawBodyParser, (req, res, next) => {
     serviceRegistry.recordResponseTime(serviceName, nodeName, latency);
     res.send(stringifyResponseTime({ success: true }));
 });
+
+router.post('/record-call', rawBodyParser, (req, res, next) => {
+    try {
+        req.body = JSON.parse(req.body.toString());
+    } catch (e) {
+        return res.status(400).end('{"message":"Invalid JSON"}');
+    }
+    next();
+}, (req, res) => {
+    const { callerService, calledService } = req.body;
+    if (!callerService || !calledService) {
+        return res.status(400).json({ error: 'Missing callerService or calledService' });
+    }
+    serviceRegistry.recordCall(callerService, calledService);
+    res.send(stringifyResponseTime({ success: true })); // reuse schema
+});
 router.get('/servers', lightningServerListController);
 router.get('/health', (req, res) => {
     const services = serviceRegistry.services.size;

@@ -1287,6 +1287,29 @@ if (config.ultraFastMode) {
         }
     });
 
+    // Handle record call for dependency auto-detection
+    routes.set('POST /record-call', (req, res, query, body) => {
+        try {
+            const { callerService, calledService } = body;
+            const clientIP = req.connection.remoteAddress || req.socket.remoteAddress || 'unknown';
+            if (!callerService || !calledService) {
+                winston.warn(`AUDIT: Invalid record call - missing callerService or calledService, clientIP: ${clientIP}`);
+                res.writeHead(400, { 'Content-Type': 'application/json' });
+                res.end('{"error": "Missing callerService or calledService"}');
+                return;
+            }
+            serviceRegistry.recordCall(callerService, calledService);
+            // winston.info(`AUDIT: Call recorded - caller: ${callerService}, called: ${calledService}, clientIP: ${clientIP}`);
+            res.writeHead(200, { 'Content-Type': 'application/json' });
+            res.end(successTrue);
+        } catch (error) {
+            console.error(`AUDIT: Record call failed - error: ${error.message}, clientIP: ${req.connection.remoteAddress || req.socket.remoteAddress || 'unknown'}`);
+            errorCount++;
+            res.writeHead(500, { 'Content-Type': 'application/json' });
+            res.end('{"error": "Internal server error"}');
+        }
+    });
+
     // Service Mesh Integration
     // Handle Envoy service mesh config generation
     const handleEnvoyConfig = (req, res, query, body) => {

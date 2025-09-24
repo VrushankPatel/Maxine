@@ -49,6 +49,10 @@ const config = {
         redisPort: process.env.REDIS_PORT ? parseInt(process.env.REDIS_PORT) : 6379,
         redisPassword: process.env.REDIS_PASSWORD || null,
         redisCacheEnabled: process.env.REDIS_CACHE_ENABLED === 'true',
+        dependencyAutoDetectEnabled: process.env.DEPENDENCY_AUTO_DETECT_ENABLED !== 'false', // enabled by default
+        dependencyCallThreshold: process.env.DEPENDENCY_CALL_THRESHOLD ? parseInt(process.env.DEPENDENCY_CALL_THRESHOLD) : 10,
+        dependencyMaxAge: process.env.DEPENDENCY_MAX_AGE ? parseInt(process.env.DEPENDENCY_MAX_AGE) : 24 * 60 * 60 * 1000, // 24 hours
+        dependencyAnalysisInterval: process.env.DEPENDENCY_ANALYSIS_INTERVAL ? parseInt(process.env.DEPENDENCY_ANALYSIS_INTERVAL) : 300000, // 5 minutes
         etcdEnabled: process.env.ETCD_ENABLED === 'true' && !isTestMode && !ultraFastDefault,
       etcdHost: process.env.ETCD_HOST || 'localhost',
       etcdPort: process.env.ETCD_PORT ? parseInt(process.env.ETCD_PORT) : 2379,
