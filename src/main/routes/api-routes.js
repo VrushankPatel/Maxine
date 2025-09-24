@@ -34,6 +34,7 @@ const { authenticationController } = require('../controller/security/authenticat
 const { requireRole, requirePermission } = require('../controller/security/authorization-controller');
 const { PERMISSIONS } = require('../security/rbac');
 const { getRolesController, getUserRolesController, setUserRoleController } = require('../controller/security/role-controller');
+const { generateApiKey, revokeApiKey, listApiKeys, validateApiKey } = require('../controller/security/api-key-controller');
 
 const config = require('../config/config');
 const isHighPerformanceMode = config.highPerformanceMode;
@@ -204,9 +205,13 @@ maxineApiRoutes = maxineApiRoutes
                                 .stepBack()
                               .post("signin", bodyParser.json(), signInController)
                               .put("change-password", bodyParser.json(), changePwdController)
-                              .get("roles", authenticationController, requireRole('admin'), getRolesController)
-                              .get("user/roles/:username", authenticationController, requireRole('admin'), getUserRolesController)
-                              .post("user/roles", authenticationController, requireRole('admin'), bodyParser.json(), setUserRoleController)
+                               .get("roles", authenticationController, requireRole('admin'), getRolesController)
+                               .get("user/roles/:username", authenticationController, requireRole('admin'), getUserRolesController)
+                               .post("user/roles", authenticationController, requireRole('admin'), bodyParser.json(), setUserRoleController)
+                               .post("api-keys/generate", authenticationController, requireRole('admin'), bodyParser.json(), generateApiKey)
+                               .post("api-keys/revoke", authenticationController, requireRole('admin'), bodyParser.json(), revokeApiKey)
+                               .get("api-keys", authenticationController, requireRole('admin'), listApiKeys)
+                               .post("api-keys/validate", bodyParser.json(), validateApiKey)
                                .from("control")
                                    .put("config", config.isTestMode ? null : authenticationController, config.isTestMode ? null : requireRole('admin'), bodyParser.json(), configuratorController)
                                    .get("config", config.isTestMode ? null : authenticationController, configurationController)

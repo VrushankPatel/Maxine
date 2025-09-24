@@ -134,10 +134,12 @@ const config = {
                        googleClientId: process.env.GOOGLE_CLIENT_ID,
                        googleClientSecret: process.env.GOOGLE_CLIENT_SECRET,
                        sessionSecret: process.env.SESSION_SECRET || 'session-secret-change-in-production',
-                       mtlsEnabled: process.env.MTLS_ENABLED === 'true',
-                       serverCertPath: process.env.SERVER_CERT_PATH || path.join(__dirname, 'certs', 'server.crt'),
-                       serverKeyPath: process.env.SERVER_KEY_PATH || path.join(__dirname, 'certs', 'server.key'),
-                       caCertPath: process.env.CA_CERT_PATH || path.join(__dirname, 'certs', 'ca.crt')
+                        mtlsEnabled: process.env.MTLS_ENABLED === 'true',
+                        serverCertPath: process.env.SERVER_CERT_PATH || path.join(__dirname, 'certs', 'server.crt'),
+                        serverKeyPath: process.env.SERVER_KEY_PATH || path.join(__dirname, 'certs', 'server.key'),
+                        caCertPath: process.env.CA_CERT_PATH || path.join(__dirname, 'certs', 'ca.crt'),
+                        apiKeyEnabled: process.env.API_KEY_ENABLED === 'true',
+                        apiKeyRequired: process.env.API_KEY_REQUIRED === 'true'
 }
 
 Object.defineProperty(config, "profile", {
