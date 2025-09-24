@@ -1,12 +1,22 @@
 const config = require("../../config/config");
 const { serviceRegistry } = require("../../entity/service-registry");
-const config = require('../../config/config');
 const fs = require('fs').promises;
 const path = require('path');
 const { promisify } = require('util');
 const zlib = require('zlib');
-const { Pool } = require('pg');
-const mysql = require('mysql2/promise');
+
+// Optional imports for database persistence
+let pg, mysql;
+try {
+    pg = require('pg');
+} catch (e) {
+    pg = null;
+}
+try {
+    mysql = require('mysql2/promise');
+} catch (e) {
+    mysql = null;
+}
 
 // Distributed persistence implementations
 class TiKVStorage {
@@ -131,6 +141,7 @@ class FoundationDBStorage {
 
 class PostgreSQLStorage {
     constructor() {
+        if (!pg) throw new Error('pg package not installed. Run: npm install pg');
         this.pool = null;
         this.connected = false;
         this.tableName = 'maxine_persistence';
@@ -138,7 +149,7 @@ class PostgreSQLStorage {
 
     async connect() {
         try {
-            this.pool = new Pool({
+            this.pool = new pg.Pool({
                 connectionString: config.postgresUrl,
                 max: 20, // Connection pool size
                 idleTimeoutMillis: 30000,
@@ -213,6 +224,7 @@ class PostgreSQLStorage {
 
 class MySQLStorage {
     constructor() {
+        if (!mysql) throw new Error('mysql2 package not installed. Run: npm install mysql2');
         this.connection = null;
         this.connected = false;
         this.tableName = 'maxine_persistence';
