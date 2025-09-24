@@ -1125,6 +1125,185 @@ if (config.lightningMode) {
         }
     });
 
+    // Dependency Graph Visualization
+    routes.set('GET /dependency-graph', (req, res, query, body) => {
+        try {
+            const clientIP = req.connection.remoteAddress || req.socket.remoteAddress || 'unknown';
+            const graph = serviceRegistry.getDependencyGraph();
+            const cycles = serviceRegistry.detectCycles();
+            const graphJson = JSON.stringify(graph);
+            const cyclesJson = JSON.stringify(cycles);
+            const html = `
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Maxine Dependency Graph</title>
+    <script src="https://d3js.org/d3.v7.min.js"></script>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .node { fill: #69b3a2; }
+        .link { stroke: #999; stroke-opacity: 0.6; }
+        .cycle-alert { color: red; font-weight: bold; }
+        #graph { border: 1px solid #ccc; }
+    </style>
+</head>
+<body>
+    <h1>Maxine Service Dependency Graph</h1>
+    <div id="cycle-alert" class="cycle-alert" style="display: none;">Warning: Circular dependencies detected!</div>
+    <div>
+        <button onclick="exportJSON()">Export JSON</button>
+        <button onclick="exportSVG()">Export SVG</button>
+    </div>
+    <svg id="graph" width="800" height="600"></svg>
+    <script>
+        const graphData = ${graphJson};
+        const cycles = ${cyclesJson};
+
+        if (cycles.length > 0) {
+            document.getElementById('cycle-alert').style.display = 'block';
+        }
+
+        // Prepare nodes and links
+        const nodes = [];
+        const links = [];
+        const nodeMap = new Map();
+
+        Object.keys(graphData).forEach(service => {
+            if (!nodeMap.has(service)) {
+                nodeMap.set(service, { id: service, group: 1 });
+                nodes.push(nodeMap.get(service));
+            }
+            graphData[service].forEach(dep => {
+                if (!nodeMap.has(dep)) {
+                    nodeMap.set(dep, { id: dep, group: 1 });
+                    nodes.push(nodeMap.get(dep));
+                }
+                links.push({ source: service, target: dep });
+            });
+        });
+
+        const svg = d3.select("#graph");
+        const width = +svg.attr("width");
+        const height = +svg.attr("height");
+
+        const simulation = d3.forceSimulation(nodes)
+            .force("link", d3.forceLink(links).id(d => d.id).distance(100))
+            .force("charge", d3.forceManyBody().strength(-300))
+            .force("center", d3.forceCenter(width / 2, height / 2));
+
+        const link = svg.append("g")
+            .attr("class", "links")
+            .selectAll("line")
+            .data(links)
+            .enter().append("line")
+            .attr("class", "link");
+
+        const node = svg.append("g")
+            .attr("class", "nodes")
+            .selectAll("circle")
+            .data(nodes)
+            .enter().append("circle")
+            .attr("class", "node")
+            .attr("r", 10)
+            .on("click", (event, d) => showImpact(d.id))
+            .call(d3.drag()
+                .on("start", dragstarted)
+                .on("drag", dragged)
+                .on("end", dragended));
+
+        node.append("title")
+            .text(d => d.id);
+
+        const text = svg.append("g")
+            .selectAll("text")
+            .data(nodes)
+            .enter().append("text")
+            .attr("dy", -15)
+            .text(d => d.id);
+
+        simulation.on("tick", () => {
+            link
+                .attr("x1", d => d.source.x)
+                .attr("y1", d => d.source.y)
+                .attr("x2", d => d.target.x)
+                .attr("y2", d => d.target.y);
+
+            node
+                .attr("cx", d => d.x)
+                .attr("cy", d => d.y);
+
+            text
+                .attr("x", d => d.x)
+                .attr("y", d => d.y);
+        });
+
+        function dragstarted(event, d) {
+            if (!event.active) simulation.alphaTarget(0.3).restart();
+            d.fx = d.x;
+            d.fy = d.y;
+        }
+
+        function dragged(event, d) {
+            d.fx = event.x;
+            d.fy = event.y;
+        }
+
+        function dragended(event, d) {
+            if (!event.active) simulation.alphaTarget(0);
+            d.fx = null;
+            d.fy = null;
+        }
+
+        function showImpact(serviceName) {
+            // Fetch dependencies and dependents via API
+            fetch('/api/maxine/serviceops/dependency/get?serviceName=' + encodeURIComponent(serviceName))
+                .then(response => response.json())
+                .then(data => {
+                    const dependencies = data.dependencies;
+                    fetch('/api/maxine/serviceops/dependency/dependents?serviceName=' + encodeURIComponent(serviceName))
+                        .then(response => response.json())
+                        .then(data2 => {
+                            const dependents = data2.dependents;
+                            alert('Service: ' + serviceName + '\nDepends on: ' + (dependencies.join(', ') || 'none') + '\nDepended by: ' + (dependents.join(', ') || 'none'));
+                        });
+                });
+        }
+
+        function exportJSON() {
+            const dataStr = JSON.stringify(graphData, null, 2);
+            const dataUri = 'data:application/json;charset=utf-8,'+ encodeURIComponent(dataStr);
+            const exportFileDefaultName = 'dependency-graph.json';
+            const linkElement = document.createElement('a');
+            linkElement.setAttribute('href', dataUri);
+            linkElement.setAttribute('download', exportFileDefaultName);
+            linkElement.click();
+        }
+
+        function exportSVG() {
+            const svg = document.getElementById('graph');
+            const serializer = new XMLSerializer();
+            const svgStr = serializer.serializeToString(svg);
+            const dataUri = 'data:image/svg+xml;charset=utf-8,'+ encodeURIComponent(svgStr);
+            const exportFileDefaultName = 'dependency-graph.svg';
+            const linkElement = document.createElement('a');
+            linkElement.setAttribute('href', dataUri);
+            linkElement.setAttribute('download', exportFileDefaultName);
+            linkElement.click();
+        }
+    </script>
+</body>
+</html>`;
+            // winston.info(`AUDIT: Dependency graph requested - clientIP: ${clientIP}`);
+            res.writeHead(200, { 'Content-Type': 'text/html' });
+            res.end(html);
+        } catch (error) {
+            // winston.error(`AUDIT: Dependency graph failed - error: ${error.message}, clientIP: ${req.connection.remoteAddress || req.socket.remoteAddress || 'unknown'}`);
+            errorCount++;
+            res.writeHead(500, { 'Content-Type': 'text/html' });
+            res.end('<h1>Internal Server Error</h1>');
+        }
+    });
+
     // Actuator endpoints for compatibility
     // Handle actuator health check
     routes.set('GET /api/actuator/health', (req, res, query, body) => {
