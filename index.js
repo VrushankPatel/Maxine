@@ -1220,6 +1220,32 @@ if (config.lightningMode) {
         // Event persistence
         const eventHistory = [];
         const maxHistory = 1000;
+        const eventHistoryFile = path.join(process.cwd(), 'event-history.json');
+
+        const saveEventHistory = () => {
+            if (config.persistenceEnabled && config.persistenceType === 'file') {
+                try {
+                    fs.writeFileSync(eventHistoryFile, JSON.stringify(eventHistory, null, 2));
+                } catch (err) {
+                    console.error('Failed to save event history:', err);
+                }
+            }
+        };
+
+        const loadEventHistory = () => {
+            if (config.persistenceEnabled && config.persistenceType === 'file' && fs.existsSync(eventHistoryFile)) {
+                try {
+                    const data = fs.readFileSync(eventHistoryFile, 'utf8');
+                    const loaded = JSON.parse(data);
+                    eventHistory.push(...loaded.slice(-maxHistory));
+                } catch (err) {
+                    console.error('Failed to load event history:', err);
+                }
+            }
+        };
+
+        // Load event history on startup
+        loadEventHistory();
 
         const broadcast = (event, data) => {
             const messageObj = { event, data, timestamp: Date.now() };
@@ -1228,6 +1254,10 @@ if (config.lightningMode) {
             eventHistory.push(messageObj);
             if (eventHistory.length > maxHistory) {
                 eventHistory.shift();
+            }
+            // Save to file periodically or on important events
+            if (eventHistory.length % 100 === 0) {
+                saveEventHistory();
             }
             // Emit to eventEmitter for SSE
             global.eventEmitter.emit(event, data);
