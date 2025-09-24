@@ -14,10 +14,10 @@ const apolloServer = new ApolloServer({
   context: ({ req }) => ({ req }),
   subscriptions: {
     onConnect: (connectionParams, webSocket, context) => {
-      console.log('Client connected to GraphQL subscriptions');
+      // Client connected to GraphQL subscriptions
     },
     onDisconnect: (webSocket, context) => {
-      console.log('Client disconnected from GraphQL subscriptions');
+      // Client disconnected from GraphQL subscriptions
     },
   },
 });
@@ -37,7 +37,7 @@ if (config.redisHost && config.redisPort) {
         });
         redisClient.on('error', (err) => console.error('Redis rate limit error:', err));
     } catch (error) {
-        console.log('Redis not available for rate limiting, using memory store');
+        // Redis not available, using memory store
     }
 }
 

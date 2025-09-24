@@ -434,8 +434,7 @@ if (config.ultraFastMode) {
 
     if (!config.isTestMode) {
         server.listen(constants.PORT, () => {
-            console.log('Maxine ultra-fast server listening on port', constants.PORT);
-            console.log('Ultra-Fast mode: maximum speed with minimal features');
+            // Server started in ultra-fast mode
         });
     }
 
@@ -453,13 +452,13 @@ if (config.ultraFastMode) {
             }
         });
         udpServer.bind(config.udpPort, () => {
-            console.log('UDP heartbeat server listening on port', config.udpPort);
+            // UDP server bound
         });
     }
 
     // Disable WebSocket, MQTT, gRPC in ultra-fast mode
 
-    console.log('Ultra-Fast server setup complete');
+    // Ultra-Fast server setup complete
     builder = { getApp: () => server };
     module.exports = builder.getApp();
 } else if (config.lightningMode && !config.ultraFastMode) {
@@ -2661,8 +2660,7 @@ if (config.ultraFastMode) {
 
     if (!config.isTestMode || process.env.WEBSOCKET_ENABLED === 'true') {
         server.listen(constants.PORT, () => {
-            console.log('Maxine lightning-fast server listening on port', constants.PORT);
-            console.log(`Lightning mode: minimal features for maximum performance using ${config.mtlsEnabled ? 'HTTPS with mTLS' : 'raw HTTP'}`);
+            // Server started in lightning mode
         });
     }
 
@@ -2677,7 +2675,7 @@ if (config.ultraFastMode) {
         if (config.mqttEnabled) {
             mqttClient = mqtt.connect(config.mqttBroker);
             mqttClient.on('connect', () => {
-                console.log('Connected to MQTT broker');
+                // Connected to MQTT broker
             });
             mqttClient.on('error', (err) => {
                 console.error('MQTT connection error:', err);
@@ -2781,7 +2779,6 @@ if (config.ultraFastMode) {
 
         wss.on('connection', (ws) => {
             wsConnectionCount++;
-            console.log('WebSocket client connected for event streaming');
             clientFilters.set(ws, null); // no filter by default
             clientAuth.set(ws, config.authEnabled ? false : { role: 'anonymous' }); // user object or false
 
@@ -2836,7 +2833,6 @@ if (config.ultraFastMode) {
 
             ws.on('close', () => {
                 wsConnectionCount--;
-                console.log('WebSocket client disconnected');
                 clientFilters.delete(ws);
                 clientAuth.delete(ws);
             });
@@ -2868,15 +2864,14 @@ if (config.ultraFastMode) {
     builder = ExpressAppBuilder.createNewApp()
         .use('/api', maxineApiRoutes)
         .blockUnknownUrls()
-        .invoke(() => console.log('before listen'));
+        .invoke(() => {});
 
     if (config.isTestMode) {
         // In test mode, export the app directly without starting server
         module.exports = builder.getApp();
     } else {
         builder.listenOrSpdy(constants.PORT, () => {
-            console.log('Maxine lightning-fast server listening on port', constants.PORT);
-            console.log('Full mode: comprehensive features with optimized performance');
+            // Server started in full mode
 
             // MQTT client for event publishing
         let mqttClient = null;
@@ -2884,7 +2879,7 @@ if (config.ultraFastMode) {
             const mqtt = require('mqtt');
             mqttClient = mqtt.connect(config.mqttBroker);
             mqttClient.on('connect', () => {
-                console.log('Connected to MQTT broker');
+                // Connected to MQTT broker
             });
             mqttClient.on('error', (err) => {
                 console.error('MQTT connection error:', err);
