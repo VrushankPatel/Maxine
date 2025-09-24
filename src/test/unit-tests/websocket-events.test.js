@@ -7,24 +7,23 @@ describe('WebSocket Event Streaming', () => {
   let port = 8081; // Use different port for tests
 
   before((done) => {
-    // Start server on test port
-    process.env.PORT = port;
-    process.env.LIGHTNING_MODE = 'true';
-    process.env.WEBSOCKET_ENABLED = 'true';
+     // Start server on test port
+     process.env.PORT = port;
+     process.env.LIGHTNING_MODE = 'true';
+     process.env.WEBSOCKET_ENABLED = 'true';
 
-    const app = require('../../../index');
-    server = http.createServer(app);
-    server.listen(port, () => {
-      done();
-    });
-  });
+     server = require('../../../index');
+     server.listen(port, () => {
+       done();
+     });
+   });
 
-  after((done) => {
-    server.close(done);
-  });
+   after((done) => {
+     server.close(done);
+   });
 
   it('should connect to WebSocket and receive events', (done) => {
-    const ws = new WebSocket(`ws://localhost:${port}`);
+    const ws = new WebSocket(`ws://127.0.0.1:${port}`);
 
     ws.on('open', () => {
       // Subscribe to events
@@ -46,7 +45,7 @@ describe('WebSocket Event Streaming', () => {
     // Trigger an event by registering a service
     setTimeout(() => {
       const req = http.request({
-        hostname: 'localhost',
+        hostname: '127.0.0.1',
         port: port,
         path: '/register',
         method: 'POST',
@@ -59,7 +58,7 @@ describe('WebSocket Event Streaming', () => {
 
       req.write(JSON.stringify({
         serviceName: 'test-service',
-        host: 'localhost',
+        host: '127.0.0.1',
         port: 3000
       }));
       req.end();
@@ -72,7 +71,7 @@ describe('WebSocket Event Streaming', () => {
     process.env.ADMIN_USERNAME = 'admin';
     process.env.ADMIN_PASSWORD_HASH = '$2b$10$test.hash'; // bcrypt hash for 'password'
 
-    const ws = new WebSocket(`ws://localhost:${port}`);
+    const ws = new WebSocket(`ws://127.0.0.1:${port}`);
 
     ws.on('open', () => {
       // Try to authenticate
@@ -93,7 +92,7 @@ describe('WebSocket Event Streaming', () => {
   });
 
   it('should filter events by service name', (done) => {
-    const ws = new WebSocket(`ws://localhost:${port}`);
+    const ws = new WebSocket(`ws://127.0.0.1:${port}`);
 
     ws.on('open', () => {
       // Subscribe to specific service
@@ -117,7 +116,7 @@ describe('WebSocket Event Streaming', () => {
     setTimeout(() => {
       // Register non-matching service
       const req1 = http.request({
-        hostname: 'localhost',
+        hostname: '127.0.0.1',
         port: port,
         path: '/register',
         method: 'POST',
@@ -133,7 +132,7 @@ describe('WebSocket Event Streaming', () => {
       // Register matching service
       setTimeout(() => {
         const req2 = http.request({
-          hostname: 'localhost',
+          hostname: '127.0.0.1',
           port: port,
           path: '/register',
           method: 'POST',

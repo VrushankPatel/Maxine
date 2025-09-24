@@ -171,12 +171,19 @@ class LightningServiceRegistrySimple extends EventEmitter {
         return false;
     }
 
-    getRandomNode(serviceName, strategy = 'round-robin', clientIP = null) {
+    getRandomNode(serviceName, strategy = 'round-robin', clientIP = null, tags = null) {
         const service = this.services.get(serviceName);
         if (!service || service.healthyNodesArray.length === 0) return null;
 
         // Filter out nodes with open circuit breakers
-        const availableNodes = service.healthyNodesArray.filter(node => !this.isCircuitOpen(node.nodeName));
+        let availableNodes = service.healthyNodesArray.filter(node => !this.isCircuitOpen(node.nodeName));
+
+        // Filter by tags if provided
+        if (tags && tags.length > 0) {
+            availableNodes = availableNodes.filter(node => {
+                return node.metadata && node.metadata.tags && tags.every(tag => node.metadata.tags.includes(tag));
+            });
+        }
 
         if (availableNodes.length === 0) return null;
 

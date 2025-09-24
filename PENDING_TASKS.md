@@ -36,12 +36,15 @@
       - [x] Implement Configuration Management: Dynamic configuration updates for services (completed with API endpoints, persistence, versioning, and event integration)
      - [x] Implement Audit Logging: Comprehensive logging of all registry operations (completed in lightning mode)
 
-     ## Code Quality and Testing
-     - [x] Run unit tests and ensure all pass - All tests passing except WebSocket integration tests (test environment issue)
-     - [x] Run load tests and verify performance targets - Performance targets met
-     - [x] Add integration tests for WebSocket event streaming and persistence features - WebSocket broadcasting fixed
-     - [x] Code review and refactoring for maintainability, including error handling and code comments - Fixed error in service registry
-     - [x] Add performance benchmarks for WebSocket connections and event broadcasting - Broadcasting now working
+ ## Code Quality and Testing
+      - [x] Run unit tests and ensure all pass - All tests passing except WebSocket integration tests (test environment issue)
+      - [x] Run load tests and verify performance targets - Performance targets met
+      - [x] Add integration tests for WebSocket event streaming and persistence features - WebSocket broadcasting fixed
+      - [x] Code review and refactoring for maintainability, including error handling and code comments - Fixed error in service registry
+      - [x] Add performance benchmarks for WebSocket connections and event broadcasting - Broadcasting now working
+
+ ## New Features Added
+      - [x] Implement Service Tags: Add support for tagging services with metadata.tags array and filtering discovery by tags parameter
 
     ## Completed Features
     - [x] Implement Service Dependency Mapping: Track and visualize service dependencies, detect circular dependencies, and provide dependency-aware load balancing to prevent cascading failures

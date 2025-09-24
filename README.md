@@ -107,11 +107,11 @@ Content-Type: application/json
    "serviceName": "my-service",
    "host": "localhost",
    "port": 3000,
-   "metadata": {"version": "1.0", "weight": 1}
+   "metadata": {"version": "1.0", "weight": 1, "tags": ["web", "api"]}
 }
 ```
 
-Note: `version` in metadata enables service versioning. `weight` in metadata is used for `weighted-random` load balancing (default 1).
+Note: `version` in metadata enables service versioning. `weight` in metadata is used for `weighted-random` load balancing (default 1). `tags` in metadata is an array of strings for service tagging and filtering.
 
 Response:
 ```json
@@ -122,10 +122,10 @@ Response:
 
 ##### Discover a Service
 ```http
-GET /discover?serviceName=my-service&loadBalancing=round-robin&version=1.0
+GET /discover?serviceName=my-service&loadBalancing=round-robin&version=1.0&tags=web,api
 ```
 
-Load balancing options: `round-robin` (default), `random`, `weighted-random`, `least-connections`, `consistent-hash`, `ip-hash`. Use `version` parameter for service versioning.
+Load balancing options: `round-robin` (default), `random`, `weighted-random`, `least-connections`, `consistent-hash`, `ip-hash`. Use `version` parameter for service versioning. Use `tags` parameter to filter services by tags (comma-separated).
 
 Response: Returns a service instance or 404 if not found.
 
