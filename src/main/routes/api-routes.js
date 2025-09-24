@@ -9,6 +9,79 @@ const { schema, root } = require('../graphql/schema');
 const { serverListController, registryController, renewLeaseController, heartbeatController, deregisterController, healthController, bulkHealthController, pushHealthController, healthHistoryController, metricsController, prometheusMetricsController, cacheStatsController, filteredDiscoveryController, discoveryInfoController, changesController, changesSSEController, bulkRegisterController, bulkDeregisterController, setMaintenanceController, setDrainingController, backupController, restoreController, dependencyGraphController, impactAnalysisController, setApiSpecController, getApiSpecController, listServicesByGroupController, updateMetadataController, databaseDiscoveryController, statsController, slaController, healthScoreController, autoscalingController, chaosController, pendingServicesController, approveServiceController, rejectServiceController, testServiceController, addServiceTemplateController, getServiceTemplateController, deleteServiceTemplateController, listServiceTemplatesController, setServiceIntentionController, getServiceIntentionController, addAclPolicyController, getAclPolicyController, deleteAclPolicyController, listAclPoliciesController, addToBlacklistController, removeFromBlacklistController, getBlacklistedNodesController, getServiceUptimeController, setCanaryController, discoverWeightedController, discoverLeastConnectionsController, setBlueGreenController, addFederatedRegistryController, removeFederatedRegistryController, startTraceController, addTraceEventController, endTraceController, getTraceController, setACLController, getACLController, setIntentionController, getIntentionController, addServiceToBlacklistController, removeServiceFromBlacklistController, isServiceBlacklistedController } = require('../controller/maxine/registry-controller');
 const batchDiscoveryController = require('../controller/maxine/batch-discovery-controller');
 const federationController = require('../controller/maxine/federation-controller');
+
+// Redis-backed rate limiting for distributed instances
+let redisClient = null;
+if (config.redisHost && config.redisPort) {
+    try {
+        const redis = require('redis');
+        redisClient = redis.createClient({
+            host: config.redisHost,
+            port: config.redisPort,
+            password: config.redisPassword || undefined
+        });
+        redisClient.on('error', (err) => console.error('Redis rate limit error:', err));
+    } catch (error) {
+        console.log('Redis not available for rate limiting, using memory store');
+    }
+}
+
+// Advanced Redis-backed rate limiter
+const createRedisRateLimiter = (options = {}) => {
+    const { windowMs = 15 * 60 * 1000, max = 100, keyGenerator = (req) => req.ip } = options;
+
+    return async (req, res, next) => {
+        if (!redisClient) {
+            // Fallback to simple in-memory rate limiting (not distributed)
+            const key = keyGenerator(req);
+            const now = Date.now();
+            if (!global.rateLimitStore) global.rateLimitStore = new Map();
+            const store = global.rateLimitStore;
+            if (!store.has(key)) store.set(key, []);
+            const timestamps = store.get(key);
+            // Remove old timestamps
+            while (timestamps.length > 0 && timestamps[0] < now - windowMs) {
+                timestamps.shift();
+            }
+            if (timestamps.length >= max) {
+                return res.status(429).json({ error: 'Too many requests, please try again later.' });
+            }
+            timestamps.push(now);
+            return next();
+        }
+
+        const key = `ratelimit:${keyGenerator(req)}`;
+        const now = Date.now();
+        const windowStart = now - windowMs;
+
+        try {
+            // Use Redis pipeline for atomic operations
+            const multi = redisClient.multi();
+            multi.zremrangebyscore(key, 0, windowStart); // Remove old requests
+            multi.zcard(key); // Get current count
+            multi.zadd(key, now, now); // Add current request
+            multi.pexpire(key, windowMs); // Set expiry
+
+            const results = await multi.exec();
+            const currentCount = results[1];
+
+            if (currentCount >= max) {
+                return res.status(429).json({ error: 'Too many requests, please try again later.' });
+            }
+
+            // Set headers for client
+            res.set('X-RateLimit-Limit', max);
+            res.set('X-RateLimit-Remaining', Math.max(0, max - currentCount - 1));
+            res.set('X-RateLimit-Reset', new Date(now + windowMs).toISOString());
+
+            next();
+        } catch (error) {
+            console.error('Rate limit error:', error);
+            // On Redis error, allow request to prevent blocking
+            next();
+        }
+    };
+};
 const envoyConfigController = require('../controller/maxine/envoy-controller');
 const istioConfigController = require('../controller/maxine/istio-controller');
 const linkerdConfigController = require('../controller/maxine/linkerd-controller');
@@ -42,19 +115,15 @@ const config = require('../config/config');
 const isHighPerformanceMode = config.highPerformanceMode;
 const isLightningMode = config.lightningMode;
 
-const limiter = isHighPerformanceMode ? null : rateLimit({
+const limiter = isHighPerformanceMode ? null : createRedisRateLimiter({
     windowMs: 15 * 60 * 1000, // 15 minutes
     max: 10000, // limit each IP to 10000 requests per windowMs for non-discovery endpoints
-    message: 'Too many requests from this IP, please try again later.'
 });
 
-const discoveryLimiter = (isHighPerformanceMode || config.ultraFastMode) ? null : rateLimit({
+const discoveryLimiter = (isHighPerformanceMode || config.ultraFastMode) ? null : createRedisRateLimiter({
     windowMs: 60 * 1000, // 1 minute
     max: 100000, // allow high rate for discovery requests
-    keyGenerator: (req) => `${req.query.serviceName || 'unknown'}:${rateLimit.ipKeyGenerator(req)}`,
-    standardHeaders: true,
-    legacyHeaders: false,
-    message: 'Too many discovery requests for this service from this IP, please try again later.'
+    keyGenerator: (req) => `${req.query.serviceName || 'unknown'}:${req.ip}`,
 });
 
 
