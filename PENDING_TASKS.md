@@ -74,8 +74,8 @@
   - [x] API key management and rate limiting per key to control access and prevent abuse
   - [x] Audit logging for all security events with compliance-ready logs
   - [x] Integration with external security systems like LDAP or SAML for enterprise environments
-- Implement OpenTelemetry Metrics: Add comprehensive metrics collection with OpenTelemetry for better observability, including custom metrics for service discovery performance, cache hit rates, and load balancing efficiency.
-- Implement Advanced Rate Limiting: Add per-service and per-client rate limiting with Redis-backed counters for distributed enforcement across multiple instances.
+- [x] Implement OpenTelemetry Metrics: Add comprehensive metrics collection with OpenTelemetry for better observability, including custom metrics for service discovery performance, cache hit rates, and load balancing efficiency.
+- [x] Implement Advanced Rate Limiting: Add per-service and per-client rate limiting with Redis-backed counters for distributed enforcement across multiple instances.
 - Implement Service Auto-Scaling Recommendations: Use machine learning algorithms to analyze service metrics and provide intelligent scaling recommendations for optimal resource utilization.
 
 ### Medium Priority
