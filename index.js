@@ -2,6 +2,10 @@ require('./src/main/util/logging/log-generic-exceptions')();
 const config = require('./src/main/config/config');
 const EventEmitter = require('events');
 global.eventEmitter = new EventEmitter();
+global.broadcast = (event, data) => {
+  if (global.eventEmitter) global.eventEmitter.emit(event, data);
+  global.lastEvent = { event, data };
+};
 
 process.on('uncaughtException', (err) => {
   console.error('uncaught exception', err);
@@ -1093,6 +1097,8 @@ if (config.lightningMode) {
             }
             // Emit to eventEmitter for SSE
             global.eventEmitter.emit(event, data);
+            // Store last event for testing
+            global.lastEvent = { event, data };
             // WebSocket broadcast with filtering
             wss.clients.forEach(client => {
                 if (client.readyState === WebSocket.OPEN) {
