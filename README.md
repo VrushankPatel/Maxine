@@ -73,6 +73,16 @@ Enable with `AUTH_ENABLED=true` and configure:
 
 Sign in via POST /signin to get a token, then include in requests as `Authorization: Bearer <token>`.
 
+### OAuth2 Integration
+
+Maxine supports OAuth2 authentication with Google for external user management.
+
+Enable with `OAUTH2_ENABLED=true` and configure:
+- `GOOGLE_CLIENT_ID`: Google OAuth2 client ID
+- `GOOGLE_CLIENT_SECRET`: Google OAuth2 client secret
+
+Redirect users to GET /auth/google to start OAuth flow, then handle the callback at GET /auth/google/callback to receive JWT token.
+
 ## MQTT Integration (Lightning Mode)
 
 Maxine supports optional MQTT integration for publishing real-time events to MQTT brokers.
