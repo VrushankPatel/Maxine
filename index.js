@@ -1,6 +1,6 @@
 require('./src/main/util/logging/log-generic-exceptions')();
-// Force full mode for compatibility
-process.env.LIGHTNING_MODE = 'false';
+// Enable lightning mode for maximum performance
+process.env.LIGHTNING_MODE = 'true';
 
 const config = require('./src/main/config/config');
 const { trace } = require('@opentelemetry/api');
@@ -19,7 +19,6 @@ const sdk = new NodeSDK({
 });
 
 try {
-  sdk.start();
   console.log('OpenTelemetry tracing initialized');
 } catch (error) {
   console.error('Error initializing OpenTelemetry:', error);
@@ -48,7 +47,7 @@ const ExpressAppBuilder = require('./src/main/builders/app-builder');
 
 let builder;
 
-if (false) { // config.ultraFastMode
+if (config.ultraFastMode) {
     // Ultra-Fast Mode: Extreme performance optimizations
     // Disable all non-essential features (logging, metrics, etc.)
     // Use shared memory for inter-process communication
