@@ -4,12 +4,10 @@ const LogFilesService = require('../../service/logfiles-service');
 const logFilesService = new LogFilesService();
 
 const logsLinkGenController = async (_, res) => {
-    console.log('logsLinkGenController called');
     try {
         const links = await logFilesService.getLogLinks();
         res.send(links);
     } catch (err) {
-        console.log('error in logsLinkGenController', err);
         res.status(500).send({error: err.message});
     }
 }

@@ -168,8 +168,6 @@ class ExpressAppBuilder{
       * @returns {object: ExpressAppBuilder}
       */
     listenOrSpdy(port, callback){
-        console.log('app type', typeof this.app);
-        console.log('app has use', typeof this.app.use);
         let server;
         if (config.http2Enabled) {
             try {

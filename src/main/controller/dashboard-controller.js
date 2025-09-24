@@ -215,7 +215,6 @@ const dashboardController = (req, res) => {
 
             ws.onopen = function(event) {
                 document.getElementById('connection-status').innerHTML = '<span class="status-indicator status-connected"></span> WebSocket: Connected';
-                console.log('WebSocket connected');
             };
 
             ws.onmessage = function(event) {
@@ -230,7 +229,6 @@ const dashboardController = (req, res) => {
 
             ws.onclose = function(event) {
                 document.getElementById('connection-status').innerHTML = '<span class="status-indicator status-disconnected"></span> WebSocket: Disconnected';
-                console.log('WebSocket disconnected, reconnecting...');
                 setTimeout(connectWebSocket, 5000);
             };
 

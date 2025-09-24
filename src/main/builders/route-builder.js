@@ -60,7 +60,6 @@ class RouteBuilder{
      */
     get(endPoint, ...args){
         const route = this.createRouteString(endPoint);
-        console.log('adding GET route', route);
         this.route.get(route, ...args.filter(arg => arg != null));
         return this;
     }

@@ -166,7 +166,6 @@ config.reload = () => {
     const newConfig = require('./config');
     // Update current config with new values
     Object.assign(config, newConfig);
-    console.log('Configuration reloaded');
 };
 
 module.exports = config;

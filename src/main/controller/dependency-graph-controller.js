@@ -31,21 +31,18 @@ const dependencyGraphController = (req, res) => {
             ws = new WebSocket('ws://' + window.location.host);
 
             ws.onopen = function() {
-                console.log('WebSocket connected for dependency graph updates');
                 clearInterval(reconnectInterval);
             };
 
             ws.onmessage = function(event) {
                 const data = JSON.parse(event.data);
                 if (data.event === 'dependency_added' || data.event === 'dependency_removed') {
-                    console.log('Dependency change detected, refreshing graph...');
                     // Refresh the page or update the graph dynamically
                     setTimeout(() => window.location.reload(), 1000); // Simple refresh for now
                 }
             };
 
             ws.onclose = function() {
-                console.log('WebSocket disconnected, attempting to reconnect...');
                 reconnectInterval = setInterval(connectWebSocket, 5000);
             };
 

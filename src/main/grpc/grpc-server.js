@@ -117,7 +117,6 @@ class GrpcServer {
                 console.error('Failed to bind gRPC server:', error);
                 return;
             }
-            console.log(`gRPC server listening on port ${port}`);
             this.server.start();
         });
     }
