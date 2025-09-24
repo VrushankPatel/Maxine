@@ -614,34 +614,25 @@ class LightningServiceRegistrySimple extends EventEmitter {
         if (!this.persistenceEnabled || this.savePending) return;
         this.savePending = true;
         if (this.saveTimeout) clearTimeout(this.saveTimeout);
-        this.saveTimeout = setTimeout(() => {
-            this._doSave();
+        this.saveTimeout = setTimeout(async () => {
+            await this._doSave();
         }, 100); // Debounce saves by 100ms
     }
 
-    _doSave() {
+    async _doSave() {
         try {
             const data = this.getRegistryData();
             if (this.persistenceType === 'file') {
-                fs.writeFile(this.registryFile, JSON.stringify(data, null, 2), (err) => {
-                    if (err) console.error('Error saving registry to file:', err);
-                    this.savePending = false;
-                });
+                await fs.promises.writeFile(this.registryFile, JSON.stringify(data, null, 2));
             } else if (this.persistenceType === 'redis') {
                 if (this.redisClient) {
-                    this.redisClient.set('maxine:registry', JSON.stringify(data)).then(() => {
-                        this.savePending = false;
-                    }).catch(err => {
-                        console.error('Redis save error:', err);
-                        this.savePending = false;
-                    });
-                } else {
-                    this.savePending = false;
+                    await this.redisClient.set('maxine:registry', JSON.stringify(data));
                 }
             }
             // DB persistence to be implemented
         } catch (err) {
-            console.error('Error preparing save data:', err);
+            console.error('Error saving registry:', err);
+        } finally {
             this.savePending = false;
         }
     }
