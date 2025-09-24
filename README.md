@@ -23,6 +23,7 @@ A minimal, high-performance service discovery and registry for microservices.
 - **Federation**: Connect multiple Maxine instances across datacenters for global service discovery
 - **Multi-Datacenter Support**: Global service discovery with cross-datacenter replication and load balancing
 - **Authentication/Authorization**: Optional JWT-based auth for Lightning Mode to secure sensitive operations
+- **Configuration Management**: Dynamic configuration updates for services with versioning and event notifications
 
 ## Missing Features (Future Enhancements)
 
@@ -286,6 +287,34 @@ Returns the circuit breaker state for the specified node, including state (close
 GET /events?since=<timestamp>&limit=<number>
 ```
 Returns recent events from the event history. Use `since` to get events after a specific timestamp (default 0), and `limit` to limit the number of events returned (default 100).
+
+##### Set Service Config
+```http
+POST /config/set
+Content-Type: application/json
+
+{
+  "serviceName": "my-service",
+  "key": "timeout",
+  "value": 5000,
+  "metadata": {"description": "Request timeout"}
+}
+```
+
+##### Get Service Config
+```http
+GET /config/get?serviceName=my-service&key=timeout
+```
+
+##### Get All Service Configs
+```http
+GET /config/all?serviceName=my-service
+```
+
+##### Delete Service Config
+```http
+DELETE /config/delete?serviceName=my-service&key=timeout
+```
 
 ##### Add Service Dependency
 ```http

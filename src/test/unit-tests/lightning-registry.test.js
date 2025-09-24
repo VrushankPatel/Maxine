@@ -127,5 +127,65 @@ describe(`${fileName} : Lightning Mode API`, () => {
                 done();
             });
     });
+
+    it('POST /config/set -> 200 & should set config', (done) => {
+        chai.request(app)
+            .post('/config/set')
+            .set('Content-Type', 'application/json')
+            .send({
+                "serviceName": "test-service",
+                "key": "timeout",
+                "value": 5000,
+                "metadata": {"description": "Request timeout"}
+            })
+            .end((_, res) => {
+                res.should.have.status(200);
+                res.should.be.json;
+                const body = res.body;
+                body.should.have.own.property("value", 5000);
+                body.should.have.own.property("version", 1);
+                body.should.have.own.property("metadata");
+                body.metadata.should.have.own.property("description", "Request timeout");
+                done();
+            });
+    });
+
+    it('GET /config/get -> 200 & should get config', (done) => {
+        chai.request(app)
+            .get('/config/get?serviceName=test-service&key=timeout')
+            .end((_, res) => {
+                res.should.have.status(200);
+                res.should.be.json;
+                const body = res.body;
+                body.should.have.own.property("value", 5000);
+                body.should.have.own.property("version", 1);
+                done();
+            });
+    });
+
+    it('GET /config/all -> 200 & should get all configs', (done) => {
+        chai.request(app)
+            .get('/config/all?serviceName=test-service')
+            .end((_, res) => {
+                res.should.have.status(200);
+                res.should.be.json;
+                const body = res.body;
+                body.should.have.own.property("timeout");
+                body.timeout.should.have.own.property("value", 5000);
+                done();
+            });
+    });
+
+    it('DELETE /config/delete -> 200 & should delete config', (done) => {
+        chai.request(app)
+            .delete('/config/delete?serviceName=test-service&key=timeout')
+            .end((_, res) => {
+                res.should.have.status(200);
+                res.should.be.json;
+                const body = res.body;
+                body.should.have.own.property("success", true);
+                done();
+            });
+    });
 });
 }

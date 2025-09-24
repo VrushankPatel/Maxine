@@ -29,6 +29,9 @@ class LightningServiceRegistrySimple {
         // Basic tracing
         this.traces = new Map();
 
+        // Configuration management
+        this.configurations = new Map(); // serviceName -> Map<key, {value, version, metadata, updatedAt}>
+
         // Circuit Breaker
         this.circuitFailures = new Map(); // nodeName -> failure count
         this.circuitState = new Map(); // nodeName -> 'closed' | 'open' | 'half-open'
@@ -123,7 +126,7 @@ class LightningServiceRegistrySimple {
                     if (node) service.healthyNodesArray.push(node);
                 }
             }
-            if (global.broadcast) global.broadcast('service_heartbeat', { nodeId });
+            // if (global.broadcast) global.broadcast('service_heartbeat', { nodeId });
             return true;
         }
         return false;
@@ -330,7 +333,8 @@ class LightningServiceRegistrySimple {
             circuitFailures: {},
             circuitState: {},
             circuitLastFailure: {},
-            circuitNextTry: {}
+            circuitNextTry: {},
+            configurations: {}
         };
         for (const [serviceName, service] of this.services) {
             data.services[serviceName] = {
@@ -360,6 +364,12 @@ class LightningServiceRegistrySimple {
         for (const [node, ts] of this.circuitNextTry) {
             data.circuitNextTry[node] = ts;
         }
+        for (const [serviceName, serviceConfigs] of this.configurations) {
+            data.configurations[serviceName] = {};
+            for (const [key, config] of serviceConfigs) {
+                data.configurations[serviceName][key] = config;
+            }
+        }
         return data;
     }
 
@@ -384,6 +394,14 @@ class LightningServiceRegistrySimple {
         this.circuitState = new Map(Object.entries(data.circuitState || {}));
         this.circuitLastFailure = new Map(Object.entries(data.circuitLastFailure || {}));
         this.circuitNextTry = new Map(Object.entries(data.circuitNextTry || {}));
+        this.configurations = new Map();
+        for (const [serviceName, configs] of Object.entries(data.configurations || {})) {
+            const serviceConfigs = new Map();
+            for (const [key, config] of Object.entries(configs)) {
+                serviceConfigs.set(key, config);
+            }
+            this.configurations.set(serviceName, serviceConfigs);
+        }
         this.saveRegistry();
     }
 
@@ -429,6 +447,13 @@ class LightningServiceRegistrySimple {
             for (const [node, ts] of this.circuitNextTry) {
                 data.circuitNextTry[node] = ts;
             }
+            data.configurations = {};
+            for (const [serviceName, serviceConfigs] of this.configurations) {
+                data.configurations[serviceName] = {};
+                for (const [key, config] of serviceConfigs) {
+                    data.configurations[serviceName][key] = config;
+                }
+            }
 
             if (this.persistenceType === 'file') {
                 fs.writeFileSync(this.registryFile, JSON.stringify(data, null, 2));
@@ -452,6 +477,48 @@ class LightningServiceRegistrySimple {
             password: config.redisPassword
         });
         this.redisClient.connect().catch(err => console.error('Redis connect error:', err));
+    }
+
+    // Configuration management methods
+    setConfig(serviceName, key, value, metadata = {}) {
+        if (!this.configurations.has(serviceName)) {
+            this.configurations.set(serviceName, new Map());
+        }
+        const serviceConfigs = this.configurations.get(serviceName);
+        const current = serviceConfigs.get(key);
+        const version = current ? current.version + 1 : 1;
+        const config = { value, version, metadata, updatedAt: Date.now() };
+        serviceConfigs.set(key, config);
+        this.saveRegistry();
+        if (global.broadcast) global.broadcast('config_changed', { serviceName, key, value, version, metadata });
+        return config;
+    }
+
+    getConfig(serviceName, key) {
+        const serviceConfigs = this.configurations.get(serviceName);
+        if (!serviceConfigs) return null;
+        return serviceConfigs.get(key) || null;
+    }
+
+    getAllConfigs(serviceName) {
+        const serviceConfigs = this.configurations.get(serviceName);
+        if (!serviceConfigs) return {};
+        const result = {};
+        for (const [key, config] of serviceConfigs) {
+            result[key] = config;
+        }
+        return result;
+    }
+
+    deleteConfig(serviceName, key) {
+        const serviceConfigs = this.configurations.get(serviceName);
+        if (!serviceConfigs) return false;
+        const deleted = serviceConfigs.delete(key);
+        if (deleted) {
+            this.saveRegistry();
+            if (global.broadcast) global.broadcast('config_deleted', { serviceName, key });
+        }
+        return deleted;
     }
 
     loadRegistry() {
@@ -488,6 +555,15 @@ class LightningServiceRegistrySimple {
                 this.circuitState = new Map(Object.entries(data.circuitState || {}));
                 this.circuitLastFailure = new Map(Object.entries(data.circuitLastFailure || {}));
                 this.circuitNextTry = new Map(Object.entries(data.circuitNextTry || {}));
+                // Load configurations
+                this.configurations = new Map();
+                for (const [serviceName, configs] of Object.entries(data.configurations || {})) {
+                    const serviceConfigs = new Map();
+                    for (const [key, config] of Object.entries(configs)) {
+                        serviceConfigs.set(key, config);
+                    }
+                    this.configurations.set(serviceName, serviceConfigs);
+                }
             }
         } catch (err) {
             console.error('Error loading registry:', err);
