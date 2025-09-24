@@ -253,6 +253,39 @@ class Program {
 - UDP/TCP support
 - Asynchronous operations
 
+## PHP SDK
+
+Located in `client-sdk/php/`.
+
+### Installation
+
+```bash
+composer require maxine/maxine-client
+```
+
+### Usage
+
+```php
+use Maxine\MaxineClient;
+
+$client = new MaxineClient("http://localhost:8080");
+
+// Register service
+$client->registerServiceLightning("my-service", "localhost", 3000);
+
+// Discover service
+$service = $client->discoverServiceLightning("my-service");
+echo $service['address'] . ":" . $service['port'];
+```
+
+### Features
+
+- Service registration and discovery
+- Lightning Mode API support
+- Built-in LRU caching
+- Load balancing strategies
+- Error handling
+
 ## Rust SDK
 
 Located in `client-sdk/rust/`.
@@ -296,15 +329,15 @@ fn main() {
 
 ## SDK Comparison
 
-| Feature | JS/Node.js | Python | Go | Java | C# | Rust |
-|---------|------------|--------|----|------|----|------|
-| Registration | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ |
-| Discovery | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ |
-| UDP Discovery | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ |
-| TCP Discovery | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ |
-| Caching | ✓ | ✓ | - | - | - | - |
-| WebSocket | ✓ | - | - | - | - | - |
-| Async/Await | ✓ | ✓ | ✓ | - | ✓ | - |
+| Feature | JS/Node.js | Python | PHP | Go | Java | C# | Rust |
+|---------|------------|--------|-----|----|------|----|------|
+| Registration | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ |
+| Discovery | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ |
+| UDP Discovery | ✓ | ✓ | - | ✓ | ✓ | ✓ | ✓ |
+| TCP Discovery | ✓ | ✓ | - | ✓ | ✓ | ✓ | ✓ |
+| Caching | ✓ | ✓ | ✓ | - | - | - | - |
+| WebSocket | ✓ | ✓ | - | - | - | - | - |
+| Async/Await | ✓ | ✓ | - | ✓ | - | ✓ | - |
 
 ## Configuration
 

@@ -1276,6 +1276,8 @@ Maxine provides client SDKs for easy integration:
 
 Client SDKs include caching, automatic retries, and support for all discovery strategies.
 
+- **PHP**: Full Mode and Lightning Mode APIs with caching support
+
 ## Architecture
 
 Maxine maintains an in-memory registry of services and their instances. Services register with heartbeats, and expired services are automatically cleaned up. Discovery returns a healthy instance using various load balancing strategies.
