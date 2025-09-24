@@ -66,6 +66,10 @@ class LightningServiceRegistrySimple extends EventEmitter {
         // LRU Cache for discovery results (10k entries, 30s TTL)
         this.discoveryCache = new LRUCache({ max: 10000, ttl: 30000 });
 
+        // Cache metrics
+        this.cacheHits = 0;
+        this.cacheMisses = 0;
+
         // Method to invalidate discovery cache for a service
         this.invalidateDiscoveryCache = (serviceName) => {
             // Since keys start with serviceName, we can iterate and delete
@@ -91,7 +95,7 @@ class LightningServiceRegistrySimple extends EventEmitter {
         }
 
         // Periodic cleanup
-        setInterval(() => this.cleanup(), 30000);
+        setInterval(() => this.cleanup(), config.cleanupInterval);
     }
 
     cleanup() {
@@ -232,7 +236,12 @@ class LightningServiceRegistrySimple extends EventEmitter {
         if (cacheableStrategies.includes(strategy)) {
             const cacheKey = `${fullServiceName}:${strategy}:${clientIP || 'default'}:${tags ? tags.sort().join(',') : ''}`;
             const cached = this.discoveryCache.get(cacheKey);
-            if (cached) return cached;
+            if (cached) {
+                this.cacheHits++;
+                return cached;
+            } else {
+                this.cacheMisses++;
+            }
         }
 
         const service = this.services.get(fullServiceName);
@@ -586,10 +595,12 @@ class LightningServiceRegistrySimple extends EventEmitter {
          for (const [serviceName, distribution] of this.trafficDistribution) {
              data.trafficDistribution[serviceName] = distribution;
          }
-         data.dependencies = {};
-         for (const [service, deps] of this.dependencies) {
-             data.dependencies[service] = Array.from(deps);
-         }
+        data.dependencies = {};
+        for (const [service, deps] of this.dependencies) {
+            data.dependencies[service] = Array.from(deps);
+        }
+        data.cacheHits = this.cacheHits;
+        data.cacheMisses = this.cacheMisses;
          data.dependents = {};
          for (const [service, deps] of this.dependents) {
              data.dependents[service] = Array.from(deps);
@@ -655,9 +666,10 @@ class LightningServiceRegistrySimple extends EventEmitter {
                   for (const [key, action] of Object.entries(data.intentions || {})) {
                       this.intentions.set(key, action);
                   }
-                  this.blacklistedServices = new Set(data.blacklistedServices || []);
-          this.blacklistedServices = new Set(data.blacklistedServices || []);
-          this.saveRegistry();
+                   this.blacklistedServices = new Set(data.blacklistedServices || []);
+           this.cacheHits = data.cacheHits || 0;
+           this.cacheMisses = data.cacheMisses || 0;
+           this.saveRegistry();
     }
 
     saveRegistry() {
@@ -801,11 +813,13 @@ class LightningServiceRegistrySimple extends EventEmitter {
                  for (const [service, acl] of Object.entries(data.acls || {})) {
                      this.acls.set(service, { allow: new Set(acl.allow || []), deny: new Set(acl.deny || []) });
                  }
-                 this.intentions = new Map();
-                 for (const [key, action] of Object.entries(data.intentions || {})) {
-                     this.intentions.set(key, action);
-                 }
-            }
+                  this.intentions = new Map();
+                  for (const [key, action] of Object.entries(data.intentions || {})) {
+                      this.intentions.set(key, action);
+                  }
+                  this.cacheHits = data.cacheHits || 0;
+                  this.cacheMisses = data.cacheMisses || 0;
+             }
         } catch (err) {
             console.error('Error loading registry:', err);
         }

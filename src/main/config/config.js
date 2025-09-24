@@ -30,6 +30,7 @@ const config = {
     lightningMode: lightningMode,
     logAsync: process.env.LOG_ASYNC === 'false' ? false : true,
     heartBeatTimeout: process.env.HEARTBEAT_TIMEOUT ? parseInt(process.env.HEARTBEAT_TIMEOUT) : 30,
+    cleanupInterval: process.env.CLEANUP_INTERVAL ? parseInt(process.env.CLEANUP_INTERVAL) : 30000,
     logJsonPrettify: process.env.LOG_JSON_PRETTIFY === 'true' ? true : false,
        actuatorEnabled: process.env.ACTUATOR_ENABLED === 'true' || (!highPerfDefault && !ultraFastDefault && !extremeFastDefault && process.env.ACTUATOR_ENABLED !== 'false') || isTestMode,
        dashboardEnabled: process.env.DASHBOARD_ENABLED === 'true' || (!extremeFastDefault && process.env.DASHBOARD_ENABLED !== 'false'),
