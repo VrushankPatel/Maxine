@@ -55,6 +55,8 @@ class ServiceRegistry extends EventEmitter {
             this.roundRobinIndex = new Map(); // For load balancing
             this.canaryConfigs = new Map(); // Enable canary in lightning mode
             this.blueGreenConfigs = new Map(); // Enable blue-green in lightning mode
+            this.acls = new Map(); // serviceName -> { allow: [], deny: [] }
+            this.intentions = new Map(); // `${source}:${destination}` -> action
             // Periodic cleanup for lightning mode - optimized interval
             setInterval(() => this.lightningCleanup(), 30000); // every 30s for less frequent cleanup
         } else {
@@ -68,6 +70,8 @@ class ServiceRegistry extends EventEmitter {
               this.blacklistNodes = new Map(); // Essential for registration
               this.maintenanceNodes = new Map(); // Essential for health checks
               this.drainingNodes = new Map(); // Essential for health checks
+              this.acls = new Map(); // serviceName -> { allow: [], deny: [] }
+              this.intentions = new Map(); // `${source}:${destination}` -> action
               this.serviceVersions = new Map(); // Track service versions for cleanup
 
             // Initialize Maps only if not fast modes for maximum performance
@@ -700,6 +704,28 @@ class ServiceRegistry extends EventEmitter {
 
     getServiceIntention = (source, destination) => {
         return this.serviceIntentions.get(source)?.get(destination) || 'allow';
+    }
+
+    // ACL methods
+    setACL = (serviceName, acl) => {
+        this.acls.set(serviceName, acl);
+        this.debounceSave();
+    }
+
+    getACL = (serviceName) => {
+        return this.acls.get(serviceName) || { allow: [], deny: [] };
+    }
+
+    // Intention methods (alternative implementation)
+    setIntention = (source, destination, action) => {
+        const key = `${source}:${destination}`;
+        this.intentions.set(key, action);
+        this.debounceSave();
+    }
+
+    getIntention = (source, destination) => {
+        const key = `${source}:${destination}`;
+        return this.intentions.get(key) || 'allow';
     }
 
     // Service dependency management
@@ -2220,6 +2246,25 @@ class ServiceRegistry extends EventEmitter {
             return { healthy: true };
         }
         return { healthy: false };
+    }
+
+    // ACL methods
+    setACL(serviceName, acl) {
+        this.acls.set(serviceName, acl);
+    }
+
+    getACL(serviceName) {
+        return this.acls.get(serviceName) || { allow: [], deny: [] };
+    }
+
+    setIntention(source, destination, action) {
+        const key = `${source}:${destination}`;
+        this.intentions.set(key, action);
+    }
+
+    getIntention(source, destination) {
+        const key = `${source}:${destination}`;
+        return this.intentions.get(key) || 'deny';
     }
 
     // Additional features for full mode
