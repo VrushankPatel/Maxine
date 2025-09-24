@@ -10,6 +10,7 @@
 - [x] Implement Service Dependencies: Added dependency management with add, remove, get dependencies/dependents, cycle detection, and graph visualization.
 - [x] Implement Access Control Lists (ACLs): Added fine-grained permissions for service discovery access with allow/deny lists.
 - [x] Implement Service Intentions: Added definition of allowed communication patterns between services.
+- [x] Implement Multi-Region Deployment Support: Added geo-aware load balancing for global deployments, selecting closest node based on client IP location.
 
 ## Next Steps
 
@@ -45,7 +46,7 @@
 - Add Distributed Tracing Enhancements: Full OpenTelemetry integration for end-to-end request tracing across services
 
 #### Medium Priority
-- Implement Multi-Region Deployment Support: Enhanced support for global deployments with geo-aware load balancing
+
 - Add Advanced Security Features: Implement mTLS, certificate management, and fine-grained access controls
 - Create Service Dependency Graph Visualization: Web UI for visualizing and managing service dependencies
 - Implement Auto-Scaling Integration: Integration with Kubernetes HPA and cloud auto-scaling for dynamic service scaling
