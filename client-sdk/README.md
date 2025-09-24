@@ -106,6 +106,37 @@ $service = $client->discoverServiceLightning("my-service");
 echo $service['address'] . ":" . $service['port'];
 ```
 
+## Ruby SDK
+
+The Ruby SDK supports HTTP, UDP, TCP, and WebSocket connections for comprehensive service discovery and real-time event streaming.
+
+### Installation
+
+Add to your Gemfile:
+
+```ruby
+gem 'maxine_client', git: 'https://github.com/VrushankPatel/Maxine.git', glob: 'client-sdk/ruby/*.rb'
+```
+
+### Usage
+
+```ruby
+require 'maxine_client'
+
+client = MaxineClient.new
+
+# Register service
+client.register_service_lightning('my-service', 'localhost', 3000, tags: ['web'])
+
+# Discover service
+service = client.discover_service_lightning('my-service')
+
+# WebSocket client for real-time events
+ws_client = WebSocketClient.new
+ws_client.on_event('service_registered') { |data| puts data }
+ws_client.connect
+```
+
 ## Other SDKs
 
 See individual README files in subdirectories for Java, Go, C#, and Rust SDKs.

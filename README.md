@@ -1277,6 +1277,7 @@ Maxine provides client SDKs for easy integration:
 Client SDKs include caching, automatic retries, and support for all discovery strategies.
 
 - **PHP**: Full Mode and Lightning Mode APIs with caching support
+- **Ruby**: Full Mode and Lightning Mode APIs with WebSocket support
 
 ## Architecture
 
