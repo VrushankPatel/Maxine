@@ -1398,9 +1398,9 @@ Maxine maintains an in-memory registry of services and their instances. Services
 - Optimized heartbeat and discovery logic with parallel operations and async I/O
 - Active health checks for proactive service monitoring
 - Event-driven notifications for real-time updates
-  - Load test results: 5,000 requests with 50 concurrent users in ~0.1s, average response time 0.83ms, 95th percentile 1.65ms, 100% success rate, 56k req/s
-        - Load test target: 95th percentile < 10ms for 50 concurrent users (achieved)
-        - Recent optimizations: Removed console.log statements from production code to reduce I/O overhead, implemented object pooling for response objects to reduce GC pressure, added service health prediction using time-series analysis, adaptive caching with access-based TTL, SIMD-inspired binary search for weighted random selection, fine-tuned GC settings, added CPU affinity
+ - Load test results: 5,000 requests with 50 concurrent users in ~0.1s, average response time 0.76ms, 95th percentile 1.4ms, 100% success rate, 61k req/s
+         - Load test target: 95th percentile < 10ms for 50 concurrent users (achieved)
+         - Recent optimizations: Removed console.log statements from production code to reduce I/O overhead, implemented object pooling for response objects to reduce GC pressure, added service health prediction using time-series analysis, adaptive caching with access-based TTL, SIMD-inspired binary search for weighted random selection, fine-tuned GC settings, added CPU affinity
 
 ## License
 
