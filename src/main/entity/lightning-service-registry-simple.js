@@ -28,6 +28,9 @@ class LightningServiceRegistrySimple extends EventEmitter {
         this.nodeToService = new Map(); // nodeName -> serviceName
         this.heartbeatTimeout = 30000; // 30 seconds
 
+        // Tag index for fast filtering
+        this.tagIndex = new Map(); // tag -> Set<nodeName>
+
         // Cached counts for performance
         this.servicesCount = 0;
         this.nodesCount = 0;
@@ -230,6 +233,16 @@ class LightningServiceRegistrySimple extends EventEmitter {
         this.lastHeartbeats.set(nodeName, Date.now());
         this.nodesCount++;
 
+        // Update tag index
+        if (node.metadata && node.metadata.tags) {
+            for (const tag of node.metadata.tags) {
+                if (!this.tagIndex.has(tag)) {
+                    this.tagIndex.set(tag, new Set());
+                }
+                this.tagIndex.get(tag).add(nodeName);
+            }
+        }
+
                 this.saveRegistry();
                 this.invalidateDiscoveryCache(fullServiceName);
                 if (global.broadcast) global.broadcast('service_registered', { serviceName: fullServiceName, nodeId: nodeName });
@@ -268,6 +281,21 @@ class LightningServiceRegistrySimple extends EventEmitter {
                 this.servicesCount--;
             }
         }
+        // Update tag index
+        if (service.nodes.has(nodeId)) {
+            const node = service.nodes.get(nodeId);
+            if (node.metadata && node.metadata.tags) {
+                for (const tag of node.metadata.tags) {
+                    if (this.tagIndex.has(tag)) {
+                        this.tagIndex.get(tag).delete(nodeId);
+                        if (this.tagIndex.get(tag).size === 0) {
+                            this.tagIndex.delete(tag);
+                        }
+                    }
+                }
+            }
+        }
+
         this.lastHeartbeats.delete(nodeId);
         this.nodeToService.delete(nodeId);
         this.saveRegistry();
@@ -318,7 +346,7 @@ class LightningServiceRegistrySimple extends EventEmitter {
                 }
 
         // Check cache for deterministic strategies
-        const cacheableStrategies = ['consistent-hash', 'ip-hash', 'geo-aware', 'least-response-time', 'health-score'];
+        const cacheableStrategies = ['consistent-hash', 'ip-hash', 'geo-aware', 'least-response-time', 'health-score', 'predictive'];
         if (cacheableStrategies.includes(strategy)) {
             const cacheKey = `${fullServiceName}:${strategy}:${clientIP || 'default'}:${tags ? tags.sort().join(',') : ''}`;
             const cached = this.getCache(cacheKey);
@@ -335,11 +363,31 @@ class LightningServiceRegistrySimple extends EventEmitter {
         // Filter out nodes with open circuit breakers
         let availableNodes = service.healthyNodesArray.filter(node => !this.isCircuitOpen(node.nodeName));
 
-        // Filter by tags if provided
+        // Filter by tags if provided (optimized with tag index)
         if (tags && tags.length > 0) {
-            availableNodes = availableNodes.filter(node => {
-                return node.metadata && node.metadata.tags && tags.every(tag => node.metadata.tags.includes(tag));
-            });
+            let intersection = null;
+            for (const tag of tags) {
+                const nodesForTag = this.tagIndex.get(tag);
+                if (!nodesForTag) {
+                    intersection = new Set();
+                    break;
+                }
+                if (intersection === null) {
+                    intersection = new Set(nodesForTag);
+                } else {
+                    // Intersect
+                    for (const node of Array.from(intersection)) {
+                        if (!nodesForTag.has(node)) {
+                            intersection.delete(node);
+                        }
+                    }
+                }
+            }
+            if (intersection) {
+                availableNodes = availableNodes.filter(node => intersection.has(node.nodeName));
+            } else {
+                availableNodes = [];
+            }
         }
 
                 if (availableNodes.length === 0) {
@@ -374,10 +422,13 @@ class LightningServiceRegistrySimple extends EventEmitter {
               case 'least-response-time':
                   selectedNode = this.selectLeastResponseTime(availableNodes);
                   break;
-              case 'health-score':
-                  selectedNode = this.selectHealthScore(availableNodes);
-                  break;
-             default: // round-robin
+               case 'health-score':
+                   selectedNode = this.selectHealthScore(availableNodes);
+                   break;
+               case 'predictive':
+                   selectedNode = this.selectPredictive(availableNodes);
+                   break;
+              default: // round-robin
                 let index = service.roundRobinIndex || 0;
                 selectedNode = availableNodes[index % availableNodes.length];
                 service.roundRobinIndex = (index + 1) % availableNodes.length;
@@ -709,8 +760,12 @@ class LightningServiceRegistrySimple extends EventEmitter {
           for (const [key, action] of this.intentions) {
               data.intentions[key] = action;
           }
-          data.blacklistedServices = Array.from(this.blacklistedServices);
-          return data;
+           data.blacklistedServices = Array.from(this.blacklistedServices);
+           data.tagIndex = {};
+           for (const [tag, nodes] of this.tagIndex) {
+               data.tagIndex[tag] = Array.from(nodes);
+           }
+           return data;
     }
 
     setRegistryData(data) {
@@ -765,14 +820,14 @@ class LightningServiceRegistrySimple extends EventEmitter {
                    this.blacklistedServices = new Set(data.blacklistedServices || []);
                    this.cacheHits = data.cacheHits || 0;
                    this.cacheMisses = data.cacheMisses || 0;
-                   this.responseTimes = new Map();
-                   for (const [node, rt] of Object.entries(data.responseTimes || {})) {
-                       this.responseTimes.set(node, rt);
-                   }
-                   this.responseTimes = new Map();
-                   for (const [node, rt] of Object.entries(data.responseTimes || {})) {
-                       this.responseTimes.set(node, rt);
-                   }
+                    this.responseTimes = new Map();
+                    for (const [node, rt] of Object.entries(data.responseTimes || {})) {
+                        this.responseTimes.set(node, rt);
+                    }
+                    this.tagIndex = new Map();
+                    for (const [tag, nodes] of Object.entries(data.tagIndex || {})) {
+                        this.tagIndex.set(tag, new Set(nodes));
+                    }
             this.saveRegistry();
     }
 
@@ -1392,6 +1447,36 @@ class LightningServiceRegistrySimple extends EventEmitter {
                 }
             }
             return bestNode || nodes[0];
+        }
+
+        // Calculate trend for predictive load balancing (slope of response times)
+        calculateTrend(nodeName) {
+            const history = this.responseTimeHistory.get(nodeName);
+            if (!history || history.length < 2) return 0; // No trend
+            // Use last 10 points for trend
+            const recent = history.slice(-10);
+            if (recent.length < 2) return 0;
+            const n = recent.length;
+            const sumX = (n * (n - 1)) / 2;
+            const sumY = recent.reduce((sum, entry) => sum + entry.responseTime, 0);
+            const sumXY = recent.reduce((sum, entry, i) => sum + i * entry.responseTime, 0);
+            const sumXX = (n * (n - 1) * (2 * n - 1)) / 6;
+            const slope = (n * sumXY - sumX * sumY) / (n * sumXX - sumX * sumX);
+            return slope;
+        }
+
+        // Select node with best predictive trend (most decreasing response time)
+        selectPredictive(nodes) {
+            let bestNode = null;
+            let bestTrend = Infinity; // Lower slope (more negative) is better
+            for (const node of nodes) {
+                const trend = this.calculateTrend(node.nodeName);
+                if (trend < bestTrend) {
+                    bestTrend = trend;
+                    bestNode = node;
+                }
+            }
+            return bestNode || nodes[(fastRandom() * nodes.length) | 0];
         }
 
         // Get health scores for a service
