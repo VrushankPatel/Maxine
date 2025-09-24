@@ -34,6 +34,9 @@ class LightningServiceRegistrySimple extends EventEmitter {
         // Configuration management
         this.configurations = new Map(); // serviceName -> Map<key, {value, version, metadata, updatedAt}>
 
+        // Traffic distribution for canary deployments
+        this.trafficDistribution = new Map(); // serviceName -> { version: percentage }
+
         // Circuit Breaker
         this.circuitFailures = new Map(); // nodeName -> failure count
         this.circuitState = new Map(); // nodeName -> 'closed' | 'open' | 'half-open'
@@ -428,8 +431,9 @@ class LightningServiceRegistrySimple extends EventEmitter {
             circuitFailures: {},
             circuitState: {},
             circuitLastFailure: {},
-            circuitNextTry: {},
-            configurations: {}
+             circuitNextTry: {},
+             configurations: {},
+             trafficDistribution: {}
         };
         for (const [serviceName, service] of this.services) {
             data.services[serviceName] = {
@@ -465,6 +469,9 @@ class LightningServiceRegistrySimple extends EventEmitter {
                 data.configurations[serviceName][key] = config;
             }
         }
+        for (const [serviceName, distribution] of this.trafficDistribution) {
+            data.trafficDistribution[serviceName] = distribution;
+        }
         return data;
     }
 
@@ -496,6 +503,10 @@ class LightningServiceRegistrySimple extends EventEmitter {
                 serviceConfigs.set(key, config);
             }
             this.configurations.set(serviceName, serviceConfigs);
+        }
+        this.trafficDistribution = new Map();
+        for (const [serviceName, distribution] of Object.entries(data.trafficDistribution || {})) {
+            this.trafficDistribution.set(serviceName, distribution);
         }
         this.saveRegistry();
     }
@@ -548,6 +559,10 @@ class LightningServiceRegistrySimple extends EventEmitter {
                 for (const [key, config] of serviceConfigs) {
                     data.configurations[serviceName][key] = config;
                 }
+            }
+            data.trafficDistribution = {};
+            for (const [serviceName, distribution] of this.trafficDistribution) {
+                data.trafficDistribution[serviceName] = distribution;
             }
 
             if (this.persistenceType === 'file') {
@@ -659,10 +674,130 @@ class LightningServiceRegistrySimple extends EventEmitter {
                     }
                     this.configurations.set(serviceName, serviceConfigs);
                 }
+                // Load traffic distribution
+                this.trafficDistribution = new Map();
+                for (const [serviceName, distribution] of Object.entries(data.trafficDistribution || {})) {
+                    this.trafficDistribution.set(serviceName, distribution);
+                }
             }
         } catch (err) {
             console.error('Error loading registry:', err);
         }
+    }
+
+    // Versioning enhancements
+    getLatestVersion(serviceName) {
+        const versions = [];
+        for (const [fullName, service] of this.services) {
+            if (fullName.startsWith(`${serviceName}:`)) {
+                const version = fullName.split(':')[1];
+                versions.push(version);
+            }
+        }
+        if (versions.length === 0) return null;
+        // Assume versions are semver-like, sort and pick latest
+        versions.sort((a, b) => {
+            const aParts = a.split('.').map(Number);
+            const bParts = b.split('.').map(Number);
+            for (let i = 0; i < Math.max(aParts.length, bParts.length); i++) {
+                const aVal = aParts[i] || 0;
+                const bVal = bParts[i] || 0;
+                if (aVal !== bVal) return bVal - aVal;
+            }
+            return 0;
+        });
+        return versions[0];
+    }
+
+    getVersions(serviceName) {
+        const versions = [];
+        for (const [fullName] of this.services) {
+            if (fullName.startsWith(`${serviceName}:`)) {
+                const version = fullName.split(':')[1];
+                versions.push(version);
+            } else if (fullName === serviceName) {
+                versions.push('default');
+            }
+        }
+        return versions;
+    }
+
+    // Traffic distribution for canary deployments
+    // serviceName -> { version: percentage }
+    trafficDistribution = new Map();
+
+    setTrafficDistribution(serviceName, distribution) {
+        // distribution: { 'v1.0': 80, 'v2.0': 20 }
+        this.trafficDistribution.set(serviceName, distribution);
+        this.saveRegistry();
+    }
+
+    getTrafficDistribution(serviceName) {
+        return this.trafficDistribution.get(serviceName) || {};
+    }
+
+    // Enhanced discover with canary support
+    discover(serviceName, options = {}) {
+        const { version, loadBalancing = 'round-robin', tags = [], ip, proxy } = options;
+        let fullServiceName = serviceName;
+        if (version) {
+            if (version === 'latest') {
+                const latest = this.getLatestVersion(serviceName);
+                if (latest) {
+                    fullServiceName = `${serviceName}:${latest}`;
+                }
+            } else {
+                fullServiceName = `${serviceName}:${version}`;
+            }
+        } else {
+            // Check for traffic distribution (canary)
+            const distribution = this.getTrafficDistribution(serviceName);
+            if (Object.keys(distribution).length > 0) {
+                const rand = fastRandom() * 100;
+                let cumulative = 0;
+                for (const [ver, percent] of Object.entries(distribution)) {
+                    cumulative += percent;
+                    if (rand <= cumulative) {
+                        fullServiceName = `${serviceName}:${ver}`;
+                        break;
+                    }
+                }
+            }
+        }
+        return this.getRandomNode(fullServiceName, loadBalancing, ip, tags);
+    }
+
+    // Version management
+    promoteVersion(serviceName, version) {
+        // For blue-green, this could set the 'active' version
+        // For now, just update traffic to 100% for this version
+        this.setTrafficDistribution(serviceName, { [version]: 100 });
+    }
+
+    retireVersion(serviceName, version) {
+        const distribution = this.getTrafficDistribution(serviceName);
+        delete distribution[version];
+        this.setTrafficDistribution(serviceName, distribution);
+        // Optionally deregister all nodes of this version
+        const fullName = `${serviceName}:${version}`;
+        const service = this.services.get(fullName);
+        if (service) {
+            for (const nodeId of service.nodes.keys()) {
+                this.deregister(nodeId);
+            }
+        }
+    }
+
+    // Shift traffic gradually
+    shiftTraffic(serviceName, fromVersion, toVersion, percentage) {
+        const distribution = this.getTrafficDistribution(serviceName);
+        const fromPercent = distribution[fromVersion] || 0;
+        const toPercent = distribution[toVersion] || 0;
+        const shiftAmount = Math.min(fromPercent, percentage);
+        distribution[fromVersion] = fromPercent - shiftAmount;
+        distribution[toVersion] = toPercent + shiftAmount;
+        if (distribution[fromVersion] <= 0) delete distribution[fromVersion];
+        this.setTrafficDistribution(serviceName, distribution);
     }
 }
 

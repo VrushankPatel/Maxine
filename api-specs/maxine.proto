@@ -3,24 +3,56 @@ syntax = "proto3";
 package maxine;
 
 service DiscoveryService {
+  rpc Register (RegisterRequest) returns (RegisterResponse);
   rpc Discover (DiscoverRequest) returns (DiscoverResponse);
+  rpc Heartbeat (HeartbeatRequest) returns (HeartbeatResponse);
+  rpc Deregister (DeregisterRequest) returns (DeregisterResponse);
   rpc WatchServices (WatchRequest) returns (stream ServiceUpdate);
+}
+
+message RegisterRequest {
+  string serviceName = 1;
+  string host = 2;
+  int32 port = 3;
+  map<string, string> metadata = 4;
+}
+
+message RegisterResponse {
+  string nodeId = 1;
 }
 
 message DiscoverRequest {
   string serviceName = 1;
   string version = 2;
-  string namespace = 3;
-  string region = 4;
-  string zone = 5;
-  string ip = 6;
-  bool proxy = 7;
+  string loadBalancing = 3;
+  repeated string tags = 4;
+  string namespace = 5;
+  string region = 6;
+  string zone = 7;
+  string ip = 8;
+  bool proxy = 9;
 }
 
 message DiscoverResponse {
   string address = 1;
   string nodeName = 2;
   string message = 3;
+}
+
+message HeartbeatRequest {
+  string nodeId = 1;
+}
+
+message HeartbeatResponse {
+  bool success = 1;
+}
+
+message DeregisterRequest {
+  string nodeId = 1;
+}
+
+message DeregisterResponse {
+  bool success = 1;
 }
 
 message WatchRequest {

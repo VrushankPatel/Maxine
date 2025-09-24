@@ -25,6 +25,7 @@ A minimal, high-performance service discovery and registry for microservices.
 - **Multi-Datacenter Support**: Global service discovery with cross-datacenter replication and load balancing
 - **Authentication/Authorization**: Optional JWT-based auth for Lightning Mode to secure sensitive operations
 - **Configuration Management**: Dynamic configuration updates for services with versioning and event notifications
+- **gRPC Support**: High-performance gRPC API for service operations
 
 ## Missing Features (Future Enhancements)
 
@@ -220,6 +221,65 @@ GET /trace/:id
 ```
 Returns the trace data for the given id.
 
+##### Get Service Versions
+```http
+GET /versions?serviceName=my-service
+```
+
+Response:
+```json
+{
+  "serviceName": "my-service",
+  "versions": ["1.0", "2.0", "default"]
+}
+```
+
+##### Set Traffic Distribution (Canary Deployments)
+```http
+POST /traffic/set
+Content-Type: application/json
+
+{
+  "serviceName": "my-service",
+  "distribution": {"1.0": 80, "2.0": 20}
+}
+```
+
+##### Promote Version (Blue-Green Deployment)
+```http
+POST /version/promote
+Content-Type: application/json
+
+{
+  "serviceName": "my-service",
+  "version": "2.0"
+}
+```
+
+##### Retire Version
+```http
+POST /version/retire
+Content-Type: application/json
+
+{
+  "serviceName": "my-service",
+  "version": "1.0"
+}
+```
+
+##### Shift Traffic Gradually
+```http
+POST /traffic/shift
+Content-Type: application/json
+
+{
+  "serviceName": "my-service",
+  "fromVersion": "1.0",
+  "toVersion": "2.0",
+  "percentage": 10
+}
+```
+
 ##### Set Service Config
 ```http
 POST /api/maxine/serviceops/config/set
@@ -384,6 +444,21 @@ Response:
 ```
 
 Use the token in Authorization header: `Bearer <token>` for protected endpoints like /backup, /restore, /trace/*.
+
+#### gRPC API
+
+Maxine supports gRPC for high-performance service registration and discovery.
+
+Default gRPC port: 50051
+
+Available methods:
+- Register: Register a service instance
+- Discover: Discover a service instance with load balancing
+- Heartbeat: Send heartbeat for a service instance
+- Deregister: Deregister a service instance
+- WatchServices: Stream service updates (basic implementation)
+
+Client SDKs can be generated from `api-specs/maxine.proto`.
 
 #### WebSocket API
 
