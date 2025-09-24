@@ -28,7 +28,7 @@
       - [x] Broadcast events to connected WebSocket clients
        - [x] Support MQTT integration for event publishing
        - [x] Add event filtering by service name or event type
-      - [ ] Implement event persistence for missed events
+       - [x] Implement event persistence for missed events
       - [ ] Add client authentication for WebSocket connections
      - [x] Implement API Gateway Integration: Built-in reverse proxy capabilities
     - [ ] Implement Configuration Management: Dynamic configuration updates for services
@@ -56,7 +56,7 @@
    ## Next Priority Features
 
 
-  - [ ] Implement Event Persistence: Store recent events in memory or database for clients to retrieve missed events on reconnection; add event replay functionality
+
   - [ ] Implement Client Authentication for WebSocket: Add JWT-based authentication for WebSocket connections, role-based access to events, and secure event streaming
   - [ ] Implement Configuration Management: Add dynamic configuration updates for services via API endpoints, support for service-specific configs, and integration with event streaming for config change notifications
   - [ ] Implement Audit Logging: Comprehensive logging of all registry operations using Winston, including user actions, system events, and security incidents; add log rotation and export capabilities

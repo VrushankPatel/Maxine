@@ -526,6 +526,15 @@ if (config.lightningMode) {
         res.end(JSON.stringify(state));
     });
 
+    // Event history endpoints
+    routes.set('GET /events', (req, res, query, body) => {
+        const since = query.since ? parseInt(query.since) : 0;
+        const limit = query.limit ? parseInt(query.limit) : 100;
+        const filtered = eventHistory.filter(e => e.timestamp > since).slice(-limit);
+        res.writeHead(200, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify(filtered));
+    });
+
     // Actuator endpoints for compatibility
     routes.set('GET /api/actuator/health', (req, res, query, body) => {
         res.writeHead(200, { 'Content-Type': 'application/json' });
@@ -677,8 +686,18 @@ if (config.lightningMode) {
             });
         }
 
+        // Event persistence
+        const eventHistory = [];
+        const maxHistory = 1000;
+
         const broadcast = (event, data) => {
-            const message = JSON.stringify({ event, data, timestamp: Date.now() });
+            const messageObj = { event, data, timestamp: Date.now() };
+            const message = JSON.stringify(messageObj);
+            // Store in history
+            eventHistory.push(messageObj);
+            if (eventHistory.length > maxHistory) {
+                eventHistory.shift();
+            }
             // WebSocket broadcast with filtering
             wss.clients.forEach(client => {
                 if (client.readyState === WebSocket.OPEN) {

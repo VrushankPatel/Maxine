@@ -235,6 +235,12 @@ GET /circuit-breaker/:nodeId
 ```
 Returns the circuit breaker state for the specified node, including state (closed/open/half-open), failure count, last failure timestamp, and next retry timestamp.
 
+##### Get Event History
+```http
+GET /events?since=<timestamp>&limit=<number>
+```
+Returns recent events from the event history. Use `since` to get events after a specific timestamp (default 0), and `limit` to limit the number of events returned (default 100).
+
 ##### Proxy to Service
 ```http
 GET /proxy/:serviceName/:path
