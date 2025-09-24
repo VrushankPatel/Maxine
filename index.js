@@ -1020,6 +1020,50 @@ if (config.lightningMode) {
         }
     });
 
+    // Simple dashboard endpoint
+    routes.set('GET /dashboard', (req, res, query, body) => {
+        try {
+            const clientIP = req.connection.remoteAddress || req.socket.remoteAddress || 'unknown';
+            const uptime = process.uptime();
+            const services = serviceRegistry.servicesCount;
+            const nodes = serviceRegistry.nodesCount;
+            const wsConnections = wsConnectionCount;
+            const eventsBroadcasted = eventBroadcastCount;
+            const html = `
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Maxine Dashboard</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .metric { margin: 10px 0; }
+        .metric span { font-weight: bold; }
+    </style>
+</head>
+<body>
+    <h1>Maxine Service Registry Dashboard</h1>
+    <div class="metric">Uptime: <span>${Math.floor(uptime)}s</span></div>
+    <div class="metric">Services: <span>${services}</span></div>
+    <div class="metric">Nodes: <span>${nodes}</span></div>
+    <div class="metric">WebSocket Connections: <span>${wsConnections}</span></div>
+    <div class="metric">Events Broadcasted: <span>${eventsBroadcasted}</span></div>
+    <h2>Recent Events</h2>
+    <ul>
+        ${eventHistory.slice(-10).map(e => `<li>${new Date(e.timestamp).toISOString()}: ${e.event}</li>`).join('')}
+    </ul>
+</body>
+</html>`;
+            winston.info(`AUDIT: Dashboard requested - clientIP: ${clientIP}`);
+            res.writeHead(200, { 'Content-Type': 'text/html' });
+            res.end(html);
+        } catch (error) {
+            winston.error(`AUDIT: Dashboard failed - error: ${error.message}, clientIP: ${req.connection.remoteAddress || req.socket.remoteAddress || 'unknown'}`);
+            errorCount++;
+            res.writeHead(500, { 'Content-Type': 'text/html' });
+            res.end('<h1>Internal Server Error</h1>');
+        }
+    });
+
     // Actuator endpoints for compatibility
     // Handle actuator health check
     routes.set('GET /api/actuator/health', (req, res, query, body) => {
@@ -1492,14 +1536,16 @@ if (config.lightningMode) {
             global.eventEmitter.emit(event, data);
             // Store last event for testing
             global.lastEvent = { event, data };
-            // WebSocket broadcast with filtering
-            wss.clients.forEach(client => {
-                if (client.readyState === WebSocket.OPEN) {
-                    const filter = clientFilters.get(client);
-                    if (matchesFilter(event, data, filter)) {
-                        client.send(message);
+            // WebSocket broadcast with filtering - async to avoid blocking
+            process.nextTick(() => {
+                wss.clients.forEach(client => {
+                    if (client.readyState === WebSocket.OPEN) {
+                        const filter = clientFilters.get(client);
+                        if (matchesFilter(event, data, filter)) {
+                            client.send(message);
+                        }
                     }
-                }
+                });
             });
             // MQTT publish
             if (mqttClient && mqttClient.connected) {
