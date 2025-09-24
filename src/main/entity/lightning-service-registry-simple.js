@@ -262,6 +262,9 @@ class LightningServiceRegistrySimple extends EventEmitter {
             case 'least-connections':
                 selectedNode = this.selectLeastConnections(availableNodes);
                 break;
+            case 'weighted-least-connections':
+                selectedNode = this.selectWeightedLeastConnections(availableNodes);
+                break;
             case 'consistent-hash':
                 selectedNode = this.selectConsistentHash(availableNodes, clientIP || 'default');
                 break;
@@ -301,6 +304,20 @@ class LightningServiceRegistrySimple extends EventEmitter {
 
     selectLeastConnections(nodes) {
         return nodes.reduce((min, node) => node.connections < min.connections ? node : min);
+    }
+
+    selectWeightedLeastConnections(nodes) {
+        // Select node with lowest connections per weight (higher weight can handle more connections)
+        let bestNode = null;
+        let bestScore = Infinity;
+        for (const node of nodes) {
+            const score = node.connections / node.weight;
+            if (score < bestScore) {
+                bestScore = score;
+                bestNode = node;
+            }
+        }
+        return bestNode;
     }
 
     selectConsistentHash(nodes, key) {

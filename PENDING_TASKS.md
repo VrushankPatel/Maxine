@@ -19,7 +19,8 @@
 - [x] Implement LRU Caching for Discovery Results: Added LRU cache for deterministic load balancing strategies (consistent-hash, ip-hash, geo-aware) with automatic invalidation on service changes.
 - [x] Performance Optimization: Disabled synchronous winston logging in all request handlers to eliminate I/O bottlenecks and improve response times under load.
 - [x] Create Service Dependency Graph Visualization: Implemented interactive web-based UI for visualizing service dependency graphs with D3.js, including cycle detection alerts, dependency impact analysis on click, and export capabilities to JSON/SVG.
-- [x] Implement Ultra-Fast Mode: Added extreme performance mode with minimal features, UDP heartbeats, disabled logging/metrics/auth/WebSocket/MQTT/gRPC, pre-allocated buffers for maximum speed.
+ - [x] Implement Ultra-Fast Mode: Added extreme performance mode with minimal features, UDP heartbeats, disabled logging/metrics/auth/WebSocket/MQTT/gRPC, pre-allocated buffers for maximum speed.
+ - [x] Implement weighted least connections load balancing: Added weighted-least-connections strategy that selects nodes based on connections per weight for better resource utilization.
 
 ## Next Steps
 
