@@ -24,7 +24,7 @@ A minimal, high-performance service discovery and registry for microservices.
 - **Event-Driven**: Real-time events for service changes and notifications via WebSocket and MQTT
 - **Federation**: Connect multiple Maxine instances across datacenters for global service discovery (available in Lightning Mode)
 - **Multi-Datacenter Support**: Global service discovery with cross-datacenter replication and load balancing
-- **Authentication/Authorization**: Optional JWT-based auth for Lightning Mode to secure sensitive operations
+- **Authentication/Authorization**: Optional JWT-based auth for Lightning Mode to secure sensitive operations with Role-Based Access Control (RBAC)
 - **Configuration Management**: Dynamic configuration updates for services with versioning and event notifications
 - **gRPC Support**: High-performance gRPC API for service operations
 - **Service Mesh Integration**: Automatic Envoy, Istio, and Linkerd configuration generation for seamless service mesh deployment
@@ -82,6 +82,31 @@ Enable with `OAUTH2_ENABLED=true` and configure:
 - `GOOGLE_CLIENT_SECRET`: Google OAuth2 client secret
 
 Redirect users to GET /auth/google to start OAuth flow, then handle the callback at GET /auth/google/callback to receive JWT token.
+
+### Role-Based Access Control (RBAC)
+
+Maxine supports Role-Based Access Control with fine-grained permissions for different user roles.
+
+#### Roles
+
+- **admin**: Full access to all operations
+- **operator**: Service management, configuration, monitoring, and advanced features
+- **viewer**: Read-only access to discovery, metrics, and health
+- **service**: Limited access for service registration, discovery, and heartbeat
+
+#### Role Management Endpoints
+
+- `GET /api/maxine/roles` - List all roles and permissions (admin only)
+- `GET /api/maxine/user/roles/:username` - Get user role (admin only)
+- `POST /api/maxine/user/roles` - Set user role (admin only)
+
+#### Demo Users
+
+For testing, Maxine includes demo users with different roles:
+- admin/admin (admin role)
+- operator/operator (operator role)
+- viewer/viewer (viewer role)
+- service/service (service role)
 
 ## Mutual TLS (mTLS) Support
 
