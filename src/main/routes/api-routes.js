@@ -225,12 +225,12 @@ maxineApiRoutes = maxineApiRoutes
                               .from("control")
                                   .put("config", config.isTestMode ? null : authenticationController, config.isTestMode ? null : requireRole('admin'), bodyParser.json(), configuratorController)
                                   .get("config", config.isTestMode ? null : authenticationController, configurationController)
-                         .stepToRoot()
-                           // .use('/graphql', authenticationController, limiter, graphqlHTTP({
-                           //   schema: schema,
-                           //   rootValue: root,
-                           //   graphiql: true,
-                           // }))
+                           .stepToRoot()
+                             .use('/graphql', limiter, graphqlHTTP({
+                               schema: schema,
+                               rootValue: root,
+                               graphiql: true,
+                             }))
                           .stepToRoot()
                            .from("actuator")
                                .get("health", (req, res) => { console.log('actuator health handler called'); res.status(200).json({ status: 'UP' }) })
