@@ -1,0 +1,23 @@
+{
+    "name": "maxine/maxine-client",
+    "description": "PHP client for Maxine Service Registry",
+    "type": "library",
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "Maxine Team",
+            "email": "info@maxine.io"
+        }
+    ],
+    "require": {
+        "php": ">=7.4",
+        "ext-curl": "*",
+        "ext-json": "*"
+    },
+    "autoload": {
+        "psr-4": {
+            "Maxine\\": "src/"
+        }
+    },
+    "minimum-stability": "stable"
+}
