@@ -308,9 +308,13 @@ if (!config.ultraFastMode && !isLightningMode) {
                                          .post("dependency/remove", authenticationController, limiter, bodyParser.json(), removeDependency)
                                          .get("dependency/get", authenticationController, limiter, getDependencies)
                                          .get("dependency/dependents", authenticationController, limiter, getDependents)
-                                         .get("dependency/graph", authenticationController, limiter, getDependencyGraph)
-                                     .get("dependency-graph", authenticationController, limiter, dependencyGraphController)
-                                         .get("dependency/cycles", authenticationController, limiter, detectCycles)
+                                      .get("dependency/graph", authenticationController, limiter, getDependencyGraph)
+                                      .get("dependency-graph", authenticationController, limiter, dependencyGraphController)
+                                          .get("dependency/cycles", authenticationController, limiter, detectCycles)
+                                          .post("dependency/analyze", authenticationController, limiter, (req, res) => {
+                                              getServiceRegistry().analyzeDependencies();
+                                              res.json({ success: true, message: 'Dependency analysis completed' });
+                                          })
                                         .post("api-spec/set", authenticationController, requireRole('admin'), limiter, bodyParser.json(), setApiSpecController)
                                         .get("api-spec/get", authenticationController, limiter, getApiSpecController)
                                         .get("pending", authenticationController, requireRole('admin'), limiter, pendingServicesController)
