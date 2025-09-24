@@ -1032,6 +1032,36 @@ Content-Type: application/json
 GET /api/maxine/chaos/status
 ```
 
+##### Get Scaling Recommendations
+```http
+GET /api/maxine/serviceops/scaling/recommendations?serviceName=my-service
+```
+
+Returns intelligent scaling recommendations based on service metrics analysis. Analyzes response times, connection counts, and node health to suggest scale up/down actions.
+
+Response:
+```json
+{
+  "serviceName": "my-service",
+  "recommendations": [
+    {
+      "serviceName": "my-service",
+      "action": "scale_up",
+      "reason": "High response time (1500ms)",
+      "confidence": 0.85,
+      "metrics": {
+        "totalNodes": 2,
+        "healthyNodes": 2,
+        "avgResponseTime": 1500,
+        "avgConnectionsPerNode": 75
+      },
+      "recommendedInstances": 3
+    }
+  ],
+  "timestamp": "2025-09-24T20:07:53.000Z"
+}
+```
+
 ##### Refresh Token
 ```http
 POST /refresh-token
