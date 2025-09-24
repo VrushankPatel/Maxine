@@ -1,6 +1,7 @@
 # Pending Tasks for Maxine Service Registry
 
 ## Recently Implemented Features
+- [x] Add DNS-based Service Discovery: Implemented DNS server using dns2 package for compatibility with DNS clients, supporting SRV records for _service._tcp queries and A records for direct IP resolution, integrated with service registry for real-time healthy node responses.
 - [x] Add PHP Client SDK: Implemented comprehensive PHP client SDK with support for both Full Mode and Lightning Mode APIs, caching, and all major operations.
 - [x] Enable Ultra-Fast Mode by Default: Enabled ultra-fast mode in index.js for maximum performance when ULTRA_FAST_MODE=true.
 - [x] Switch to Lightning Mode by Default: Changed default mode to lightning mode in config.js and index.js for better performance.
@@ -67,6 +68,11 @@
 ## Next Implementation Steps
 
 ### High Priority
+- Implement Advanced Load Balancing Algorithms: Add AI-driven load balancing using reinforcement learning for optimal routing based on real-time metrics and historical data
+- Enhance Chaos Engineering Tools: Implement automated chaos experiments with ML-driven fault injection, network partitioning, and intelligent recovery validation
+- Add Service Mesh AI Optimization: Use AI to automatically optimize Istio/Linkerd configurations based on traffic patterns and performance metrics
+- Implement Multi-Cloud Federation: Advanced cross-cloud service discovery with automatic failover, geo-aware routing, and conflict resolution
+- Add eBPF Integration: Kernel-level tracing and monitoring for ultra-low overhead observability of service communications
 - Implement SIMD Operations: Use SIMD instructions for bulk data processing in load balancing calculations to further reduce latency.
 - Implement Adaptive Caching: Use machine learning to predict and pre-cache frequently accessed services for even lower latency.
 - Implement Advanced Security Features: Comprehensive security enhancements for production deployments
