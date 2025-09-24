@@ -221,7 +221,7 @@ class FederationService {
             this.selectPrimaryRegistry();
 
             if (this.primaryRegistry !== currentPrimary) {
-                console.log(`Federation failover: Switching from ${currentPrimary} to ${this.primaryRegistry}`);
+                // Federation failover occurred
 
                 // Broadcast failover event
                 if (global.broadcast) {
@@ -255,7 +255,7 @@ class FederationService {
             if (response.status === 200 && response.data) {
                 // Synchronize local registry with primary data
                 // This would require access to the local service registry
-                console.log(`Synchronized ${Object.keys(response.data).length} services from primary ${this.primaryRegistry}`);
+                // Synchronized services from primary
             }
         } catch (error) {
             console.warn(`Failed to synchronize from primary ${this.primaryRegistry}: ${error.message}`);
