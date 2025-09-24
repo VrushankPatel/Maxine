@@ -1,5 +1,8 @@
 # Pending Tasks for Maxine Service Registry
 
+## Recently Implemented Features
+- [x] Enable GraphQL API in Lightning Mode: Added GraphQL endpoint (/graphql) to Lightning Mode for flexible service queries and mutations, matching the functionality available in Full Mode.
+
 ## Next Steps
 
 ### High Priority
