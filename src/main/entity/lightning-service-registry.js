@@ -1,7 +1,7 @@
 // Lightning-fast service registry for minimal overhead
 const config = require('../config/config');
 const { LRUCache } = require('lru-cache');
-const { trace } = require('@opentelemetry/api');
+const { trace, metrics } = require('@opentelemetry/api');
 
 class LightningServiceRegistry {
     constructor() {
@@ -37,6 +37,25 @@ class LightningServiceRegistry {
         this._totalNodes = 0;
         this._totalActiveConnections = 0;
         this._averageResponseTime = 0;
+
+        // OpenTelemetry metrics
+        if (global.meter) {
+            this.meter = global.meter;
+            this.registerCounter = this.meter.createCounter('maxine_service_register_total', { description: 'Total number of service registrations' });
+            this.discoverCounter = this.meter.createCounter('maxine_service_discover_total', { description: 'Total number of service discoveries' });
+            this.heartbeatCounter = this.meter.createCounter('maxine_service_heartbeat_total', { description: 'Total number of heartbeats' });
+            this.deregisterCounter = this.meter.createCounter('maxine_service_deregister_total', { description: 'Total number of service deregistrations' });
+            this.cacheHitCounter = this.meter.createCounter('maxine_cache_hit_total', { description: 'Total cache hits' });
+            this.cacheMissCounter = this.meter.createCounter('maxine_cache_miss_total', { description: 'Total cache misses' });
+            this.servicesGauge = this.meter.createObservableGauge('maxine_services_total', { description: 'Total number of services' });
+            this.nodesGauge = this.meter.createObservableGauge('maxine_nodes_total', { description: 'Total number of nodes' });
+
+            // Register gauge callbacks
+            this.meter.addBatchObservableCallback((observableResult) => {
+                observableResult.observe(this.servicesGauge, this.services.size);
+                observableResult.observe(this.nodesGauge, Array.from(this.services.values()).reduce((sum, s) => sum + s.nodes.size, 0));
+            }, [this.servicesGauge, this.nodesGauge]);
+        }
 
         // Persistence enabled in lightning mode
         this.persistenceEnabled = config.persistenceEnabled;
@@ -108,15 +127,25 @@ class LightningServiceRegistry {
             },
             'weighted': (service, availableNodes, clientId) => {
                 if (availableNodes.length === 0) return null;
-                let totalWeight = 0;
                 const weights = availableNodes.map(n => n.metadata?.weight || 1);
-                weights.forEach(w => totalWeight += w);
-                let rand = Math.random() * totalWeight;
-                for (let i = 0; i < availableNodes.length; i++) {
-                    rand -= weights[i];
-                    if (rand <= 0) return availableNodes[i];
+                const cumulative = [];
+                let sum = 0;
+                for (const w of weights) {
+                    sum += w;
+                    cumulative.push(sum);
                 }
-                return availableNodes[0];
+                const rand = Math.random() * sum;
+                // Binary search for the index
+                let low = 0, high = cumulative.length - 1;
+                while (low < high) {
+                    const mid = Math.floor((low + high) / 2);
+                    if (cumulative[mid] < rand) {
+                        low = mid + 1;
+                    } else {
+                        high = mid;
+                    }
+                }
+                return availableNodes[low];
             },
             'power-of-two-choices': (service, availableNodes, clientId) => {
                 if (availableNodes.length < 2) return availableNodes[0] || null;
@@ -237,15 +266,20 @@ class LightningServiceRegistry {
              }
          }
 
-                // Update min connection node if this is the first or has fewer connections
-                const connCount = this.activeConnections.get(nodeName) || 0;
-                if (service.minConnectionNode === null || connCount < service.minConnectionCount) {
-                    service.minConnectionNode = node;
-                    service.minConnectionCount = connCount;
-                }
+                 // Update min connection node if this is the first or has fewer connections
+                 const connCount = this.activeConnections.get(nodeName) || 0;
+                 if (service.minConnectionNode === null || connCount < service.minConnectionCount) {
+                     service.minConnectionNode = node;
+                     service.minConnectionCount = connCount;
+                 }
 
-                span.end();
-                return nodeName;
+                 // Increment register counter
+                 if (this.registerCounter) {
+                     this.registerCounter.add(1, { service: serviceName });
+                 }
+
+                 span.end();
+                 return nodeName;
             } catch (error) {
                 span.recordException(error);
                 span.setStatus({ code: 2, message: error.message });
@@ -347,10 +381,15 @@ class LightningServiceRegistry {
                               if (envSet.size === 0) this.environmentIndex.delete(node.environment);
                           }
                       }
-                  }
-                }
+                   }
+                 }
 
-                span.end();
+                 // Increment deregister counter
+                 if (this.deregisterCounter) {
+                     this.deregisterCounter.add(1, { service: serviceName, node: nodeName });
+                 }
+
+                 span.end();
             } catch (error) {
                 span.recordException(error);
                 span.setStatus({ code: 2, message: error.message });
@@ -401,6 +440,9 @@ class LightningServiceRegistry {
     heartbeat(nodeId) {
         if (this.lastHeartbeats.has(nodeId)) {
             this.lastHeartbeats.set(nodeId, Date.now());
+            if (this.heartbeatCounter) {
+                this.heartbeatCounter.add(1, { node: nodeId });
+            }
             return true;
         }
         return false;
@@ -425,6 +467,9 @@ class LightningServiceRegistry {
                 const cacheKey = `${serviceName}:${strategy}:${clientId || ''}:${tags.join(',')}:${version || ''}:${environment || ''}`;
                 const cached = this.discoveryCache.get(cacheKey);
                 if (cached) {
+                    if (this.cacheHitCounter) {
+                        this.cacheHitCounter.add(1, { service: serviceName, strategy });
+                    }
                     span.end();
                     return cached.node || cached;
                 }
@@ -526,14 +571,23 @@ class LightningServiceRegistry {
                     if (node) {
                         this.discoveryCache.set(cacheKey, node);
                     }
-                } else {
-                    node = this.strategies['round-robin'](service, availableNodes, clientId);
-                    if (node) {
-                        this.discoveryCache.set(cacheKey, node);
-                    }
-                }
-                span.end();
-                return node;
+                 } else {
+                     node = this.strategies['round-robin'](service, availableNodes, clientId);
+                     if (node) {
+                         this.discoveryCache.set(cacheKey, node);
+                     }
+                 }
+
+                 // Increment counters
+                 if (this.discoverCounter) {
+                     this.discoverCounter.add(1, { service: serviceName, strategy });
+                 }
+                 if (!cached && this.cacheMissCounter) {
+                     this.cacheMissCounter.add(1, { service: serviceName, strategy });
+                 }
+
+                 span.end();
+                 return node;
             } catch (error) {
                 span.recordException(error);
                 span.setStatus({ code: 2, message: error.message });
