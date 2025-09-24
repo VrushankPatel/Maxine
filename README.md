@@ -43,11 +43,11 @@ A minimal, high-performance service discovery and registry for microservices.
 
 Maxine delivers exceptional performance for service discovery operations:
 
-- **Ultra-Fast Mode**: Average 0.95ms, P95 1.72ms for discovery requests
-- **Throughput**: 48,113+ requests per second under load (50 concurrent users, 5000 iterations)
+- **Ultra-Fast Mode**: Average 0.81ms, P95 1.5ms for discovery requests
+- **Throughput**: 55,567+ requests per second under load (50 concurrent users, 5000 iterations)
 - **Lightning Mode**: Average 0.82ms, P95 1.76ms for discovery requests (10 concurrent users, 1000 iterations)
 - **Throughput**: 14,605+ requests per second under load (50 concurrent users, 5000 iterations)
-- **Optimizations**: Disabled OpenTelemetry tracing and Prometheus metrics in Lightning Mode, ultra-fast mode with minimal features for maximum speed, fast LCG PRNG, pre-allocated buffers, object pooling, adaptive caching, binary search for weighted random selection, removed console.log from production code, optimized discovery to use ultraFastGetRandomNode, disabled expensive operations in lightning mode
+- **Optimizations**: Disabled OpenTelemetry tracing and Prometheus metrics in Lightning Mode, ultra-fast mode with minimal features for maximum speed, fast LCG PRNG, pre-allocated buffers, object pooling, adaptive caching, binary search for weighted random selection, SIMD-inspired fast operations for bulk calculations, removed console.log from production code, optimized discovery to use ultraFastGetRandomNode, disabled expensive operations in lightning mode
 
 ## Quick Start
 
@@ -74,8 +74,12 @@ Maxine supports optional persistence to maintain registry state across restarts:
 - **Redis**: Uses Redis for distributed storage
 - **Memory-mapped (mmap)**: Zero-copy operations with memory-mapped files for ultra-fast persistence
 - **Shared Memory (shm)**: In-memory shared buffer with file backing for maximum performance
+- **PostgreSQL**: Enterprise-grade SQL persistence with connection pooling and advanced querying
+- **MySQL**: High-performance MySQL persistence with optimized schemas and indexing
+- **TiKV**: Distributed key-value store with strong consistency and horizontal scaling
+- **FoundationDB**: Multi-model database with ACID transactions and fault tolerance
 
-Enable with `PERSISTENCE_ENABLED=true` and set `PERSISTENCE_TYPE=file`, `redis`, `mmap`, or `shm`.
+Enable with `PERSISTENCE_ENABLED=true` and set `PERSISTENCE_TYPE=file`, `redis`, `mmap`, `shm`, `postgres`, `mysql`, `tikv`, or `foundationdb`.
 
 For Redis, configure `REDIS_HOST`, `REDIS_PORT`, `REDIS_PASSWORD`.
 

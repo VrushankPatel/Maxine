@@ -1,6 +1,7 @@
 const tf = require('@tensorflow/tfjs-node');
 const fs = require('fs');
 const path = require('path');
+const { fastOps } = require('../util/util');
 
 class DeepLearningLBService {
     constructor() {
@@ -227,47 +228,45 @@ class DeepLearningLBService {
     }
 
     /**
-     * Calculate mean of array
+     * Calculate mean of array using SIMD-inspired operations
      */
     mean(arr) {
-        return arr.reduce((a, b) => a + b, 0) / arr.length;
+        return fastOps.avg(arr);
     }
 
     /**
-     * Calculate standard deviation
+     * Calculate standard deviation using SIMD-inspired operations
      */
     std(arr) {
-        const avg = this.mean(arr);
-        const squareDiffs = arr.map(value => Math.pow(value - avg, 2));
-        return Math.sqrt(this.mean(squareDiffs));
+        return fastOps.std(arr);
     }
 
     /**
-     * Calculate min
+     * Calculate min using SIMD-inspired operations
      */
     min(arr) {
-        return Math.min(...arr);
+        return fastOps.min(arr);
     }
 
     /**
-     * Calculate max
+     * Calculate max using SIMD-inspired operations
      */
     max(arr) {
-        return Math.max(...arr);
+        return fastOps.max(arr);
     }
 
     /**
-     * Calculate slope using linear regression
+     * Calculate slope using linear regression with SIMD-inspired operations
      */
     calculateSlope(y) {
         const n = y.length;
         if (n < 2) return 0;
 
         const x = Array.from({ length: n }, (_, i) => i);
-        const sumX = x.reduce((a, b) => a + b, 0);
-        const sumY = y.reduce((a, b) => a + b, 0);
-        const sumXY = x.reduce((sum, xi, i) => sum + xi * y[i], 0);
-        const sumXX = x.reduce((sum, xi) => sum + xi * xi, 0);
+        const sumX = fastOps.sum(x);
+        const sumY = fastOps.sum(y);
+        const sumXY = fastOps.dotProduct(x, y);
+        const sumXX = fastOps.sum(x.map(xi => xi * xi));
 
         const slope = (n * sumXY - sumX * sumY) / (n * sumXX - sumX * sumX);
         return isNaN(slope) ? 0 : slope;
@@ -307,13 +306,13 @@ class DeepLearningLBService {
             const features = data.map(d => d.features);
             const labels = data.map(d => [d.label]);
 
-            // Calculate feature statistics for normalization
+            // Calculate feature statistics for normalization using SIMD operations
             const featureStats = [];
             for (let i = 0; i < this.inputSize; i++) {
                 const values = features.map(f => f[i]);
                 featureStats.push({
-                    mean: this.mean(values),
-                    std: this.std(values)
+                    mean: fastOps.avg(values),
+                    std: fastOps.std(values)
                 });
             }
 

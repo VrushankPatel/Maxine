@@ -999,21 +999,17 @@ class LightningServiceRegistrySimple extends EventEmitter {
         if (this.lbPlugins.has(strategy)) {
             return this.lbPlugins.get(strategy)(nodes, { clientId, serviceName, tags });
         } else if (strategy === 'least-connections') {
-            let minConnections = Infinity;
-            let selectedNode = nodes[0];
-            for (let i = 0; i < nodes.length; i++) {
-                const node = nodes[i];
-                const connections = node.connections || 0;
-                if (connections < minConnections) {
-                    minConnections = connections;
-                    selectedNode = node;
-                    if (minConnections === 0) break;
-                }
-            }
-            return selectedNode;
+            // SIMD-inspired fast min operation
+            const { fastOps } = require('../util/util');
+            const connections = nodes.map(n => n.connections || 0);
+            const minConnections = fastOps.min(connections);
+            // Find first node with min connections
+            return nodes.find(n => (n.connections || 0) === minConnections) || nodes[0];
         } else if (strategy === 'weighted-random') {
             // Optimized weighted random with binary search (SIMD-inspired)
-            const totalWeight = nodes.reduce((sum, n) => sum + (n.weight || 1), 0);
+            const { fastOps } = require('../util/util');
+            const weights = nodes.map(n => n.weight || 1);
+            const totalWeight = fastOps.sum(weights);
             let rand = fastRandom() * totalWeight;
             // Precompute cumulative weights for binary search
             const cumulativeWeights = new Array(nodes.length);
