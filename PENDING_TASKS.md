@@ -7,19 +7,20 @@
 - [x] Add comprehensive monitoring for WebSocket connections: Added metrics for active WebSocket connections and event broadcast rates in /metrics endpoint.
 - [x] Implement multi-cluster federation with conflict resolution: Added federation support in Lightning Mode for cross-datacenter service discovery and replication.
 - [x] Implement advanced service mesh features (traffic splitting, canary deployments): Traffic distribution, version promotion, retirement, and gradual traffic shifting are already implemented.
+- [x] Implement Service Dependencies: Added dependency management with add, remove, get dependencies/dependents, cycle detection, and graph visualization.
+- [x] Implement Access Control Lists (ACLs): Added fine-grained permissions for service discovery access with allow/deny lists.
+- [x] Implement Service Intentions: Added definition of allowed communication patterns between services.
 
 ## Next Steps
 
 ### High Priority
 
 ### Medium Priority
-- Implement Advanced Security: OAuth2 integration, fine-grained ACLs, and encrypted communication
+- Implement Advanced Security: OAuth2 integration and encrypted communication
 - Implement Observability Enhancements: Distributed tracing integration with OpenTelemetry, log aggregation, and advanced monitoring dashboards
 - Optimize Memory Usage: Add memory profiling and optimization for large-scale deployments with thousands of services
 - Implement Kubernetes Operator: Create a custom Kubernetes operator for automated Maxine deployment and management
 - Add Advanced Monitoring Dashboard: Build a web-based dashboard for real-time service registry monitoring, metrics visualization, and alerting
-- Implement advanced service mesh features (traffic splitting, canary deployments)
-- Add multi-cluster federation with conflict resolution
 - Implement OAuth2 integration for enhanced security
 - Add distributed tracing integration with OpenTelemetry
 
