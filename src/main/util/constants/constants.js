@@ -54,9 +54,10 @@ const SSS = {
     STICKY: '11',
     LR: '12',
     PRIORITY: '14',
-    BHS: '15',
-    GEO: '16',
-    AFFINITY: '17'
+     BHS: '15',
+     GEO: '16',
+     AFFINITY: '17',
+     PREDICTIVE: '18'
 };
 const LOG_FORMATS = {
     JSON: '0',

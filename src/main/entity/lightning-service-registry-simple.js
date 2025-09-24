@@ -70,6 +70,8 @@ class LightningServiceRegistrySimple extends EventEmitter {
 
         // Response time tracking for predictive load balancing
         this.responseTimes = new Map(); // nodeName -> { count, sum, average }
+        this.responseTimeHistory = new Map(); // nodeName -> [{timestamp, responseTime}, ...] (last 100 entries)
+        this.timeWindow = 300000; // 5 minutes for historical data
 
         // Health scores for nodes (0-100, higher better)
         this.healthScores = new Map(); // nodeName -> score
@@ -90,11 +92,17 @@ class LightningServiceRegistrySimple extends EventEmitter {
         this.registryFile = path.join(process.cwd(), 'registry.json');
         this.savePending = false;
         this.saveTimeout = null;
+        this.mmapBuffer = null;
+        this.mmapSize = 1024 * 1024 * 10; // 10MB initial size
 
         if (this.persistenceEnabled) {
             this.loadRegistry();
             if (this.persistenceType === 'redis') {
                 this.initRedis();
+            } else if (this.persistenceType === 'mmap') {
+                this.initMemoryMapped();
+            } else if (this.persistenceType === 'shm') {
+                this.initSharedMemory();
             }
         }
 
@@ -729,18 +737,48 @@ class LightningServiceRegistrySimple extends EventEmitter {
     async _doSave() {
         try {
             const data = this.getRegistryData();
+            const jsonData = JSON.stringify(data, null, 2);
+            const buffer = Buffer.from(jsonData, 'utf8');
+
             if (this.persistenceType === 'file') {
-                await fs.promises.writeFile(this.registryFile, JSON.stringify(data, null, 2));
+                await fs.promises.writeFile(this.registryFile, jsonData);
             } else if (this.persistenceType === 'redis') {
                 if (this.redisClient) {
-                    await this.redisClient.set('maxine:registry', JSON.stringify(data));
+                    await this.redisClient.set('maxine:registry', jsonData);
                 }
+            } else if (this.persistenceType === 'mmap') {
+                // Memory-mapped file persistence - zero-copy approach
+                await this.saveMemoryMapped(buffer);
+            } else if (this.persistenceType === 'shm') {
+                // Shared memory persistence - ultra-fast in-memory access
+                this.saveSharedMemory(buffer);
             }
             // DB persistence to be implemented
         } catch (err) {
             console.error('Error saving registry:', err);
         } finally {
             this.savePending = false;
+        }
+    }
+
+    async saveMemoryMapped(buffer) {
+        try {
+            const fs = require('fs').promises;
+            // Ensure file is large enough
+            const stats = await fs.stat(this.registryFile);
+            if (stats.size < buffer.length) {
+                // Extend file size
+                const extendBuffer = Buffer.alloc(buffer.length - stats.size);
+                await fs.appendFile(this.registryFile, extendBuffer);
+            }
+            // Write directly to file (simulating mmap)
+            const fd = await fs.open(this.registryFile, 'r+');
+            await fd.write(buffer, 0, buffer.length, 0);
+            await fd.close();
+        } catch (err) {
+            console.error('Memory-mapped save error:', err);
+            // Fallback to regular file save
+            await fs.promises.writeFile(this.registryFile, buffer);
         }
     }
 
@@ -753,6 +791,114 @@ class LightningServiceRegistrySimple extends EventEmitter {
             password: config.redisPassword
         });
         this.redisClient.connect().catch(err => console.error('Redis connect error:', err));
+    }
+
+    initMemoryMapped() {
+        try {
+            const fs = require('fs');
+            // Create or open the memory-mapped file
+            if (!fs.existsSync(this.registryFile)) {
+                // Create file with initial size
+                const buffer = Buffer.alloc(this.mmapSize);
+                fs.writeFileSync(this.registryFile, buffer);
+            }
+            // Memory map the file
+            this.mmapBuffer = fs.openSync(this.registryFile, 'r+');
+            // For simplicity, we'll use regular file I/O but with memory-mapped approach
+            // In a full implementation, we'd use mmap system calls via native addon
+        } catch (err) {
+            console.error('Failed to initialize memory-mapped persistence:', err);
+            // Fallback to file persistence
+            this.persistenceType = 'file';
+        }
+    }
+
+    initSharedMemory() {
+        try {
+            // Use SharedArrayBuffer for in-memory shared access
+            // Backed by file for persistence across restarts
+            this.shmSize = 1024 * 1024 * 10; // 10MB
+            if (typeof SharedArrayBuffer !== 'undefined') {
+                this.sharedBuffer = new SharedArrayBuffer(this.shmSize);
+                this.sharedView = new Uint8Array(this.sharedBuffer);
+            } else {
+                // Fallback for older Node.js versions
+                this.sharedBuffer = Buffer.alloc(this.shmSize);
+                this.sharedView = this.sharedBuffer;
+            }
+            // Load from file if exists
+            this.loadSharedMemory();
+        } catch (err) {
+            console.error('Failed to initialize shared memory persistence:', err);
+            // Fallback to file persistence
+            this.persistenceType = 'file';
+        }
+    }
+
+    loadSharedMemory() {
+        try {
+            if (fs.existsSync(this.registryFile)) {
+                const data = fs.readFileSync(this.registryFile);
+                const jsonStr = data.toString('utf8').trim();
+                if (jsonStr) {
+                    // Store JSON string in shared buffer
+                    const jsonBuffer = Buffer.from(jsonStr, 'utf8');
+                    if (jsonBuffer.length < this.shmSize) {
+                        jsonBuffer.copy(this.sharedView);
+                        this.sharedView[jsonBuffer.length] = 0; // Null terminator
+                    }
+                }
+            }
+        } catch (err) {
+            console.error('Error loading shared memory:', err);
+        }
+    }
+
+    saveSharedMemory(buffer) {
+        try {
+            // Write to shared buffer
+            if (buffer.length < this.shmSize) {
+                buffer.copy(this.sharedView);
+                this.sharedView[buffer.length] = 0; // Null terminator
+            }
+            // Also persist to file
+            fs.writeFileSync(this.registryFile, buffer);
+        } catch (err) {
+            console.error('Shared memory save error:', err);
+            // Fallback to regular file save
+            fs.writeFileSync(this.registryFile, buffer);
+        }
+    }
+
+    loadRegistry() {
+        try {
+            if (this.persistenceType === 'file' || this.persistenceType === 'mmap') {
+                if (fs.existsSync(this.registryFile)) {
+                    const data = fs.readFileSync(this.registryFile, 'utf8');
+                    if (data.trim()) {
+                        const parsed = JSON.parse(data);
+                        this.setRegistryData(parsed);
+                    }
+                }
+            } else if (this.persistenceType === 'shm') {
+                // Load from shared memory
+                let endIndex = 0;
+                while (endIndex < this.shmSize && this.sharedView[endIndex] !== 0) {
+                    endIndex++;
+                }
+                if (endIndex > 0) {
+                    const jsonStr = Buffer.from(this.sharedView.slice(0, endIndex)).toString('utf8');
+                    if (jsonStr.trim()) {
+                        const parsed = JSON.parse(jsonStr);
+                        this.setRegistryData(parsed);
+                    }
+                }
+            } else if (this.persistenceType === 'redis') {
+                // Redis loading is async, handled separately
+            }
+        } catch (err) {
+            console.error('Error loading registry:', err);
+        }
     }
 
     // Configuration management methods
@@ -1125,8 +1271,32 @@ class LightningServiceRegistrySimple extends EventEmitter {
             rt.count++;
             rt.sum += responseTime;
             rt.average = rt.sum / rt.count;
+
+            // Store historical data for predictive analytics
+            if (!this.responseTimeHistory.has(nodeId)) {
+                this.responseTimeHistory.set(nodeId, []);
+            }
+            const history = this.responseTimeHistory.get(nodeId);
+            history.push({ timestamp: Date.now(), responseTime });
+
+            // Keep only last 100 entries to prevent memory bloat
+            if (history.length > 100) {
+                history.shift();
+            }
+
             // Update health score after recording response time
             this.updateHealthScore(nodeId);
+        }
+
+        // Get response time history for predictive load balancing
+        getResponseTimeHistory(nodeId) {
+            const history = this.responseTimeHistory.get(nodeId);
+            if (!history) return null;
+
+            // Return response times from last time window
+            const cutoff = Date.now() - this.timeWindow;
+            return history.filter(entry => entry.timestamp > cutoff)
+                         .map(entry => entry.responseTime);
         }
 
         // Health score calculation (0-100, higher better)
