@@ -157,102 +157,158 @@ if (config.lightningMode) {
     // const rateLimitWindow = 15 * 60 * 1000; // 15 minutes
 
     // Handler functions - only core features for lightning speed
+    // Handle service registration
     const handleRegister = (req, res, query, body) => {
-        const { serviceName, host, port, metadata } = body;
-        const clientIP = req.connection.remoteAddress || req.socket.remoteAddress || 'unknown';
-        if (!serviceName || !host || !port) {
-            winston.warn(`AUDIT: Invalid registration attempt - missing fields, clientIP: ${clientIP}`);
-            res.writeHead(400, { 'Content-Type': 'application/json' });
-            res.end(errorMissingServiceName);
-            return;
+        try {
+            const { serviceName, host, port, metadata } = body;
+            const clientIP = req.connection.remoteAddress || req.socket.remoteAddress || 'unknown';
+            if (!serviceName || !host || !port) {
+                winston.warn(`AUDIT: Invalid registration attempt - missing fields, clientIP: ${clientIP}`);
+                res.writeHead(400, { 'Content-Type': 'application/json' });
+                res.end(errorMissingServiceName);
+                return;
+            }
+            const nodeId = serviceRegistry.register(serviceName, { host, port, metadata });
+            winston.info(`AUDIT: Service registered - serviceName: ${serviceName}, host: ${host}, port: ${port}, nodeId: ${nodeId}, clientIP: ${clientIP}`);
+            res.writeHead(200, { 'Content-Type': 'application/json' });
+            res.end(stringifyRegister({ nodeId, status: 'registered' }));
+        } catch (error) {
+            winston.error(`AUDIT: Registration failed - error: ${error.message}, clientIP: ${req.connection.remoteAddress || req.socket.remoteAddress || 'unknown'}`);
+            errorCount++;
+            res.writeHead(500, { 'Content-Type': 'application/json' });
+            res.end('{"error": "Internal server error"}');
         }
-        const nodeId = serviceRegistry.register(serviceName, { host, port, metadata });
-        winston.info(`AUDIT: Service registered - serviceName: ${serviceName}, host: ${host}, port: ${port}, nodeId: ${nodeId}, clientIP: ${clientIP}`);
-        res.writeHead(200, { 'Content-Type': 'application/json' });
-        res.end(stringifyRegister({ nodeId, status: 'registered' }));
     };
 
+    // Handle service heartbeat
     const handleHeartbeat = (req, res, query, body) => {
-        const { nodeId } = body;
-        const clientIP = req.connection.remoteAddress || req.socket.remoteAddress || 'unknown';
-        if (!nodeId) {
-            winston.warn(`AUDIT: Invalid heartbeat attempt - missing nodeId, clientIP: ${clientIP}`);
-            res.writeHead(400, { 'Content-Type': 'application/json' });
-            res.end(errorMissingNodeId);
-            return;
+        try {
+            const { nodeId } = body;
+            const clientIP = req.connection.remoteAddress || req.socket.remoteAddress || 'unknown';
+            if (!nodeId) {
+                winston.warn(`AUDIT: Invalid heartbeat attempt - missing nodeId, clientIP: ${clientIP}`);
+                res.writeHead(400, { 'Content-Type': 'application/json' });
+                res.end(errorMissingNodeId);
+                return;
+            }
+            const success = serviceRegistry.heartbeat(nodeId);
+            // winston.info(`AUDIT: Heartbeat received - nodeId: ${nodeId}, success: ${success}, clientIP: ${clientIP}`);
+            res.writeHead(200, { 'Content-Type': 'application/json' });
+            res.end(stringifySuccess({ success }));
+        } catch (error) {
+            winston.error(`AUDIT: Heartbeat failed - error: ${error.message}, clientIP: ${req.connection.remoteAddress || req.socket.remoteAddress || 'unknown'}`);
+            errorCount++;
+            res.writeHead(500, { 'Content-Type': 'application/json' });
+            res.end('{"error": "Internal server error"}');
         }
-        const success = serviceRegistry.heartbeat(nodeId);
-        winston.info(`AUDIT: Heartbeat received - nodeId: ${nodeId}, success: ${success}, clientIP: ${clientIP}`);
-        res.writeHead(200, { 'Content-Type': 'application/json' });
-        res.end(stringifySuccess({ success }));
     };
 
+    // Handle service deregistration
     const handleDeregister = (req, res, query, body) => {
-        const { nodeId } = body;
-        const clientIP = req.connection.remoteAddress || req.socket.remoteAddress || 'unknown';
-        if (!nodeId) {
-            winston.warn(`AUDIT: Invalid deregister attempt - missing nodeId, clientIP: ${clientIP}`);
-            res.writeHead(400, { 'Content-Type': 'application/json' });
-            res.end(errorMissingNodeId);
-            return;
+        try {
+            const { nodeId } = body;
+            const clientIP = req.connection.remoteAddress || req.socket.remoteAddress || 'unknown';
+            if (!nodeId) {
+                winston.warn(`AUDIT: Invalid deregister attempt - missing nodeId, clientIP: ${clientIP}`);
+                res.writeHead(400, { 'Content-Type': 'application/json' });
+                res.end(errorMissingNodeId);
+                return;
+            }
+            serviceRegistry.deregister(nodeId);
+            winston.info(`AUDIT: Service deregistered - nodeId: ${nodeId}, clientIP: ${clientIP}`);
+            res.writeHead(200, { 'Content-Type': 'application/json' });
+            res.end(successTrue);
+        } catch (error) {
+            winston.error(`AUDIT: Deregistration failed - error: ${error.message}, clientIP: ${req.connection.remoteAddress || req.socket.remoteAddress || 'unknown'}`);
+            errorCount++;
+            res.writeHead(500, { 'Content-Type': 'application/json' });
+            res.end('{"error": "Internal server error"}');
         }
-        serviceRegistry.deregister(nodeId);
-        winston.info(`AUDIT: Service deregistered - nodeId: ${nodeId}, clientIP: ${clientIP}`);
-        res.writeHead(200, { 'Content-Type': 'application/json' });
-        res.end(successTrue);
     };
 
+    // Handle service discovery
     const handleDiscover = (req, res, query, body) => {
-        const serviceName = query.serviceName;
-        const clientIP = req.connection.remoteAddress;
-        if (!serviceName) {
-            winston.warn(`AUDIT: Invalid discover attempt - missing serviceName, clientIP: ${clientIP}`);
-            res.writeHead(400, { 'Content-Type': 'application/json' });
-            res.end(errorMissingServiceName);
-            return;
+        try {
+            const serviceName = query.serviceName;
+            const clientIP = req.connection.remoteAddress;
+            if (!serviceName) {
+                winston.warn(`AUDIT: Invalid discover attempt - missing serviceName, clientIP: ${clientIP}`);
+                res.writeHead(400, { 'Content-Type': 'application/json' });
+                res.end(errorMissingServiceName);
+                return;
+            }
+            const version = query.version;
+            const fullServiceName = version ? `${serviceName}:${version}` : serviceName;
+            const strategy = query.loadBalancing || 'round-robin';
+            const node = serviceRegistry.getRandomNode(fullServiceName, strategy, clientIP);
+            if (!node) {
+                winston.info(`AUDIT: Service discovery failed - serviceName: ${fullServiceName}, strategy: ${strategy}, clientIP: ${clientIP}`);
+                res.writeHead(404, { 'Content-Type': 'application/json' });
+                res.end(serviceUnavailable);
+                return;
+            }
+            winston.info(`AUDIT: Service discovered - serviceName: ${fullServiceName}, strategy: ${strategy}, node: ${node.nodeName}, clientIP: ${clientIP}`);
+            res.writeHead(200, { 'Content-Type': 'application/json' });
+            res.end(stringifyDiscover({ address: node.address, nodeName: node.nodeName, healthy: true }));
+        } catch (error) {
+            winston.error(`AUDIT: Discovery failed - error: ${error.message}, clientIP: ${req.connection.remoteAddress || req.socket.remoteAddress || 'unknown'}`);
+            errorCount++;
+            res.writeHead(500, { 'Content-Type': 'application/json' });
+            res.end('{"error": "Internal server error"}');
         }
-        const version = query.version;
-        const fullServiceName = version ? `${serviceName}:${version}` : serviceName;
-        const strategy = query.loadBalancing || 'round-robin';
-        const node = serviceRegistry.getRandomNode(fullServiceName, strategy, clientIP);
-        if (!node) {
-            winston.info(`AUDIT: Service discovery failed - serviceName: ${fullServiceName}, strategy: ${strategy}, clientIP: ${clientIP}`);
-            res.writeHead(404, { 'Content-Type': 'application/json' });
-            res.end(serviceUnavailable);
-            return;
-        }
-        winston.info(`AUDIT: Service discovered - serviceName: ${fullServiceName}, strategy: ${strategy}, node: ${node.nodeName}, clientIP: ${clientIP}`);
-        res.writeHead(200, { 'Content-Type': 'application/json' });
-        res.end(stringifyDiscover({ address: node.address, nodeName: node.nodeName, healthy: true }));
     };
 
+    // Handle list all services
     const handleServers = (req, res, query, body) => {
-        const clientIP = req.connection.remoteAddress || req.socket.remoteAddress || 'unknown';
-        const services = serviceRegistry.getServices();
-        winston.info(`AUDIT: Services list requested - count: ${services.length}, clientIP: ${clientIP}`);
-        res.writeHead(200, { 'Content-Type': 'application/json' });
-        res.end(stringifyServers({ services }));
+        try {
+            const clientIP = req.connection.remoteAddress || req.socket.remoteAddress || 'unknown';
+            const services = serviceRegistry.getServices();
+            winston.info(`AUDIT: Services list requested - count: ${services.length}, clientIP: ${clientIP}`);
+            res.writeHead(200, { 'Content-Type': 'application/json' });
+            res.end(stringifyServers({ services }));
+        } catch (error) {
+            winston.error(`AUDIT: Services list failed - error: ${error.message}, clientIP: ${req.connection.remoteAddress || req.socket.remoteAddress || 'unknown'}`);
+            errorCount++;
+            res.writeHead(500, { 'Content-Type': 'application/json' });
+            res.end('{"error": "Internal server error"}');
+        }
     };
 
+    // Handle health check
     const handleHealth = (req, res, query, body) => {
-        const clientIP = req.connection.remoteAddress || req.socket.remoteAddress || 'unknown';
-        const services = serviceRegistry.servicesCount;
-        const nodes = serviceRegistry.nodesCount;
-        winston.info(`AUDIT: Health check requested - services: ${services}, nodes: ${nodes}, clientIP: ${clientIP}`);
-        res.writeHead(200, { 'Content-Type': 'application/json' });
-        res.end(stringifyHealth({ status: 'ok', services, nodes }));
+        try {
+            const clientIP = req.connection.remoteAddress || req.socket.remoteAddress || 'unknown';
+            const services = serviceRegistry.servicesCount;
+            const nodes = serviceRegistry.nodesCount;
+            winston.info(`AUDIT: Health check requested - services: ${services}, nodes: ${nodes}, clientIP: ${clientIP}`);
+            res.writeHead(200, { 'Content-Type': 'application/json' });
+            res.end(stringifyHealth({ status: 'ok', services, nodes }));
+        } catch (error) {
+            winston.error(`AUDIT: Health check failed - error: ${error.message}, clientIP: ${req.connection.remoteAddress || req.socket.remoteAddress || 'unknown'}`);
+            errorCount++;
+            res.writeHead(500, { 'Content-Type': 'application/json' });
+            res.end('{"error": "Internal server error"}');
+        }
     };
 
+    // Handle metrics
     const handleMetrics = (req, res, query, body) => {
-        const clientIP = req.connection.remoteAddress || req.socket.remoteAddress || 'unknown';
-        const uptime = process.uptime();
-        const services = serviceRegistry.servicesCount;
-        const nodes = serviceRegistry.nodesCount;
-        const persistenceEnabled = config.persistenceEnabled;
-        const persistenceType = config.persistenceType;
-        winston.info(`AUDIT: Metrics requested - clientIP: ${clientIP}`);
-        res.writeHead(200, { 'Content-Type': 'application/json' });
-        res.end(stringifyMetrics({ uptime, requests: requestCount, errors: errorCount, services, nodes, persistenceEnabled, persistenceType }));
+        try {
+            const clientIP = req.connection.remoteAddress || req.socket.remoteAddress || 'unknown';
+            const uptime = process.uptime();
+            const services = serviceRegistry.servicesCount;
+            const nodes = serviceRegistry.nodesCount;
+            const persistenceEnabled = config.persistenceEnabled;
+            const persistenceType = config.persistenceType;
+            winston.info(`AUDIT: Metrics requested - clientIP: ${clientIP}`);
+            res.writeHead(200, { 'Content-Type': 'application/json' });
+            res.end(stringifyMetrics({ uptime, requests: requestCount, errors: errorCount, services, nodes, persistenceEnabled, persistenceType }));
+        } catch (error) {
+            winston.error(`AUDIT: Metrics failed - error: ${error.message}, clientIP: ${req.connection.remoteAddress || req.socket.remoteAddress || 'unknown'}`);
+            errorCount++;
+            res.writeHead(500, { 'Content-Type': 'application/json' });
+            res.end('{"error": "Internal server error"}');
+        }
     };
 
     routes.set('POST /register', handleRegister);
@@ -262,136 +318,156 @@ if (config.lightningMode) {
     routes.set('GET /servers', handleServers);
     routes.set('GET /health', handleHealth);
     routes.set('GET /metrics', handleMetrics);
+    // Handle signin for authentication
     routes.set('POST /signin', (req, res, query, body) => {
-        const { username, password } = body;
-        const clientIP = req.connection.remoteAddress || req.socket.remoteAddress || 'unknown';
-        if (!username || !password) {
-            winston.warn(`AUDIT: Signin failed - missing credentials, clientIP: ${clientIP}`);
-            res.writeHead(400, { 'Content-Type': 'application/json' });
-            res.end('{"error": "Missing username or password"}');
-            return;
-        }
-        if (username === config.adminUsername && bcrypt.compareSync(password, config.adminPasswordHash)) {
-            const token = jwt.sign({ username, role: 'admin' }, config.jwtSecret, { expiresIn: config.jwtExpiresIn });
-            winston.info(`AUDIT: Signin successful - username: ${username}, clientIP: ${clientIP}`);
-            res.writeHead(200, { 'Content-Type': 'application/json' });
-            res.end(JSON.stringify({ token }));
-        } else {
-            winston.warn(`AUDIT: Signin failed - invalid credentials, username: ${username}, clientIP: ${clientIP}`);
-            res.writeHead(401, { 'Content-Type': 'application/json' });
-            res.end(errorUnauthorized);
+        try {
+            const { username, password } = body;
+            const clientIP = req.connection.remoteAddress || req.socket.remoteAddress || 'unknown';
+            if (!username || !password) {
+                winston.warn(`AUDIT: Signin failed - missing credentials, clientIP: ${clientIP}`);
+                res.writeHead(400, { 'Content-Type': 'application/json' });
+                res.end('{"error": "Missing username or password"}');
+                return;
+            }
+            if (username === config.adminUsername && bcrypt.compareSync(password, config.adminPasswordHash)) {
+                const token = jwt.sign({ username, role: 'admin' }, config.jwtSecret, { expiresIn: config.jwtExpiresIn });
+                winston.info(`AUDIT: Signin successful - username: ${username}, clientIP: ${clientIP}`);
+                res.writeHead(200, { 'Content-Type': 'application/json' });
+                res.end(JSON.stringify({ token }));
+            } else {
+                winston.warn(`AUDIT: Signin failed - invalid credentials, username: ${username}, clientIP: ${clientIP}`);
+                res.writeHead(401, { 'Content-Type': 'application/json' });
+                res.end(errorUnauthorized);
+            }
+        } catch (error) {
+            winston.error(`AUDIT: Signin failed - error: ${error.message}, clientIP: ${req.connection.remoteAddress || req.socket.remoteAddress || 'unknown'}`);
+            errorCount++;
+            res.writeHead(500, { 'Content-Type': 'application/json' });
+            res.end('{"error": "Internal server error"}');
         }
     });
 
     // Persistence endpoints
+    // Handle registry backup
     routes.set('GET /backup', (req, res, query, body) => {
-        const clientIP = req.connection.remoteAddress || req.socket.remoteAddress || 'unknown';
-        if (config.authEnabled) {
-            const authHeader = req.headers.authorization;
-            if (!authHeader || !authHeader.startsWith('Bearer ')) {
-                winston.warn(`AUDIT: Unauthorized backup attempt - clientIP: ${clientIP}`);
-                res.writeHead(401, { 'Content-Type': 'application/json' });
-                res.end(errorUnauthorized);
-                return;
-            }
-            const token = authHeader.substring(7);
-            try {
-                jwt.verify(token, config.jwtSecret);
-            } catch (err) {
-                winston.warn(`AUDIT: Invalid token for backup - clientIP: ${clientIP}`);
-                res.writeHead(401, { 'Content-Type': 'application/json' });
-                res.end(errorUnauthorized);
-                return;
-            }
-        }
-        if (!config.persistenceEnabled) {
-            winston.warn(`AUDIT: Backup attempted but persistence not enabled - clientIP: ${clientIP}`);
-            res.writeHead(400, { 'Content-Type': 'application/json' });
-            res.end('{"error": "Persistence not enabled"}');
-            return;
-        }
         try {
+            const clientIP = req.connection.remoteAddress || req.socket.remoteAddress || 'unknown';
+            if (config.authEnabled) {
+                const authHeader = req.headers.authorization;
+                if (!authHeader || !authHeader.startsWith('Bearer ')) {
+                    winston.warn(`AUDIT: Unauthorized backup attempt - clientIP: ${clientIP}`);
+                    res.writeHead(401, { 'Content-Type': 'application/json' });
+                    res.end(errorUnauthorized);
+                    return;
+                }
+                const token = authHeader.substring(7);
+                try {
+                    jwt.verify(token, config.jwtSecret);
+                } catch (err) {
+                    winston.warn(`AUDIT: Invalid token for backup - clientIP: ${clientIP}`);
+                    res.writeHead(401, { 'Content-Type': 'application/json' });
+                    res.end(errorUnauthorized);
+                    return;
+                }
+            }
+            if (!config.persistenceEnabled) {
+                winston.warn(`AUDIT: Backup attempted but persistence not enabled - clientIP: ${clientIP}`);
+                res.writeHead(400, { 'Content-Type': 'application/json' });
+                res.end('{"error": "Persistence not enabled"}');
+                return;
+            }
             const data = serviceRegistry.getRegistryData();
             winston.info(`AUDIT: Registry backup performed - clientIP: ${clientIP}`);
             res.writeHead(200, { 'Content-Type': 'application/json' });
             res.end(JSON.stringify(data));
-        } catch (err) {
-            winston.error(`AUDIT: Backup failed - error: ${err.message}, clientIP: ${clientIP}`);
+        } catch (error) {
+            winston.error(`AUDIT: Backup failed - error: ${error.message}, clientIP: ${req.connection.remoteAddress || req.socket.remoteAddress || 'unknown'}`);
+            errorCount++;
             res.writeHead(500, { 'Content-Type': 'application/json' });
-            res.end('{"error": "Backup failed"}');
+            res.end('{"error": "Internal server error"}');
         }
     });
 
+    // Handle registry restore
     routes.set('POST /restore', (req, res, query, body) => {
-        const clientIP = req.connection.remoteAddress || req.socket.remoteAddress || 'unknown';
-        if (config.authEnabled) {
-            const authHeader = req.headers.authorization;
-            if (!authHeader || !authHeader.startsWith('Bearer ')) {
-                winston.warn(`AUDIT: Unauthorized restore attempt - clientIP: ${clientIP}`);
-                res.writeHead(401, { 'Content-Type': 'application/json' });
-                res.end(errorUnauthorized);
-                return;
-            }
-            const token = authHeader.substring(7);
-            try {
-                jwt.verify(token, config.jwtSecret);
-            } catch (err) {
-                winston.warn(`AUDIT: Invalid token for restore - clientIP: ${clientIP}`);
-                res.writeHead(401, { 'Content-Type': 'application/json' });
-                res.end(errorUnauthorized);
-                return;
-            }
-        }
-        if (!config.persistenceEnabled) {
-            winston.warn(`AUDIT: Restore attempted but persistence not enabled - clientIP: ${clientIP}`);
-            res.writeHead(400, { 'Content-Type': 'application/json' });
-            res.end('{"error": "Persistence not enabled"}');
-            return;
-        }
         try {
+            const clientIP = req.connection.remoteAddress || req.socket.remoteAddress || 'unknown';
+            if (config.authEnabled) {
+                const authHeader = req.headers.authorization;
+                if (!authHeader || !authHeader.startsWith('Bearer ')) {
+                    winston.warn(`AUDIT: Unauthorized restore attempt - clientIP: ${clientIP}`);
+                    res.writeHead(401, { 'Content-Type': 'application/json' });
+                    res.end(errorUnauthorized);
+                    return;
+                }
+                const token = authHeader.substring(7);
+                try {
+                    jwt.verify(token, config.jwtSecret);
+                } catch (err) {
+                    winston.warn(`AUDIT: Invalid token for restore - clientIP: ${clientIP}`);
+                    res.writeHead(401, { 'Content-Type': 'application/json' });
+                    res.end(errorUnauthorized);
+                    return;
+                }
+            }
+            if (!config.persistenceEnabled) {
+                winston.warn(`AUDIT: Restore attempted but persistence not enabled - clientIP: ${clientIP}`);
+                res.writeHead(400, { 'Content-Type': 'application/json' });
+                res.end('{"error": "Persistence not enabled"}');
+                return;
+            }
             serviceRegistry.setRegistryData(body);
             winston.info(`AUDIT: Registry restore performed - clientIP: ${clientIP}`);
             res.writeHead(200, { 'Content-Type': 'application/json' });
             res.end('{"success": true}');
-        } catch (err) {
-            winston.error(`AUDIT: Restore failed - error: ${err.message}, clientIP: ${clientIP}`);
+        } catch (error) {
+            winston.error(`AUDIT: Restore failed - error: ${error.message}, clientIP: ${req.connection.remoteAddress || req.socket.remoteAddress || 'unknown'}`);
+            errorCount++;
             res.writeHead(500, { 'Content-Type': 'application/json' });
-            res.end('{"error": "Restore failed"}');
+            res.end('{"error": "Internal server error"}');
         }
     });
 
     // Basic tracing endpoints
+    // Handle trace start
     routes.set('POST /trace/start', (req, res, query, body) => {
-        const clientIP = req.connection.remoteAddress || req.socket.remoteAddress || 'unknown';
-        if (config.authEnabled) {
-            const authHeader = req.headers.authorization;
-            if (!authHeader || !authHeader.startsWith('Bearer ')) {
-                winston.warn(`AUDIT: Unauthorized trace start attempt - clientIP: ${clientIP}`);
-                res.writeHead(401, { 'Content-Type': 'application/json' });
-                res.end(errorUnauthorized);
+        try {
+            const clientIP = req.connection.remoteAddress || req.socket.remoteAddress || 'unknown';
+            if (config.authEnabled) {
+                const authHeader = req.headers.authorization;
+                if (!authHeader || !authHeader.startsWith('Bearer ')) {
+                    winston.warn(`AUDIT: Unauthorized trace start attempt - clientIP: ${clientIP}`);
+                    res.writeHead(401, { 'Content-Type': 'application/json' });
+                    res.end(errorUnauthorized);
+                    return;
+                }
+                const token = authHeader.substring(7);
+                try {
+                    jwt.verify(token, config.jwtSecret);
+                } catch (err) {
+                    winston.warn(`AUDIT: Invalid token for trace start - clientIP: ${clientIP}`);
+                    res.writeHead(401, { 'Content-Type': 'application/json' });
+                    res.end(errorUnauthorized);
+                    return;
+                }
+            }
+            const { operation, id } = body;
+            if (!id || !operation) {
+                winston.warn(`AUDIT: Invalid trace start - missing id or operation, clientIP: ${clientIP}`);
+                res.writeHead(400, { 'Content-Type': 'application/json' });
+                res.end('{"error": "Missing id or operation"}');
                 return;
             }
-            const token = authHeader.substring(7);
-            try {
-                jwt.verify(token, config.jwtSecret);
-            } catch (err) {
-                winston.warn(`AUDIT: Invalid token for trace start - clientIP: ${clientIP}`);
-                res.writeHead(401, { 'Content-Type': 'application/json' });
-                res.end(errorUnauthorized);
-                return;
-            }
+            serviceRegistry.startTrace(id, operation);
+            winston.info(`AUDIT: Trace started - id: ${id}, operation: ${operation}, clientIP: ${clientIP}`);
+            res.writeHead(200, { 'Content-Type': 'application/json' });
+            res.end('{"success": true}');
+        } catch (error) {
+            winston.error(`AUDIT: Trace start failed - error: ${error.message}, clientIP: ${req.connection.remoteAddress || req.socket.remoteAddress || 'unknown'}`);
+            errorCount++;
+            res.writeHead(500, { 'Content-Type': 'application/json' });
+            res.end('{"error": "Internal server error"}');
         }
-        const { operation, id } = body;
-        if (!id || !operation) {
-            winston.warn(`AUDIT: Invalid trace start - missing id or operation, clientIP: ${clientIP}`);
-            res.writeHead(400, { 'Content-Type': 'application/json' });
-            res.end('{"error": "Missing id or operation"}');
-            return;
-        }
-        serviceRegistry.startTrace(id, operation);
-        winston.info(`AUDIT: Trace started - id: ${id}, operation: ${operation}, clientIP: ${clientIP}`);
-        res.writeHead(200, { 'Content-Type': 'application/json' });
-        res.end('{"success": true}');
     });
 
     routes.set('POST /trace/event', (req, res, query, body) => {
@@ -487,181 +563,404 @@ if (config.lightningMode) {
         res.end(JSON.stringify(trace));
     });
 
+    // Configuration management endpoints
+    // Handle config set
+    routes.set('POST /config/set', (req, res, query, body) => {
+        try {
+            const clientIP = req.connection.remoteAddress || req.socket.remoteAddress || 'unknown';
+            if (config.authEnabled) {
+                const authHeader = req.headers.authorization;
+                if (!authHeader || !authHeader.startsWith('Bearer ')) {
+                    winston.warn(`AUDIT: Unauthorized config set attempt - clientIP: ${clientIP}`);
+                    res.writeHead(401, { 'Content-Type': 'application/json' });
+                    res.end(errorUnauthorized);
+                    return;
+                }
+                const token = authHeader.substring(7);
+                try {
+                    jwt.verify(token, config.jwtSecret);
+                } catch (err) {
+                    winston.warn(`AUDIT: Invalid token for config set - clientIP: ${clientIP}`);
+                    res.writeHead(401, { 'Content-Type': 'application/json' });
+                    res.end(errorUnauthorized);
+                    return;
+                }
+            }
+            const { serviceName, key, value, metadata } = body;
+            if (!serviceName || !key) {
+                winston.warn(`AUDIT: Invalid config set - missing serviceName or key, clientIP: ${clientIP}`);
+                res.writeHead(400, { 'Content-Type': 'application/json' });
+                res.end('{"error": "Missing serviceName or key"}');
+                return;
+            }
+            const configResult = serviceRegistry.setConfig(serviceName, key, value, metadata);
+            winston.info(`AUDIT: Config set - serviceName: ${serviceName}, key: ${key}, clientIP: ${clientIP}`);
+            res.writeHead(200, { 'Content-Type': 'application/json' });
+            res.end(JSON.stringify(configResult));
+        } catch (error) {
+            winston.error(`AUDIT: Config set failed - error: ${error.message}, clientIP: ${req.connection.remoteAddress || req.socket.remoteAddress || 'unknown'}`);
+            errorCount++;
+            res.writeHead(500, { 'Content-Type': 'application/json' });
+            res.end('{"error": "Internal server error"}');
+        }
+    });
+
+    // Handle config get
+    routes.set('GET /config/get', (req, res, query, body) => {
+        try {
+            const clientIP = req.connection.remoteAddress || req.socket.remoteAddress || 'unknown';
+            const serviceName = query.serviceName;
+            const key = query.key;
+            if (!serviceName || !key) {
+                winston.warn(`AUDIT: Invalid config get - missing serviceName or key, clientIP: ${clientIP}`);
+                res.writeHead(400, { 'Content-Type': 'application/json' });
+                res.end('{"error": "Missing serviceName or key"}');
+                return;
+            }
+            const configValue = serviceRegistry.getConfig(serviceName, key);
+            if (!configValue) {
+                winston.info(`AUDIT: Config get - not found, serviceName: ${serviceName}, key: ${key}, clientIP: ${clientIP}`);
+                res.writeHead(404, { 'Content-Type': 'application/json' });
+                res.end('{"error": "Config not found"}');
+                return;
+            }
+            winston.info(`AUDIT: Config get - serviceName: ${serviceName}, key: ${key}, clientIP: ${clientIP}`);
+            res.writeHead(200, { 'Content-Type': 'application/json' });
+            res.end(JSON.stringify(configValue));
+        } catch (error) {
+            winston.error(`AUDIT: Config get failed - error: ${error.message}, clientIP: ${req.connection.remoteAddress || req.socket.remoteAddress || 'unknown'}`);
+            errorCount++;
+            res.writeHead(500, { 'Content-Type': 'application/json' });
+            res.end('{"error": "Internal server error"}');
+        }
+    });
+
+    // Handle config all
+    routes.set('GET /config/all', (req, res, query, body) => {
+        try {
+            const clientIP = req.connection.remoteAddress || req.socket.remoteAddress || 'unknown';
+            const serviceName = query.serviceName;
+            if (!serviceName) {
+                winston.warn(`AUDIT: Invalid config all - missing serviceName, clientIP: ${clientIP}`);
+                res.writeHead(400, { 'Content-Type': 'application/json' });
+                res.end('{"error": "Missing serviceName"}');
+                return;
+            }
+            const configs = serviceRegistry.getAllConfigs(serviceName);
+            winston.info(`AUDIT: Config all - serviceName: ${serviceName}, count: ${Object.keys(configs).length}, clientIP: ${clientIP}`);
+            res.writeHead(200, { 'Content-Type': 'application/json' });
+            res.end(JSON.stringify(configs));
+        } catch (error) {
+            winston.error(`AUDIT: Config all failed - error: ${error.message}, clientIP: ${req.connection.remoteAddress || req.socket.remoteAddress || 'unknown'}`);
+            errorCount++;
+            res.writeHead(500, { 'Content-Type': 'application/json' });
+            res.end('{"error": "Internal server error"}');
+        }
+    });
+
+    // Handle config delete
+    routes.set('DELETE /config/delete', (req, res, query, body) => {
+        try {
+            const clientIP = req.connection.remoteAddress || req.socket.remoteAddress || 'unknown';
+            if (config.authEnabled) {
+                const authHeader = req.headers.authorization;
+                if (!authHeader || !authHeader.startsWith('Bearer ')) {
+                    winston.warn(`AUDIT: Unauthorized config delete attempt - clientIP: ${clientIP}`);
+                    res.writeHead(401, { 'Content-Type': 'application/json' });
+                    res.end(errorUnauthorized);
+                    return;
+                }
+                const token = authHeader.substring(7);
+                try {
+                    jwt.verify(token, config.jwtSecret);
+                } catch (err) {
+                    winston.warn(`AUDIT: Invalid token for config delete - clientIP: ${clientIP}`);
+                    res.writeHead(401, { 'Content-Type': 'application/json' });
+                    res.end(errorUnauthorized);
+                    return;
+                }
+            }
+            const serviceName = query.serviceName;
+            const key = query.key;
+            if (!serviceName || !key) {
+                winston.warn(`AUDIT: Invalid config delete - missing serviceName or key, clientIP: ${clientIP}`);
+                res.writeHead(400, { 'Content-Type': 'application/json' });
+                res.end('{"error": "Missing serviceName or key"}');
+                return;
+            }
+            const deleted = serviceRegistry.deleteConfig(serviceName, key);
+            if (!deleted) {
+                winston.info(`AUDIT: Config delete - not found, serviceName: ${serviceName}, key: ${key}, clientIP: ${clientIP}`);
+                res.writeHead(404, { 'Content-Type': 'application/json' });
+                res.end('{"error": "Config not found"}');
+                return;
+            }
+            winston.info(`AUDIT: Config delete - serviceName: ${serviceName}, key: ${key}, clientIP: ${clientIP}`);
+            res.writeHead(200, { 'Content-Type': 'application/json' });
+            res.end(successTrue);
+        } catch (error) {
+            winston.error(`AUDIT: Config delete failed - error: ${error.message}, clientIP: ${req.connection.remoteAddress || req.socket.remoteAddress || 'unknown'}`);
+            errorCount++;
+            res.writeHead(500, { 'Content-Type': 'application/json' });
+            res.end('{"error": "Internal server error"}');
+        }
+    });
+
     // Service Mesh Integration
+    // Handle Envoy service mesh config generation
     const handleEnvoyConfig = (req, res, query, body) => {
-        const clientIP = req.connection.remoteAddress || req.socket.remoteAddress || 'unknown';
-        const services = serviceRegistry.getAllServices();
-        const clusters = [];
-        for (const [serviceName, nodes] of services) {
-            const lbEndpoints = nodes.map(node => ({
-                endpoint: {
-                    address: {
-                        socket_address: {
-                            address: node.host,
-                            port_value: node.port
+        try {
+            const clientIP = req.connection.remoteAddress || req.socket.remoteAddress || 'unknown';
+            const services = serviceRegistry.getAllServices();
+            const clusters = [];
+            for (const [serviceName, nodes] of services) {
+                const lbEndpoints = nodes.map(node => ({
+                    endpoint: {
+                        address: {
+                            socket_address: {
+                                address: node.host,
+                                port_value: node.port
+                            }
                         }
                     }
-                }
-            }));
-            clusters.push({
-                name: serviceName,
-                type: 'STATIC',
-                lb_policy: 'ROUND_ROBIN',
-                load_assignment: {
-                    cluster_name: serviceName,
-                    endpoints: [{
-                        lb_endpoints: lbEndpoints
-                    }]
-                }
-            });
-        }
-        const envoyConfig = {
-            static_resources: {
-                clusters: clusters
-            }
-        };
-        winston.info(`AUDIT: Envoy config requested - services: ${services.size}, clientIP: ${clientIP}`);
-        res.writeHead(200, { 'Content-Type': 'application/json' });
-        res.end(JSON.stringify(envoyConfig, null, 2));
-    };
-
-    const handleIstioConfig = (req, res, query, body) => {
-        const clientIP = req.connection.remoteAddress || req.socket.remoteAddress || 'unknown';
-        const services = serviceRegistry.getAllServices();
-        const configs = [];
-        for (const [serviceName, nodes] of services) {
-            const subsets = [];
-            const versionMap = new Map();
-            nodes.forEach(node => {
-                const version = node.metadata?.version || 'default';
-                if (!versionMap.has(version)) {
-                    versionMap.set(version, []);
-                }
-                versionMap.get(version).push(`${node.host}:${node.port}`);
-            });
-            for (const [version, addresses] of versionMap) {
-                subsets.push({
-                    name: version,
-                    labels: { version: version }
+                }));
+                clusters.push({
+                    name: serviceName,
+                    type: 'STATIC',
+                    lb_policy: 'ROUND_ROBIN',
+                    load_assignment: {
+                        cluster_name: serviceName,
+                        endpoints: [{
+                            lb_endpoints: lbEndpoints
+                        }]
+                    }
                 });
             }
-            const virtualService = {
-                apiVersion: 'networking.istio.io/v1alpha3',
-                kind: 'VirtualService',
-                metadata: { name: serviceName },
-                spec: {
-                    hosts: [serviceName],
-                    http: [{
-                        route: [{
-                            destination: {
-                                host: serviceName,
-                                subset: 'default'
-                            }
-                        }]
-                    }]
+            const envoyConfig = {
+                static_resources: {
+                    clusters: clusters
                 }
             };
-            const destinationRule = {
-                apiVersion: 'networking.istio.io/v1alpha3',
-                kind: 'DestinationRule',
-                metadata: { name: serviceName },
-                spec: {
-                    host: serviceName,
-                    subsets: subsets
-                }
-            };
-            configs.push({ virtualService, destinationRule });
+            winston.info(`AUDIT: Envoy config requested - services: ${services.size}, clientIP: ${clientIP}`);
+            res.writeHead(200, { 'Content-Type': 'application/json' });
+            res.end(JSON.stringify(envoyConfig, null, 2));
+        } catch (error) {
+            winston.error(`AUDIT: Envoy config failed - error: ${error.message}, clientIP: ${req.connection.remoteAddress || req.socket.remoteAddress || 'unknown'}`);
+            errorCount++;
+            res.writeHead(500, { 'Content-Type': 'application/json' });
+            res.end('{"error": "Internal server error"}');
         }
-        winston.info(`AUDIT: Istio config requested - services: ${services.size}, clientIP: ${clientIP}`);
-        res.writeHead(200, { 'Content-Type': 'application/json' });
-        res.end(JSON.stringify(configs, null, 2));
+    };
+
+    // Handle Istio service mesh config generation
+    const handleIstioConfig = (req, res, query, body) => {
+        try {
+            const clientIP = req.connection.remoteAddress || req.socket.remoteAddress || 'unknown';
+            const services = serviceRegistry.getAllServices();
+            const configs = [];
+            for (const [serviceName, nodes] of services) {
+                const subsets = [];
+                const versionMap = new Map();
+                nodes.forEach(node => {
+                    const version = node.metadata?.version || 'default';
+                    if (!versionMap.has(version)) {
+                        versionMap.set(version, []);
+                    }
+                    versionMap.get(version).push(`${node.host}:${node.port}`);
+                });
+                for (const [version, addresses] of versionMap) {
+                    subsets.push({
+                        name: version,
+                        labels: { version: version }
+                    });
+                }
+                const virtualService = {
+                    apiVersion: 'networking.istio.io/v1alpha3',
+                    kind: 'VirtualService',
+                    metadata: { name: serviceName },
+                    spec: {
+                        hosts: [serviceName],
+                        http: [{
+                            route: [{
+                                destination: {
+                                    host: serviceName,
+                                    subset: 'default'
+                                }
+                            }]
+                        }]
+                    }
+                };
+                const destinationRule = {
+                    apiVersion: 'networking.istio.io/v1alpha3',
+                    kind: 'DestinationRule',
+                    metadata: { name: serviceName },
+                    spec: {
+                        host: serviceName,
+                        subsets: subsets
+                    }
+                };
+                configs.push({ virtualService, destinationRule });
+            }
+            winston.info(`AUDIT: Istio config requested - services: ${services.size}, clientIP: ${clientIP}`);
+            res.writeHead(200, { 'Content-Type': 'application/json' });
+            res.end(JSON.stringify(configs, null, 2));
+        } catch (error) {
+            winston.error(`AUDIT: Istio config failed - error: ${error.message}, clientIP: ${req.connection.remoteAddress || req.socket.remoteAddress || 'unknown'}`);
+            errorCount++;
+            res.writeHead(500, { 'Content-Type': 'application/json' });
+            res.end('{"error": "Internal server error"}');
+        }
     };
 
     routes.set('GET /service-mesh/envoy-config', handleEnvoyConfig);
     routes.set('GET /service-mesh/istio-config', handleIstioConfig);
 
     // Circuit Breaker endpoints
+    // Handle circuit breaker state query
     routes.set('GET /circuit-breaker/:nodeId', (req, res, query, body) => {
-        const clientIP = req.connection.remoteAddress || req.socket.remoteAddress || 'unknown';
-        const nodeId = req.url.split('/').pop();
-        const state = serviceRegistry.getCircuitState(nodeId);
-        winston.info(`AUDIT: Circuit breaker state requested - nodeId: ${nodeId}, state: ${JSON.stringify(state)}, clientIP: ${clientIP}`);
-        res.writeHead(200, { 'Content-Type': 'application/json' });
-        res.end(JSON.stringify(state));
+        try {
+            const clientIP = req.connection.remoteAddress || req.socket.remoteAddress || 'unknown';
+            const nodeId = req.url.split('/').pop();
+            const state = serviceRegistry.getCircuitState(nodeId);
+            winston.info(`AUDIT: Circuit breaker state requested - nodeId: ${nodeId}, state: ${JSON.stringify(state)}, clientIP: ${clientIP}`);
+            res.writeHead(200, { 'Content-Type': 'application/json' });
+            res.end(JSON.stringify(state));
+        } catch (error) {
+            winston.error(`AUDIT: Circuit breaker state failed - error: ${error.message}, clientIP: ${req.connection.remoteAddress || req.socket.remoteAddress || 'unknown'}`);
+            errorCount++;
+            res.writeHead(500, { 'Content-Type': 'application/json' });
+            res.end('{"error": "Internal server error"}');
+        }
     });
 
     // Event history endpoints
+    // Handle event history query
     routes.set('GET /events', (req, res, query, body) => {
-        const clientIP = req.connection.remoteAddress || req.socket.remoteAddress || 'unknown';
-        const since = query.since ? parseInt(query.since) : 0;
-        const limit = query.limit ? parseInt(query.limit) : 100;
-        const filtered = eventHistory.filter(e => e.timestamp > since).slice(-limit);
-        winston.info(`AUDIT: Event history requested - since: ${since}, limit: ${limit}, returned: ${filtered.length}, clientIP: ${clientIP}`);
-        res.writeHead(200, { 'Content-Type': 'application/json' });
-        res.end(JSON.stringify(filtered));
+        try {
+            const clientIP = req.connection.remoteAddress || req.socket.remoteAddress || 'unknown';
+            const since = query.since ? parseInt(query.since) : 0;
+            const limit = query.limit ? parseInt(query.limit) : 100;
+            const filtered = eventHistory.filter(e => e.timestamp > since).slice(-limit);
+            winston.info(`AUDIT: Event history requested - since: ${since}, limit: ${limit}, returned: ${filtered.length}, clientIP: ${clientIP}`);
+            res.writeHead(200, { 'Content-Type': 'application/json' });
+            res.end(JSON.stringify(filtered));
+        } catch (error) {
+            winston.error(`AUDIT: Event history failed - error: ${error.message}, clientIP: ${req.connection.remoteAddress || req.socket.remoteAddress || 'unknown'}`);
+            errorCount++;
+            res.writeHead(500, { 'Content-Type': 'application/json' });
+            res.end('{"error": "Internal server error"}');
+        }
     });
 
     // Actuator endpoints for compatibility
+    // Handle actuator health check
     routes.set('GET /api/actuator/health', (req, res, query, body) => {
-        const clientIP = req.connection.remoteAddress || req.socket.remoteAddress || 'unknown';
-        winston.info(`AUDIT: Actuator health requested - clientIP: ${clientIP}`);
-        res.writeHead(200, { 'Content-Type': 'application/json' });
-        res.end('{"status": "UP"}');
+        try {
+            const clientIP = req.connection.remoteAddress || req.socket.remoteAddress || 'unknown';
+            winston.info(`AUDIT: Actuator health requested - clientIP: ${clientIP}`);
+            res.writeHead(200, { 'Content-Type': 'application/json' });
+            res.end('{"status": "UP"}');
+        } catch (error) {
+            winston.error(`AUDIT: Actuator health failed - error: ${error.message}, clientIP: ${req.connection.remoteAddress || req.socket.remoteAddress || 'unknown'}`);
+            errorCount++;
+            res.writeHead(500, { 'Content-Type': 'application/json' });
+            res.end('{"error": "Internal server error"}');
+        }
     });
+    // Handle actuator info
     routes.set('GET /api/actuator/info', (req, res, query, body) => {
-        const clientIP = req.connection.remoteAddress || req.socket.remoteAddress || 'unknown';
-        winston.info(`AUDIT: Actuator info requested - clientIP: ${clientIP}`);
-        res.writeHead(200, { 'Content-Type': 'application/json' });
-        res.end('{"build": {"description": "Maxine Lightning Mode", "name": "maxine-discovery"}}');
+        try {
+            const clientIP = req.connection.remoteAddress || req.socket.remoteAddress || 'unknown';
+            winston.info(`AUDIT: Actuator info requested - clientIP: ${clientIP}`);
+            res.writeHead(200, { 'Content-Type': 'application/json' });
+            res.end('{"build": {"description": "Maxine Lightning Mode", "name": "maxine-discovery"}}');
+        } catch (error) {
+            winston.error(`AUDIT: Actuator info failed - error: ${error.message}, clientIP: ${req.connection.remoteAddress || req.socket.remoteAddress || 'unknown'}`);
+            errorCount++;
+            res.writeHead(500, { 'Content-Type': 'application/json' });
+            res.end('{"error": "Internal server error"}');
+        }
     });
+    // Handle actuator metrics
     routes.set('GET /api/actuator/metrics', (req, res, query, body) => {
-        const clientIP = req.connection.remoteAddress || req.socket.remoteAddress || 'unknown';
-        const mem = process.memoryUsage();
-        const uptime = process.uptime();
-        winston.info(`AUDIT: Actuator metrics requested - clientIP: ${clientIP}`);
-        res.writeHead(200, { 'Content-Type': 'application/json' });
-        res.end(JSON.stringify({ mem, uptime }));
+        try {
+            const clientIP = req.connection.remoteAddress || req.socket.remoteAddress || 'unknown';
+            const mem = process.memoryUsage();
+            const uptime = process.uptime();
+            winston.info(`AUDIT: Actuator metrics requested - clientIP: ${clientIP}`);
+            res.writeHead(200, { 'Content-Type': 'application/json' });
+            res.end(JSON.stringify({ mem, uptime }));
+        } catch (error) {
+            winston.error(`AUDIT: Actuator metrics failed - error: ${error.message}, clientIP: ${req.connection.remoteAddress || req.socket.remoteAddress || 'unknown'}`);
+            errorCount++;
+            res.writeHead(500, { 'Content-Type': 'application/json' });
+            res.end('{"error": "Internal server error"}');
+        }
     });
 
     // Logs endpoint for compatibility
+    // Handle logs download
     routes.set('GET /api/logs/download', (req, res, query, body) => {
-        const clientIP = req.connection.remoteAddress || req.socket.remoteAddress || 'unknown';
-        winston.info(`AUDIT: Logs download requested - clientIP: ${clientIP}`);
-        res.writeHead(200, { 'Content-Type': 'application/json' });
-        res.end('{}');
+        try {
+            const clientIP = req.connection.remoteAddress || req.socket.remoteAddress || 'unknown';
+            winston.info(`AUDIT: Logs download requested - clientIP: ${clientIP}`);
+            res.writeHead(200, { 'Content-Type': 'application/json' });
+            res.end('{}');
+        } catch (error) {
+            winston.error(`AUDIT: Logs download failed - error: ${error.message}, clientIP: ${req.connection.remoteAddress || req.socket.remoteAddress || 'unknown'}`);
+            errorCount++;
+            res.writeHead(500, { 'Content-Type': 'application/json' });
+            res.end('{"error": "Internal server error"}');
+        }
     });
 
     // Config endpoint for compatibility
+    // Handle config get for compatibility
     routes.set('GET /api/maxine/control/config', (req, res, query, body) => {
-        const clientIP = req.connection.remoteAddress || req.socket.remoteAddress || 'unknown';
-        winston.info(`AUDIT: Config get requested - clientIP: ${clientIP}`);
-        res.writeHead(200, { 'Content-Type': 'application/json' });
-        res.end(JSON.stringify({
-            logAsync: config.logAsync,
-            heartBeatTimeout: config.heartBeatTimeout,
-            highPerformanceMode: false,
-            logJsonPrettify: config.logJsonPrettify,
-            serverSelectionStrategy: 'RR',
-            logFormat: 'JSON'
-        }));
-    });
-    routes.set('PUT /api/maxine/control/config', (req, res, query, body) => {
-        const clientIP = req.connection.remoteAddress || req.socket.remoteAddress || 'unknown';
-        const key = Object.keys(body)[0];
-        const value = body[key];
-        if (key === 'serverSelectionStrategy') {
-            config[key] = constants.SSS[value] || value;
-        } else if (key === 'logFormat') {
-            config[key] = constants.LOG_FORMATS[value] || value;
-        } else {
-            config[key] = value;
+        try {
+            const clientIP = req.connection.remoteAddress || req.socket.remoteAddress || 'unknown';
+            winston.info(`AUDIT: Config get requested - clientIP: ${clientIP}`);
+            res.writeHead(200, { 'Content-Type': 'application/json' });
+            res.end(JSON.stringify({
+                logAsync: config.logAsync,
+                heartBeatTimeout: config.heartBeatTimeout,
+                highPerformanceMode: false,
+                logJsonPrettify: config.logJsonPrettify,
+                serverSelectionStrategy: 'RR',
+                logFormat: 'JSON'
+            }));
+        } catch (error) {
+            winston.error(`AUDIT: Config get failed - error: ${error.message}, clientIP: ${req.connection.remoteAddress || req.socket.remoteAddress || 'unknown'}`);
+            errorCount++;
+            res.writeHead(500, { 'Content-Type': 'application/json' });
+            res.end('{"error": "Internal server error"}');
         }
-        winston.info(`AUDIT: Config updated - key: ${key}, value: ${value}, clientIP: ${clientIP}`);
-        res.writeHead(200, { 'Content-Type': 'application/json' });
-        res.end(JSON.stringify({ [key]: "Success" }));
+    });
+    // Handle config update for compatibility
+    routes.set('PUT /api/maxine/control/config', (req, res, query, body) => {
+        try {
+            const clientIP = req.connection.remoteAddress || req.socket.remoteAddress || 'unknown';
+            const key = Object.keys(body)[0];
+            const value = body[key];
+            if (key === 'serverSelectionStrategy') {
+                config[key] = constants.SSS[value] || value;
+            } else if (key === 'logFormat') {
+                config[key] = constants.LOG_FORMATS[value] || value;
+            } else {
+                config[key] = value;
+            }
+            winston.info(`AUDIT: Config updated - key: ${key}, value: ${value}, clientIP: ${clientIP}`);
+            res.writeHead(200, { 'Content-Type': 'application/json' });
+            res.end(JSON.stringify({ [key]: "Success" }));
+        } catch (error) {
+            winston.error(`AUDIT: Config update failed - error: ${error.message}, clientIP: ${req.connection.remoteAddress || req.socket.remoteAddress || 'unknown'}`);
+            errorCount++;
+            res.writeHead(500, { 'Content-Type': 'application/json' });
+            res.end('{"error": "Internal server error"}');
+        }
     });
 
-     const server = http.createServer({ keepAlive: true, keepAliveInitialDelay: 0 }, (req, res) => {
+     const server = http.createServer({ keepAlive: false }, (req, res) => {
          const clientIP = req.connection.remoteAddress || req.socket.remoteAddress || 'unknown';
 
           // Rate limiting disabled in lightning mode for ultimate speed
@@ -749,7 +1048,7 @@ if (config.lightningMode) {
     });
 
     if (!config.isTestMode) {
-        server.listen(constants.PORT, () => {
+        server.listen(constants.PORT, '0.0.0.0', () => {
             console.log('Maxine lightning-fast server listening on port', constants.PORT);
             console.log('Lightning mode: minimal features for maximum performance using raw HTTP');
         });
@@ -758,16 +1057,16 @@ if (config.lightningMode) {
         const wss = new WebSocket.Server({ server });
 
         // MQTT client for event publishing
-        let mqttClient = null;
-        if (config.mqttEnabled) {
-            mqttClient = mqtt.connect(config.mqttBroker);
-            mqttClient.on('connect', () => {
-                console.log('Connected to MQTT broker');
-            });
-            mqttClient.on('error', (err) => {
-                console.error('MQTT connection error:', err);
-            });
-        }
+        // let mqttClient = null;
+        // if (config.mqttEnabled) {
+        //     mqttClient = mqtt.connect(config.mqttBroker);
+        //     mqttClient.on('connect', () => {
+        //         console.log('Connected to MQTT broker');
+        //     });
+        //     mqttClient.on('error', (err) => {
+        //         console.error('MQTT connection error:', err);
+        //     });
+        // }
 
         // Event persistence
         const eventHistory = [];
@@ -793,12 +1092,12 @@ if (config.lightningMode) {
                 }
             });
             // MQTT publish
-            if (mqttClient && mqttClient.connected) {
-                const topic = `${config.mqttTopic}/${event}`;
-                mqttClient.publish(topic, message, { qos: 1 }, (err) => {
-                    if (err) console.error('MQTT publish error:', err);
-                });
-            }
+            // if (mqttClient && mqttClient.connected) {
+            //     const topic = `${config.mqttTopic}/${event}`;
+            //     mqttClient.publish(topic, message, { qos: 1 }, (err) => {
+            //         if (err) console.error('MQTT publish error:', err);
+            //     });
+            // }
         };
 
         const matchesFilter = (event, data, filter) => {

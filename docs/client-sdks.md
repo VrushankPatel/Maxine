@@ -43,6 +43,35 @@ client.close();
 - Caching support
 - WebSocket notifications
 
+### WebSocket Event Streaming
+
+The JavaScript SDK supports real-time event streaming via WebSocket for monitoring service registry changes.
+
+```javascript
+const MaxineClient = require('maxine-client');
+
+const client = new MaxineClient({
+  serverUrl: 'http://localhost:8080'
+});
+
+// Connect to WebSocket for event streaming
+client.connectWebSocket((event) => {
+  console.log('Received event:', event);
+});
+
+// Authenticate if required
+client.authenticateWebSocket('your-jwt-token');
+
+// Subscribe to specific events
+client.subscribeWebSocket({
+  event: 'service_registered',
+  serviceName: 'my-service'
+});
+
+// Close WebSocket connection
+client.closeWebSocket();
+```
+
 ## Python SDK
 
 Located in `client-sdk/python/`.
