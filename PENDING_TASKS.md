@@ -25,7 +25,7 @@
   - [x] Implement Linkerd Service Mesh Configuration Generation: Added /service-mesh/linkerd-config endpoint to generate Linkerd ServiceProfile configurations for seamless service mesh integration.
 - [x] Add Configurable Cleanup Interval: Made the periodic cleanup interval configurable via CLEANUP_INTERVAL environment variable for fine-tuning performance.
 - [x] Add Cache Hit/Miss Metrics: Implemented metrics for discovery cache performance monitoring, including cacheHits and cacheMisses in /metrics endpoint.
-- [x] Implement Anomaly Detection: Added /anomalies endpoint to detect services with high circuit breaker failures, no healthy nodes, or no nodes at all.
+ - [x] Implement Anomaly Detection: Added /anomalies endpoint to detect services with high circuit breaker failures, no healthy nodes, or no nodes at all. (Fully implemented with getAnomalies method and endpoint)
 - [x] Implement Service Catalog Integration: Added Open Service Broker API endpoints for enterprise service catalog compatibility, enabling integration with Kubernetes Service Catalog and other OSB implementations.
 - [x] Implement Shared Memory Persistence: Added shared memory (shm) persistence type for ultra-fast in-memory persistence with file backing across restarts.
 - [x] Implement Memory-Mapped Files Persistence: Added memory-mapped file (mmap) persistence for zero-copy operations and faster data access.
@@ -386,6 +386,28 @@
   - [x] Added broadcasting of dependency_added and dependency_removed events
   - [x] Graph refreshes automatically when dependencies are modified via API
   - [x] Enables real-time monitoring of service dependency changes
+
+### Future Enhancements
+- Implement Machine Learning-Based Load Balancing: Advanced load balancing using ML models
+  - Train models on historical performance data (response times, failure rates)
+  - Implement predictive algorithms for optimal node selection
+  - Add reinforcement learning for dynamic load balancing adaptation
+  - Integrate with external ML platforms for model training and inference
+- Add Service Health Prediction: Proactive health monitoring and failure prediction
+  - Implement time-series analysis for service metrics
+  - Use statistical models to predict service degradation
+  - Add early warning system for potential failures
+  - Integrate predictions with load balancing decisions
+- Implement Chaos Engineering Tools: Built-in chaos testing for resilience validation
+  - Add service failure simulation endpoints
+  - Implement network latency and packet loss injection
+  - Create automated chaos experiments with safety controls
+  - Provide chaos testing dashboards and reports
+- Enhance Multi-Cluster Federation: Advanced cross-datacenter features
+  - Implement conflict resolution for service registrations
+  - Add geo-aware load balancing with latency optimization
+  - Support for multi-region active-active deployments
+  - Implement federation health monitoring and failover
 
 
 
