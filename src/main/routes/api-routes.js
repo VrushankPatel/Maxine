@@ -3,10 +3,24 @@ const config = require('../config/config');
 const bodyParser = require('body-parser');
 const rateLimit = require('express-rate-limit');
 const { graphqlHTTP } = require('express-graphql');
+const { ApolloServer } = require('apollo-server-express');
 const swaggerUi = require('swagger-ui-express');
 const yaml = require('js-yaml');
 const fs = require('fs');
 const { schema, root } = require('../graphql/schema');
+
+const apolloServer = new ApolloServer({
+  schema,
+  context: ({ req }) => ({ req }),
+  subscriptions: {
+    onConnect: (connectionParams, webSocket, context) => {
+      console.log('Client connected to GraphQL subscriptions');
+    },
+    onDisconnect: (webSocket, context) => {
+      console.log('Client disconnected from GraphQL subscriptions');
+    },
+  },
+});
 const { serverListController, registryController, renewLeaseController, heartbeatController, deregisterController, healthController, bulkHealthController, pushHealthController, healthHistoryController, metricsController, prometheusMetricsController, cacheStatsController, filteredDiscoveryController, discoveryInfoController, changesController, changesSSEController, bulkRegisterController, bulkDeregisterController, setMaintenanceController, setDrainingController, backupController, restoreController, dependencyGraphController, impactAnalysisController, setApiSpecController, getApiSpecController, listServicesByGroupController, updateMetadataController, databaseDiscoveryController, statsController, slaController, healthScoreController, autoscalingController, chaosController, pendingServicesController, approveServiceController, rejectServiceController, testServiceController, addServiceTemplateController, getServiceTemplateController, deleteServiceTemplateController, listServiceTemplatesController, setServiceIntentionController, getServiceIntentionController, addAclPolicyController, getAclPolicyController, deleteAclPolicyController, listAclPoliciesController, addToBlacklistController, removeFromBlacklistController, getBlacklistedNodesController, getServiceUptimeController, setCanaryController, discoverWeightedController, discoverLeastConnectionsController, setBlueGreenController, addFederatedRegistryController, removeFederatedRegistryController, startTraceController, addTraceEventController, endTraceController, getTraceController, setACLController, getACLController, setIntentionController, getIntentionController, addServiceToBlacklistController, removeServiceFromBlacklistController, isServiceBlacklistedController } = require('../controller/maxine/registry-controller');
 const batchDiscoveryController = require('../controller/maxine/batch-discovery-controller');
 const federationController = require('../controller/maxine/federation-controller');
