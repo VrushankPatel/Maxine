@@ -32,6 +32,13 @@ class LightningServiceRegistry {
         this.discoveryCache = new LRUCache({ max: 50000, maxAge: 15000 }); // 15 second cache for better performance and freshness
         this.cacheTTL = 15000;
 
+        // Adaptive caching with ML-inspired access pattern analysis
+        this.accessPatterns = new Map(); // service -> { count, lastAccess, emaFrequency }
+        this.adaptiveCacheEnabled = true;
+        this.baseTTL = 15000;
+        this.maxTTL = 300000; // 5 minutes max
+        this.emaAlpha = 0.1; // Smoothing factor for exponential moving average
+
         // Cached metrics for fast access
         this._totalServices = 0;
         this._totalNodes = 0;
@@ -65,6 +72,36 @@ class LightningServiceRegistry {
                 if (i + 3 < len) sum += values[i + 3];
             }
             return sum;
+        };
+
+        // Adaptive caching methods
+        this.updateAccessPattern = (serviceName) => {
+            if (!this.adaptiveCacheEnabled) return this.baseTTL;
+
+            const now = Date.now();
+            let pattern = this.accessPatterns.get(serviceName);
+            if (!pattern) {
+                pattern = { count: 0, lastAccess: now, emaFrequency: 0 };
+                this.accessPatterns.set(serviceName, pattern);
+            }
+
+            pattern.count++;
+            const timeDiff = now - pattern.lastAccess;
+            if (timeDiff > 0) {
+                const instantFrequency = 1000 / timeDiff; // accesses per second
+                pattern.emaFrequency = this.emaAlpha * instantFrequency + (1 - this.emaAlpha) * pattern.emaFrequency;
+            }
+            pattern.lastAccess = now;
+
+            // Compute adaptive TTL: base + frequency bonus, capped at max
+            const adaptiveTTL = Math.min(this.baseTTL + (pattern.emaFrequency * 10000), this.maxTTL);
+            return adaptiveTTL;
+        };
+
+        this.getAdaptiveTTL = (serviceName) => {
+            const pattern = this.accessPatterns.get(serviceName);
+            if (!pattern) return this.baseTTL;
+            return Math.min(this.baseTTL + (pattern.emaFrequency * 10000), this.maxTTL);
         };
 
         // OpenTelemetry metrics
@@ -498,6 +535,8 @@ class LightningServiceRegistry {
                 const cacheKey = `${serviceName}:${strategy}:${clientId || ''}:${tags.join(',')}:${version || ''}:${environment || ''}`;
                 const cached = this.discoveryCache.get(cacheKey);
                 if (cached) {
+                    // Update access pattern for adaptive caching
+                    this.updateAccessPattern(serviceName);
                     if (this.cacheHitCounter) {
                         this.cacheHitCounter.add(1, { service: serviceName, strategy });
                     }
@@ -573,10 +612,13 @@ class LightningServiceRegistry {
                 return null;
             }
 
+                // Update access pattern for cache miss
+                const adaptiveTTL = this.updateAccessPattern(serviceName);
+
                 // Check for blue-green deployment
                 const bgNode = this.getBlueGreenNode(serviceName);
                 if (bgNode && !this.isCircuitOpen(serviceName, bgNode.nodeName)) {
-                    this.discoveryCache.set(cacheKey, bgNode);
+                    this.discoveryCache.set(cacheKey, bgNode, { ttl: adaptiveTTL });
                     span.end();
                     return bgNode;
                 }
@@ -587,7 +629,7 @@ class LightningServiceRegistry {
                     if (Math.random() * 100 < canaryConfig.percentage) {
                         const canaryNode = this.getCanaryNode(serviceName);
                         if (canaryNode && !this.isCircuitOpen(serviceName, canaryNode.nodeName)) {
-                            this.discoveryCache.set(cacheKey, canaryNode);
+                            this.discoveryCache.set(cacheKey, canaryNode, { ttl: adaptiveTTL });
                             span.end();
                             return canaryNode;
                         }
@@ -600,12 +642,12 @@ class LightningServiceRegistry {
                 if (strategyFunc) {
                     node = strategyFunc(service, availableNodes, clientId);
                     if (node) {
-                        this.discoveryCache.set(cacheKey, node);
+                        this.discoveryCache.set(cacheKey, node, { ttl: adaptiveTTL });
                     }
                  } else {
                      node = this.strategies['round-robin'](service, availableNodes, clientId);
                      if (node) {
-                         this.discoveryCache.set(cacheKey, node);
+                         this.discoveryCache.set(cacheKey, node, { ttl: adaptiveTTL });
                      }
                  }
 
