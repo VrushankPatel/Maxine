@@ -7,7 +7,7 @@ A minimal, high-performance service discovery and registry for microservices.
 - **Lightning Fast**: In-memory storage with O(1) lookups, optimized heartbeat with periodic cleanup, pre-allocated response buffers, fast LCG PRNG for random selection
 - **Simple API**: Register, discover, heartbeat, and deregister services with support for service versioning
 - **Automatic Cleanup**: Removes expired services with efficient periodic cleanup (every 30 seconds)
-- **Load Balancing**: Round-robin, random, weighted-random, least-connections, consistent-hash, ip-hash, geo-aware, predictive, cost-aware selection for advanced load balancing
+- **Load Balancing**: Round-robin, random, weighted-random, least-connections, consistent-hash, ip-hash, geo-aware, predictive, ai-driven, cost-aware selection for advanced load balancing
 - **Health Checks**: /health endpoint returning service and node counts, active health monitoring for real-time status
 - **Advanced Health Checks**: Custom health check endpoints with proactive monitoring, configurable intervals, and health status integration with load balancing decisions
 - **Circuit Breakers**: Automatic failure detection and recovery to protect against cascading failures
@@ -40,10 +40,10 @@ A minimal, high-performance service discovery and registry for microservices.
 
 Maxine delivers exceptional performance for service discovery operations:
 
-- **Ultra-Fast Mode**: Average 4.47ms, P95 6.54ms, P99 8.86ms for discovery requests
-- **Throughput**: 22,000+ requests per second under load (100 concurrent users, 1000 iterations each)
-- **Lightning Mode**: Average 2.75ms, P95 6.16ms for discovery requests
-- **Throughput**: 17,800+ requests per second under load (50 concurrent users, 1000 iterations each)
+- **Ultra-Fast Mode**: Average 1.03ms, P95 2.26ms, P99 ~3ms for discovery requests
+- **Throughput**: 44,500+ requests per second under load (50 concurrent users, 5000 iterations)
+- **Lightning Mode**: Average 1.03ms, P95 2.26ms for discovery requests
+- **Throughput**: 44,500+ requests per second under load (50 concurrent users, 5000 iterations)
 - **Optimizations**: Disabled OpenTelemetry tracing and Prometheus metrics in Lightning Mode, ultra-fast mode with minimal features for maximum speed
 
 ## Quick Start
