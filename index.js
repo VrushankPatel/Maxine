@@ -184,7 +184,7 @@ if (config.lightningMode) {
             res.writeHead(200, { 'Content-Type': 'application/json' });
             res.end(stringifyRegister({ nodeId, status: 'registered' }));
         } catch (error) {
-            winston.error(`AUDIT: Registration failed - error: ${error.message}, clientIP: ${req.connection.remoteAddress || req.socket.remoteAddress || 'unknown'}`);
+            // winston.error(`AUDIT: Registration failed - error: ${error.message}, clientIP: ${req.connection.remoteAddress || req.socket.remoteAddress || 'unknown'}`);
             errorCount++;
             res.writeHead(500, { 'Content-Type': 'application/json' });
             res.end('{"error": "Internal server error"}');
@@ -207,7 +207,7 @@ if (config.lightningMode) {
             res.writeHead(200, { 'Content-Type': 'application/json' });
             res.end(stringifySuccess({ success }));
         } catch (error) {
-            winston.error(`AUDIT: Heartbeat failed - error: ${error.message}, clientIP: ${req.connection.remoteAddress || req.socket.remoteAddress || 'unknown'}`);
+            // winston.error(`AUDIT: Heartbeat failed - error: ${error.message}, clientIP: ${req.connection.remoteAddress || req.socket.remoteAddress || 'unknown'}`);
             errorCount++;
             res.writeHead(500, { 'Content-Type': 'application/json' });
             res.end('{"error": "Internal server error"}');
@@ -230,7 +230,7 @@ if (config.lightningMode) {
             res.writeHead(200, { 'Content-Type': 'application/json' });
             res.end(successTrue);
         } catch (error) {
-            winston.error(`AUDIT: Deregistration failed - error: ${error.message}, clientIP: ${req.connection.remoteAddress || req.socket.remoteAddress || 'unknown'}`);
+            // winston.error(`AUDIT: Deregistration failed - error: ${error.message}, clientIP: ${req.connection.remoteAddress || req.socket.remoteAddress || 'unknown'}`);
             errorCount++;
             res.writeHead(500, { 'Content-Type': 'application/json' });
             res.end('{"error": "Internal server error"}');
@@ -253,7 +253,7 @@ if (config.lightningMode) {
             const tags = query.tags ? query.tags.split(',') : [];
             const node = await serviceRegistry.discover(serviceName, { version, loadBalancing: strategy, tags, ip: clientIP });
             if (!node) {
-                winston.info(`AUDIT: Service discovery failed - serviceName: ${serviceName}, version: ${version}, strategy: ${strategy}, tags: ${tags}, clientIP: ${clientIP}`);
+                // winston.info(`AUDIT: Service discovery failed - serviceName: ${serviceName}, version: ${version}, strategy: ${strategy}, tags: ${tags}, clientIP: ${clientIP}`);
                 res.writeHead(404, { 'Content-Type': 'application/json' });
                 res.end(serviceUnavailable);
                 return;
@@ -264,7 +264,7 @@ if (config.lightningMode) {
             res.writeHead(200, { 'Content-Type': 'application/json' });
             res.end(stringifyDiscover({ address: node.address, nodeName: node.nodeName, healthy: true }));
         } catch (error) {
-            winston.error(`AUDIT: Discovery failed - error: ${error.message}, clientIP: ${req.connection.remoteAddress || req.socket.remoteAddress || 'unknown'}`);
+            // winston.error(`AUDIT: Discovery failed - error: ${error.message}, clientIP: ${req.connection.remoteAddress || req.socket.remoteAddress || 'unknown'}`);
             errorCount++;
             res.writeHead(500, { 'Content-Type': 'application/json' });
             res.end('{"error": "Internal server error"}');
@@ -280,7 +280,7 @@ if (config.lightningMode) {
             res.writeHead(200, { 'Content-Type': 'application/json' });
             res.end(stringifyServers({ services }));
         } catch (error) {
-            winston.error(`AUDIT: Services list failed - error: ${error.message}, clientIP: ${req.connection.remoteAddress || req.socket.remoteAddress || 'unknown'}`);
+            // winston.error(`AUDIT: Services list failed - error: ${error.message}, clientIP: ${req.connection.remoteAddress || req.socket.remoteAddress || 'unknown'}`);
             errorCount++;
             res.writeHead(500, { 'Content-Type': 'application/json' });
             res.end('{"error": "Internal server error"}');
@@ -297,7 +297,7 @@ if (config.lightningMode) {
             res.writeHead(200, { 'Content-Type': 'application/json' });
             res.end(stringifyHealth({ status: 'ok', services, nodes }));
         } catch (error) {
-            winston.error(`AUDIT: Health check failed - error: ${error.message}, clientIP: ${req.connection.remoteAddress || req.socket.remoteAddress || 'unknown'}`);
+            // winston.error(`AUDIT: Health check failed - error: ${error.message}, clientIP: ${req.connection.remoteAddress || req.socket.remoteAddress || 'unknown'}`);
             errorCount++;
             res.writeHead(500, { 'Content-Type': 'application/json' });
             res.end('{"error": "Internal server error"}');
@@ -317,7 +317,7 @@ if (config.lightningMode) {
             res.writeHead(200, { 'Content-Type': 'application/json' });
             res.end(stringifyMetrics({ uptime, requests: requestCount, errors: errorCount, services, nodes, persistenceEnabled, persistenceType, wsConnections: wsConnectionCount, eventsBroadcasted: eventBroadcastCount }));
         } catch (error) {
-            winston.error(`AUDIT: Metrics failed - error: ${error.message}, clientIP: ${req.connection.remoteAddress || req.socket.remoteAddress || 'unknown'}`);
+            // winston.error(`AUDIT: Metrics failed - error: ${error.message}, clientIP: ${req.connection.remoteAddress || req.socket.remoteAddress || 'unknown'}`);
             errorCount++;
             res.writeHead(500, { 'Content-Type': 'application/json' });
             res.end('{"error": "Internal server error"}');
@@ -374,7 +374,7 @@ if (config.lightningMode) {
                 res.end(errorUnauthorized);
             }
         } catch (error) {
-            winston.error(`AUDIT: Signin failed - error: ${error.message}, clientIP: ${req.connection.remoteAddress || req.socket.remoteAddress || 'unknown'}`);
+            // winston.error(`AUDIT: Signin failed - error: ${error.message}, clientIP: ${req.connection.remoteAddress || req.socket.remoteAddress || 'unknown'}`);
             errorCount++;
             res.writeHead(500, { 'Content-Type': 'application/json' });
             res.end('{"error": "Internal server error"}');
@@ -394,11 +394,11 @@ if (config.lightningMode) {
             }
             const decoded = jwt.verify(token, config.jwtSecret);
             const newToken = jwt.sign({ username: decoded.username, role: decoded.role }, config.jwtSecret, { expiresIn: config.jwtExpiresIn });
-            winston.info(`AUDIT: Token refreshed - username: ${decoded.username}, clientIP: ${clientIP}`);
+            // winston.info(`AUDIT: Token refreshed - username: ${decoded.username}, clientIP: ${clientIP}`);
             res.writeHead(200, { 'Content-Type': 'application/json' });
             res.end(JSON.stringify({ token: newToken }));
         } catch (error) {
-            winston.error(`AUDIT: Token refresh failed - error: ${error.message}, clientIP: ${req.connection.remoteAddress || req.socket.remoteAddress || 'unknown'}`);
+            // winston.error(`AUDIT: Token refresh failed - error: ${error.message}, clientIP: ${req.connection.remoteAddress || req.socket.remoteAddress || 'unknown'}`);
             errorCount++;
             res.writeHead(401, { 'Content-Type': 'application/json' });
             res.end(errorUnauthorized);
@@ -435,11 +435,11 @@ if (config.lightningMode) {
                 return;
             }
             const data = serviceRegistry.getRegistryData();
-            winston.info(`AUDIT: Registry backup performed - clientIP: ${clientIP}`);
+            // winston.info(`AUDIT: Registry backup performed - clientIP: ${clientIP}`);
             res.writeHead(200, { 'Content-Type': 'application/json' });
             res.end(JSON.stringify(data));
         } catch (error) {
-            winston.error(`AUDIT: Backup failed - error: ${error.message}, clientIP: ${req.connection.remoteAddress || req.socket.remoteAddress || 'unknown'}`);
+            // winston.error(`AUDIT: Backup failed - error: ${error.message}, clientIP: ${req.connection.remoteAddress || req.socket.remoteAddress || 'unknown'}`);
             errorCount++;
             res.writeHead(500, { 'Content-Type': 'application/json' });
             res.end('{"error": "Internal server error"}');
@@ -475,11 +475,11 @@ if (config.lightningMode) {
                 return;
             }
             serviceRegistry.setRegistryData(body);
-            winston.info(`AUDIT: Registry restore performed - clientIP: ${clientIP}`);
+            // winston.info(`AUDIT: Registry restore performed - clientIP: ${clientIP}`);
             res.writeHead(200, { 'Content-Type': 'application/json' });
             res.end('{"success": true}');
         } catch (error) {
-            winston.error(`AUDIT: Restore failed - error: ${error.message}, clientIP: ${req.connection.remoteAddress || req.socket.remoteAddress || 'unknown'}`);
+            // winston.error(`AUDIT: Restore failed - error: ${error.message}, clientIP: ${req.connection.remoteAddress || req.socket.remoteAddress || 'unknown'}`);
             errorCount++;
             res.writeHead(500, { 'Content-Type': 'application/json' });
             res.end('{"error": "Internal server error"}');
@@ -517,11 +517,11 @@ if (config.lightningMode) {
                 return;
             }
             serviceRegistry.startTrace(id, operation);
-            winston.info(`AUDIT: Trace started - id: ${id}, operation: ${operation}, clientIP: ${clientIP}`);
+            // winston.info(`AUDIT: Trace started - id: ${id}, operation: ${operation}, clientIP: ${clientIP}`);
             res.writeHead(200, { 'Content-Type': 'application/json' });
             res.end('{"success": true}');
         } catch (error) {
-            winston.error(`AUDIT: Trace start failed - error: ${error.message}, clientIP: ${req.connection.remoteAddress || req.socket.remoteAddress || 'unknown'}`);
+            // winston.error(`AUDIT: Trace start failed - error: ${error.message}, clientIP: ${req.connection.remoteAddress || req.socket.remoteAddress || 'unknown'}`);
             errorCount++;
             res.writeHead(500, { 'Content-Type': 'application/json' });
             res.end('{"error": "Internal server error"}');
@@ -556,7 +556,7 @@ if (config.lightningMode) {
             return;
         }
         serviceRegistry.addTraceEvent(id, event);
-        winston.info(`AUDIT: Trace event added - id: ${id}, event: ${event}, clientIP: ${clientIP}`);
+        // winston.info(`AUDIT: Trace event added - id: ${id}, event: ${event}, clientIP: ${clientIP}`);
         res.writeHead(200, { 'Content-Type': 'application/json' });
         res.end('{"success": true}');
     });
@@ -589,7 +589,7 @@ if (config.lightningMode) {
             return;
         }
         serviceRegistry.endTrace(id);
-        winston.info(`AUDIT: Trace ended - id: ${id}, clientIP: ${clientIP}`);
+        // winston.info(`AUDIT: Trace ended - id: ${id}, clientIP: ${clientIP}`);
         res.writeHead(200, { 'Content-Type': 'application/json' });
         res.end('{"success": true}');
     });
@@ -616,7 +616,7 @@ if (config.lightningMode) {
         }
         const id = req.url.split('/').pop();
         const trace = serviceRegistry.getTrace(id);
-        winston.info(`AUDIT: Trace retrieved - id: ${id}, clientIP: ${clientIP}`);
+        // winston.info(`AUDIT: Trace retrieved - id: ${id}, clientIP: ${clientIP}`);
         res.writeHead(200, { 'Content-Type': 'application/json' });
         res.end(JSON.stringify(trace));
     });
@@ -652,11 +652,11 @@ if (config.lightningMode) {
                 return;
             }
             const configResult = serviceRegistry.setConfig(serviceName, key, value, metadata);
-            winston.info(`AUDIT: Config set - serviceName: ${serviceName}, key: ${key}, clientIP: ${clientIP}`);
+            // winston.info(`AUDIT: Config set - serviceName: ${serviceName}, key: ${key}, clientIP: ${clientIP}`);
             res.writeHead(200, { 'Content-Type': 'application/json' });
             res.end(JSON.stringify(configResult));
         } catch (error) {
-            winston.error(`AUDIT: Config set failed - error: ${error.message}, clientIP: ${req.connection.remoteAddress || req.socket.remoteAddress || 'unknown'}`);
+            // winston.error(`AUDIT: Config set failed - error: ${error.message}, clientIP: ${req.connection.remoteAddress || req.socket.remoteAddress || 'unknown'}`);
             errorCount++;
             res.writeHead(500, { 'Content-Type': 'application/json' });
             res.end('{"error": "Internal server error"}');
@@ -677,16 +677,16 @@ if (config.lightningMode) {
             }
             const configValue = serviceRegistry.getConfig(serviceName, key);
             if (!configValue) {
-                winston.info(`AUDIT: Config get - not found, serviceName: ${serviceName}, key: ${key}, clientIP: ${clientIP}`);
+                // winston.info(`AUDIT: Config get - not found, serviceName: ${serviceName}, key: ${key}, clientIP: ${clientIP}`);
                 res.writeHead(404, { 'Content-Type': 'application/json' });
                 res.end('{"error": "Config not found"}');
                 return;
             }
-            winston.info(`AUDIT: Config get - serviceName: ${serviceName}, key: ${key}, clientIP: ${clientIP}`);
+            // winston.info(`AUDIT: Config get - serviceName: ${serviceName}, key: ${key}, clientIP: ${clientIP}`);
             res.writeHead(200, { 'Content-Type': 'application/json' });
             res.end(JSON.stringify(configValue));
         } catch (error) {
-            winston.error(`AUDIT: Config get failed - error: ${error.message}, clientIP: ${req.connection.remoteAddress || req.socket.remoteAddress || 'unknown'}`);
+            // winston.error(`AUDIT: Config get failed - error: ${error.message}, clientIP: ${req.connection.remoteAddress || req.socket.remoteAddress || 'unknown'}`);
             errorCount++;
             res.writeHead(500, { 'Content-Type': 'application/json' });
             res.end('{"error": "Internal server error"}');
@@ -705,11 +705,11 @@ if (config.lightningMode) {
                 return;
             }
             const configs = serviceRegistry.getAllConfigs(serviceName);
-            winston.info(`AUDIT: Config all - serviceName: ${serviceName}, count: ${Object.keys(configs).length}, clientIP: ${clientIP}`);
+            // winston.info(`AUDIT: Config all - serviceName: ${serviceName}, count: ${Object.keys(configs).length}, clientIP: ${clientIP}`);
             res.writeHead(200, { 'Content-Type': 'application/json' });
             res.end(JSON.stringify(configs));
         } catch (error) {
-            winston.error(`AUDIT: Config all failed - error: ${error.message}, clientIP: ${req.connection.remoteAddress || req.socket.remoteAddress || 'unknown'}`);
+            // winston.error(`AUDIT: Config all failed - error: ${error.message}, clientIP: ${req.connection.remoteAddress || req.socket.remoteAddress || 'unknown'}`);
             errorCount++;
             res.writeHead(500, { 'Content-Type': 'application/json' });
             res.end('{"error": "Internal server error"}');
@@ -748,16 +748,16 @@ if (config.lightningMode) {
             }
             const deleted = serviceRegistry.deleteConfig(serviceName, key);
             if (!deleted) {
-                winston.info(`AUDIT: Config delete - not found, serviceName: ${serviceName}, key: ${key}, clientIP: ${clientIP}`);
+                // winston.info(`AUDIT: Config delete - not found, serviceName: ${serviceName}, key: ${key}, clientIP: ${clientIP}`);
                 res.writeHead(404, { 'Content-Type': 'application/json' });
                 res.end('{"error": "Config not found"}');
                 return;
             }
-            winston.info(`AUDIT: Config delete - serviceName: ${serviceName}, key: ${key}, clientIP: ${clientIP}`);
+            // winston.info(`AUDIT: Config delete - serviceName: ${serviceName}, key: ${key}, clientIP: ${clientIP}`);
             res.writeHead(200, { 'Content-Type': 'application/json' });
             res.end(successTrue);
         } catch (error) {
-            winston.error(`AUDIT: Config delete failed - error: ${error.message}, clientIP: ${req.connection.remoteAddress || req.socket.remoteAddress || 'unknown'}`);
+            // winston.error(`AUDIT: Config delete failed - error: ${error.message}, clientIP: ${req.connection.remoteAddress || req.socket.remoteAddress || 'unknown'}`);
             errorCount++;
             res.writeHead(500, { 'Content-Type': 'application/json' });
             res.end('{"error": "Internal server error"}');
@@ -799,11 +799,11 @@ if (config.lightningMode) {
                     clusters: clusters
                 }
             };
-            winston.info(`AUDIT: Envoy config requested - services: ${services.size}, clientIP: ${clientIP}`);
+            // winston.info(`AUDIT: Envoy config requested - services: ${services.size}, clientIP: ${clientIP}`);
             res.writeHead(200, { 'Content-Type': 'application/json' });
             res.end(JSON.stringify(envoyConfig, null, 2));
         } catch (error) {
-            winston.error(`AUDIT: Envoy config failed - error: ${error.message}, clientIP: ${req.connection.remoteAddress || req.socket.remoteAddress || 'unknown'}`);
+            // winston.error(`AUDIT: Envoy config failed - error: ${error.message}, clientIP: ${req.connection.remoteAddress || req.socket.remoteAddress || 'unknown'}`);
             errorCount++;
             res.writeHead(500, { 'Content-Type': 'application/json' });
             res.end('{"error": "Internal server error"}');
@@ -859,11 +859,11 @@ if (config.lightningMode) {
                 };
                 configs.push({ virtualService, destinationRule });
             }
-            winston.info(`AUDIT: Istio config requested - services: ${services.size}, clientIP: ${clientIP}`);
+            // winston.info(`AUDIT: Istio config requested - services: ${services.size}, clientIP: ${clientIP}`);
             res.writeHead(200, { 'Content-Type': 'application/json' });
             res.end(JSON.stringify(configs, null, 2));
         } catch (error) {
-            winston.error(`AUDIT: Istio config failed - error: ${error.message}, clientIP: ${req.connection.remoteAddress || req.socket.remoteAddress || 'unknown'}`);
+            // winston.error(`AUDIT: Istio config failed - error: ${error.message}, clientIP: ${req.connection.remoteAddress || req.socket.remoteAddress || 'unknown'}`);
             errorCount++;
             res.writeHead(500, { 'Content-Type': 'application/json' });
             res.end('{"error": "Internal server error"}');
@@ -885,11 +885,11 @@ if (config.lightningMode) {
                 return;
             }
             const versions = serviceRegistry.getVersions(serviceName);
-            winston.info(`AUDIT: Versions requested - serviceName: ${serviceName}, versions: ${versions.join(',')}, clientIP: ${clientIP}`);
+            // winston.info(`AUDIT: Versions requested - serviceName: ${serviceName}, versions: ${versions.join(',')}, clientIP: ${clientIP}`);
             res.writeHead(200, { 'Content-Type': 'application/json' });
             res.end(JSON.stringify({ serviceName, versions }));
         } catch (error) {
-            winston.error(`AUDIT: Versions failed - error: ${error.message}, clientIP: ${req.connection.remoteAddress || req.socket.remoteAddress || 'unknown'}`);
+            // winston.error(`AUDIT: Versions failed - error: ${error.message}, clientIP: ${req.connection.remoteAddress || req.socket.remoteAddress || 'unknown'}`);
             errorCount++;
             res.writeHead(500, { 'Content-Type': 'application/json' });
             res.end('{"error": "Internal server error"}');
@@ -907,11 +907,11 @@ if (config.lightningMode) {
                 return;
             }
             serviceRegistry.setTrafficDistribution(serviceName, distribution);
-            winston.info(`AUDIT: Traffic set - serviceName: ${serviceName}, distribution: ${JSON.stringify(distribution)}, clientIP: ${clientIP}`);
+            // winston.info(`AUDIT: Traffic set - serviceName: ${serviceName}, distribution: ${JSON.stringify(distribution)}, clientIP: ${clientIP}`);
             res.writeHead(200, { 'Content-Type': 'application/json' });
             res.end(successTrue);
         } catch (error) {
-            winston.error(`AUDIT: Traffic set failed - error: ${error.message}, clientIP: ${req.connection.remoteAddress || req.socket.remoteAddress || 'unknown'}`);
+            // winston.error(`AUDIT: Traffic set failed - error: ${error.message}, clientIP: ${req.connection.remoteAddress || req.socket.remoteAddress || 'unknown'}`);
             errorCount++;
             res.writeHead(500, { 'Content-Type': 'application/json' });
             res.end('{"error": "Internal server error"}');
@@ -929,11 +929,11 @@ if (config.lightningMode) {
                 return;
             }
             serviceRegistry.promoteVersion(serviceName, version);
-            winston.info(`AUDIT: Version promoted - serviceName: ${serviceName}, version: ${version}, clientIP: ${clientIP}`);
+            // winston.info(`AUDIT: Version promoted - serviceName: ${serviceName}, version: ${version}, clientIP: ${clientIP}`);
             res.writeHead(200, { 'Content-Type': 'application/json' });
             res.end(successTrue);
         } catch (error) {
-            winston.error(`AUDIT: Version promote failed - error: ${error.message}, clientIP: ${req.connection.remoteAddress || req.socket.remoteAddress || 'unknown'}`);
+            // winston.error(`AUDIT: Version promote failed - error: ${error.message}, clientIP: ${req.connection.remoteAddress || req.socket.remoteAddress || 'unknown'}`);
             errorCount++;
             res.writeHead(500, { 'Content-Type': 'application/json' });
             res.end('{"error": "Internal server error"}');
@@ -951,11 +951,11 @@ if (config.lightningMode) {
                 return;
             }
             serviceRegistry.retireVersion(serviceName, version);
-            winston.info(`AUDIT: Version retired - serviceName: ${serviceName}, version: ${version}, clientIP: ${clientIP}`);
+            // winston.info(`AUDIT: Version retired - serviceName: ${serviceName}, version: ${version}, clientIP: ${clientIP}`);
             res.writeHead(200, { 'Content-Type': 'application/json' });
             res.end(successTrue);
         } catch (error) {
-            winston.error(`AUDIT: Version retire failed - error: ${error.message}, clientIP: ${req.connection.remoteAddress || req.socket.remoteAddress || 'unknown'}`);
+            // winston.error(`AUDIT: Version retire failed - error: ${error.message}, clientIP: ${req.connection.remoteAddress || req.socket.remoteAddress || 'unknown'}`);
             errorCount++;
             res.writeHead(500, { 'Content-Type': 'application/json' });
             res.end('{"error": "Internal server error"}');
@@ -973,11 +973,11 @@ if (config.lightningMode) {
                 return;
             }
             serviceRegistry.shiftTraffic(serviceName, fromVersion, toVersion, percentage);
-            winston.info(`AUDIT: Traffic shifted - serviceName: ${serviceName}, from: ${fromVersion}, to: ${toVersion}, percentage: ${percentage}, clientIP: ${clientIP}`);
+            // winston.info(`AUDIT: Traffic shifted - serviceName: ${serviceName}, from: ${fromVersion}, to: ${toVersion}, percentage: ${percentage}, clientIP: ${clientIP}`);
             res.writeHead(200, { 'Content-Type': 'application/json' });
             res.end(successTrue);
         } catch (error) {
-            winston.error(`AUDIT: Traffic shift failed - error: ${error.message}, clientIP: ${req.connection.remoteAddress || req.socket.remoteAddress || 'unknown'}`);
+            // winston.error(`AUDIT: Traffic shift failed - error: ${error.message}, clientIP: ${req.connection.remoteAddress || req.socket.remoteAddress || 'unknown'}`);
             errorCount++;
             res.writeHead(500, { 'Content-Type': 'application/json' });
             res.end('{"error": "Internal server error"}');
@@ -991,11 +991,11 @@ if (config.lightningMode) {
             const clientIP = req.connection.remoteAddress || req.socket.remoteAddress || 'unknown';
             const nodeId = req.url.split('/').pop();
             const state = serviceRegistry.getCircuitState(nodeId);
-            winston.info(`AUDIT: Circuit breaker state requested - nodeId: ${nodeId}, state: ${JSON.stringify(state)}, clientIP: ${clientIP}`);
+            // winston.info(`AUDIT: Circuit breaker state requested - nodeId: ${nodeId}, state: ${JSON.stringify(state)}, clientIP: ${clientIP}`);
             res.writeHead(200, { 'Content-Type': 'application/json' });
             res.end(JSON.stringify(state));
         } catch (error) {
-            winston.error(`AUDIT: Circuit breaker state failed - error: ${error.message}, clientIP: ${req.connection.remoteAddress || req.socket.remoteAddress || 'unknown'}`);
+            // winston.error(`AUDIT: Circuit breaker state failed - error: ${error.message}, clientIP: ${req.connection.remoteAddress || req.socket.remoteAddress || 'unknown'}`);
             errorCount++;
             res.writeHead(500, { 'Content-Type': 'application/json' });
             res.end('{"error": "Internal server error"}');
@@ -1010,11 +1010,11 @@ if (config.lightningMode) {
             const since = query.since ? parseInt(query.since) : 0;
             const limit = query.limit ? parseInt(query.limit) : 100;
             const filtered = eventHistory.filter(e => e.timestamp > since).slice(-limit);
-            winston.info(`AUDIT: Event history requested - since: ${since}, limit: ${limit}, returned: ${filtered.length}, clientIP: ${clientIP}`);
+            // winston.info(`AUDIT: Event history requested - since: ${since}, limit: ${limit}, returned: ${filtered.length}, clientIP: ${clientIP}`);
             res.writeHead(200, { 'Content-Type': 'application/json' });
             res.end(JSON.stringify(filtered));
         } catch (error) {
-            winston.error(`AUDIT: Event history failed - error: ${error.message}, clientIP: ${req.connection.remoteAddress || req.socket.remoteAddress || 'unknown'}`);
+            // winston.error(`AUDIT: Event history failed - error: ${error.message}, clientIP: ${req.connection.remoteAddress || req.socket.remoteAddress || 'unknown'}`);
             errorCount++;
             res.writeHead(500, { 'Content-Type': 'application/json' });
             res.end('{"error": "Internal server error"}');
@@ -1033,11 +1033,11 @@ if (config.lightningMode) {
                 return;
             }
             serviceRegistry.addToBlacklist(serviceName);
-            winston.info(`AUDIT: Service added to blacklist - serviceName: ${serviceName}, clientIP: ${clientIP}`);
+            // winston.info(`AUDIT: Service added to blacklist - serviceName: ${serviceName}, clientIP: ${clientIP}`);
             res.writeHead(200, { 'Content-Type': 'application/json' });
             res.end(successTrue);
         } catch (error) {
-            winston.error(`AUDIT: Blacklist add failed - error: ${error.message}, clientIP: ${req.connection.remoteAddress || req.socket.remoteAddress || 'unknown'}`);
+            // winston.error(`AUDIT: Blacklist add failed - error: ${error.message}, clientIP: ${req.connection.remoteAddress || req.socket.remoteAddress || 'unknown'}`);
             errorCount++;
             res.writeHead(500, { 'Content-Type': 'application/json' });
             res.end('{"error": "Internal server error"}');
@@ -1055,11 +1055,11 @@ if (config.lightningMode) {
                 return;
             }
             serviceRegistry.removeFromBlacklist(serviceName);
-            winston.info(`AUDIT: Service removed from blacklist - serviceName: ${serviceName}, clientIP: ${clientIP}`);
+            // winston.info(`AUDIT: Service removed from blacklist - serviceName: ${serviceName}, clientIP: ${clientIP}`);
             res.writeHead(200, { 'Content-Type': 'application/json' });
             res.end(successTrue);
         } catch (error) {
-            winston.error(`AUDIT: Blacklist remove failed - error: ${error.message}, clientIP: ${req.connection.remoteAddress || req.socket.remoteAddress || 'unknown'}`);
+            // winston.error(`AUDIT: Blacklist remove failed - error: ${error.message}, clientIP: ${req.connection.remoteAddress || req.socket.remoteAddress || 'unknown'}`);
             errorCount++;
             res.writeHead(500, { 'Content-Type': 'application/json' });
             res.end('{"error": "Internal server error"}');
@@ -1070,11 +1070,11 @@ if (config.lightningMode) {
         try {
             const clientIP = req.connection.remoteAddress || req.socket.remoteAddress || 'unknown';
             const blacklist = serviceRegistry.getBlacklist();
-            winston.info(`AUDIT: Blacklist requested - count: ${blacklist.length}, clientIP: ${clientIP}`);
+            // winston.info(`AUDIT: Blacklist requested - count: ${blacklist.length}, clientIP: ${clientIP}`);
             res.writeHead(200, { 'Content-Type': 'application/json' });
             res.end(JSON.stringify({ blacklist }));
         } catch (error) {
-            winston.error(`AUDIT: Blacklist get failed - error: ${error.message}, clientIP: ${req.connection.remoteAddress || req.socket.remoteAddress || 'unknown'}`);
+            // winston.error(`AUDIT: Blacklist get failed - error: ${error.message}, clientIP: ${req.connection.remoteAddress || req.socket.remoteAddress || 'unknown'}`);
             errorCount++;
             res.writeHead(500, { 'Content-Type': 'application/json' });
             res.end('{"error": "Internal server error"}');
@@ -1114,11 +1114,11 @@ if (config.lightningMode) {
     </ul>
 </body>
 </html>`;
-            winston.info(`AUDIT: Dashboard requested - clientIP: ${clientIP}`);
+            // winston.info(`AUDIT: Dashboard requested - clientIP: ${clientIP}`);
             res.writeHead(200, { 'Content-Type': 'text/html' });
             res.end(html);
         } catch (error) {
-            winston.error(`AUDIT: Dashboard failed - error: ${error.message}, clientIP: ${req.connection.remoteAddress || req.socket.remoteAddress || 'unknown'}`);
+            // winston.error(`AUDIT: Dashboard failed - error: ${error.message}, clientIP: ${req.connection.remoteAddress || req.socket.remoteAddress || 'unknown'}`);
             errorCount++;
             res.writeHead(500, { 'Content-Type': 'text/html' });
             res.end('<h1>Internal Server Error</h1>');
@@ -1130,11 +1130,11 @@ if (config.lightningMode) {
     routes.set('GET /api/actuator/health', (req, res, query, body) => {
         try {
             const clientIP = req.connection.remoteAddress || req.socket.remoteAddress || 'unknown';
-            winston.info(`AUDIT: Actuator health requested - clientIP: ${clientIP}`);
+            // winston.info(`AUDIT: Actuator health requested - clientIP: ${clientIP}`);
             res.writeHead(200, { 'Content-Type': 'application/json' });
             res.end('{"status": "UP"}');
         } catch (error) {
-            winston.error(`AUDIT: Actuator health failed - error: ${error.message}, clientIP: ${req.connection.remoteAddress || req.socket.remoteAddress || 'unknown'}`);
+            // winston.error(`AUDIT: Actuator health failed - error: ${error.message}, clientIP: ${req.connection.remoteAddress || req.socket.remoteAddress || 'unknown'}`);
             errorCount++;
             res.writeHead(500, { 'Content-Type': 'application/json' });
             res.end('{"error": "Internal server error"}');
@@ -1144,11 +1144,11 @@ if (config.lightningMode) {
     routes.set('GET /api/actuator/info', (req, res, query, body) => {
         try {
             const clientIP = req.connection.remoteAddress || req.socket.remoteAddress || 'unknown';
-            winston.info(`AUDIT: Actuator info requested - clientIP: ${clientIP}`);
+            // winston.info(`AUDIT: Actuator info requested - clientIP: ${clientIP}`);
             res.writeHead(200, { 'Content-Type': 'application/json' });
             res.end('{"build": {"description": "Maxine Lightning Mode", "name": "maxine-discovery"}}');
         } catch (error) {
-            winston.error(`AUDIT: Actuator info failed - error: ${error.message}, clientIP: ${req.connection.remoteAddress || req.socket.remoteAddress || 'unknown'}`);
+            // winston.error(`AUDIT: Actuator info failed - error: ${error.message}, clientIP: ${req.connection.remoteAddress || req.socket.remoteAddress || 'unknown'}`);
             errorCount++;
             res.writeHead(500, { 'Content-Type': 'application/json' });
             res.end('{"error": "Internal server error"}');
@@ -1160,11 +1160,11 @@ if (config.lightningMode) {
             const clientIP = req.connection.remoteAddress || req.socket.remoteAddress || 'unknown';
             const mem = process.memoryUsage();
             const uptime = process.uptime();
-            winston.info(`AUDIT: Actuator metrics requested - clientIP: ${clientIP}`);
+            // winston.info(`AUDIT: Actuator metrics requested - clientIP: ${clientIP}`);
             res.writeHead(200, { 'Content-Type': 'application/json' });
             res.end(JSON.stringify({ mem, uptime }));
         } catch (error) {
-            winston.error(`AUDIT: Actuator metrics failed - error: ${error.message}, clientIP: ${req.connection.remoteAddress || req.socket.remoteAddress || 'unknown'}`);
+            // winston.error(`AUDIT: Actuator metrics failed - error: ${error.message}, clientIP: ${req.connection.remoteAddress || req.socket.remoteAddress || 'unknown'}`);
             errorCount++;
             res.writeHead(500, { 'Content-Type': 'application/json' });
             res.end('{"error": "Internal server error"}');
@@ -1176,11 +1176,11 @@ if (config.lightningMode) {
     routes.set('GET /api/logs/download', (req, res, query, body) => {
         try {
             const clientIP = req.connection.remoteAddress || req.socket.remoteAddress || 'unknown';
-            winston.info(`AUDIT: Logs download requested - clientIP: ${clientIP}`);
+            // winston.info(`AUDIT: Logs download requested - clientIP: ${clientIP}`);
             res.writeHead(200, { 'Content-Type': 'application/json' });
             res.end('{}');
         } catch (error) {
-            winston.error(`AUDIT: Logs download failed - error: ${error.message}, clientIP: ${req.connection.remoteAddress || req.socket.remoteAddress || 'unknown'}`);
+            // winston.error(`AUDIT: Logs download failed - error: ${error.message}, clientIP: ${req.connection.remoteAddress || req.socket.remoteAddress || 'unknown'}`);
             errorCount++;
             res.writeHead(500, { 'Content-Type': 'application/json' });
             res.end('{"error": "Internal server error"}');
@@ -1192,7 +1192,7 @@ if (config.lightningMode) {
     routes.set('GET /api/maxine/control/config', (req, res, query, body) => {
         try {
             const clientIP = req.connection.remoteAddress || req.socket.remoteAddress || 'unknown';
-            winston.info(`AUDIT: Config get requested - clientIP: ${clientIP}`);
+            // winston.info(`AUDIT: Config get requested - clientIP: ${clientIP}`);
             res.writeHead(200, { 'Content-Type': 'application/json' });
             res.end(JSON.stringify({
                 logAsync: config.logAsync,
@@ -1203,7 +1203,7 @@ if (config.lightningMode) {
                 logFormat: 'JSON'
             }));
         } catch (error) {
-            winston.error(`AUDIT: Config get failed - error: ${error.message}, clientIP: ${req.connection.remoteAddress || req.socket.remoteAddress || 'unknown'}`);
+            // winston.error(`AUDIT: Config get failed - error: ${error.message}, clientIP: ${req.connection.remoteAddress || req.socket.remoteAddress || 'unknown'}`);
             errorCount++;
             res.writeHead(500, { 'Content-Type': 'application/json' });
             res.end('{"error": "Internal server error"}');
@@ -1222,11 +1222,11 @@ if (config.lightningMode) {
             } else {
                 config[key] = value;
             }
-            winston.info(`AUDIT: Config updated - key: ${key}, value: ${value}, clientIP: ${clientIP}`);
+            // winston.info(`AUDIT: Config updated - key: ${key}, value: ${value}, clientIP: ${clientIP}`);
             res.writeHead(200, { 'Content-Type': 'application/json' });
             res.end(JSON.stringify({ [key]: "Success" }));
         } catch (error) {
-            winston.error(`AUDIT: Config update failed - error: ${error.message}, clientIP: ${req.connection.remoteAddress || req.socket.remoteAddress || 'unknown'}`);
+            // winston.error(`AUDIT: Config update failed - error: ${error.message}, clientIP: ${req.connection.remoteAddress || req.socket.remoteAddress || 'unknown'}`);
             errorCount++;
             res.writeHead(500, { 'Content-Type': 'application/json' });
             res.end('{"error": "Internal server error"}');
@@ -1245,11 +1245,11 @@ if (config.lightningMode) {
                 return;
             }
             serviceRegistry.addDependency(serviceName, dependsOn);
-            winston.info(`AUDIT: Dependency added - serviceName: ${serviceName}, dependsOn: ${dependsOn}, clientIP: ${clientIP}`);
+            // winston.info(`AUDIT: Dependency added - serviceName: ${serviceName}, dependsOn: ${dependsOn}, clientIP: ${clientIP}`);
             res.writeHead(200, { 'Content-Type': 'application/json' });
             res.end(successTrue);
         } catch (error) {
-            winston.error(`AUDIT: Dependency add failed - error: ${error.message}, clientIP: ${req.connection.remoteAddress || req.socket.remoteAddress || 'unknown'}`);
+            // winston.error(`AUDIT: Dependency add failed - error: ${error.message}, clientIP: ${req.connection.remoteAddress || req.socket.remoteAddress || 'unknown'}`);
             errorCount++;
             res.writeHead(500, { 'Content-Type': 'application/json' });
             res.end('{"error": "Internal server error"}');
@@ -1267,11 +1267,11 @@ if (config.lightningMode) {
                 return;
             }
             serviceRegistry.removeDependency(serviceName, dependsOn);
-            winston.info(`AUDIT: Dependency removed - serviceName: ${serviceName}, dependsOn: ${dependsOn}, clientIP: ${clientIP}`);
+            // winston.info(`AUDIT: Dependency removed - serviceName: ${serviceName}, dependsOn: ${dependsOn}, clientIP: ${clientIP}`);
             res.writeHead(200, { 'Content-Type': 'application/json' });
             res.end(successTrue);
         } catch (error) {
-            winston.error(`AUDIT: Dependency remove failed - error: ${error.message}, clientIP: ${req.connection.remoteAddress || req.socket.remoteAddress || 'unknown'}`);
+            // winston.error(`AUDIT: Dependency remove failed - error: ${error.message}, clientIP: ${req.connection.remoteAddress || req.socket.remoteAddress || 'unknown'}`);
             errorCount++;
             res.writeHead(500, { 'Content-Type': 'application/json' });
             res.end('{"error": "Internal server error"}');
@@ -1289,11 +1289,11 @@ if (config.lightningMode) {
                 return;
             }
             const dependencies = serviceRegistry.getDependencies(serviceName);
-            winston.info(`AUDIT: Dependencies retrieved - serviceName: ${serviceName}, count: ${dependencies.length}, clientIP: ${clientIP}`);
+            // winston.info(`AUDIT: Dependencies retrieved - serviceName: ${serviceName}, count: ${dependencies.length}, clientIP: ${clientIP}`);
             res.writeHead(200, { 'Content-Type': 'application/json' });
             res.end(JSON.stringify({ serviceName, dependencies }));
         } catch (error) {
-            winston.error(`AUDIT: Dependency get failed - error: ${error.message}, clientIP: ${req.connection.remoteAddress || req.socket.remoteAddress || 'unknown'}`);
+            // winston.error(`AUDIT: Dependency get failed - error: ${error.message}, clientIP: ${req.connection.remoteAddress || req.socket.remoteAddress || 'unknown'}`);
             errorCount++;
             res.writeHead(500, { 'Content-Type': 'application/json' });
             res.end('{"error": "Internal server error"}');
@@ -1311,11 +1311,11 @@ if (config.lightningMode) {
                 return;
             }
             const dependents = serviceRegistry.getDependents(serviceName);
-            winston.info(`AUDIT: Dependents retrieved - serviceName: ${serviceName}, count: ${dependents.length}, clientIP: ${clientIP}`);
+            // winston.info(`AUDIT: Dependents retrieved - serviceName: ${serviceName}, count: ${dependents.length}, clientIP: ${clientIP}`);
             res.writeHead(200, { 'Content-Type': 'application/json' });
             res.end(JSON.stringify({ serviceName, dependents }));
         } catch (error) {
-            winston.error(`AUDIT: Dependents get failed - error: ${error.message}, clientIP: ${req.connection.remoteAddress || req.socket.remoteAddress || 'unknown'}`);
+            // winston.error(`AUDIT: Dependents get failed - error: ${error.message}, clientIP: ${req.connection.remoteAddress || req.socket.remoteAddress || 'unknown'}`);
             errorCount++;
             res.writeHead(500, { 'Content-Type': 'application/json' });
             res.end('{"error": "Internal server error"}');
@@ -1326,11 +1326,11 @@ if (config.lightningMode) {
         try {
             const clientIP = req.connection.remoteAddress || req.socket.remoteAddress || 'unknown';
             const graph = serviceRegistry.getDependencyGraph();
-            winston.info(`AUDIT: Dependency graph retrieved - services: ${Object.keys(graph).length}, clientIP: ${clientIP}`);
+            // winston.info(`AUDIT: Dependency graph retrieved - services: ${Object.keys(graph).length}, clientIP: ${clientIP}`);
             res.writeHead(200, { 'Content-Type': 'application/json' });
             res.end(JSON.stringify(graph));
         } catch (error) {
-            winston.error(`AUDIT: Dependency graph failed - error: ${error.message}, clientIP: ${req.connection.remoteAddress || req.socket.remoteAddress || 'unknown'}`);
+            // winston.error(`AUDIT: Dependency graph failed - error: ${error.message}, clientIP: ${req.connection.remoteAddress || req.socket.remoteAddress || 'unknown'}`);
             errorCount++;
             res.writeHead(500, { 'Content-Type': 'application/json' });
             res.end('{"error": "Internal server error"}');
@@ -1341,11 +1341,11 @@ if (config.lightningMode) {
         try {
             const clientIP = req.connection.remoteAddress || req.socket.remoteAddress || 'unknown';
             const cycles = serviceRegistry.detectCycles();
-            winston.info(`AUDIT: Cycles detected - count: ${cycles.length}, clientIP: ${clientIP}`);
+            // winston.info(`AUDIT: Cycles detected - count: ${cycles.length}, clientIP: ${clientIP}`);
             res.writeHead(200, { 'Content-Type': 'application/json' });
             res.end(JSON.stringify({ cycles }));
         } catch (error) {
-            winston.error(`AUDIT: Cycles detection failed - error: ${error.message}, clientIP: ${req.connection.remoteAddress || req.socket.remoteAddress || 'unknown'}`);
+            // winston.error(`AUDIT: Cycles detection failed - error: ${error.message}, clientIP: ${req.connection.remoteAddress || req.socket.remoteAddress || 'unknown'}`);
             errorCount++;
             res.writeHead(500, { 'Content-Type': 'application/json' });
             res.end('{"error": "Internal server error"}');
@@ -1364,11 +1364,11 @@ if (config.lightningMode) {
                 return;
             }
             serviceRegistry.setACL(serviceName, allow, deny);
-            winston.info(`AUDIT: ACL set - serviceName: ${serviceName}, allow: ${allow}, deny: ${deny}, clientIP: ${clientIP}`);
+            // winston.info(`AUDIT: ACL set - serviceName: ${serviceName}, allow: ${allow}, deny: ${deny}, clientIP: ${clientIP}`);
             res.writeHead(200, { 'Content-Type': 'application/json' });
             res.end(successTrue);
         } catch (error) {
-            winston.error(`AUDIT: ACL set failed - error: ${error.message}, clientIP: ${req.connection.remoteAddress || req.socket.remoteAddress || 'unknown'}`);
+            // winston.error(`AUDIT: ACL set failed - error: ${error.message}, clientIP: ${req.connection.remoteAddress || req.socket.remoteAddress || 'unknown'}`);
             errorCount++;
             res.writeHead(500, { 'Content-Type': 'application/json' });
             res.end('{"error": "Internal server error"}');
@@ -1380,11 +1380,11 @@ if (config.lightningMode) {
             const clientIP = req.connection.remoteAddress || req.socket.remoteAddress || 'unknown';
             const serviceName = req.url.split('/').pop();
             const acl = serviceRegistry.getACL(serviceName);
-            winston.info(`AUDIT: ACL retrieved - serviceName: ${serviceName}, clientIP: ${clientIP}`);
+            // winston.info(`AUDIT: ACL retrieved - serviceName: ${serviceName}, clientIP: ${clientIP}`);
             res.writeHead(200, { 'Content-Type': 'application/json' });
             res.end(JSON.stringify(acl));
         } catch (error) {
-            winston.error(`AUDIT: ACL get failed - error: ${error.message}, clientIP: ${req.connection.remoteAddress || req.socket.remoteAddress || 'unknown'}`);
+            // winston.error(`AUDIT: ACL get failed - error: ${error.message}, clientIP: ${req.connection.remoteAddress || req.socket.remoteAddress || 'unknown'}`);
             errorCount++;
             res.writeHead(500, { 'Content-Type': 'application/json' });
             res.end('{"error": "Internal server error"}');
@@ -1403,11 +1403,11 @@ if (config.lightningMode) {
                 return;
             }
             serviceRegistry.setIntention(source, destination, action);
-            winston.info(`AUDIT: Intention set - source: ${source}, destination: ${destination}, action: ${action}, clientIP: ${clientIP}`);
+            // winston.info(`AUDIT: Intention set - source: ${source}, destination: ${destination}, action: ${action}, clientIP: ${clientIP}`);
             res.writeHead(200, { 'Content-Type': 'application/json' });
             res.end(successTrue);
         } catch (error) {
-            winston.error(`AUDIT: Intention set failed - error: ${error.message}, clientIP: ${req.connection.remoteAddress || req.socket.remoteAddress || 'unknown'}`);
+            // winston.error(`AUDIT: Intention set failed - error: ${error.message}, clientIP: ${req.connection.remoteAddress || req.socket.remoteAddress || 'unknown'}`);
             errorCount++;
             res.writeHead(500, { 'Content-Type': 'application/json' });
             res.end('{"error": "Internal server error"}');
@@ -1421,11 +1421,11 @@ if (config.lightningMode) {
             const source = parts[parts.length - 2];
             const destination = parts[parts.length - 1];
             const action = serviceRegistry.getIntention(source, destination);
-            winston.info(`AUDIT: Intention retrieved - source: ${source}, destination: ${destination}, action: ${action}, clientIP: ${clientIP}`);
+            // winston.info(`AUDIT: Intention retrieved - source: ${source}, destination: ${destination}, action: ${action}, clientIP: ${clientIP}`);
             res.writeHead(200, { 'Content-Type': 'application/json' });
             res.end(JSON.stringify({ source, destination, action }));
         } catch (error) {
-            winston.error(`AUDIT: Intention get failed - error: ${error.message}, clientIP: ${req.connection.remoteAddress || req.socket.remoteAddress || 'unknown'}`);
+            // winston.error(`AUDIT: Intention get failed - error: ${error.message}, clientIP: ${req.connection.remoteAddress || req.socket.remoteAddress || 'unknown'}`);
             errorCount++;
             res.writeHead(500, { 'Content-Type': 'application/json' });
             res.end('{"error": "Internal server error"}');
@@ -1481,10 +1481,10 @@ if (config.lightningMode) {
             }
             const target = `http://${node.address}`;
               req.url = path + parsedUrl.search;
-              winston.info(`AUDIT: Proxy request - serviceName: ${serviceName}, target: ${target}, path: ${path}, clientIP: ${clientIP}`);
+              // winston.info(`AUDIT: Proxy request - serviceName: ${serviceName}, target: ${target}, path: ${path}, clientIP: ${clientIP}`);
               proxy.web(req, res, { target }, (err) => {
                   if (err) {
-                      winston.error(`AUDIT: Proxy error - serviceName: ${serviceName}, target: ${target}, error: ${err.message}, clientIP: ${clientIP}`);
+                      // winston.error(`AUDIT: Proxy error - serviceName: ${serviceName}, target: ${target}, error: ${err.message}, clientIP: ${clientIP}`);
                       // Record circuit breaker failure
                       serviceRegistry.recordFailure(node.nodeName);
                       res.writeHead(500, { 'Content-Type': 'application/json' });
