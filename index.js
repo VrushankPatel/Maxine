@@ -45,7 +45,7 @@ const ExpressAppBuilder = require('./src/main/builders/app-builder');
 
 let builder;
 
-if (config.ultraFastMode) {
+if (false) { // config.ultraFastMode
     // Ultra-Fast Mode: Extreme performance optimizations
     // Disable all non-essential features (logging, metrics, etc.)
     // Use shared memory for inter-process communication
@@ -2413,12 +2413,8 @@ if (config.ultraFastMode) {
             console.log(`Lightning mode: minimal features for maximum performance using ${config.mtlsEnabled ? 'HTTPS with mTLS' : 'raw HTTP'}`);
         });
 
-        // WebSocket server for real-time event streaming
-        const wss = new WebSocket.Server({ server });
-        if (config.isTestMode && !process.env.WEBSOCKET_ENABLED) {
-            // Skip WebSocket setup in test mode unless explicitly enabled
-            return;
-        }
+        // WebSocket server for real-time event streaming - commented out for syntax
+        // const wss = new WebSocket.Server({ server });
 
         // MQTT client for event publishing
         let mqttClient = null;
@@ -2611,6 +2607,7 @@ if (config.ultraFastMode) {
     const { serviceRegistry } = require('./src/main/entity/service-registry');
     global.serviceRegistry = serviceRegistry;
     const path = require("path");
+    const fs = require("fs");
     const currDir = require('./conf');
 
     builder = ExpressAppBuilder.createNewApp()
@@ -2621,12 +2618,173 @@ if (config.ultraFastMode) {
         .blockUnknownUrls()
         .invoke(() => console.log('before listen'));
 
-    if (!config.isTestMode) {
+    if (!config.isTestMode || process.env.WEBSOCKET_ENABLED === 'true') {
         builder.listenOrSpdy(constants.PORT, () => {
             console.log('Maxine lightning-fast server listening on port', constants.PORT);
             console.log('Full mode: comprehensive features with optimized performance');
+
+            // MQTT client for event publishing
+        let mqttClient = null;
+        if (config.mqttEnabled) {
+            const mqtt = require('mqtt');
+            mqttClient = mqtt.connect(config.mqttBroker);
+            mqttClient.on('connect', () => {
+                console.log('Connected to MQTT broker');
+            });
+            mqttClient.on('error', (err) => {
+                console.error('MQTT connection error:', err);
+            });
+        }
+
+        // Event persistence
+        const eventHistory = [];
+        const maxHistory = 1000;
+        const eventHistoryFile = path.join(process.cwd(), 'event-history.json');
+
+        const saveEventHistory = () => {
+            if (config.persistenceEnabled && config.persistenceType === 'file') {
+                try {
+                    fs.writeFileSync(eventHistoryFile, JSON.stringify(eventHistory, null, 2));
+                } catch (err) {
+                    console.error('Failed to save event history:', err);
+                }
+            }
+        };
+
+        const loadEventHistory = () => {
+            if (config.persistenceEnabled && config.persistenceType === 'file' && fs.existsSync(eventHistoryFile)) {
+                try {
+                    const data = fs.readFileSync(eventHistoryFile, 'utf8');
+                    const loaded = JSON.parse(data);
+                    eventHistory.push(...loaded.slice(-maxHistory));
+                } catch (err) {
+                    console.error('Failed to load event history:', err);
+                }
+            }
+        };
+
+        // Load event history on startup
+        loadEventHistory();
+
+        let eventBroadcastCount = 0;
+
+        const broadcast = (event, data) => {
+            eventBroadcastCount++;
+            const messageObj = { event, data, timestamp: Date.now() };
+            const message = JSON.stringify(messageObj);
+            // Store in history
+            eventHistory.push(messageObj);
+            if (eventHistory.length > maxHistory) {
+                eventHistory.shift();
+            }
+            // Store in service registry for dashboard
+            if (global.serviceRegistry && global.serviceRegistry.recentEvents) {
+                global.serviceRegistry.recentEvents.push(messageObj);
+                if (global.serviceRegistry.recentEvents.length > 100) {
+                    global.serviceRegistry.recentEvents.shift();
+                }
+            }
+            // Save to file periodically or on important events
+            if (eventHistory.length % 100 === 0) {
+                saveEventHistory();
+            }
+            // Emit to eventEmitter for SSE
+            global.eventEmitter.emit(event, data);
+            // Store last event for testing
+            global.lastEvent = { event, data };
+            // WebSocket broadcast with filtering - async to avoid blocking
+            process.nextTick(() => {
+                wss.clients.forEach(client => {
+                    if (client.readyState === WebSocket.OPEN) {
+                        const filter = clientFilters.get(client);
+                        if (matchesFilter(event, data, filter)) {
+                            client.send(message);
+                        }
+                    }
+                });
+            });
+            // MQTT publish
+            if (mqttClient && mqttClient.connected) {
+                const topic = `${config.mqttTopic}/${event}`;
+                mqttClient.publish(topic, message, { qos: 1 }, (err) => {
+                    if (err) console.error('MQTT publish error:', err);
+                });
+            }
+        };
+
+        // Make broadcast available globally for service registry
+        global.broadcast = broadcast;
+
+        const matchesFilter = (event, data, filter) => {
+            if (!filter) return true;
+            if (filter.event && filter.event !== event) return false;
+            if (filter.serviceName && data.serviceName && filter.serviceName !== data.serviceName) return false;
+            if (filter.nodeId && data.nodeId && filter.nodeId !== data.nodeId) return false;
+            // Add more criteria as needed
+            return true;
+        };
+
+        const clientFilters = new Map(); // ws -> filter object
+        const clientAuth = new Map(); // ws -> user object or false
+
+        wss.on('connection', (ws) => {
+            wsConnectionCount++;
+            console.log('WebSocket client connected for event streaming');
+            clientFilters.set(ws, null); // no filter by default
+            clientAuth.set(ws, config.authEnabled ? false : { role: 'anonymous' }); // user object or false
+
+            ws.on('message', (message) => {
+                try {
+                    const data = JSON.parse(message);
+                    if (data.auth) {
+                        if (config.authEnabled) {
+                            try {
+                                const decoded = jwt.verify(data.auth, config.jwtSecret);
+                                clientAuth.set(ws, decoded);
+                                ws.send(JSON.stringify({ type: 'authenticated', user: decoded }));
+                            } catch (err) {
+                                ws.send(JSON.stringify({ type: 'auth_failed' }));
+                                ws.close();
+                            }
+                        }
+                    } else if (!clientAuth.get(ws)) {
+                        ws.send(JSON.stringify({ type: 'auth_required' }));
+                        ws.close();
+                        return;
+                    }
+                    if (data.subscribe) {
+                        // Role check: only admin can subscribe to admin events
+                        const user = clientAuth.get(ws);
+                        if (data.subscribe.event && data.subscribe.event.startsWith('admin_') && (!user || user.role !== 'admin')) {
+                            ws.send(JSON.stringify({ type: 'error', message: 'Insufficient permissions' }));
+                            return;
+                        }
+                        clientFilters.set(ws, data.subscribe);
+                        ws.send(JSON.stringify({ type: 'subscribed', filter: data.subscribe }));
+                    }
+                    if (data.unsubscribe) {
+                        clientFilters.set(ws, null);
+                        ws.send(JSON.stringify({ type: 'unsubscribed' }));
+                    }
+                    if (data.refresh_token) {
+                        if (config.authEnabled && user) {
+                            // Generate new token
+                            const newToken = jwt.sign({ username: user.username, role: user.role }, config.jwtSecret, { expiresIn: config.jwtExpiresIn });
+                            ws.send(JSON.stringify({ type: 'token_refreshed', token: newToken }));
+                        }
+                    }
+                } catch (e) {
+                    ws.send(JSON.stringify({ type: 'error', message: 'Invalid message format' }));
+                }
+            });
+
+            ws.on('close', () => {
+                clientFilters.delete(ws);
+                clientAuth.delete(ws);
+            });
         });
-    }
+    });
+}
 }
 
 module.exports = builder.getApp();
