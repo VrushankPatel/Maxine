@@ -1,5 +1,12 @@
 const config = require("../../config/config");
 const { serviceRegistry } = require("../../entity/service-registry");
+const config = require('../../config/config');
+const fs = require('fs').promises;
+const path = require('path');
+const { promisify } = require('util');
+const zlib = require('zlib');
+const { Pool } = require('pg');
+const mysql = require('mysql2/promise');
 
 // Distributed persistence implementations
 class TiKVStorage {
@@ -122,6 +129,165 @@ class FoundationDBStorage {
     }
 }
 
+class PostgreSQLStorage {
+    constructor() {
+        this.pool = null;
+        this.connected = false;
+        this.tableName = 'maxine_persistence';
+    }
+
+    async connect() {
+        try {
+            this.pool = new Pool({
+                connectionString: config.postgresUrl,
+                max: 20, // Connection pool size
+                idleTimeoutMillis: 30000,
+                connectionTimeoutMillis: 2000,
+            });
+
+            // Create table if it doesn't exist
+            await this.pool.query(`
+                CREATE TABLE IF NOT EXISTS ${this.tableName} (
+                    key TEXT PRIMARY KEY,
+                    value JSONB,
+                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                );
+                CREATE INDEX IF NOT EXISTS idx_key ON ${this.tableName} (key);
+                CREATE INDEX IF NOT EXISTS idx_updated_at ON ${this.tableName} (updated_at);
+            `);
+
+            this.connected = true;
+            console.log('PostgreSQL storage connected');
+        } catch (error) {
+            console.error('PostgreSQL connection failed:', error);
+            throw error;
+        }
+    }
+
+    async disconnect() {
+        if (this.pool) {
+            await this.pool.end();
+        }
+        this.connected = false;
+    }
+
+    async put(key, value) {
+        if (!this.connected) throw new Error('PostgreSQL not connected');
+        const query = `
+            INSERT INTO ${this.tableName} (key, value, updated_at)
+            VALUES ($1, $2, CURRENT_TIMESTAMP)
+            ON CONFLICT (key) DO UPDATE SET
+                value = EXCLUDED.value,
+                updated_at = CURRENT_TIMESTAMP
+        `;
+        await this.pool.query(query, [key, value]);
+    }
+
+    async get(key) {
+        if (!this.connected) throw new Error('PostgreSQL not connected');
+        const result = await this.pool.query(
+            `SELECT value FROM ${this.tableName} WHERE key = $1`,
+            [key]
+        );
+        return result.rows.length > 0 ? result.rows[0].value : null;
+    }
+
+    async delete(key) {
+        if (!this.connected) throw new Error('PostgreSQL not connected');
+        await this.pool.query(`DELETE FROM ${this.tableName} WHERE key = $1`, [key]);
+        return true;
+    }
+
+    async getRange(startKey, endKey, limit = 100) {
+        if (!this.connected) throw new Error('PostgreSQL not connected');
+        const result = await this.pool.query(
+            `SELECT key, value FROM ${this.tableName}
+             WHERE key >= $1 AND key < $2
+             ORDER BY key LIMIT $3`,
+            [startKey, endKey, limit]
+        );
+        return result.rows.map(row => ({ key: row.key, value: row.value }));
+    }
+}
+
+class MySQLStorage {
+    constructor() {
+        this.connection = null;
+        this.connected = false;
+        this.tableName = 'maxine_persistence';
+    }
+
+    async connect() {
+        try {
+            this.connection = await mysql.createConnection(config.mysqlUrl);
+
+            // Create table if it doesn't exist
+            await this.connection.execute(`
+                CREATE TABLE IF NOT EXISTS ${this.tableName} (
+                    \`key\` VARCHAR(255) PRIMARY KEY,
+                    \`value\` JSON,
+                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+                    INDEX idx_key (\`key\`),
+                    INDEX idx_updated_at (updated_at)
+                ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
+            `);
+
+            this.connected = true;
+            console.log('MySQL storage connected');
+        } catch (error) {
+            console.error('MySQL connection failed:', error);
+            throw error;
+        }
+    }
+
+    async disconnect() {
+        if (this.connection) {
+            await this.connection.end();
+        }
+        this.connected = false;
+    }
+
+    async put(key, value) {
+        if (!this.connected) throw new Error('MySQL not connected');
+        const query = `
+            INSERT INTO ${this.tableName} (\`key\`, \`value\`, updated_at)
+            VALUES (?, ?, NOW())
+            ON DUPLICATE KEY UPDATE
+                \`value\` = VALUES(\`value\`),
+                updated_at = NOW()
+        `;
+        await this.connection.execute(query, [key, JSON.stringify(value)]);
+    }
+
+    async get(key) {
+        if (!this.connected) throw new Error('MySQL not connected');
+        const [rows] = await this.connection.execute(
+            `SELECT \`value\` FROM ${this.tableName} WHERE \`key\` = ?`,
+            [key]
+        );
+        return rows.length > 0 ? JSON.parse(rows[0].value) : null;
+    }
+
+    async delete(key) {
+        if (!this.connected) throw new Error('MySQL not connected');
+        await this.connection.execute(`DELETE FROM ${this.tableName} WHERE \`key\` = ?`, [key]);
+        return true;
+    }
+
+    async getRange(startKey, endKey, limit = 100) {
+        if (!this.connected) throw new Error('MySQL not connected');
+        const [rows] = await this.connection.execute(
+            `SELECT \`key\`, \`value\` FROM ${this.tableName}
+             WHERE \`key\` >= ? AND \`key\` < ?
+             ORDER BY \`key\` LIMIT ?`,
+            [startKey, endKey, limit]
+        );
+        return rows.map(row => ({ key: row.key, value: JSON.parse(row.value) }));
+    }
+}
+
 class DistributedPersistenceManager {
     constructor() {
         this.storages = new Map();
@@ -138,6 +304,12 @@ class DistributedPersistenceManager {
             await this.activeStorage.connect();
         } else if (persistenceType === 'foundationdb') {
             this.activeStorage = new FoundationDBStorage();
+            await this.activeStorage.connect();
+        } else if (persistenceType === 'postgres' || persistenceType === 'postgresql') {
+            this.activeStorage = new PostgreSQLStorage();
+            await this.activeStorage.connect();
+        } else if (persistenceType === 'mysql') {
+            this.activeStorage = new MySQLStorage();
             await this.activeStorage.connect();
         }
 
@@ -311,7 +483,7 @@ class DistributedPersistenceManager {
             connected: this.activeStorage ? this.activeStorage.connected : false,
             replicationEnabled: this.replicationEnabled,
             replicas: this.replicas,
-            supportedTypes: ['tikv', 'foundationdb'],
+            supportedTypes: ['tikv', 'foundationdb', 'postgres', 'mysql'],
             timestamp: new Date().toISOString()
         };
     }
@@ -475,8 +647,8 @@ const loadServiceData = async (req, res) => {
 const configurePersistence = (req, res) => {
     const { type, replicationEnabled, replicas } = req.body;
 
-    if (type && !['tikv', 'foundationdb'].includes(type)) {
-        return res.status(400).json({ error: 'Invalid persistence type. Supported: tikv, foundationdb' });
+    if (type && !['tikv', 'foundationdb', 'postgres', 'postgresql', 'mysql'].includes(type)) {
+        return res.status(400).json({ error: 'Invalid persistence type. Supported: tikv, foundationdb, postgres, mysql' });
     }
 
     // Update configuration (in real implementation, this would update config and restart)
