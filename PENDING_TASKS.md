@@ -26,7 +26,7 @@
       - [x] Implement WebSocket server for real-time event notifications
       - [x] Add event types: service_registered, service_deregistered, service_heartbeat, service_unhealthy
       - [x] Broadcast events to connected WebSocket clients
-      - [ ] Support MQTT integration for event publishing
+       - [x] Support MQTT integration for event publishing
       - [ ] Add event filtering by service name or event type
       - [ ] Implement event persistence for missed events
       - [ ] Add client authentication for WebSocket connections
@@ -54,7 +54,7 @@
    - [ ] Add monitoring and alerting for WebSocket connections and event rates
 
    ## Next Priority Features
-  - [ ] Implement MQTT Integration: Add MQTT client for publishing events to MQTT brokers, support for topics based on service names, and QoS levels for reliable event delivery
+
   - [ ] Implement Event Filtering: Add WebSocket message filtering by event type, service name, or custom criteria; support subscription-based event delivery
   - [ ] Implement Event Persistence: Store recent events in memory or database for clients to retrieve missed events on reconnection; add event replay functionality
   - [ ] Implement Client Authentication for WebSocket: Add JWT-based authentication for WebSocket connections, role-based access to events, and secure event streaming
