@@ -83,6 +83,27 @@ Enable with `OAUTH2_ENABLED=true` and configure:
 
 Redirect users to GET /auth/google to start OAuth flow, then handle the callback at GET /auth/google/callback to receive JWT token.
 
+## Mutual TLS (mTLS) Support
+
+Maxine supports Mutual TLS for encrypted and authenticated service-to-service communication in Lightning Mode.
+
+Enable with `MTLS_ENABLED=true` and provide certificate paths:
+- `SERVER_CERT_PATH`: Path to server certificate (default: src/main/config/certs/server.crt)
+- `SERVER_KEY_PATH`: Path to server private key (default: src/main/config/certs/server.key)
+- `CA_CERT_PATH`: Path to CA certificate for client verification (default: src/main/config/certs/ca.crt)
+
+To generate self-signed certificates for testing, run:
+```bash
+node src/main/config/certs/generate-certs.js
+```
+
+This creates CA, server, and client certificates. Use client.crt and client.key for client authentication.
+
+Example curl with client cert:
+```bash
+curl --cert src/main/config/certs/client.crt --key src/main/config/certs/client.key --cacert src/main/config/certs/ca.crt https://localhost:8080/health
+```
+
 ## MQTT Integration (Lightning Mode)
 
 Maxine supports optional MQTT integration for publishing real-time events to MQTT brokers.
