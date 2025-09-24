@@ -18,7 +18,7 @@ A minimal, high-performance service discovery and registry for microservices.
 - **Minimal Dependencies**: Only essential packages for maximum performance
 - **Lightning Mode**: Dedicated mode for ultimate speed with core features: register, heartbeat, deregister, discover with round-robin/random load balancing, health, metrics, basic tracing
 - **Optimized Parsing**: Fast JSON parsing with error handling
-- **Event-Driven**: Real-time events for service changes and notifications via WebSocket
+- **Event-Driven**: Real-time events for service changes and notifications via WebSocket and MQTT
 - **Federation**: Connect multiple Maxine instances across datacenters for global service discovery
 - **Multi-Datacenter Support**: Global service discovery with cross-datacenter replication and load balancing
 - **Authentication/Authorization**: Optional JWT-based auth for Lightning Mode to secure sensitive operations
@@ -72,6 +72,16 @@ Enable with `AUTH_ENABLED=true` and configure:
 - `ADMIN_PASSWORD_HASH`: Bcrypt hash of admin password
 
 Sign in via POST /signin to get a token, then include in requests as `Authorization: Bearer <token>`.
+
+## MQTT Integration (Lightning Mode)
+
+Maxine supports optional MQTT integration for publishing real-time events to MQTT brokers.
+
+Enable with `MQTT_ENABLED=true` and configure:
+- `MQTT_BROKER`: MQTT broker URL (default mqtt://localhost:1883)
+- `MQTT_TOPIC`: Base topic for events (default maxine/registry/events)
+
+Events are published to topics like `maxine/registry/events/service_registered`, `maxine/registry/events/circuit_open`, etc. with QoS 1.
 
 ## Modes
 

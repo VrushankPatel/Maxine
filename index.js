@@ -30,6 +30,7 @@ if (config.lightningMode) {
     const httpProxy = require('http-proxy');
     const proxy = httpProxy.createProxyServer({});
     const WebSocket = require('ws');
+    const mqtt = require('mqtt');
 
     const stringify = require('fast-json-stringify');
 
@@ -664,13 +665,33 @@ if (config.lightningMode) {
         // WebSocket server for real-time event streaming
         const wss = new WebSocket.Server({ server });
 
+        // MQTT client for event publishing
+        let mqttClient = null;
+        if (config.mqttEnabled) {
+            mqttClient = mqtt.connect(config.mqttBroker);
+            mqttClient.on('connect', () => {
+                console.log('Connected to MQTT broker');
+            });
+            mqttClient.on('error', (err) => {
+                console.error('MQTT connection error:', err);
+            });
+        }
+
         const broadcast = (event, data) => {
             const message = JSON.stringify({ event, data, timestamp: Date.now() });
+            // WebSocket broadcast
             wss.clients.forEach(client => {
                 if (client.readyState === WebSocket.OPEN) {
                     client.send(message);
                 }
             });
+            // MQTT publish
+            if (mqttClient && mqttClient.connected) {
+                const topic = `${config.mqttTopic}/${event}`;
+                mqttClient.publish(topic, message, { qos: 1 }, (err) => {
+                    if (err) console.error('MQTT publish error:', err);
+                });
+            }
         };
 
         wss.on('connection', (ws) => {
