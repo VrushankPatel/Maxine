@@ -15,6 +15,7 @@
 - [x] Performance Optimizations: Implemented async debounced persistence saves and async WebSocket broadcasting to reduce I/O blocking and improve response times.
 - [x] Advanced Monitoring Dashboard: Enhanced /dashboard with real-time WebSocket updates, interactive charts using Chart.js, improved UI with modern styling, service topology visualization, and live event streaming.
 - [x] Implement Service Blacklist in Lightning Mode: Added blacklist functionality to prevent registration of unwanted services, with endpoints for add, remove, and list blacklisted services.
+- [x] Optimize Discovery Latency: Implemented lightweight LRU caching layers (10k entries, 30s TTL) for frequently accessed services in Lightning Mode to reduce lookup times further.
 
 ## Next Steps
 
@@ -22,7 +23,6 @@
 - Implement Kubernetes Operator: Create a custom Kubernetes operator for automated Maxine deployment and management, including CRDs for ServiceRegistry, automated scaling, and integration with K8s services. This will enable seamless integration into Kubernetes environments, allowing users to manage Maxine instances declaratively.
 - Implement Service Mesh Integration Enhancements: Deep integration with Istio, Linkerd, and Envoy for advanced traffic management, including automatic sidecar injection and policy enforcement. This will provide out-of-the-box service mesh capabilities for microservices architectures.
 - Add Distributed Tracing Enhancements: Full OpenTelemetry integration for end-to-end request tracing across services, with Jaeger/Zipkin support and trace correlation. Enable detailed observability for request flows through the service registry.
-- Optimize Discovery Latency: Implement caching layers (e.g., Redis or in-memory LRU) for frequently accessed services to reduce lookup times further. Add predictive caching based on access patterns.
 - Enhance Load Balancing Algorithms: Add machine learning-based load balancing that adapts to service performance metrics, failure rates, and response times for optimal traffic distribution.
 
 ### Medium Priority
@@ -50,6 +50,7 @@
 - Add Advanced Monitoring Dashboard: Build a web-based dashboard for real-time service registry monitoring, metrics visualization, and alerting
 - Implement Service Mesh Integration Enhancements: Deep integration with Istio, Linkerd, and Envoy for advanced traffic management
 - Add Distributed Tracing Enhancements: Full OpenTelemetry integration for end-to-end request tracing across services
+- Implement Advanced Security Features: Add OAuth2 integration with providers like Google/Auth0, mTLS for encrypted communication, certificate management, and fine-grained access controls with RBAC
 
 #### Medium Priority
 
