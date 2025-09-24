@@ -178,6 +178,17 @@ Returns an advanced HTML dashboard with real-time metrics, charts, service topol
 - Recent events feed
 - Connection status indicators
 
+##### Dependency Graph
+```http
+GET /dependency-graph
+```
+Returns an interactive HTML page visualizing the service dependency graph using D3.js. Features include:
+- Force-directed graph layout
+- Click on nodes to view dependency impact (dependencies and dependents)
+- Cycle detection alerts
+- Export to JSON or SVG
+- Real-time updates (planned)
+
 ##### Heap Dump
 ```http
 GET /heapdump
