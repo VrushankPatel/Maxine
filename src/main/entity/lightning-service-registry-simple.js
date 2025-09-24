@@ -6,6 +6,7 @@ const path = require('path');
 const { EventEmitter } = require('events');
 const axios = require('axios');
 const geoip = require('geoip-lite');
+const { LRUCache } = require('lru-cache');
 
 // Fast LCG PRNG for random load balancing
 let lcgSeed = Date.now();
@@ -61,6 +62,19 @@ class LightningServiceRegistrySimple extends EventEmitter {
         this.circuitBreakerTimeout = config.circuitBreakerTimeout || 60000;
         this.circuitBreakerRetryDelay = 1000; // initial retry delay 1s
         this.circuitBreakerMaxRetryDelay = 30000; // max 30s
+
+        // LRU Cache for discovery results (10k entries, 30s TTL)
+        this.discoveryCache = new LRUCache({ max: 10000, ttl: 30000 });
+
+        // Method to invalidate discovery cache for a service
+        this.invalidateDiscoveryCache = (serviceName) => {
+            // Since keys start with serviceName, we can iterate and delete
+            for (const key of this.discoveryCache.keys()) {
+                if (key.startsWith(serviceName + ':')) {
+                    this.discoveryCache.delete(key);
+                }
+            }
+        };
 
         // Persistence
         this.persistenceEnabled = config.persistenceEnabled;
@@ -144,6 +158,7 @@ class LightningServiceRegistrySimple extends EventEmitter {
         this.nodesCount++;
 
         this.saveRegistry();
+        this.invalidateDiscoveryCache(fullServiceName);
         if (global.broadcast) global.broadcast('service_registered', { serviceName: fullServiceName, nodeId: nodeName });
         // Replicate to federation peers
         this.replicateRegistration(fullServiceName, node);
@@ -175,6 +190,7 @@ class LightningServiceRegistrySimple extends EventEmitter {
         this.lastHeartbeats.delete(nodeId);
         this.nodeToService.delete(nodeId);
         this.saveRegistry();
+        this.invalidateDiscoveryCache(serviceName);
         if (global.broadcast) global.broadcast('service_deregistered', { nodeId });
         // Replicate to federation peers
         this.replicateDeregistration(nodeId);
@@ -210,6 +226,15 @@ class LightningServiceRegistrySimple extends EventEmitter {
                 fullServiceName = `${serviceName}:${version}`;
             }
         }
+
+        // Check cache for deterministic strategies
+        const cacheableStrategies = ['consistent-hash', 'ip-hash', 'geo-aware'];
+        if (cacheableStrategies.includes(strategy)) {
+            const cacheKey = `${fullServiceName}:${strategy}:${clientIP || 'default'}:${tags ? tags.sort().join(',') : ''}`;
+            const cached = this.discoveryCache.get(cacheKey);
+            if (cached) return cached;
+        }
+
         const service = this.services.get(fullServiceName);
         if (!service || service.healthyNodesArray.length === 0) return null;
 
@@ -254,6 +279,13 @@ class LightningServiceRegistrySimple extends EventEmitter {
         if (selectedNode) {
             selectedNode.connections++; // Increment for least-connections
         }
+
+        // Cache the result for cacheable strategies
+        if (cacheableStrategies.includes(strategy) && selectedNode) {
+            const cacheKey = `${fullServiceName}:${strategy}:${clientIP || 'default'}:${tags ? tags.sort().join(',') : ''}`;
+            this.discoveryCache.set(cacheKey, selectedNode);
+        }
+
         return selectedNode;
     }
 
@@ -348,15 +380,16 @@ class LightningServiceRegistrySimple extends EventEmitter {
                         }
                         this.nodesCount--;
                     }
-                    service.nodes.delete(nodeName);
-                    if (service.nodes.size === 0) {
-                        this.services.delete(serviceName);
-                        this.servicesCount--;
-                    }
-                }
-            }
-            this.nodeToService.delete(nodeName);
-            if (global.broadcast) global.broadcast('service_unhealthy', { nodeId: nodeName });
+                     service.nodes.delete(nodeName);
+                     if (service.nodes.size === 0) {
+                         this.services.delete(serviceName);
+                         this.servicesCount--;
+                     }
+                 }
+             }
+             this.nodeToService.delete(nodeName);
+             this.invalidateDiscoveryCache(serviceName);
+             if (global.broadcast) global.broadcast('service_unhealthy', { nodeId: nodeName });
         }
         if (toRemove.length > 0) {
             this.saveRegistry();
