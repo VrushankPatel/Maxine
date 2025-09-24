@@ -88,8 +88,12 @@ class LightningServiceRegistrySimple extends EventEmitter {
 
         // Rate limiting
         this.rateLimits = new Map(); // For in-memory fallback
+        this.rateLimitEnabled = config.rateLimitEnabled;
 
         this.checkRateLimit = (key, maxRequests = 1000, windowMs = 15 * 60 * 1000) => {
+            if (!this.rateLimitEnabled) {
+                return true; // Rate limiting disabled
+            }
             const now = Date.now();
             const windowKey = `${key}:${Math.floor(now / windowMs)}`;
 

@@ -25,6 +25,7 @@
   "license": "MIT",
   "bin": "index.js",
   "dependencies": {
+    "@graphql-tools/schema": "^10.0.25",
     "@grpc/grpc-js": "^1.10.0",
     "@grpc/proto-loader": "^0.7.10",
     "@opentelemetry/api": "^1.7.0",
@@ -32,6 +33,7 @@
     "@opentelemetry/exporter-zipkin": "^1.30.1",
     "@opentelemetry/sdk-node": "^0.45.1",
     "activedirectory": "^0.7.2",
+    "apollo-server-express": "^3.13.0",
     "axios": "^1.12.2",
     "bcrypt": "^6.0.0",
     "body-parser": "^1.20.2",
@@ -42,6 +44,7 @@
     "fast-json-stringify": "^6.0.1",
     "geoip-lite": "^1.4.10",
     "graphql-subscriptions": "^2.0.0",
+    "graphql-ws": "^6.0.6",
     "hashring": "^3.2.0",
     "heapdump": "^0.3.15",
     "http-proxy": "^1.18.1",
@@ -56,6 +59,7 @@
     "passport-saml": "^3.2.4",
     "prom-client": "^15.1.0",
     "redis": "^4.6.13",
+    "subscriptions-transport-ws": "^0.11.0",
     "swagger-ui-express": "^5.0.1",
     "winston": "^3.13.0",
     "ws": "^8.16.0"
