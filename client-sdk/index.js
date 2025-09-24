@@ -2,6 +2,7 @@ const axios = require('axios');
 const { LRUCache } = require('lru-cache');
 const dgram = require('dgram');
 const net = require('net');
+const WebSocket = require('ws');
 
 class MaxineClient {
     constructor(baseUrl, token, cacheOptions = {}) {
@@ -186,6 +187,155 @@ class MaxineClient {
     clearCache() {
         this.discoveryCache.clear();
     }
+
+    // Lightning Mode API Methods (for ultra-fast operations)
+
+    async registerServiceLightning(serviceName, host, port, metadata = {}, tags = [], version = null, environment = null, namespace = 'default', datacenter = 'default') {
+        const payload = {
+            serviceName,
+            host,
+            port,
+            metadata,
+            tags,
+            version,
+            environment,
+            namespace,
+            datacenter
+        };
+        const response = await this.client.post('/register', payload);
+        return response.data;
+    }
+
+    async discoverServiceLightning(serviceName, strategy = 'round-robin', clientId = null, tags = [], version = null, environment = null, namespace = 'default', datacenter = 'default') {
+        const params = {
+            serviceName,
+            loadBalancing: strategy,
+            namespace,
+            datacenter
+        };
+        if (clientId) params.clientId = clientId;
+        if (tags.length > 0) params.tags = tags.join(',');
+        if (version) params.version = version;
+        if (environment) params.environment = environment;
+
+        const cacheKey = 'lightning:' + JSON.stringify(params);
+        if (this.discoveryCache.has(cacheKey)) {
+            return this.discoveryCache.get(cacheKey);
+        }
+        const response = await this.client.get('/discover', { params });
+        this.discoveryCache.set(cacheKey, response.data);
+        return response.data;
+    }
+
+    async heartbeatLightning(nodeId) {
+        const payload = { nodeId };
+        const response = await this.client.post('/heartbeat', payload);
+        return response.data;
+    }
+
+    async deregisterServiceLightning(serviceName, nodeName, namespace = 'default', datacenter = 'default') {
+        const payload = {
+            serviceName,
+            nodeName,
+            namespace,
+            datacenter
+        };
+        const response = await this.client.delete('/deregister', { data: payload });
+        return response.data;
+    }
+
+    async listServicesLightning() {
+        const response = await this.client.get('/servers');
+        return response.data;
+    }
+
+    async getHealthLightning() {
+        const response = await this.client.get('/health');
+        return response.data;
+    }
+
+    async getMetricsLightning() {
+        const response = await this.client.get('/metrics');
+        return response.data;
+    }
 }
 
-module.exports = MaxineClient;
+class WebSocketClient {
+    constructor(baseUrl = 'ws://localhost:8080', token = null) {
+        this.baseUrl = baseUrl;
+        this.token = token;
+        this.ws = null;
+        this.connected = false;
+        this.eventHandlers = {};
+    }
+
+    on(eventType, handler) {
+        if (!this.eventHandlers[eventType]) {
+            this.eventHandlers[eventType] = [];
+        }
+        this.eventHandlers[eventType].push(handler);
+    }
+
+    connect() {
+        return new Promise((resolve, reject) => {
+            this.ws = new WebSocket(this.baseUrl);
+
+            this.ws.on('open', () => {
+                this.connected = true;
+                if (this.token) {
+                    this.ws.send(JSON.stringify({ auth: this.token }));
+                }
+                resolve();
+            });
+
+            this.ws.on('message', (data) => {
+                try {
+                    const message = JSON.parse(data.toString());
+                    const eventType = message.event;
+                    if (eventType && this.eventHandlers[eventType]) {
+                        this.eventHandlers[eventType].forEach(handler => handler(message));
+                    }
+                } catch (e) {
+                    // Ignore invalid JSON
+                }
+            });
+
+            this.ws.on('close', () => {
+                this.connected = false;
+            });
+
+            this.ws.on('error', (error) => {
+                reject(error);
+            });
+        });
+    }
+
+    disconnect() {
+        if (this.ws) {
+            this.ws.close();
+        }
+    }
+
+    subscribe(eventType, serviceName = null, nodeId = null) {
+        if (this.ws && this.connected) {
+            const subscription = { subscribe: { event: eventType } };
+            if (serviceName) subscription.subscribe.serviceName = serviceName;
+            if (nodeId) subscription.subscribe.nodeId = nodeId;
+            this.ws.send(JSON.stringify(subscription));
+        }
+    }
+
+    unsubscribe() {
+        if (this.ws && this.connected) {
+            this.ws.send(JSON.stringify({ unsubscribe: true }));
+        }
+    }
+
+    refreshToken() {
+        if (this.ws && this.connected && this.token) {
+            this.ws.send(JSON.stringify({ refresh_token: true }));
+        }
+    }
+}
+
+module.exports = { MaxineClient, WebSocketClient };
