@@ -61,12 +61,50 @@ class LightningServiceRegistrySimple extends EventEmitter {
         this.circuitBreakerRetryDelay = 1000; // initial retry delay 1s
         this.circuitBreakerMaxRetryDelay = 30000; // max 30s
 
-        // LRU Cache for discovery results (10k entries, 30s TTL)
-        this.discoveryCache = new LRUCache({ max: 10000, ttl: 30000 });
+        // Adaptive LRU Cache for discovery results (10k entries, adaptive TTL)
+        this.discoveryCache = new Map(); // key -> { value, timestamp, accessCount, lastAccess }
+        this.cacheMaxSize = 10000;
 
         // Cache metrics
         this.cacheHits = 0;
         this.cacheMisses = 0;
+
+        // Adaptive caching methods
+        this.getCache = (key) => {
+            const entry = this.discoveryCache.get(key);
+            if (!entry) return null;
+            const now = Date.now();
+            const ttl = this.getAdaptiveTTL(entry.accessCount, now - entry.lastAccess);
+            if (now - entry.timestamp > ttl) {
+                this.discoveryCache.delete(key);
+                return null;
+            }
+            entry.accessCount++;
+            entry.lastAccess = now;
+            this.cacheHits++;
+            return entry.value;
+        };
+
+        this.setCache = (key, value) => {
+            const now = Date.now();
+            if (this.discoveryCache.size >= this.cacheMaxSize) {
+                // Evict least recently used (simple: first key)
+                const firstKey = this.discoveryCache.keys().next().value;
+                this.discoveryCache.delete(firstKey);
+            }
+            this.discoveryCache.set(key, { value, timestamp: now, accessCount: 1, lastAccess: now });
+        };
+
+        this.getAdaptiveTTL = (accessCount, timeSinceLastAccess) => {
+            // If accessed recently and frequently, longer TTL
+            if (timeSinceLastAccess < 60000 && accessCount > 5) {
+                return 60000; // 1 minute for hot keys
+            } else if (accessCount > 2) {
+                return 30000; // 30 seconds for warm keys
+            } else {
+                return 10000; // 10 seconds for cold keys
+            }
+        };
 
         // Response time tracking for predictive load balancing
         this.responseTimes = new Map(); // nodeName -> { count, sum, average }
@@ -283,9 +321,8 @@ class LightningServiceRegistrySimple extends EventEmitter {
         const cacheableStrategies = ['consistent-hash', 'ip-hash', 'geo-aware', 'least-response-time', 'health-score'];
         if (cacheableStrategies.includes(strategy)) {
             const cacheKey = `${fullServiceName}:${strategy}:${clientIP || 'default'}:${tags ? tags.sort().join(',') : ''}`;
-            const cached = this.discoveryCache.get(cacheKey);
+            const cached = this.getCache(cacheKey);
             if (cached) {
-                this.cacheHits++;
                 return cached;
             } else {
                 this.cacheMisses++;
@@ -352,7 +389,7 @@ class LightningServiceRegistrySimple extends EventEmitter {
                 // Cache the result for cacheable strategies
                 if (cacheableStrategies.includes(strategy) && selectedNode) {
                     const cacheKey = `${fullServiceName}:${strategy}:${clientIP || 'default'}:${tags ? tags.sort().join(',') : ''}`;
-                    this.discoveryCache.set(cacheKey, selectedNode);
+                    this.setCache(cacheKey, selectedNode);
                 }
 
                 span.end();
@@ -367,13 +404,27 @@ class LightningServiceRegistrySimple extends EventEmitter {
     }
 
     selectWeightedRandom(nodes) {
-        const totalWeight = nodes.reduce((sum, node) => sum + node.weight, 0);
-        let random = fastRandom() * totalWeight;
+        // SIMD-like optimization: pre-compute cumulative weights for binary search
+        const cumulative = [];
+        let sum = 0;
         for (const node of nodes) {
-            random -= node.weight;
-            if (random <= 0) return node;
+            sum += node.weight;
+            cumulative.push({ node, cumulative: sum });
         }
-        return nodes[0];
+        const totalWeight = sum;
+        const random = fastRandom() * totalWeight;
+
+        // Binary search for faster selection (SIMD-inspired bulk processing)
+        let low = 0, high = cumulative.length - 1;
+        while (low < high) {
+            const mid = Math.floor((low + high) / 2);
+            if (random > cumulative[mid].cumulative) {
+                low = mid + 1;
+            } else {
+                high = mid;
+            }
+        }
+        return cumulative[low].node;
     }
 
     selectLeastConnections(nodes) {
