@@ -243,6 +243,12 @@ GET /api/maxine/serviceops/config/get?serviceName=my-service&key=timeout&namespa
 GET /api/maxine/serviceops/config/all?serviceName=my-service&namespace=default&region=us-east&zone=zone1
 ```
 
+##### Watch Service Config Changes
+```http
+GET /api/maxine/serviceops/config/watch?serviceName=my-service&namespace=default&region=us-east&zone=zone1
+```
+Returns Server-Sent Events for real-time config changes.
+
 ##### Delete Service Config
 ```http
 DELETE /api/maxine/serviceops/config/delete
@@ -280,6 +286,48 @@ Returns the circuit breaker state for the specified node, including state (close
 GET /events?since=<timestamp>&limit=<number>
 ```
 Returns recent events from the event history. Use `since` to get events after a specific timestamp (default 0), and `limit` to limit the number of events returned (default 100).
+
+##### Add Service Dependency
+```http
+POST /api/maxine/serviceops/dependency/add
+Content-Type: application/json
+
+{
+  "serviceName": "my-service",
+  "dependsOn": "dependent-service"
+}
+```
+
+##### Remove Service Dependency
+```http
+POST /api/maxine/serviceops/dependency/remove
+Content-Type: application/json
+
+{
+  "serviceName": "my-service",
+  "dependsOn": "dependent-service"
+}
+```
+
+##### Get Service Dependencies
+```http
+GET /api/maxine/serviceops/dependency/get?serviceName=my-service
+```
+
+##### Get Service Dependents
+```http
+GET /api/maxine/serviceops/dependency/dependents?serviceName=my-service
+```
+
+##### Get Dependency Graph
+```http
+GET /api/maxine/serviceops/dependency/graph
+```
+
+##### Detect Circular Dependencies
+```http
+GET /api/maxine/serviceops/dependency/cycles
+```
 
 ##### Proxy to Service
 ```http

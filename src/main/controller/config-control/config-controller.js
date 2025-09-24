@@ -46,9 +46,47 @@ const deleteConfig = (req, res) => {
     res.status(statusAndMsgs.STATUS_SUCCESS).json({ message: "Config deleted successfully" });
 };
 
+const watchConfig = (req, res) => {
+    const { serviceName, namespace, region, zone } = req.query;
+    if (!serviceName) {
+        return res.status(statusAndMsgs.STATUS_GENERIC_ERROR).json({ message: "serviceName is required" });
+    }
+
+    res.writeHead(200, {
+        'Content-Type': 'text/event-stream',
+        'Cache-Control': 'no-cache',
+        'Connection': 'keep-alive',
+        'Access-Control-Allow-Origin': '*',
+        'Access-Control-Allow-Headers': 'Cache-Control',
+    });
+
+    const listener = (event, data) => {
+        if (data.serviceName === serviceName &&
+            (namespace ? data.namespace === namespace : true) &&
+            (region ? data.region === region : true) &&
+            (zone ? data.zone === zone : true)) {
+            res.write(`data: ${JSON.stringify({ event, data })}\n\n`);
+        }
+    };
+
+    if (global.eventEmitter) {
+        global.eventEmitter.on('config_changed', listener);
+        global.eventEmitter.on('config_deleted', listener);
+    }
+
+    req.on('close', () => {
+        if (global.eventEmitter) {
+            global.eventEmitter.off('config_changed', listener);
+            global.eventEmitter.off('config_deleted', listener);
+        }
+        res.end();
+    });
+};
+
 module.exports = {
     setConfig,
     getConfig,
     getAllConfig,
-    deleteConfig
+    deleteConfig,
+    watchConfig
 };

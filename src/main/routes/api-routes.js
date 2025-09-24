@@ -18,10 +18,11 @@ const opaPolicyController = require('../controller/maxine/opa-controller');
 const kubernetesIngressController = require('../controller/maxine/kubernetes-controller');
 const haproxyConfigController = require('../controller/maxine/haproxy-controller');
 const nginxConfigController = require('../controller/maxine/nginx-controller');
-const { setConfig, getConfig, getAllConfig, deleteConfig } = require('../controller/config-control/config-controller');
+const { setConfig, getConfig, getAllConfig, deleteConfig, watchConfig } = require('../controller/config-control/config-controller');
 const { addWebhook, removeWebhook, getWebhooks } = require('../controller/webhook-controller');
 const { addAlias, removeAlias, getAliases } = require('../controller/alias-controller');
 const { setKv, getKv, deleteKv, getAllKv } = require('../controller/kv-controller');
+const { addDependency, removeDependency, getDependencies, getDependents, getDependencyGraph, detectCycles } = require('../controller/dependency-controller');
 const discoveryController = require('../controller/maxine/discovery-controller');
 const dashboardController = require('../controller/dashboard-controller');
 const dnsController = require('../controller/maxine/dns-controller');
@@ -80,10 +81,11 @@ maxineApiRoutes = maxineApiRoutes
                                          .post("register", (config.ultraFastMode || isLightningMode) ? null : authenticationController, bodyParser.json(), registryController)
                                          .post("heartbeat", bodyParser.json(), heartbeatController)
                                          .post("lease/renew", (config.ultraFastMode || isLightningMode) ? null : authenticationController, bodyParser.json(), renewLeaseController)
-                                         .post("config/set", (config.ultraFastMode || isLightningMode) ? null : authenticationController, (config.ultraFastMode || isLightningMode) ? null : limiter, bodyParser.json(), setConfig)
-                                         .get("config/get", (config.ultraFastMode || isLightningMode) ? null : authenticationController, (config.ultraFastMode || isLightningMode) ? null : limiter, getConfig)
-                                         .get("config/all", (config.ultraFastMode || isLightningMode) ? null : authenticationController, (config.ultraFastMode || isLightningMode) ? null : limiter, getAllConfig)
-                                         .delete("config/delete", (config.ultraFastMode || isLightningMode) ? null : authenticationController, (config.ultraFastMode || isLightningMode) ? null : limiter, bodyParser.json(), deleteConfig);
+                                          .post("config/set", (config.ultraFastMode || isLightningMode) ? null : authenticationController, (config.ultraFastMode || isLightningMode) ? null : limiter, bodyParser.json(), setConfig)
+                                          .get("config/get", (config.ultraFastMode || isLightningMode) ? null : authenticationController, (config.ultraFastMode || isLightningMode) ? null : limiter, getConfig)
+                                          .get("config/all", (config.ultraFastMode || isLightningMode) ? null : authenticationController, (config.ultraFastMode || isLightningMode) ? null : limiter, getAllConfig)
+                                          .get("config/watch", (config.ultraFastMode || isLightningMode) ? null : authenticationController, (config.ultraFastMode || isLightningMode) ? null : limiter, watchConfig)
+                                          .delete("config/delete", (config.ultraFastMode || isLightningMode) ? null : authenticationController, (config.ultraFastMode || isLightningMode) ? null : limiter, bodyParser.json(), deleteConfig);
 
 if (!config.ultraFastMode && !isLightningMode) {
     maxineApiRoutes = maxineApiRoutes
@@ -155,8 +157,12 @@ if (!config.ultraFastMode && !isLightningMode) {
                                        .delete("kv/delete", authenticationController, requireRole('admin'), limiter, bodyParser.json(), deleteKv)
                                        .get("backup", authenticationController, limiter, backupController)
                                         .post("restore", authenticationController, requireRole('admin'), limiter, bodyParser.json(), restoreController)
-                                        .get("dependency/graph", authenticationController, limiter, dependencyGraphController)
-                                        .get("impact/analysis", authenticationController, limiter, impactAnalysisController)
+                                         .post("dependency/add", authenticationController, limiter, bodyParser.json(), addDependency)
+                                         .post("dependency/remove", authenticationController, limiter, bodyParser.json(), removeDependency)
+                                         .get("dependency/get", authenticationController, limiter, getDependencies)
+                                         .get("dependency/dependents", authenticationController, limiter, getDependents)
+                                         .get("dependency/graph", authenticationController, limiter, getDependencyGraph)
+                                         .get("dependency/cycles", authenticationController, limiter, detectCycles)
                                         .post("api-spec/set", authenticationController, requireRole('admin'), limiter, bodyParser.json(), setApiSpecController)
                                         .get("api-spec/get", authenticationController, limiter, getApiSpecController)
                                         .get("pending", authenticationController, requireRole('admin'), limiter, pendingServicesController)

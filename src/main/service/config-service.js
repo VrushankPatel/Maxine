@@ -11,7 +11,7 @@ class ConfigService {
             this.configs.set(fullServiceName, new Map());
         }
         this.configs.get(fullServiceName).set(key, value);
-        if (global.broadcast) global.broadcast('config_changed', { serviceName, key, value, namespace, region, zone });
+        global.eventEmitter.emit('config_changed', { serviceName, key, value, namespace, region, zone });
         return true;
     }
 
@@ -37,7 +37,7 @@ class ConfigService {
             `${namespace}:${serviceName}`;
         if (!this.configs.has(fullServiceName)) return false;
         const deleted = this.configs.get(fullServiceName).delete(key);
-        if (deleted && global.broadcast) global.broadcast('config_deleted', { serviceName, key, namespace, region, zone });
+        if (deleted) global.eventEmitter.emit('config_deleted', { serviceName, key, namespace, region, zone });
         return deleted;
     }
 }
