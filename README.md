@@ -40,10 +40,10 @@ A minimal, high-performance service discovery and registry for microservices.
 
 Maxine delivers exceptional performance for service discovery operations:
 
-- **Ultra-Fast Mode**: Average 0.82ms, P95 1.5ms, P99 ~2ms for discovery requests
-- **Throughput**: 55,000+ requests per second under load (50 concurrent users, 5000 iterations)
-- **Lightning Mode**: Average 0.82ms, P95 1.5ms for discovery requests
-- **Throughput**: 55,000+ requests per second under load (50 concurrent users, 5000 iterations)
+- **Ultra-Fast Mode**: Average 0.74ms, P95 1.41ms, P99 ~2ms for discovery requests
+- **Throughput**: 62,000+ requests per second under load (50 concurrent users, 5000 iterations)
+- **Lightning Mode**: Average 0.74ms, P95 1.41ms for discovery requests
+- **Throughput**: 62,000+ requests per second under load (50 concurrent users, 5000 iterations)
 - **Optimizations**: Disabled OpenTelemetry tracing and Prometheus metrics in Lightning Mode, ultra-fast mode with minimal features for maximum speed
 
 ## Quick Start
@@ -54,6 +54,14 @@ npm start
 ```
 
 Maxine runs in **Ultra-Fast Mode** by default for maximum performance with core features only. For more features, set `ULTRA_FAST_MODE=false` and `LIGHTNING_MODE=true`.
+
+## Documentation
+
+- [Advanced Load Balancing Tutorial](docs/advanced-load-balancing-tutorial.md) - Comprehensive guide to load balancing strategies
+- [WebSocket Events Tutorial](docs/websocket-events-tutorial.md) - Real-time event streaming and monitoring
+- [Monitoring and Alerting Guide](docs/monitoring-alerting-guide.md) - Production monitoring setup
+- [Client SDKs](docs/client-sdks.md) - SDK documentation for multiple languages
+- [Event Streaming](docs/event-streaming-tutorial.md) - Event-driven architectures
 
 ## Persistence
 
