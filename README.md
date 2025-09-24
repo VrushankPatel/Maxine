@@ -15,6 +15,7 @@ A minimal, high-performance service discovery and registry for microservices.
 - **Access Control Lists (ACLs)**: Fine-grained permissions for service discovery access
 - **Service Intentions**: Define allowed communication patterns between services
 - **Service Dependencies**: Manage service dependencies with cycle detection and graph visualization
+- **Access Control Lists (ACLs)**: Fine-grained permissions for service discovery access
 - **Metrics**: Basic /metrics endpoint with request counts, errors, uptime, and basic stats
 - **Audit Logging**: Comprehensive logging of all registry operations using Winston, including user actions, system events, and security incidents with log rotation and export capabilities
 - **Persistence**: Optional persistence to survive restarts with file-based or Redis storage
@@ -460,6 +461,31 @@ Response:
 ```json
 {
   "cycles": [["service-a", "service-b", "service-a"]]
+}
+```
+
+##### Set ACL
+```http
+POST /api/maxine/serviceops/acl/set
+Content-Type: application/json
+
+{
+  "serviceName": "my-service",
+  "allow": ["service-a", "service-b"],
+  "deny": ["service-c"]
+}
+```
+
+##### Get ACL
+```http
+GET /api/maxine/serviceops/acl/:serviceName
+```
+
+Response:
+```json
+{
+  "allow": ["service-a", "service-b"],
+  "deny": ["service-c"]
 }
 ```
 
