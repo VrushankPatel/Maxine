@@ -2031,6 +2031,7 @@ if (false) { // config.ultraFastMode
                 return;
             }
             serviceRegistry.addDependency(serviceName, dependsOn);
+            global.broadcast('dependency_added', { serviceName, dependsOn });
             // winston.info(`AUDIT: Dependency added - serviceName: ${serviceName}, dependsOn: ${dependsOn}, clientIP: ${clientIP}`);
             res.writeHead(200, { 'Content-Type': 'application/json' });
             res.end(successTrue);
@@ -2053,6 +2054,7 @@ if (false) { // config.ultraFastMode
                 return;
             }
             serviceRegistry.removeDependency(serviceName, dependsOn);
+            global.broadcast('dependency_removed', { serviceName, dependsOn });
             // winston.info(`AUDIT: Dependency removed - serviceName: ${serviceName}, dependsOn: ${dependsOn}, clientIP: ${clientIP}`);
             res.writeHead(200, { 'Content-Type': 'application/json' });
             res.end(successTrue);
