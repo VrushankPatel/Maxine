@@ -51,6 +51,7 @@
     "http-proxy": "^1.18.1",
     "js-yaml": "^4.1.0",
     "jsonwebtoken": "^9.0.2",
+    "@kubernetes/client-node": "^0.20.0",
     "lru-cache": "^10.2.2",
     "minimist": "^1.2.8",
     "mqtt": "^5.3.4",
