@@ -20,6 +20,7 @@ A minimal, high-performance service discovery and registry for microservices.
 - **Optimized Parsing**: Fast JSON parsing with error handling
 - **Event-Driven**: Real-time events for service changes and notifications
 - **Federation**: Connect multiple Maxine instances across datacenters for global service discovery
+- **Authentication/Authorization**: Optional JWT-based auth for Lightning Mode to secure sensitive operations
 
 ## Missing Features (Future Enhancements)
 
@@ -60,9 +61,21 @@ Additional options: `FEDERATION_TIMEOUT` (default 5000ms), `FEDERATION_RETRY_ATT
 
 Federated registries are queried automatically if a service is not found locally.
 
+## Authentication (Lightning Mode)
+
+Maxine supports optional JWT-based authentication in Lightning Mode to secure sensitive operations like backup/restore and tracing.
+
+Enable with `AUTH_ENABLED=true` and configure:
+- `JWT_SECRET`: Secret key for JWT signing
+- `JWT_EXPIRES_IN`: Token expiration (default 1h)
+- `ADMIN_USERNAME`: Admin username (default admin)
+- `ADMIN_PASSWORD_HASH`: Bcrypt hash of admin password
+
+Sign in via POST /signin to get a token, then include in requests as `Authorization: Bearer <token>`.
+
 ## Modes
 
-- **Lightning Mode** (default): Ultra-fast with minimal features for maximum speed. Core operations: register, heartbeat, deregister, discover with round-robin/random load balancing. Uses root-level API endpoints like `/register`, `/discover`.
+- **Lightning Mode** (default): Ultra-fast with minimal features for maximum speed. Core operations: register, heartbeat, deregister, discover with round-robin/random load balancing. Optional JWT auth for sensitive endpoints. Uses root-level API endpoints like `/register`, `/discover`.
 - **Full Mode**: Comprehensive features including federation, tracing, ACLs, intentions, service blacklists, management UI, security, metrics, etc. Uses `/api/*` endpoints.
 
 To run in full mode: `LIGHTNING_MODE=false npm start`
@@ -193,6 +206,26 @@ Content-Type: application/json
 GET /trace/:id
 ```
 Returns the trace data for the given id.
+
+##### Sign In (Authentication)
+```http
+POST /signin
+Content-Type: application/json
+
+{
+  "username": "admin",
+  "password": "yourpassword"
+}
+```
+
+Response:
+```json
+{
+  "token": "jwt-token-here"
+}
+```
+
+Use the token in Authorization header: `Bearer <token>` for protected endpoints like /backup, /restore, /trace/*.
 
 
 

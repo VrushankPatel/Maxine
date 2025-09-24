@@ -119,10 +119,15 @@ const config = {
                            coapEnabled: process.env.COAP_ENABLED === 'true', // Optional for IoT
                        coapPort: process.env.COAP_PORT ? parseInt(process.env.COAP_PORT) : 5683,
                     datacenter: process.env.DATACENTER || 'default',
-                    federationEnabled: process.env.FEDERATION_ENABLED === 'true' && !isTestMode,
-                    federationPeers: process.env.FEDERATION_PEERS ? process.env.FEDERATION_PEERS.split(',') : [],
-                    federationTimeout: process.env.FEDERATION_TIMEOUT ? parseInt(process.env.FEDERATION_TIMEOUT) : 5000,
-                    federationRetryAttempts: process.env.FEDERATION_RETRY_ATTEMPTS ? parseInt(process.env.FEDERATION_RETRY_ATTEMPTS) : 3
+                     federationEnabled: process.env.FEDERATION_ENABLED === 'true' && !isTestMode,
+                     federationPeers: process.env.FEDERATION_PEERS ? process.env.FEDERATION_PEERS.split(',') : [],
+                     federationTimeout: process.env.FEDERATION_TIMEOUT ? parseInt(process.env.FEDERATION_TIMEOUT) : 5000,
+                     federationRetryAttempts: process.env.FEDERATION_RETRY_ATTEMPTS ? parseInt(process.env.FEDERATION_RETRY_ATTEMPTS) : 3,
+                     authEnabled: process.env.AUTH_ENABLED === 'true' && lightningMode, // Auth only in lightning mode for now
+                     jwtSecret: process.env.JWT_SECRET || 'default-secret-change-in-production',
+                     jwtExpiresIn: process.env.JWT_EXPIRES_IN || '1h',
+                     adminUsername: process.env.ADMIN_USERNAME || 'admin',
+                     adminPasswordHash: process.env.ADMIN_PASSWORD_HASH || '$2b$10$example.hash.here' // Use bcrypt to generate
 }
 
 Object.defineProperty(config, "profile", {
