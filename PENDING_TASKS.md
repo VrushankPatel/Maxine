@@ -30,7 +30,7 @@
        - [x] Broadcast events to connected WebSocket clients
          - [x] Support MQTT integration for event publishing - Enabled MQTT client and publishing in broadcast function
         - [x] Add event filtering by service name or event type
-        - [x] Implement event persistence for missed events
+         - [x] Implement event persistence for missed events - Added file-based persistence for event history when persistence is enabled
         - [x] Add client authentication for WebSocket connections
      - [x] Implement API Gateway Integration: Built-in reverse proxy capabilities
       - [x] Implement Configuration Management: Dynamic configuration updates for services (completed with API endpoints, persistence, versioning, and event integration)
