@@ -2640,6 +2640,8 @@ class ServiceRegistry extends EventEmitter {
     // Chaos engineering methods
     chaosLatency = new Map(); // serviceName -> delay in ms
     chaosFailure = new Map(); // serviceName -> failure rate (0-1)
+    chaosPartitions = new Map(); // serviceName -> { endTime, affectedNodes: Set }
+    chaosExperiments = new Map(); // experimentId -> experiment data
 
     injectLatency(serviceName, delay) {
         this.chaosLatency.set(serviceName, delay);
@@ -2649,15 +2651,106 @@ class ServiceRegistry extends EventEmitter {
         this.chaosFailure.set(serviceName, rate);
     }
 
+    injectNetworkPartition(serviceName, duration) {
+        const endTime = Date.now() + duration;
+        const nodes = this.getNodes(serviceName);
+        const affectedNodes = nodes ? new Set(Object.keys(nodes)) : new Set();
+
+        this.chaosPartitions.set(serviceName, {
+            endTime,
+            affectedNodes,
+            startTime: Date.now()
+        });
+    }
+
+    startChaosExperiment(experiment) {
+        this.chaosExperiments.set(experiment.id, {
+            ...experiment,
+            status: 'running',
+            currentPhase: 0,
+            phaseStartTime: Date.now()
+        });
+
+        // Schedule phase transitions
+        this.scheduleExperimentPhases(experiment.id);
+    }
+
+    scheduleExperimentPhases(experimentId) {
+        const experiment = this.chaosExperiments.get(experimentId);
+        if (!experiment) return;
+
+        const currentPhase = experiment.phases[experiment.currentPhase];
+        if (!currentPhase) {
+            // Experiment complete
+            experiment.status = 'completed';
+            experiment.endTime = Date.now();
+            return;
+        }
+
+        // Execute phase actions
+        for (const action of currentPhase.actions) {
+            switch (action.type) {
+                case 'inject_failure':
+                    this.injectFailure(experiment.serviceName, action.rate);
+                    break;
+                case 'inject_latency':
+                    this.injectLatency(experiment.serviceName, action.delay);
+                    break;
+                case 'network_partition':
+                    this.injectNetworkPartition(experiment.serviceName, action.duration);
+                    break;
+            }
+        }
+
+        // Schedule next phase
+        setTimeout(() => {
+            experiment.currentPhase++;
+            experiment.phaseStartTime = Date.now();
+            this.scheduleExperimentPhases(experimentId);
+        }, currentPhase.duration);
+    }
+
+    getChaosExperiments() {
+        return Array.from(this.chaosExperiments.values());
+    }
+
+    stopChaosExperiment(experimentId) {
+        const experiment = this.chaosExperiments.get(experimentId);
+        if (!experiment) return null;
+
+        experiment.status = 'stopped';
+        experiment.endTime = Date.now();
+
+        // Reset all chaos for the service
+        this.resetChaos(experiment.serviceName);
+
+        return experiment;
+    }
+
     resetChaos(serviceName) {
         this.chaosLatency.delete(serviceName);
         this.chaosFailure.delete(serviceName);
+        this.chaosPartitions.delete(serviceName);
     }
 
     getChaosStatus() {
+        const partitions = {};
+        for (const [service, data] of this.chaosPartitions) {
+            if (Date.now() < data.endTime) {
+                partitions[service] = {
+                    remainingTime: data.endTime - Date.now(),
+                    affectedNodes: Array.from(data.affectedNodes)
+                };
+            } else {
+                this.chaosPartitions.delete(service);
+            }
+        }
+
         return {
             latency: Object.fromEntries(this.chaosLatency),
-            failure: Object.fromEntries(this.chaosFailure)
+            failure: Object.fromEntries(this.chaosFailure),
+            partitions,
+            experiments: Array.from(this.chaosExperiments.values())
         };
     }
 

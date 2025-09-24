@@ -1,0 +1,224 @@
+apiVersion: apiextensions.k8s.io/v1
+kind: CustomResourceDefinition
+metadata:
+  name: servicemeshoperators.maxine.io
+spec:
+  group: maxine.io
+  versions:
+  - name: v1
+    served: true
+    storage: true
+    schema:
+      openAPIV3Schema:
+        type: object
+        properties:
+          spec:
+            type: object
+            properties:
+              meshType:
+                type: string
+                enum: [istio, linkerd, envoy]
+              namespace:
+                type: string
+              serviceSelector:
+                type: object
+                properties:
+                  labels:
+                    type: object
+                    additionalProperties:
+                      type: string
+              policies:
+                type: object
+                properties:
+                  circuitBreaker:
+                    type: object
+                    properties:
+                      maxRequests:
+                        type: integer
+                      timeout:
+                        type: string
+                  retry:
+                    type: object
+                    properties:
+                      attempts:
+                        type: integer
+                      timeout:
+                        type: string
+                  loadBalancing:
+                    type: string
+                    enum: [round_robin, least_request, consistent_hash]
+              monitoring:
+                type: object
+                properties:
+                  enabled:
+                    type: boolean
+                  metrics:
+                    type: boolean
+                  tracing:
+                    type: boolean
+            required:
+            - meshType
+            - namespace
+          status:
+            type: object
+            properties:
+              phase:
+                type: string
+                enum: [Pending, Configuring, Running, Failed]
+              conditions:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    type:
+                      type: string
+                    status:
+                      type: string
+                    lastTransitionTime:
+                      type: string
+                    reason:
+                      type: string
+                    message:
+                      type: string
+  scope: Namespaced
+  names:
+    plural: servicemeshoperators
+    singular: servicemeshoperator
+    kind: ServiceMeshOperator
+    shortNames:
+    - smo
+
+---
+apiVersion: apiextensions.k8s.io/v1
+kind: CustomResourceDefinition
+metadata:
+  name: trafficpolicies.maxine.io
+spec:
+  group: maxine.io
+  versions:
+  - name: v1
+    served: true
+    storage: true
+    schema:
+      openAPIV3Schema:
+        type: object
+        properties:
+          spec:
+            type: object
+            properties:
+              serviceName:
+                type: string
+              rules:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    name:
+                      type: string
+                    match:
+                      type: object
+                      properties:
+                        headers:
+                          type: object
+                          additionalProperties:
+                            type: string
+                        method:
+                          type: string
+                        path:
+                          type: string
+                    route:
+                      type: object
+                      properties:
+                        destination:
+                          type: object
+                          properties:
+                            host:
+                              type: string
+                            subset:
+                              type: string
+                        weight:
+                          type: integer
+                    timeout:
+                      type: string
+                    retries:
+                      type: object
+                      properties:
+                        attempts:
+                          type: integer
+                        perTryTimeout:
+                          type: string
+          status:
+            type: object
+            properties:
+              phase:
+                type: string
+                enum: [Pending, Applied, Failed]
+              appliedAt:
+                type: string
+  scope: Namespaced
+  names:
+    plural: trafficpolicies
+    singular: trafficpolicy
+    kind: TrafficPolicy
+    shortNames:
+    - tp
+
+---
+apiVersion: apiextensions.k8s.io/v1
+kind: CustomResourceDefinition
+metadata:
+  name: serviceendpoints.maxine.io
+spec:
+  group: maxine.io
+  versions:
+  - name: v1
+    served: true
+    storage: true
+    schema:
+      openAPIV3Schema:
+        type: object
+        properties:
+          spec:
+            type: object
+            properties:
+              serviceName:
+                type: string
+              endpoints:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    address:
+                      type: string
+                    port:
+                      type: integer
+                    labels:
+                      type: object
+                      additionalProperties:
+                        type: string
+              healthCheck:
+                type: object
+                properties:
+                  path:
+                    type: string
+                  interval:
+                    type: string
+                  timeout:
+                    type: string
+          status:
+            type: object
+            properties:
+              phase:
+                type: string
+                enum: [Pending, Registered, Failed]
+              registeredAt:
+                type: string
+              endpointCount:
+                type: integer
+  scope: Namespaced
+  names:
+    plural: serviceendpoints
+    singular: serviceendpoint
+    kind: ServiceEndpoint
+    shortNames:
+    - se

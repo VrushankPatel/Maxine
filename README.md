@@ -16,6 +16,7 @@ A minimal, high-performance service discovery and registry for microservices.
 - **Access Control Lists (ACLs)**: Fine-grained permissions for service discovery access
 - **Service Intentions**: Define allowed communication patterns between services
  - **Service Dependencies**: Manage service dependencies with cycle detection, graph visualization, and automatic dependency detection through call logging
+- **Service Call Analytics**: Real-time dashboard visualizing service communication patterns, call frequencies, and dependency graphs with interactive D3.js charts
 - **Metrics**: Basic /metrics endpoint with request counts, errors, uptime, and basic stats including cache performance metrics
 - **OpenTelemetry Metrics**: Comprehensive observability with Prometheus-compatible metrics for service registrations, discoveries, heartbeats, deregistrations, cache hits/misses, and total services/nodes
 - **Advanced Rate Limiting**: Distributed rate limiting with configurable limits per client IP to protect against excessive requests
@@ -1104,6 +1105,8 @@ Available methods:
 
 Client SDKs can be generated from `api-specs/maxine.proto`.
 
+- **Dart**: Full Mode and Lightning Mode APIs with async/await support for Flutter and Dart applications
+
 #### WebSocket API
 
 Maxine supports real-time event streaming via WebSocket for monitoring service changes.
@@ -1386,11 +1389,13 @@ Maxine provides client SDKs for easy integration:
 - **Java**: Full Mode API support
 - **C#**: Full Mode API support
 - **Rust**: Full Mode API support
+- **Dart**: Full Mode and Lightning Mode APIs with async/await support for Flutter and Dart applications
 
 Client SDKs include caching, automatic retries, and support for all discovery strategies.
 
 - **PHP**: Full Mode and Lightning Mode APIs with caching support
 - **Ruby**: Full Mode and Lightning Mode APIs with WebSocket support
+- **C++**: High-performance C++ SDK for low-latency applications and game servers
 
 ## Architecture
 
