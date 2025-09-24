@@ -100,7 +100,9 @@ if (config.lightningMode) {
             services: { type: 'number' },
             nodes: { type: 'number' },
             persistenceEnabled: { type: 'boolean' },
-            persistenceType: { type: 'string' }
+            persistenceType: { type: 'string' },
+            wsConnections: { type: 'number' },
+            eventsBroadcasted: { type: 'number' }
         }
     };
     const stringifyMetrics = stringify(metricsResponseSchema);
@@ -156,6 +158,8 @@ if (config.lightningMode) {
     // Metrics
     let requestCount = 0;
     let errorCount = 0;
+    let wsConnectionCount = 0;
+    let eventBroadcastCount = 0;
 
     // Rate limiting disabled in lightning mode for ultimate speed
     // const rateLimitMap = new Map(); // ip -> { count, resetTime }
@@ -310,7 +314,7 @@ if (config.lightningMode) {
             const persistenceType = config.persistenceType;
             // winston.info(`AUDIT: Metrics requested - clientIP: ${clientIP}`);
             res.writeHead(200, { 'Content-Type': 'application/json' });
-            res.end(stringifyMetrics({ uptime, requests: requestCount, errors: errorCount, services, nodes, persistenceEnabled, persistenceType }));
+            res.end(stringifyMetrics({ uptime, requests: requestCount, errors: errorCount, services, nodes, persistenceEnabled, persistenceType, wsConnections: wsConnectionCount, eventsBroadcasted: eventBroadcastCount }));
         } catch (error) {
             winston.error(`AUDIT: Metrics failed - error: ${error.message}, clientIP: ${req.connection.remoteAddress || req.socket.remoteAddress || 'unknown'}`);
             errorCount++;
@@ -373,6 +377,30 @@ if (config.lightningMode) {
             errorCount++;
             res.writeHead(500, { 'Content-Type': 'application/json' });
             res.end('{"error": "Internal server error"}');
+        }
+    });
+
+    // Handle token refresh
+    routes.set('POST /refresh-token', (req, res, query, body) => {
+        try {
+            const { token } = body;
+            const clientIP = req.connection.remoteAddress || req.socket.remoteAddress || 'unknown';
+            if (!token) {
+                winston.warn(`AUDIT: Token refresh failed - missing token, clientIP: ${clientIP}`);
+                res.writeHead(400, { 'Content-Type': 'application/json' });
+                res.end('{"error": "Missing token"}');
+                return;
+            }
+            const decoded = jwt.verify(token, config.jwtSecret);
+            const newToken = jwt.sign({ username: decoded.username, role: decoded.role }, config.jwtSecret, { expiresIn: config.jwtExpiresIn });
+            winston.info(`AUDIT: Token refreshed - username: ${decoded.username}, clientIP: ${clientIP}`);
+            res.writeHead(200, { 'Content-Type': 'application/json' });
+            res.end(JSON.stringify({ token: newToken }));
+        } catch (error) {
+            winston.error(`AUDIT: Token refresh failed - error: ${error.message}, clientIP: ${req.connection.remoteAddress || req.socket.remoteAddress || 'unknown'}`);
+            errorCount++;
+            res.writeHead(401, { 'Content-Type': 'application/json' });
+            res.end(errorUnauthorized);
         }
     });
 
@@ -1249,6 +1277,7 @@ if (config.lightningMode) {
         loadEventHistory();
 
         const broadcast = (event, data) => {
+            eventBroadcastCount++;
             const messageObj = { event, data, timestamp: Date.now() };
             const message = JSON.stringify(messageObj);
             // Store in history
@@ -1295,12 +1324,13 @@ if (config.lightningMode) {
         };
 
         const clientFilters = new Map(); // ws -> filter object
-        const clientAuth = new Map(); // ws -> authenticated boolean
+        const clientAuth = new Map(); // ws -> user object or false
 
         wss.on('connection', (ws) => {
+            wsConnectionCount++;
             console.log('WebSocket client connected for event streaming');
             clientFilters.set(ws, null); // no filter by default
-            clientAuth.set(ws, !config.authEnabled); // authenticated if auth not enabled
+            clientAuth.set(ws, config.authEnabled ? false : { role: 'anonymous' }); // user object or false
 
             ws.on('message', (message) => {
                 try {
@@ -1309,8 +1339,8 @@ if (config.lightningMode) {
                         if (config.authEnabled) {
                             try {
                                 const decoded = jwt.verify(data.auth, config.jwtSecret);
-                                clientAuth.set(ws, true);
-                                ws.send(JSON.stringify({ type: 'authenticated' }));
+                                clientAuth.set(ws, decoded);
+                                ws.send(JSON.stringify({ type: 'authenticated', user: decoded }));
                             } catch (err) {
                                 ws.send(JSON.stringify({ type: 'auth_failed' }));
                                 ws.close();
@@ -1322,11 +1352,29 @@ if (config.lightningMode) {
                         return;
                     }
                     if (data.subscribe) {
+                        // Role check: only admin can subscribe to admin events
+                        const user = clientAuth.get(ws);
+                        if (data.subscribe.event === 'admin_event' && (!user || user.role !== 'admin')) {
+                            ws.send(JSON.stringify({ type: 'error', message: 'Insufficient permissions' }));
+                            return;
+                        }
                         clientFilters.set(ws, data.subscribe);
                         ws.send(JSON.stringify({ type: 'subscribed', filter: data.subscribe }));
                     } else if (data.unsubscribe) {
                         clientFilters.set(ws, null);
                         ws.send(JSON.stringify({ type: 'unsubscribed' }));
+                    } else if (data.refresh_token) {
+                        const user = clientAuth.get(ws);
+                        if (!user) {
+                            ws.send(JSON.stringify({ type: 'error', message: 'Not authenticated' }));
+                            return;
+                        }
+                        try {
+                            const newToken = jwt.sign({ username: user.username, role: user.role }, config.jwtSecret, { expiresIn: config.jwtExpiresIn });
+                            ws.send(JSON.stringify({ type: 'token_refreshed', token: newToken }));
+                        } catch (err) {
+                            ws.send(JSON.stringify({ type: 'error', message: 'Token refresh failed' }));
+                        }
                     }
                 } catch (e) {
                     // ignore invalid messages
@@ -1334,6 +1382,7 @@ if (config.lightningMode) {
             });
 
             ws.on('close', () => {
+                wsConnectionCount--;
                 console.log('WebSocket client disconnected');
                 clientFilters.delete(ws);
                 clientAuth.delete(ws);

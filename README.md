@@ -162,7 +162,7 @@ Returns status, services count, nodes count.
 ```http
 GET /metrics
 ```
-Returns uptime, requests, errors, services, nodes, persistenceEnabled, persistenceType.
+Returns uptime, requests, errors, services, nodes, persistenceEnabled, persistenceType, wsConnections, eventsBroadcasted.
 
 ##### Backup Registry
 ```http
@@ -457,6 +457,23 @@ Response:
 
 Use the token in Authorization header: `Bearer <token>` for protected endpoints like /backup, /restore, /trace/*.
 
+##### Refresh Token
+```http
+POST /refresh-token
+Content-Type: application/json
+
+{
+  "token": "current-jwt-token"
+}
+```
+
+Response:
+```json
+{
+  "token": "new-jwt-token"
+}
+```
+
 #### gRPC API
 
 Maxine supports gRPC for high-performance service registration and discovery.
@@ -491,7 +508,9 @@ If authentication is enabled, clients must authenticate by sending an auth messa
 }
 ```
 
-Upon successful authentication, the server responds with `{"type": "authenticated"}`. If authentication fails, the connection is closed.
+Upon successful authentication, the server responds with `{"type": "authenticated", "user": {...}}`. If authentication fails, the connection is closed.
+
+Role-based access: Certain subscriptions may require specific roles (e.g., admin for admin events).
 
 ##### Subscription and Filtering
 
@@ -518,6 +537,16 @@ To unsubscribe:
   "unsubscribe": true
 }
 ```
+
+To refresh token:
+
+```json
+{
+  "refresh_token": true
+}
+```
+
+Response: `{"type": "token_refreshed", "token": "new-token"}`
 
 If no filter is set, all events are received.
 
