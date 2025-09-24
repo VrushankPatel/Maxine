@@ -167,6 +167,12 @@ GET /metrics
 ```
 Returns uptime, requests, errors, services, nodes, persistenceEnabled, persistenceType, wsConnections, eventsBroadcasted.
 
+##### Heap Dump
+```http
+GET /heapdump
+```
+Creates a heap snapshot file for memory profiling (requires heapdump module).
+
 ##### Backup Registry
 ```http
 GET /backup

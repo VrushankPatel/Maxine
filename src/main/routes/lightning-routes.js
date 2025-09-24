@@ -4,6 +4,7 @@ const bodyParser = require('body-parser');
 const config = require('../config/config');
 const discoveryController = require('../controller/maxine/discovery-controller');
 const fastJson = require('fast-json-stringify');
+const heapdump = require('heapdump');
 
 // Fast JSON schemas for optimized responses
 const registerSchema = {
@@ -332,6 +333,18 @@ if (config.metricsEnabled) {
             originalEnd.apply(this, args);
         };
         next();
+    });
+
+    // Heap dump for memory profiling
+    router.get('/heapdump', (req, res) => {
+        const filename = `heapdump-${Date.now()}.heapsnapshot`;
+        heapdump.writeSnapshot(filename, (err, filename) => {
+            if (err) {
+                res.status(500).send('Error creating heap dump');
+            } else {
+                res.send(`Heap dump written to ${filename}`);
+            }
+        });
     });
 }
 
