@@ -29,6 +29,16 @@ class LightningServiceRegistrySimple {
         // Basic tracing
         this.traces = new Map();
 
+        // Circuit Breaker
+        this.circuitFailures = new Map(); // nodeName -> failure count
+        this.circuitState = new Map(); // nodeName -> 'closed' | 'open' | 'half-open'
+        this.circuitLastFailure = new Map(); // nodeName -> timestamp
+        this.circuitNextTry = new Map(); // nodeName -> timestamp for next retry
+        this.circuitBreakerThreshold = config.circuitBreakerFailureThreshold || 5;
+        this.circuitBreakerTimeout = config.circuitBreakerTimeout || 60000;
+        this.circuitBreakerRetryDelay = 1000; // initial retry delay 1s
+        this.circuitBreakerMaxRetryDelay = 30000; // max 30s
+
         // Persistence
         this.persistenceEnabled = config.persistenceEnabled;
         this.persistenceType = config.persistenceType;
@@ -123,28 +133,33 @@ class LightningServiceRegistrySimple {
         const service = this.services.get(serviceName);
         if (!service || service.healthyNodesArray.length === 0) return null;
 
+        // Filter out nodes with open circuit breakers
+        const availableNodes = service.healthyNodesArray.filter(node => !this.isCircuitOpen(node.nodeName));
+
+        if (availableNodes.length === 0) return null;
+
         let selectedNode;
         switch (strategy) {
             case 'random':
-                const randomIndex = (fastRandom() * service.healthyNodesArray.length) | 0;
-                selectedNode = service.healthyNodesArray[randomIndex];
+                const randomIndex = (fastRandom() * availableNodes.length) | 0;
+                selectedNode = availableNodes[randomIndex];
                 break;
             case 'weighted-random':
-                selectedNode = this.selectWeightedRandom(service.healthyNodesArray);
+                selectedNode = this.selectWeightedRandom(availableNodes);
                 break;
             case 'least-connections':
-                selectedNode = this.selectLeastConnections(service.healthyNodesArray);
+                selectedNode = this.selectLeastConnections(availableNodes);
                 break;
             case 'consistent-hash':
-                selectedNode = this.selectConsistentHash(service.healthyNodesArray, clientIP || 'default');
+                selectedNode = this.selectConsistentHash(availableNodes, clientIP || 'default');
                 break;
             case 'ip-hash':
-                selectedNode = this.selectIPHash(service.healthyNodesArray, clientIP);
+                selectedNode = this.selectIPHash(availableNodes, clientIP);
                 break;
             default: // round-robin
                 let index = service.roundRobinIndex || 0;
-                selectedNode = service.healthyNodesArray[index];
-                service.roundRobinIndex = (index + 1) % service.healthyNodesArray.length;
+                selectedNode = availableNodes[index % availableNodes.length];
+                service.roundRobinIndex = (index + 1) % availableNodes.length;
         }
         if (selectedNode) {
             selectedNode.connections++; // Increment for least-connections
@@ -257,13 +272,65 @@ class LightningServiceRegistrySimple {
         return this.traces.get(id) || {};
     }
 
+    // Circuit Breaker methods
+    isCircuitOpen(nodeName) {
+        const state = this.circuitState.get(nodeName);
+        if (state === 'open') {
+            const nextTry = this.circuitNextTry.get(nodeName);
+            if (nextTry && Date.now() > nextTry) {
+                // Time to try half-open
+                this.circuitState.set(nodeName, 'half-open');
+                this.circuitNextTry.delete(nodeName);
+                if (global.broadcast) global.broadcast('circuit_half_open', { nodeId: nodeName });
+                return false;
+            }
+            return true;
+        }
+        return false;
+    }
+
+    recordFailure(nodeName) {
+        const currentFailures = this.circuitFailures.get(nodeName) || 0;
+        this.circuitFailures.set(nodeName, currentFailures + 1);
+        this.circuitLastFailure.set(nodeName, Date.now());
+
+        if (currentFailures + 1 >= this.circuitBreakerThreshold) {
+            this.circuitState.set(nodeName, 'open');
+            // Exponential backoff for retry
+            const delay = Math.min(this.circuitBreakerRetryDelay * Math.pow(2, currentFailures), this.circuitBreakerMaxRetryDelay);
+            this.circuitNextTry.set(nodeName, Date.now() + delay);
+            if (global.broadcast) global.broadcast('circuit_open', { nodeId: nodeName, failures: currentFailures + 1 });
+        }
+    }
+
+    recordSuccess(nodeName) {
+        this.circuitFailures.set(nodeName, 0);
+        this.circuitState.set(nodeName, 'closed');
+        this.circuitLastFailure.delete(nodeName);
+        this.circuitNextTry.delete(nodeName);
+        if (global.broadcast) global.broadcast('circuit_closed', { nodeId: nodeName });
+    }
+
+    getCircuitState(nodeName) {
+        return {
+            state: this.circuitState.get(nodeName) || 'closed',
+            failures: this.circuitFailures.get(nodeName) || 0,
+            lastFailure: this.circuitLastFailure.get(nodeName) || 0,
+            nextTry: this.circuitNextTry.get(nodeName) || 0
+        };
+    }
+
     getRegistryData() {
         const data = {
             services: {},
             lastHeartbeats: {},
             nodeToService: {},
             servicesCount: this.servicesCount,
-            nodesCount: this.nodesCount
+            nodesCount: this.nodesCount,
+            circuitFailures: {},
+            circuitState: {},
+            circuitLastFailure: {},
+            circuitNextTry: {}
         };
         for (const [serviceName, service] of this.services) {
             data.services[serviceName] = {
@@ -280,6 +347,18 @@ class LightningServiceRegistrySimple {
         }
         for (const [node, service] of this.nodeToService) {
             data.nodeToService[node] = service;
+        }
+        for (const [node, failures] of this.circuitFailures) {
+            data.circuitFailures[node] = failures;
+        }
+        for (const [node, state] of this.circuitState) {
+            data.circuitState[node] = state;
+        }
+        for (const [node, ts] of this.circuitLastFailure) {
+            data.circuitLastFailure[node] = ts;
+        }
+        for (const [node, ts] of this.circuitNextTry) {
+            data.circuitNextTry[node] = ts;
         }
         return data;
     }
@@ -301,6 +380,10 @@ class LightningServiceRegistrySimple {
         this.nodeToService = new Map(Object.entries(data.nodeToService || {}));
         this.servicesCount = data.servicesCount || 0;
         this.nodesCount = data.nodesCount || 0;
+        this.circuitFailures = new Map(Object.entries(data.circuitFailures || {}));
+        this.circuitState = new Map(Object.entries(data.circuitState || {}));
+        this.circuitLastFailure = new Map(Object.entries(data.circuitLastFailure || {}));
+        this.circuitNextTry = new Map(Object.entries(data.circuitNextTry || {}));
         this.saveRegistry();
     }
 
@@ -312,7 +395,11 @@ class LightningServiceRegistrySimple {
                 lastHeartbeats: {},
                 nodeToService: {},
                 servicesCount: this.servicesCount,
-                nodesCount: this.nodesCount
+                nodesCount: this.nodesCount,
+                circuitFailures: {},
+                circuitState: {},
+                circuitLastFailure: {},
+                circuitNextTry: {}
             };
             for (const [serviceName, service] of this.services) {
                 data.services[serviceName] = {
@@ -329,6 +416,18 @@ class LightningServiceRegistrySimple {
             }
             for (const [node, service] of this.nodeToService) {
                 data.nodeToService[node] = service;
+            }
+            for (const [node, failures] of this.circuitFailures) {
+                data.circuitFailures[node] = failures;
+            }
+            for (const [node, state] of this.circuitState) {
+                data.circuitState[node] = state;
+            }
+            for (const [node, ts] of this.circuitLastFailure) {
+                data.circuitLastFailure[node] = ts;
+            }
+            for (const [node, ts] of this.circuitNextTry) {
+                data.circuitNextTry[node] = ts;
             }
 
             if (this.persistenceType === 'file') {
@@ -385,6 +484,10 @@ class LightningServiceRegistrySimple {
                 this.nodeToService = new Map(Object.entries(data.nodeToService || {}));
                 this.servicesCount = data.servicesCount || 0;
                 this.nodesCount = data.nodesCount || 0;
+                this.circuitFailures = new Map(Object.entries(data.circuitFailures || {}));
+                this.circuitState = new Map(Object.entries(data.circuitState || {}));
+                this.circuitLastFailure = new Map(Object.entries(data.circuitLastFailure || {}));
+                this.circuitNextTry = new Map(Object.entries(data.circuitNextTry || {}));
             }
         } catch (err) {
             console.error('Error loading registry:', err);

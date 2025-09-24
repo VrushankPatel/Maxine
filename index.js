@@ -517,6 +517,14 @@ if (config.lightningMode) {
     routes.set('GET /service-mesh/envoy-config', handleEnvoyConfig);
     routes.set('GET /service-mesh/istio-config', handleIstioConfig);
 
+    // Circuit Breaker endpoints
+    routes.set('GET /circuit-breaker/:nodeId', (req, res, query, body) => {
+        const nodeId = req.url.split('/').pop();
+        const state = serviceRegistry.getCircuitState(nodeId);
+        res.writeHead(200, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify(state));
+    });
+
     // Actuator endpoints for compatibility
     routes.set('GET /api/actuator/health', (req, res, query, body) => {
         res.writeHead(200, { 'Content-Type': 'application/json' });
@@ -606,13 +614,18 @@ if (config.lightningMode) {
                 return;
             }
             const target = `http://${node.address}`;
-            req.url = path + parsedUrl.search;
-            proxy.web(req, res, { target }, (err) => {
-                if (err) {
-                    res.writeHead(500, { 'Content-Type': 'application/json' });
-                    res.end('{"error": "Proxy error"}');
-                }
-            });
+             req.url = path + parsedUrl.search;
+             proxy.web(req, res, { target }, (err) => {
+                 if (err) {
+                     // Record circuit breaker failure
+                     serviceRegistry.recordFailure(node.nodeName);
+                     res.writeHead(500, { 'Content-Type': 'application/json' });
+                     res.end('{"error": "Proxy error"}');
+                 } else {
+                     // Record success for circuit breaker
+                     serviceRegistry.recordSuccess(node.nodeName);
+                 }
+             });
             return;
         }
 
