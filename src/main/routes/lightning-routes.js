@@ -80,19 +80,15 @@ const notFoundBuffer = Buffer.from('{"message": "Service unavailable"}');
 const commandRegex = /^(\w+)\s+(.+)$/;
 
 // Simple controllers for lightning mode
-let serviceRegistry;
-
-const setServiceRegistry = (registry) => {
-    serviceRegistry = registry;
-};
+const getServiceRegistry = () => global.serviceRegistry;
 
 const lightningRegistryController = (req, res) => {
     const { serviceName, host, port, metadata, namespace, datacenter, tags, version, environment } = req.body;
     if (!serviceName || !host || !port) {
         return res.status(400).json({ error: 'Missing serviceName, host, or port' });
     }
-    const nodeId = serviceRegistry.register(serviceName, { host, port, metadata, tags, version, environment }, namespace, datacenter);
-    res.send(stringifyRegister({ nodeId, status: 'registered' }));
+    const nodeId = getServiceRegistry().register(serviceName, { host, port, metadata, tags, version, environment }, namespace, datacenter);
+    res.json({ nodeId, status: 'registered' });
 };
 
 const lightningHeartbeatController = (req, res) => {
@@ -100,7 +96,7 @@ const lightningHeartbeatController = (req, res) => {
     if (!nodeId) {
         return res.status(400).json({ error: 'Missing nodeId' });
     }
-    const success = serviceRegistry.heartbeat(nodeId);
+    const success = getServiceRegistry().heartbeat(nodeId);
     res.send(stringifyHeartbeat({ success }));
 };
 
@@ -110,13 +106,13 @@ const lightningDeregisterController = (req, res) => {
         return res.status(400).json({ error: 'Missing serviceName or nodeName' });
     }
     const fullServiceName = datacenter !== "default" ? `${datacenter}:${namespace || "default"}:${serviceName}` : `${namespace || "default"}:${serviceName}`;
-    serviceRegistry.deregister(fullServiceName, nodeName);
+    getServiceRegistry().deregister(fullServiceName, nodeName);
     res.send(stringifyDeregister({ success: true }));
 };
 
 const lightningServerListController = (req, res) => {
     const services = {};
-    for (const [serviceName, service] of serviceRegistry.services) {
+    for (const [serviceName, service] of getServiceRegistry().services) {
         services[serviceName] = Array.from(service.nodes.values());
     }
     res.json(services);
@@ -183,7 +179,7 @@ router.get('/discover', (req, res) => {
     const tags = req.query.tags ? req.query.tags.split(',') : [];
     const version = req.query.version;
     const environment = req.query.environment;
-    const serviceNode = serviceRegistry.getRandomNode(fullServiceName, strategy, clientId, tags, version, environment);
+    const serviceNode = getServiceRegistry().getRandomNode(fullServiceName, strategy, clientId, tags, version, environment);
     if (!serviceNode) {
         return res.status(404).end(notFoundBuffer);
     }
@@ -237,7 +233,7 @@ router.post('/connection/increment', rawBodyParser, (req, res, next) => {
     if (!serviceName || !nodeName) {
         return res.status(400).json({ error: 'Missing serviceName or nodeName' });
     }
-    serviceRegistry.incrementActiveConnections(serviceName, nodeName);
+    getServiceRegistry().incrementActiveConnections(serviceName, nodeName);
     res.send(stringifyConnection({ success: true }));
 });
 router.post('/connection/decrement', rawBodyParser, (req, res, next) => {
@@ -252,7 +248,7 @@ router.post('/connection/decrement', rawBodyParser, (req, res, next) => {
     if (!serviceName || !nodeName) {
         return res.status(400).json({ error: 'Missing serviceName or nodeName' });
     }
-    serviceRegistry.decrementActiveConnections(serviceName, nodeName);
+    getServiceRegistry().decrementActiveConnections(serviceName, nodeName);
     res.send(stringifyConnection({ success: true }));
 });
 router.post('/response-time', rawBodyParser, (req, res, next) => {
@@ -267,7 +263,7 @@ router.post('/response-time', rawBodyParser, (req, res, next) => {
     if (!serviceName || !nodeName || latency === undefined) {
         return res.status(400).json({ error: 'Missing serviceName, nodeName, or latency' });
     }
-    serviceRegistry.recordResponseTime(serviceName, nodeName, latency);
+    getServiceRegistry().recordResponseTime(serviceName, nodeName, latency);
     res.send(stringifyResponseTime({ success: true }));
 });
 
@@ -283,15 +279,15 @@ router.post('/record-call', rawBodyParser, (req, res, next) => {
     if (!callerService || !calledService) {
         return res.status(400).json({ error: 'Missing callerService or calledService' });
     }
-    serviceRegistry.recordCall(callerService, calledService);
+    getServiceRegistry().recordCall(callerService, calledService);
     res.send(stringifyResponseTime({ success: true })); // reuse schema
 });
 router.get('/servers', lightningServerListController);
 router.get('/health', (req, res) => {
-    const services = serviceRegistry.services.size;
-    const totalNodes = Array.from(serviceRegistry.services.values()).reduce((sum, s) => sum + s.healthyNodes.size, 0);
-    const totalActiveConnections = Array.from(serviceRegistry.activeConnections.values()).reduce((sum, c) => sum + c, 0);
-    const responseTimes = Array.from(serviceRegistry.responseTimes.values());
+    const services = getServiceRegistry().services.size;
+    const totalNodes = Array.from(getServiceRegistry().services.values()).reduce((sum, s) => sum + s.healthyNodes.size, 0);
+    const totalActiveConnections = Array.from(getServiceRegistry().activeConnections.values()).reduce((sum, c) => sum + c, 0);
+    const responseTimes = Array.from(getServiceRegistry().responseTimes.values());
     const averageResponseTime = responseTimes.length > 0 ? responseTimes.reduce((sum, t) => sum + t, 0) / responseTimes.length : 0;
     res.end(`{"status":"ok","services":${services},"nodes":${totalNodes},"activeConnections":${totalActiveConnections},"averageResponseTime":${averageResponseTime.toFixed(2)}}`);
 });
@@ -301,12 +297,12 @@ router.get('/health/score', (req, res) => {
     if (!serviceName) {
         return res.status(400).end('{"message":"Missing serviceName"}');
     }
-    const score = serviceRegistry.getServiceHealthScore(serviceName);
+    const score = getServiceRegistry().getServiceHealthScore(serviceName);
     res.end(`{"serviceName":"${serviceName}","healthScore":${score.toFixed(2)}}`);
 });
 
 router.get('/backup', (req, res) => {
-    const data = serviceRegistry.backup();
+    const data = getServiceRegistry().backup();
     res.json(data);
 });
 
@@ -318,22 +314,22 @@ router.post('/restore', rawBodyParser, (req, res, next) => {
     }
     next();
 }, (req, res) => {
-    const success = serviceRegistry.restore(req.body);
+    const success = getServiceRegistry().restore(req.body);
     res.send(stringifyDeregister({ success }));
 });
 
 // Basic metrics for lightning mode
-if (config.metricsEnabled) {
+    if (config.metricsEnabled) {
     let requestCount = 0;
     let errorCount = 0;
     let startTime = Date.now();
 
     router.get('/metrics', (req, res) => {
         const uptime = Date.now() - startTime;
-        const services = serviceRegistry.services.size;
-        const totalNodes = Array.from(serviceRegistry.services.values()).reduce((sum, s) => sum + s.healthyNodes.size, 0);
-        const totalActiveConnections = Array.from(serviceRegistry.activeConnections.values()).reduce((sum, c) => sum + c, 0);
-        const responseTimes = Array.from(serviceRegistry.responseTimes.values());
+        const services = getServiceRegistry().services.size;
+        const totalNodes = Array.from(getServiceRegistry().services.values()).reduce((sum, s) => sum + s.healthyNodes.size, 0);
+        const totalActiveConnections = Array.from(getServiceRegistry().activeConnections.values()).reduce((sum, c) => sum + c, 0);
+        const responseTimes = Array.from(getServiceRegistry().responseTimes.values());
         const averageResponseTime = responseTimes.length > 0 ? responseTimes.reduce((sum, t) => sum + t, 0) / responseTimes.length : 0;
         res.end(`{"uptime":${uptime},"requests":${requestCount},"errors":${errorCount},"services":${services},"nodes":${totalNodes},"activeConnections":${totalActiveConnections},"averageResponseTime":${averageResponseTime.toFixed(2)}}`);
     });
@@ -389,7 +385,7 @@ router.post('/api/maxine/serviceops/canary/set', rawBodyParser, (req, res, next)
     if (!serviceName || percentage === undefined || !Array.isArray(canaryNodes)) {
         return res.status(400).end('{"message":"Invalid parameters"}');
     }
-    serviceRegistry.setCanary(serviceName, percentage, canaryNodes);
+    getServiceRegistry().setCanary(serviceName, percentage, canaryNodes);
     res.end('{"message":"Canary set"}');
 });
 router.post('/api/maxine/serviceops/blue-green/set', rawBodyParser, (req, res, next) => {
@@ -402,7 +398,7 @@ router.post('/api/maxine/serviceops/blue-green/set', rawBodyParser, (req, res, n
     if (!serviceName || !Array.isArray(blueNodes) || !Array.isArray(greenNodes)) {
         return res.status(400).end('{"message":"Invalid parameters"}');
     }
-    serviceRegistry.setBlueGreen(serviceName, blueNodes, greenNodes, activeColor || 'blue');
+    getServiceRegistry().setBlueGreen(serviceName, blueNodes, greenNodes, activeColor || 'blue');
     res.end('{"message":"Blue-green set"}');
 });
 
@@ -418,7 +414,7 @@ router.post('/alias/set', rawBodyParser, (req, res, next) => {
     if (!alias || !serviceName) {
         return res.status(400).json({ error: 'Missing alias or serviceName' });
     }
-    serviceRegistry.setAlias(alias, serviceName);
+    getServiceRegistry().setAlias(alias, serviceName);
     res.send(stringifyDeregister({ success: true })); // reuse schema
 });
 
@@ -427,7 +423,7 @@ router.get('/alias/get', (req, res) => {
     if (!alias) {
         return res.status(400).json({ error: 'Missing alias' });
     }
-    const serviceName = serviceRegistry.getAlias(alias);
+    const serviceName = getServiceRegistry().getAlias(alias);
     res.send(stringifyAliasGet({ serviceName }));
 });
 
@@ -443,7 +439,7 @@ router.post('/maintenance/set', rawBodyParser, (req, res, next) => {
     if (!nodeName) {
         return res.status(400).json({ error: 'Missing nodeName' });
     }
-    serviceRegistry.setMaintenance(nodeName, inMaintenance);
+    getServiceRegistry().setMaintenance(nodeName, inMaintenance);
     res.send(stringifyMaintenance({ success: true }));
 });
 
@@ -459,7 +455,7 @@ router.post('/kv/set', rawBodyParser, (req, res, next) => {
     if (!key) {
         return res.status(400).json({ error: 'Missing key' });
     }
-    serviceRegistry.setKV(key, value);
+    getServiceRegistry().setKV(key, value);
     res.send(stringifyDeregister({ success: true })); // reuse
 });
 
@@ -468,7 +464,7 @@ router.get('/kv/get', (req, res) => {
     if (!key) {
         return res.status(400).json({ error: 'Missing key' });
     }
-    const value = serviceRegistry.getKV(key);
+    const value = getServiceRegistry().getKV(key);
     res.send(stringifyKVGet({ value }));
 });
 
@@ -485,7 +481,7 @@ router.post('/federation/add', rawBodyParser, (req, res, next) => {
     if (!name || !url) {
         return res.status(400).json({ error: 'Missing name or url' });
     }
-    serviceRegistry.addFederatedRegistry(name, url);
+    getServiceRegistry().addFederatedRegistry(name, url);
     res.send(stringifyDeregister({ success: true }));
 });
 
@@ -501,7 +497,7 @@ router.delete('/federation/remove', rawBodyParser, (req, res, next) => {
     if (!name) {
         return res.status(400).json({ error: 'Missing name' });
     }
-    serviceRegistry.removeFederatedRegistry(name);
+    getServiceRegistry().removeFederatedRegistry(name);
     res.send(stringifyDeregister({ success: true }));
 });
 
@@ -512,7 +508,7 @@ router.get('/federated/discover', (req, res) => {
     }
     const strategy = req.query.strategy || 'round-robin';
     const clientId = req.query.clientId;
-    const node = serviceRegistry.getFederatedNode(serviceName, strategy, clientId);
+    const node = getServiceRegistry().getFederatedNode(serviceName, strategy, clientId);
     if (!node) {
         return res.status(404).end(notFoundBuffer);
     }
@@ -544,7 +540,7 @@ router.post('/dependency/add', rawBodyParser, (req, res, next) => {
     if (!serviceName || !dependsOn) {
         return res.status(400).json({ error: 'Missing serviceName or dependsOn' });
     }
-    serviceRegistry.addDependency(serviceName, dependsOn);
+    getServiceRegistry().addDependency(serviceName, dependsOn);
     res.send(stringifyDeregister({ success: true }));
 });
 
@@ -553,7 +549,7 @@ router.get('/dependency/get', (req, res) => {
     if (!serviceName) {
         return res.status(400).json({ error: 'Missing serviceName' });
     }
-    const deps = Array.from(serviceRegistry.getDependencies(serviceName));
+    const deps = Array.from(getServiceRegistry().getDependencies(serviceName));
     res.json({ dependencies: deps });
 });
 
@@ -562,7 +558,7 @@ router.get('/dependency/dependents', (req, res) => {
     if (!serviceName) {
         return res.status(400).json({ error: 'Missing serviceName' });
     }
-    const deps = Array.from(serviceRegistry.getDependents(serviceName));
+    const deps = Array.from(getServiceRegistry().getDependents(serviceName));
     res.json({ dependents: deps });
 });
 
@@ -579,7 +575,7 @@ router.post('/trace/start', rawBodyParser, (req, res, next) => {
     if (!operation || !id) {
         return res.status(400).json({ error: 'Missing operation or id' });
     }
-    serviceRegistry.startTrace(operation, id);
+    getServiceRegistry().startTrace(operation, id);
     res.send(stringifyDeregister({ success: true }));
 });
 
@@ -595,7 +591,7 @@ router.post('/trace/event', rawBodyParser, (req, res, next) => {
     if (!id || !event) {
         return res.status(400).json({ error: 'Missing id or event' });
     }
-    serviceRegistry.addTraceEvent(id, event);
+    getServiceRegistry().addTraceEvent(id, event);
     res.send(stringifyDeregister({ success: true }));
 });
 
@@ -611,7 +607,7 @@ router.post('/trace/end', rawBodyParser, (req, res, next) => {
     if (!id) {
         return res.status(400).json({ error: 'Missing id' });
     }
-    serviceRegistry.endTrace(id);
+    getServiceRegistry().endTrace(id);
     res.send(stringifyDeregister({ success: true }));
 });
 
@@ -620,8 +616,8 @@ router.get('/trace/get', (req, res) => {
     if (!id) {
         return res.status(400).json({ error: 'Missing id' });
     }
-    const trace = serviceRegistry.getTrace(id);
+    const trace = getServiceRegistry().getTrace(id);
     res.json(trace || {});
 });
 
-module.exports = { router, setServiceRegistry };
+module.exports = { router };

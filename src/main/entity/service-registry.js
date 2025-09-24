@@ -145,6 +145,60 @@ class ServiceRegistry extends EventEmitter {
         });
     }
 
+    register(serviceName, nodeInfo) {
+        if (config.lightningMode) {
+            // Use lightning mode registration
+            const nodeName = `${nodeInfo.host}:${nodeInfo.port}`;
+            const weight = nodeInfo.metadata && nodeInfo.metadata.weight ? parseInt(nodeInfo.metadata.weight) : 1;
+            const version = nodeInfo.metadata && nodeInfo.metadata.version ? nodeInfo.metadata.version : null;
+            const fullServiceName = version ? `${serviceName}:${version}` : serviceName;
+            const node = { ...nodeInfo, nodeName, address: `${nodeInfo.host}:${nodeInfo.port}`, weight, connections: 0 };
+
+            if (!this.registry.has(fullServiceName)) {
+                this.registry.set(fullServiceName, { nodes: new Map(), healthyNodes: [], roundRobinIndex: 0 });
+            }
+            const service = this.registry.get(fullServiceName);
+            if (service.nodes.has(nodeName)) {
+                // Already registered, just update heartbeat
+                this.lastHeartbeats.set(nodeName, Date.now());
+                return nodeName;
+            }
+            service.nodes.set(nodeName, node);
+            service.healthyNodes.push(node);
+            this.nodeToService.set(nodeName, fullServiceName);
+            this.lastHeartbeats.set(nodeName, Date.now());
+            this.servicesCount++;
+            this.nodesCount++;
+
+            // Update tag index
+            if (node.metadata && node.metadata.tags) {
+                for (const tag of node.metadata.tags) {
+                    if (!this.tagIndex.has(tag)) {
+                        this.tagIndex.set(tag, new Set());
+                    }
+                    this.tagIndex.get(tag).add(nodeName);
+                }
+            }
+
+            this.saveRegistry();
+            this.invalidateDiscoveryCache(fullServiceName);
+            if (global.broadcast) global.broadcast('service_registered', { serviceName: fullServiceName, nodeId: nodeName });
+            return nodeName;
+        } else {
+            // Full mode registration
+            const nodeName = `${nodeInfo.host}:${nodeInfo.port}`;
+            if (!this.registry.has(serviceName)) {
+                this.registry.set(serviceName, { nodes: {}, createdAt: Date.now() });
+            }
+            const service = this.registry.get(serviceName);
+            service.nodes[nodeName] = { ...nodeInfo, nodeName, registeredAt: Date.now() };
+            this.addToHealthyNodes(serviceName, nodeName);
+            this.publishChange({ type: 'register', serviceName, nodeName, data: { node: service.nodes[nodeName] } });
+            this.debounceSave();
+            return nodeName;
+        }
+    }
+
     ultraFastGetRandomNode(serviceName, strategy = 'round-robin', clientId = null) {
         if (config.lightningMode) {
             // Lightning mode: optimized for speed with basic load balancing
@@ -1376,6 +1430,62 @@ class ServiceRegistry extends EventEmitter {
         }
     }
 
+    register = (serviceName, nodeInfo, namespace = "default", datacenter = "default") => {
+        const { host, port, metadata = {}, tags = [], version, environment } = nodeInfo;
+        const nodeId = `${serviceName}:${host}:${port}`;
+        const address = `${host}:${port}`;
+        const node = {
+            nodeName: nodeId,
+            address,
+            host,
+            port,
+            metadata: { ...metadata, ...(tags ? { tags } : {}), ...(version ? { version } : {}), ...(environment ? { environment } : {}) },
+            healthy: true,
+            registeredAt: Date.now()
+        };
+
+        if (config.lightningMode) {
+            // Lightning mode: optimized for speed
+            let serviceData = this.registry.get(serviceName);
+            if (!serviceData) {
+                serviceData = { nodes: new Map(), healthyNodes: [], roundRobinIndex: 0 };
+                this.registry.set(serviceName, serviceData);
+            }
+            // Add to nodes if not exists
+            if (!serviceData.nodes.has(nodeId)) {
+                serviceData.nodes.set(nodeId, node);
+                this.nodeToService.set(nodeId, serviceName); // Track for fast cleanup
+                this.lastHeartbeats.set(nodeId, Date.now()); // Initialize heartbeat
+            }
+            // Add to healthyNodes if not already - optimized lookup
+            let exists = false;
+            for (let i = 0; i < serviceData.healthyNodes.length; i++) {
+                if (serviceData.healthyNodes[i].nodeName === nodeId) {
+                    exists = true;
+                    break;
+                }
+            }
+            if (!exists) {
+                serviceData.healthyNodes.push(node);
+            }
+        } else {
+            // Full mode: comprehensive registration
+            if (!this.registry.has(serviceName)) {
+                this.registry.set(serviceName, { nodes: {} });
+            }
+            const service = this.registry.get(serviceName);
+            if (!service.nodes[nodeId]) {
+                service.nodes[nodeId] = node;
+                this.addToHealthyNodes(serviceName, nodeId);
+                // Initialize heartbeat tracking
+                this.lastHeartbeats.set(nodeId, Date.now());
+                // Broadcast registration event
+                global.broadcast('service_registered', { serviceName, nodeId });
+            }
+        }
+        return nodeId;
+    }
+
     invalidateServiceCaches = (serviceName) => {
         // Invalidate all cache entries for this service (including groups)
         for (const key of this.healthyCache.keys()) {
@@ -1384,7 +1494,7 @@ class ServiceRegistry extends EventEmitter {
                 this.sortedHealthyCache.delete(key);
             }
         }
-          // Ultra-fast cache is maintained separately
+           // Ultra-fast cache is maintained separately
     }
 
     removeFromHealthyNodes = (serviceName, nodeName) => {
@@ -2436,6 +2546,30 @@ class ServiceRegistry extends EventEmitter {
 
     isBlacklisted(serviceName) {
         return this.blacklists.has(serviceName);
+    }
+
+    // Chaos engineering methods
+    chaosLatency = new Map(); // serviceName -> delay in ms
+    chaosFailure = new Map(); // serviceName -> failure rate (0-1)
+
+    injectLatency(serviceName, delay) {
+        this.chaosLatency.set(serviceName, delay);
+    }
+
+    injectFailure(serviceName, rate) {
+        this.chaosFailure.set(serviceName, rate);
+    }
+
+    resetChaos(serviceName) {
+        this.chaosLatency.delete(serviceName);
+        this.chaosFailure.delete(serviceName);
+    }
+
+    getChaosStatus() {
+        return {
+            latency: Object.fromEntries(this.chaosLatency),
+            failure: Object.fromEntries(this.chaosFailure)
+        };
     }
 }
 

@@ -60,7 +60,7 @@ if (config.lightningMode) {
     describe.skip(`${fileName} : NON API discover with config with Round Robin`, () => {});
 } else {
 describe(`${fileName} : NON API discover with config with Round Robin`, () => {
-    it(`RR discover with NonAPI`, (done) => {
+    it(`RR discover with NonAPI`, async () => {
         // Making sure that server selection strategy is RR
         config.serverSelectionStrategy = constants.SSS.RR;
         // Register service for test
@@ -68,13 +68,12 @@ describe(`${fileName} : NON API discover with config with Round Robin`, () => {
         // Reset cache for test
         const fullServiceName = `default:${serviceSampleRR.serviceName}:1.0`;
         discoveryService.clearCache();
-        const response1 = discoveryService.getNode(fullServiceName, serviceSampleRR.hostName);
+        const response1 = await discoveryService.getNode(fullServiceName, serviceSampleRR.hostName);
         response1.should.be.a('object');
         // by default, Round robin will return node with name like nodename + '-0', we'll test it.
         response1.should.have.own.property("nodeName", `${serviceSampleRR.nodeName}-0`);
         response1.should.have.own.property("parentNode", serviceSampleRR.nodeName);
         response1.should.have.own.property("address");
-        done();
     });
 });
 }

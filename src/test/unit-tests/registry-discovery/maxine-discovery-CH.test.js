@@ -55,7 +55,7 @@ registryService.registerService(serviceSampleCH);
 
 // We'll check if we're getting same server for multiple endpoint hits.
 describe(`${fileName} : API /api/maxine/discover with config with Consistent Hashing`, () => {
-    it(`CH discover with NonAPI`, (done) => {
+    it(`CH discover with NonAPI`, async () => {
         // Making sure that server selection strategy is CH
         config.serverSelectionStrategy = constants.SSS.CH;
         // Register service for test
@@ -66,15 +66,14 @@ describe(`${fileName} : API /api/maxine/discover with config with Consistent Has
         const fullServiceName = `default:${serviceSampleCH.serviceName}:1.0`;
         const ip = "127.0.0.1";
 
-        const response1 = discoveryService.getNode(fullServiceName, ip);
+        const response1 = await discoveryService.getNode(fullServiceName, ip);
 
-        const response2 = discoveryService.getNode(fullServiceName, ip);
+        const response2 = await discoveryService.getNode(fullServiceName, ip);
 
         // Because of consistent hashing, we should expect both the responses same because the ip we're passing is the same.
         response1.should.be.a('object');
         response2.should.be.a('object');
         response1.should.be.eql(response2);
-        done();
     });
 });
 }

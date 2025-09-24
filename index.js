@@ -461,6 +461,7 @@ if (config.ultraFastMode) {
 
     console.log('Ultra-Fast server setup complete');
     builder = { getApp: () => server };
+    module.exports = builder.getApp();
 } else if (config.lightningMode && !config.ultraFastMode) {
     // Minimal lightning mode with raw HTTP for ultimate speed
     const { LightningServiceRegistrySimple } = require('./src/main/entity/lightning-service-registry-simple');
@@ -2663,6 +2664,7 @@ if (config.ultraFastMode) {
             console.log('Maxine lightning-fast server listening on port', constants.PORT);
             console.log(`Lightning mode: minimal features for maximum performance using ${config.mtlsEnabled ? 'HTTPS with mTLS' : 'raw HTTP'}`);
         });
+    }
 
         // WebSocket server for real-time event streaming
         let wss = null;
@@ -2851,14 +2853,6 @@ if (config.ultraFastMode) {
                 broadcast('stats_update', stats);
             }
         }, 5000); // Every 5 seconds
-    }
-
-    // Start gRPC server
-    const grpcServer = new GrpcServer(serviceRegistry, config);
-    grpcServer.start(50051); // Default gRPC port
-
-    console.log('Server setup complete');
-    builder = { getApp: () => server };
 } else {
     // Full mode
     const loggingUtil = require('./src/main/util/logging/logging-util');
@@ -3005,7 +2999,7 @@ if (config.ultraFastMode) {
         // });
         // }
     });
-}
-}
 
-module.exports = builder.getApp();
+    module.exports = builder.server;
+}
+}

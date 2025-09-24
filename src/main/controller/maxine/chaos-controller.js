@@ -1,5 +1,5 @@
 const config = require('../../config/config');
-const registry = require('../entity/service-registry');
+const { serviceRegistry: registry } = require('../../entity/service-registry');
 
 const injectLatency = (req, res) => {
     const { serviceName, delay } = req.body;
