@@ -37,6 +37,30 @@ class MetricsService {
                 labelNames: ['service', 'status'],
                 registers: [this.register]
             });
+
+            // Enhanced error metrics
+            this.errorTotal = new promClient.Counter({
+                name: 'maxine_errors_total',
+                help: 'Total number of errors',
+                labelNames: ['service', 'error_type'],
+                registers: [this.register]
+            });
+
+            this.errorRate = new promClient.Gauge({
+                name: 'maxine_error_rate',
+                help: 'Current error rate (errors per second)',
+                labelNames: ['service'],
+                registers: [this.register]
+            });
+
+            // Enhanced latency histogram with more detailed buckets
+            this.detailedLatencyHistogram = new promClient.Histogram({
+                name: 'maxine_detailed_request_duration_seconds',
+                help: 'Detailed request duration in seconds with finer buckets',
+                labelNames: ['service', 'method', 'status'],
+                buckets: [0.0001, 0.0005, 0.001, 0.005, 0.01, 0.025, 0.05, 0.1, 0.25, 0.5, 1, 2.5, 5, 10, 25],
+                registers: [this.register]
+            });
         }
 
         // Legacy metrics for backward compatibility
@@ -69,6 +93,13 @@ class MetricsService {
                 method: method
             }, latency / 1000);
         }
+        if (this.detailedLatencyHistogram) {
+            this.detailedLatencyHistogram.observe({
+                service: serviceName,
+                method: method,
+                status: success ? 'success' : 'error'
+            }, latency / 1000);
+        }
 
         // Legacy metrics for backward compatibility
         this.metrics.totalRequests++;
@@ -94,7 +125,16 @@ class MetricsService {
         this.metrics.serviceRequests[serviceName]++;
     }
 
-    recordError(errorType) {
+    recordError(errorType, serviceName = 'unknown') {
+        // Update Prometheus metrics
+        if (this.errorTotal) {
+            this.errorTotal.inc({
+                service: serviceName,
+                error_type: errorType
+            });
+        }
+
+        // Legacy metrics for backward compatibility
         if (!this.metrics.errors[errorType]) {
             this.metrics.errors[errorType] = 0;
         }
