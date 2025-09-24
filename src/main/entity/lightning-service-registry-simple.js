@@ -612,10 +612,13 @@ class LightningServiceRegistrySimple extends EventEmitter {
                  case 'ai-driven':
                      selectedNode = this.selectAIDriven(availableNodes, clientIP);
                      break;
-                 case 'cost-aware':
-                     selectedNode = this.selectCostAware(availableNodes);
-                     break;
-                default: // round-robin
+                  case 'cost-aware':
+                      selectedNode = this.selectCostAware(availableNodes);
+                      break;
+                  case 'power-of-two-choices':
+                      selectedNode = this.selectPowerOfTwoChoices(availableNodes);
+                      break;
+                 default: // round-robin
                 let index = service.roundRobinIndex || 0;
                 selectedNode = availableNodes[index % availableNodes.length];
                 service.roundRobinIndex = (index + 1) % availableNodes.length;
@@ -854,6 +857,14 @@ class LightningServiceRegistrySimple extends EventEmitter {
         } else if (strategy === 'ai-driven' || strategy === 'advanced-ml') {
             // Advanced ML-based selection
             return this.selectAdvancedML(nodes, serviceName, clientId);
+        } else if (strategy === 'power-of-two-choices') {
+            // Power of two choices: select two random nodes, pick the one with fewer connections
+            if (nodes.length < 2) return nodes[0];
+            const choice1 = nodes[(fastRandom() * nodes.length) | 0];
+            const choice2 = nodes[(fastRandom() * nodes.length) | 0];
+            const conn1 = choice1.connections || 0;
+            const conn2 = choice2.connections || 0;
+            return conn1 <= conn2 ? choice1 : choice2;
         } else {
             // round-robin
             let index = service.roundRobinIndex || 0;
@@ -2065,8 +2076,26 @@ class LightningServiceRegistrySimple extends EventEmitter {
                  return a.connections - b.connections;
              });
 
-             return costPriorities[0].node;
-         }
+              return costPriorities[0].node;
+          }
+
+          selectPowerOfTwoChoices(nodes) {
+              if (nodes.length === 0) return null;
+              if (nodes.length === 1) return nodes[0];
+
+              // Power of two choices: select two random nodes, pick the one with fewer connections
+              const choice1 = nodes[(fastRandom() * nodes.length) | 0];
+              const choice2 = nodes[(fastRandom() * nodes.length) | 0];
+
+              // Ensure they are different if possible
+              while (nodes.length > 1 && choice1 === choice2) {
+                  choice2 = nodes[(fastRandom() * nodes.length) | 0];
+              }
+
+              const conn1 = choice1.connections || 0;
+              const conn2 = choice2.connections || 0;
+              return conn1 <= conn2 ? choice1 : choice2;
+          }
 
         // Get health scores for a service
         getHealthScores(serviceName) {
