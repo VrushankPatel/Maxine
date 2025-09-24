@@ -1,0 +1,64 @@
+apiVersion: apiextensions.k8s.io/v1
+kind: CustomResourceDefinition
+metadata:
+  name: servicepolicies.maxine.io
+spec:
+  group: maxine.io
+  versions:
+  - name: v1
+    served: true
+    storage: true
+    schema:
+      openAPIV3Schema:
+        type: object
+        properties:
+          spec:
+            type: object
+            properties:
+              serviceName:
+                type: string
+              loadBalancing:
+                type: string
+                enum: ["round-robin", "consistent-hash", "least-connections", "random"]
+                default: "round-robin"
+              trafficDistribution:
+                type: object
+                additionalProperties:
+                  type: number
+              circuitBreaker:
+                type: object
+                properties:
+                  enabled:
+                    type: boolean
+                    default: false
+                  failureThreshold:
+                    type: integer
+                    default: 5
+                  timeout:
+                    type: integer
+                    default: 60000
+              acl:
+                type: object
+                properties:
+                  allow:
+                    type: array
+                    items:
+                      type: string
+                  deny:
+                    type: array
+                    items:
+                      type: string
+          status:
+            type: object
+            properties:
+              applied:
+                type: boolean
+              lastUpdated:
+                type: string
+  scope: Namespaced
+  names:
+    plural: servicepolicies
+    singular: servicepolicy
+    kind: ServicePolicy
+    shortNames:
+    - sp

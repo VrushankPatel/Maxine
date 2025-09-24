@@ -25,13 +25,13 @@
 ## Next Steps
 
 ### High Priority
-- Implement Kubernetes Operator: Create a custom Kubernetes operator for automated Maxine deployment and management. This includes:
-  - Define Custom Resource Definitions (CRDs) for ServiceRegistry, ServiceInstance, and ServicePolicy
-  - Implement controller logic for watching CRD changes and reconciling Maxine state
-  - Add automated scaling based on service load metrics
-  - Integrate with Kubernetes services and endpoints for seamless discovery
-  - Provide Helm charts for easy deployment
-  - Enable declarative management of Maxine instances in K8s clusters
+- [x] Implement Kubernetes Operator: Create a custom Kubernetes operator for automated Maxine deployment and management. This includes:
+  - [x] Define Custom Resource Definitions (CRDs) for ServiceRegistry, ServiceInstance, and ServicePolicy
+  - [x] Implement controller logic for watching CRD changes and reconciling Maxine state
+  - [x] Add automated scaling based on service load metrics
+  - [x] Integrate with Kubernetes services and endpoints for seamless discovery
+  - [x] Provide Helm charts for easy deployment
+  - [x] Enable declarative management of Maxine instances in K8s clusters
 - Implement Service Mesh Integration Enhancements: Deep integration with popular service meshes:
   - Istio: Automatic Envoy configuration generation, traffic policies, and service mesh integration
   - Linkerd: Native Linkerd service profile generation and traffic splitting

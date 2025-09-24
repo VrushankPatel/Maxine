@@ -25,6 +25,7 @@ type RegisterPayload struct {
 	HostName    string                 `json:"hostName"`
 	Port        int                    `json:"port"`
 	Weight      int                    `json:"weight,omitempty"`
+	Tags        []string               `json:"tags,omitempty"`
 	Metadata    map[string]interface{} `json:"metadata,omitempty"`
 }
 
@@ -50,8 +51,11 @@ func (c *MaxineClient) Register(payload RegisterPayload) error {
 	return nil
 }
 
-func (c *MaxineClient) Discover(serviceName string) (*ServiceNode, error) {
+func (c *MaxineClient) Discover(serviceName string, tags []string) (*ServiceNode, error) {
 	url := c.BaseURL + "/api/maxine/serviceops/discover?serviceName=" + serviceName + "&proxy=false"
+	if len(tags) > 0 {
+		url += "&tags=" + fmt.Sprintf("%v", tags)
+	}
 	resp, err := http.Get(url)
 	if err != nil {
 		return nil, err
