@@ -422,23 +422,46 @@ Response:
 }
 ```
 
-##### Get Health Scores
-```http
-GET /health-score?serviceName=my-service
-```
+ ##### Get Health Scores
+ ```http
+ GET /health-score?serviceName=my-service
+ ```
 
-Returns health scores (0-100, higher better) for all healthy nodes in the service, based on response times, failure rates, and circuit breaker state.
+ Returns health scores (0-100, higher better) for all healthy nodes in the service, based on response times, failure rates, and circuit breaker state.
 
-Response:
-```json
-{
-  "serviceName": "my-service",
-  "scores": {
-    "my-service:localhost:3000": 85,
-    "my-service:localhost:3001": 92
-  }
-}
-```
+ Response:
+ ```json
+ {
+   "serviceName": "my-service",
+   "scores": {
+     "my-service:localhost:3000": 85,
+     "my-service:localhost:3001": 92
+   }
+ }
+ ```
+
+ ##### Predict Service Health
+ ```http
+ GET /predict-health?serviceName=my-service&window=300000
+ ```
+
+ Returns health predictions for service nodes using time-series analysis. The `window` parameter specifies the prediction time window in milliseconds (default: 300000ms / 5 minutes).
+
+ Response:
+ ```json
+ {
+   "serviceName": "my-service",
+   "predictions": {
+     "my-service:localhost:3000": {
+       "currentScore": 85,
+       "predictedScore": 78,
+       "trend": 2.5,
+       "predictedResponseTime": 180
+     }
+   },
+   "predictionWindow": 300000
+ }
+ ```
 
 ##### Set Traffic Distribution (Canary Deployments)
 ```http
@@ -1248,9 +1271,9 @@ Maxine maintains an in-memory registry of services and their instances. Services
 - Optimized heartbeat and discovery logic with parallel operations and async I/O
 - Active health checks for proactive service monitoring
 - Event-driven notifications for real-time updates
- - Load test results: 5,000 requests with 50 concurrent users in ~0.1s, average response time 1.07ms, 95th percentile 1.69ms, 100% success rate, 40k req/s
-      - Load test target: 95th percentile < 10ms for 50 concurrent users (achieved)
-      - Recent optimizations: Implemented adaptive caching with access-based TTL, SIMD-inspired binary search for weighted random selection, fine-tuned GC settings, added CPU affinity, improved performance to sub-2ms p95
+ - Load test results: 5,000 requests with 50 concurrent users in ~0.1s, average response time 1.27ms, 95th percentile 2.59ms, 100% success rate, 36k req/s
+       - Load test target: 95th percentile < 10ms for 50 concurrent users (achieved)
+       - Recent optimizations: Implemented object pooling for response objects to reduce GC pressure, added service health prediction using time-series analysis, adaptive caching with access-based TTL, SIMD-inspired binary search for weighted random selection, fine-tuned GC settings, added CPU affinity
 
 ## License
 

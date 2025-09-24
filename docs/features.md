@@ -259,6 +259,13 @@
 - Health score is computed as a score from 0-100, where higher scores indicate healthier nodes with lower load and faster response times.
 - Enables monitoring service quality and load distribution optimization.
 - Provides quantitative metrics for service health monitoring.
+
+### Service Health Prediction
+- Maxine provides predictive health monitoring using time-series analysis of response times.
+- Predicts future service health based on historical performance trends.
+- Uses linear regression on recent response time data to forecast service degradation.
+- API endpoint `/predict-health?serviceName=<name>&window=<ms>` returns predictions with trend analysis.
+- Enables proactive scaling and maintenance before services fail.
 ### Service API Specs
 - Maxine supports storing and retrieving API specifications for registered services to enable better service contract management.
 - Set API specs (e.g., OpenAPI/Swagger JSON) via `/api/maxine/serviceops/api-spec/set` with serviceName, nodeName, and apiSpec payload.
