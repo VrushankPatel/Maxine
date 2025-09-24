@@ -219,6 +219,12 @@ GET /service-mesh/istio-config
 ```
 Returns Istio VirtualService and DestinationRule configurations in JSON format for service mesh deployment.
 
+##### Get Circuit Breaker State
+```http
+GET /circuit-breaker/:nodeId
+```
+Returns the circuit breaker state for the specified node, including state (closed/open/half-open), failure count, last failure timestamp, and next retry timestamp.
+
 ##### Proxy to Service
 ```http
 GET /proxy/:serviceName/:path
