@@ -11,6 +11,8 @@ A minimal, high-performance service discovery and registry for microservices.
 - **Health Checks**: /health endpoint returning service and node counts, active health monitoring for real-time status
 - **Circuit Breakers**: Automatic failure detection and recovery to protect against cascading failures
 - **Rate Limiting**: Protect services from excessive requests with configurable limits
+- **Access Control Lists (ACLs)**: Fine-grained permissions for service discovery access
+- **Service Intentions**: Define allowed communication patterns between services
 - **Metrics**: Basic /metrics endpoint with request counts, errors, uptime, and basic stats
 - **Minimal Dependencies**: Only essential packages for maximum performance
 - **Lightning Mode**: Dedicated mode for ultimate speed with core features: register, heartbeat, deregister, discover with round-robin/random load balancing, health, metrics
@@ -21,9 +23,6 @@ A minimal, high-performance service discovery and registry for microservices.
 
 While Maxine provides core service registry functionality with lightning-fast performance, the following features are not yet implemented but could be added for a more complete service registry:
 
-- **Access Control Lists (ACLs)**: Fine-grained permissions for service access
-- **Service Intentions**: Define allowed communication patterns between services
-- **Service Blacklists**: Prevent registration or discovery of problematic services
 - **Federation**: Connect multiple Maxine instances across datacenters
 - **Distributed Tracing**: Track service calls across the mesh
 - **Authentication/Authorization**: Secure access to registry operations
@@ -272,8 +271,8 @@ Maxine maintains an in-memory registry of services and their instances. Services
 - Optimized heartbeat and discovery logic with parallel operations and async I/O
 - Active health checks for proactive service monitoring
 - Event-driven notifications for real-time updates
-- Load test results: 5,000 requests with 50 concurrent users in ~0.2s, average response time 1.69ms, 95th percentile 2.4ms, 100% success rate
-- Load test target: 95th percentile < 10ms for 50 concurrent users (achieved)
+ - Load test results: 5,000 requests with 50 concurrent users in ~0.1s, average response time 1.06ms, 95th percentile 1.95ms, 100% success rate
+ - Load test target: 95th percentile < 10ms for 50 concurrent users (achieved)
 
 ## License
 
