@@ -7,7 +7,7 @@ A minimal, high-performance service discovery and registry for microservices.
 - **Lightning Fast**: In-memory storage with O(1) lookups, optimized heartbeat with periodic cleanup, pre-allocated response buffers, fast LCG PRNG for random selection
 - **Simple API**: Register, discover, heartbeat, and deregister services with support for service versioning
 - **Automatic Cleanup**: Removes expired services with efficient periodic cleanup (every 30 seconds)
-- **Load Balancing**: Round-robin, random, weighted-random, least-connections, consistent-hash, ip-hash, geo-aware selection for advanced load balancing
+- **Load Balancing**: Round-robin, random, weighted-random, least-connections, consistent-hash, ip-hash, geo-aware, predictive selection for advanced load balancing
 - **Health Checks**: /health endpoint returning service and node counts, active health monitoring for real-time status
 - **Advanced Health Checks**: Custom health check endpoints with proactive monitoring, configurable intervals, and health status integration with load balancing decisions
 - **Circuit Breakers**: Automatic failure detection and recovery to protect against cascading failures
@@ -18,7 +18,7 @@ A minimal, high-performance service discovery and registry for microservices.
 - **Service Dependencies**: Manage service dependencies with cycle detection and graph visualization
 - **Metrics**: Basic /metrics endpoint with request counts, errors, uptime, and basic stats
 - **Audit Logging**: Comprehensive logging of all registry operations using Winston, including user actions, system events, and security incidents with log rotation and export capabilities
-- **Persistence**: Optional persistence to survive restarts with file-based or Redis storage
+- **Persistence**: Optional persistence to survive restarts with file-based, Redis, memory-mapped (mmap), or shared memory (shm) storage
 - **Minimal Dependencies**: Only essential packages for maximum performance
 - **Lightning Mode**: Dedicated mode for ultimate speed with core features: register, heartbeat, deregister, discover with round-robin/random load balancing, health, metrics, OpenTelemetry tracing, audit logging
 - **Optimized Parsing**: Fast JSON parsing with error handling
@@ -48,8 +48,10 @@ Maxine supports optional persistence to maintain registry state across restarts:
 
 - **File-based**: Saves to `registry.json` in the working directory
 - **Redis**: Uses Redis for distributed storage
+- **Memory-mapped (mmap)**: Zero-copy operations with memory-mapped files for ultra-fast persistence
+- **Shared Memory (shm)**: In-memory shared buffer with file backing for maximum performance
 
-Enable with `PERSISTENCE_ENABLED=true` and set `PERSISTENCE_TYPE=file` or `PERSISTENCE_TYPE=redis`.
+Enable with `PERSISTENCE_ENABLED=true` and set `PERSISTENCE_TYPE=file`, `redis`, `mmap`, or `shm`.
 
 For Redis, configure `REDIS_HOST`, `REDIS_PORT`, `REDIS_PASSWORD`.
 
@@ -257,7 +259,7 @@ Response:
 GET /discover?serviceName=my-service&loadBalancing=round-robin&version=1.0&tags=web,api
 ```
 
-Load balancing options: `round-robin` (default), `random`, `weighted-random`, `least-connections`, `weighted-least-connections`, `consistent-hash`, `ip-hash`, `geo-aware`, `least-response-time`, `health-score`. Use `version` parameter for service versioning. Use `tags` parameter to filter services by tags (comma-separated).
+Load balancing options: `round-robin` (default), `random`, `weighted-random`, `least-connections`, `weighted-least-connections`, `consistent-hash`, `ip-hash`, `geo-aware`, `least-response-time`, `health-score`, `predictive`. Use `version` parameter for service versioning. Use `tags` parameter to filter services by tags (comma-separated).
 
 Response: Returns a service instance or 404 if not found.
 
@@ -1176,7 +1178,7 @@ Maxine maintains an in-memory registry of services and their instances. Services
 
 ## Performance
 
-- **Lightning Mode**: Ultra-fast response times using raw Node.js HTTP server, O(1) lookups using optimized in-memory data structures with lightweight LRU caching (10k entries, 30s TTL), pre-allocated buffer responses, fast LCG PRNG for random selection, advanced load balancing strategies (round-robin, random, weighted-random, least-connections, consistent-hash, ip-hash, geo-aware), optimized request handling without deferred execution for minimal latency, stripped-down registry with only core features for minimal overhead
+- **Lightning Mode**: Ultra-fast response times using raw Node.js HTTP server, O(1) lookups using optimized in-memory data structures with lightweight LRU caching (10k entries, 30s TTL), pre-allocated buffer responses, fast LCG PRNG for random selection, advanced load balancing strategies (round-robin, random, weighted-random, least-connections, consistent-hash, ip-hash, geo-aware, predictive), optimized request handling without deferred execution for minimal latency, stripped-down registry with only core features for minimal overhead, memory-mapped and shared memory persistence options
 - **Full Mode**: Comprehensive features with optimized caching, async operations, and JWT authentication
 - Minimal memory footprint with efficient data structures
 - Automatic cleanup prevents memory leaks with periodic sweeps (every 30 seconds)
