@@ -5,17 +5,18 @@ import { htmlReport } from "https://raw.githubusercontent.com/benc-uk/k6-reporte
 
 const host = "http://127.0.0.1:8080";
 const apiUrl = host;
-const isLightning = __ENV.ULTRA_FAST_MODE === 'true' || __ENV.LIGHTNING_MODE !== 'false';
-const registerUrl = isLightning ? '/register' : '/api/maxine/serviceops/register';
-const heartbeatUrl = isLightning ? '/heartbeat' : '/api/maxine/serviceops/heartbeat';
-const discoverUrl = isLightning ? '/discover?serviceName=dbservice&version=1.0' : '/api/maxine/serviceops/discover?serviceName=dbservice&version=1.0';
+const registerUrl = '/api/maxine/serviceops/register';
+const heartbeatUrl = '/api/maxine/serviceops/heartbeat';
+const discoverUrl = '/api/maxine/serviceops/discover?serviceName=dbservice&version=1.0';
 const statusCheck = {"is status 200": response => response.status === 200};
 
 const headers = {headers: {'Content-Type': 'application/json'}};
 
 const serviceObj = JSON.stringify({
     "serviceName": "dbservice",
-    "host": "localhost",
+    "version": "1.0",
+    "hostName": "localhost",
+    "nodeName": "node1",
     "port": 3000,
     "metadata": {"version": "1.0"}
 });
