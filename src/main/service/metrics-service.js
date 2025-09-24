@@ -38,6 +38,33 @@ class MetricsService {
                 registers: [this.register]
             });
 
+            this.websocketConnections = new promClient.Gauge({
+                name: 'maxine_websocket_connections',
+                help: 'Number of active WebSocket connections',
+                registers: [this.register]
+            });
+
+            this.eventRate = new promClient.Counter({
+                name: 'maxine_events_total',
+                help: 'Total number of events emitted',
+                labelNames: ['event_type'],
+                registers: [this.register]
+            });
+
+            this.circuitBreakerState = new promClient.Gauge({
+                name: 'maxine_circuit_breaker_state',
+                help: 'Circuit breaker state (0=closed, 1=open, 2=half-open)',
+                labelNames: ['service', 'node'],
+                registers: [this.register]
+            });
+
+            this.serviceHealthScore = new promClient.Gauge({
+                name: 'maxine_service_health_score',
+                help: 'Health score of service instances (0-100)',
+                labelNames: ['service', 'node'],
+                registers: [this.register]
+            });
+
             // Enhanced error metrics
             this.errorTotal = new promClient.Counter({
                 name: 'maxine_errors_total',
@@ -172,6 +199,31 @@ class MetricsService {
         if (this.serviceInstances) {
             this.serviceInstances.set({ service: serviceName, status: 'healthy' }, healthyCount);
             this.serviceInstances.set({ service: serviceName, status: 'total' }, totalCount);
+        }
+    }
+
+    updateWebsocketConnections(count) {
+        if (this.websocketConnections) {
+            this.websocketConnections.set(count);
+        }
+    }
+
+    recordEvent(eventType) {
+        if (this.eventRate) {
+            this.eventRate.inc({ event_type: eventType });
+        }
+    }
+
+    updateCircuitBreakerState(serviceName, nodeId, state) {
+        if (this.circuitBreakerState) {
+            const stateNum = state === 'closed' ? 0 : state === 'open' ? 1 : 2;
+            this.circuitBreakerState.set({ service: serviceName, node: nodeId }, stateNum);
+        }
+    }
+
+    updateHealthScore(serviceName, nodeId, score) {
+        if (this.serviceHealthScore) {
+            this.serviceHealthScore.set({ service: serviceName, node: nodeId }, score);
         }
     }
 }
