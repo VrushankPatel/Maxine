@@ -956,9 +956,9 @@ Maxine maintains an in-memory registry of services and their instances. Services
 - Optimized heartbeat and discovery logic with parallel operations and async I/O
 - Active health checks for proactive service monitoring
 - Event-driven notifications for real-time updates
-  - Load test results: 5,000 requests with 50 concurrent users in ~0.1s, average response time 1.06ms, 95th percentile 1.95ms, 100% success rate
-  - Load test target: 95th percentile < 10ms for 50 concurrent users (achieved)
-  - Recent optimizations: Fixed WebSocket event broadcasting, added missing cleanup method for expired services, improved error handling in lightning mode
+   - Load test results: 5,000 requests with 50 concurrent users in ~0.1s, average response time 1.06ms, 95th percentile 1.95ms, 100% success rate
+   - Load test target: 95th percentile < 10ms for 50 concurrent users (achieved)
+   - Recent optimizations: Fixed WebSocket event broadcasting, added missing cleanup method for expired services, improved error handling in lightning mode, disabled synchronous logging in request handlers to prevent I/O bottlenecks
 
 ## License
 
