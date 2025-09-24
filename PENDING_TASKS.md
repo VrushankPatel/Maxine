@@ -1,11 +1,12 @@
 # Pending Tasks for Maxine Service Registry
 
 ## Performance Optimizations
-- [x] Run load tests and analyze performance metrics (target: 95th percentile < 10ms for 50 concurrent users) - ACHIEVED: ~1.61ms 95th percentile
+- [x] Run load tests and analyze performance metrics (target: 95th percentile < 10ms for 50 concurrent users) - ACHIEVED: ~2.04ms 95th percentile
 - [x] Optimize in-memory data structures for O(1) lookups
 - [x] Review and optimize heartbeat and cleanup logic
 - [x] Check for memory leaks and optimize memory usage
 - [x] Optimize JSON parsing and response buffers
+- [x] Remove rate limiting in lightning mode for ultimate speed
 
   ## Missing Features Implementation
     - [x] Implement Access Control Lists (ACLs): Fine-grained permissions for service access
