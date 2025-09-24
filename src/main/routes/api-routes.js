@@ -133,7 +133,13 @@ const { PERMISSIONS } = require('../security/rbac');
 const { getRolesController, getUserRolesController, setUserRoleController } = require('../controller/security/role-controller');
 const { generateApiKey, revokeApiKey, listApiKeys, validateApiKey } = require('../controller/security/api-key-controller');
 const { googleAuth, googleCallback } = require('../controller/security/oauth-controller');
-const { injectLatency, injectFailure, resetChaos, getChaosStatus } = require('../controller/maxine/chaos-controller');
+const { injectLatency, injectFailure, injectNetworkPartition, runChaosExperiment, getChaosExperiments, stopChaosExperiment, resetChaos, getChaosStatus } = require('../controller/maxine/chaos-controller');
+const { optimizeIstioConfig, optimizeLinkerdConfig, getOptimizationAnalytics } = require('../controller/maxine/service-mesh-ai-controller');
+const { getServiceCallAnalytics } = require('../controller/maxine/service-call-analytics-controller');
+const { getMultiCloudScalingRecommendations, executeMultiCloudScaling, getCloudProviderStatus } = require('../controller/maxine/multi-cloud-autoscaling-controller');
+const { getEBPFMetrics, getEBPFTraces, getEBPFProgramStatus, getNetworkTopology, attachEBPFProbe, detachEBPFProbe, getEBPFStatus } = require('../controller/maxine/ebpf-controller');
+const { getPersistenceStatus, saveRegistrySnapshot, loadRegistrySnapshot, getStoredKeys, saveServiceData, loadServiceData, configurePersistence } = require('../controller/maxine/distributed-persistence-controller');
+const { getSpireStatus, getWorkloadIdentities, createAuthorizationPolicy, getAuthorizationPolicy, rotateCertificates, validateCertificate, configureSpire } = require('../controller/maxine/spiffe-spire-controller');
 
 const isHighPerformanceMode = config.highPerformanceMode;
 const isLightningMode = config.lightningMode;
@@ -229,14 +235,50 @@ if (!config.ultraFastMode && !isLightningMode) {
                                         .get("health/score", authenticationController, limiter, healthScoreController)
                                         .post("autoscaling", authenticationController, requireRole('admin'), limiter, bodyParser.json(), autoscalingController)
                                         .get("scaling/recommendations", authenticationController, limiter, scalingRecommendationsController)
+                                        .get("scaling/multi-cloud", authenticationController, limiter, getMultiCloudScalingRecommendations)
+                                        .post("scaling/multi-cloud/execute", authenticationController, requireRole('admin'), limiter, bodyParser.json(), executeMultiCloudScaling)
+                                        .get("scaling/cloud-providers", authenticationController, limiter, getCloudProviderStatus)
                                         .post("chaos", authenticationController, requireRole('admin'), limiter, bodyParser.json(), chaosController)
+                                        .post("chaos/latency", authenticationController, requireRole('admin'), limiter, bodyParser.json(), (req, res) => injectLatency(req, res))
+                                        .post("chaos/failure", authenticationController, requireRole('admin'), limiter, bodyParser.json(), (req, res) => injectFailure(req, res))
+                                        .post("chaos/partition", authenticationController, requireRole('admin'), limiter, bodyParser.json(), (req, res) => injectNetworkPartition(req, res))
+                                        .post("chaos/experiment", authenticationController, requireRole('admin'), limiter, bodyParser.json(), (req, res) => runChaosExperiment(req, res))
+                                        .get("chaos/experiments", authenticationController, requireRole('admin'), limiter, (req, res) => getChaosExperiments(req, res))
+                                        .delete("chaos/experiment/:experimentId", authenticationController, requireRole('admin'), limiter, (req, res) => stopChaosExperiment(req, res))
+                                        .post("chaos/reset", authenticationController, requireRole('admin'), limiter, bodyParser.json(), (req, res) => resetChaos(req, res))
+                                        .get("chaos/status", authenticationController, requireRole('admin'), limiter, (req, res) => getChaosStatus(req, res))
                                        .get("cache/stats", authenticationController, limiter, cacheStatsController)
                                       .get("changes", authenticationController, limiter, changesController)
                                       .get("changes/sse", authenticationController, limiter, changesSSEController)
                                         .get("envoy/config", authenticationController, limiter, envoyConfigController)
                                         .get("service-mesh/metrics", authenticationController, limiter, serviceMeshMetricsController)
                                         .get("istio/config", authenticationController, limiter, istioConfigController)
+                                        .get("istio/config/ai", authenticationController, limiter, optimizeIstioConfig)
                                         .get("linkerd/config", authenticationController, limiter, linkerdConfigController)
+                                        .get("linkerd/config/ai", authenticationController, limiter, optimizeLinkerdConfig)
+                                         .get("service-mesh/analytics", authenticationController, limiter, getOptimizationAnalytics)
+                                         .get("analytics", authenticationController, limiter, getServiceCallAnalytics)
+                                         .get("ebpf/metrics", authenticationController, limiter, getEBPFMetrics)
+                                        .get("ebpf/traces", authenticationController, limiter, getEBPFTraces)
+                                        .get("ebpf/programs", authenticationController, limiter, getEBPFProgramStatus)
+                                        .get("ebpf/topology", authenticationController, limiter, getNetworkTopology)
+                                        .post("ebpf/probes", authenticationController, requireRole('admin'), limiter, bodyParser.json(), attachEBPFProbe)
+                                        .delete("ebpf/probes/:probeId", authenticationController, requireRole('admin'), limiter, detachEBPFProbe)
+                                        .get("ebpf/status", authenticationController, limiter, getEBPFStatus)
+                                        .get("persistence/status", authenticationController, limiter, getPersistenceStatus)
+                                        .post("persistence/snapshot/save", authenticationController, requireRole('admin'), limiter, saveRegistrySnapshot)
+                                        .get("persistence/snapshot/load", authenticationController, limiter, loadRegistrySnapshot)
+                                        .get("persistence/keys", authenticationController, limiter, getStoredKeys)
+                                        .post("persistence/service-data", authenticationController, requireRole('admin'), limiter, bodyParser.json(), saveServiceData)
+                                        .get("persistence/service-data/:serviceName/:type", authenticationController, limiter, loadServiceData)
+                                        .post("persistence/config", authenticationController, requireRole('admin'), limiter, bodyParser.json(), configurePersistence)
+                                        .get("spire/status", authenticationController, limiter, getSpireStatus)
+                                        .get("spire/workloads", authenticationController, limiter, getWorkloadIdentities)
+                                        .post("spire/policies", authenticationController, requireRole('admin'), limiter, bodyParser.json(), createAuthorizationPolicy)
+                                        .get("spire/policies/:serviceName", authenticationController, limiter, getAuthorizationPolicy)
+                                        .post("spire/certificates/rotate", authenticationController, requireRole('admin'), limiter, rotateCertificates)
+                                        .post("spire/certificates/validate", authenticationController, limiter, bodyParser.json(), validateCertificate)
+                                        .post("spire/config", authenticationController, requireRole('admin'), limiter, bodyParser.json(), configureSpire)
                                         .get("traefik/config", authenticationController, limiter, traefikConfigController)
                                         .get("appmesh/config", authenticationController, limiter, appMeshConfigController)
                                         .get("opa/policies", authenticationController, limiter, opaPolicyController)

@@ -19,6 +19,11 @@ class LightningServiceRegistry {
         this.aliases = new Map(); // alias -> serviceName
         this.maintenanceNodes = new Set(); // nodeName in maintenance
         this.stickyAssignments = new Map(); // clientId -> nodeName
+
+        // Chaos engineering properties
+        this.chaosLatency = new Map(); // serviceName -> delay in ms
+        this.chaosFailure = new Map(); // serviceName -> failure rate (0-1)
+        this.chaosPartitions = new Map(); // serviceName -> { endTime, affectedNodes: Set }
         this.kvStore = new Map(); // simple KV store
         this.tagIndex = new Map(); // tag -> Set<nodeName>
         this.versionIndex = new Map(); // version -> Set<nodeName>
@@ -534,6 +539,59 @@ class LightningServiceRegistry {
         service.minResponseTime = minTime;
     }
 
+    // Chaos engineering methods
+    injectLatency(serviceName, delay) {
+        this.chaosLatency.set(serviceName, delay);
+    }
+
+    injectFailure(serviceName, rate) {
+        this.chaosFailure.set(serviceName, rate);
+    }
+
+    injectNetworkPartition(serviceName, duration) {
+        const endTime = Date.now() + duration;
+        const service = this.services.get(serviceName);
+        const affectedNodes = service ? new Set(service.availableNodesArray.map(n => n.nodeName)) : new Set();
+
+        this.chaosPartitions.set(serviceName, {
+            endTime,
+            affectedNodes,
+            startTime: Date.now()
+        });
+    }
+
+    resetChaos(serviceName) {
+        this.chaosLatency.delete(serviceName);
+        this.chaosFailure.delete(serviceName);
+        this.chaosPartitions.delete(serviceName);
+    }
+
+    applyChaos(serviceName, node) {
+        if (!node) return { failure: false, delay: 0 };
+
+        // Check network partition
+        const partition = this.chaosPartitions.get(serviceName);
+        if (partition && Date.now() < partition.endTime && partition.affectedNodes.has(node.nodeName)) {
+            return { failure: true, delay: 0 }; // Simulate partition
+        }
+
+        // Check failure injection
+        const failureRate = this.chaosFailure.get(serviceName);
+        if (failureRate && Math.random() < failureRate) {
+            return { failure: true, delay: 0 };
+        }
+
+        // Check latency injection
+        const delay = this.chaosLatency.get(serviceName) || 0;
+        if (delay > 0) {
+            // In a real implementation, this would delay the response
+            // For simulation, we just return the delay info
+            return { failure: false, delay };
+        }
+
+        return { failure: false, delay: 0 };
+    }
+
     heartbeat(nodeId) {
         if (this.lastHeartbeats.has(nodeId)) {
             this.lastHeartbeats.set(nodeId, Date.now());
@@ -781,8 +839,21 @@ class LightningServiceRegistry {
                       this.redisCacheMissCounter.add(1, { service: serviceName, strategy });
                   }
 
-                 span.end();
-                 return node;
+                  // Apply chaos engineering before returning
+                  const chaosApplied = this.applyChaos(serviceName, node);
+                  if (chaosApplied.failure) {
+                      span.setAttribute('chaos.failure', true);
+                      span.end();
+                      return null; // Simulate failure
+                  }
+                  if (chaosApplied.delay > 0) {
+                      // In real chaos engineering, this would be applied at the network level
+                      // For simulation, we just log it
+                      span.setAttribute('chaos.delay', chaosApplied.delay);
+                  }
+
+                  span.end();
+                  return node;
              } catch (error) {
                  span.recordException(error);
                  span.setStatus({ code: 2, message: error.message });
@@ -997,18 +1068,25 @@ class LightningServiceRegistry {
                  }
              }
 
-             // Increment counters
-             if (this.discoverCounter) {
-                 this.discoverCounter.add(1, { service: serviceName, strategy });
-             }
-             if (!cached && this.cacheMissCounter) {
-                 this.cacheMissCounter.add(1, { service: serviceName, strategy });
-             }
-             if (this.redisCacheEnabled && !cached && this.redisCacheMissCounter) {
-                 this.redisCacheMissCounter.add(1, { service: serviceName, strategy });
-             }
+              // Increment counters
+              if (this.discoverCounter) {
+                  this.discoverCounter.add(1, { service: serviceName, strategy });
+              }
+              if (!cached && this.cacheMissCounter) {
+                  this.cacheMissCounter.add(1, { service: serviceName, strategy });
+              }
+              if (this.redisCacheEnabled && !cached && this.redisCacheMissCounter) {
+                  this.redisCacheMissCounter.add(1, { service: serviceName, strategy });
+              }
 
-             return node;
+              // Apply chaos engineering before returning
+              const chaosApplied = this.applyChaos(serviceName, node);
+              if (chaosApplied.failure) {
+                  return null; // Simulate failure
+              }
+              // Note: delay would be applied at network level in real implementation
+
+              return node;
          } catch (error) {
              return null;
          }

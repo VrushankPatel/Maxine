@@ -10,9 +10,14 @@ class MaxineOperator {
         this.appsApi = this.kc.makeApiClient(k8s.AppsV1Api);
         this.customApi = this.kc.makeApiClient(k8s.CustomObjectsApi);
 
+        this.maxineUrl = process.env.MAXINE_URL || 'http://maxine-service:8080';
+
         this.watchServiceRegistries();
         this.watchServiceInstances();
         this.watchServicePolicies();
+        this.watchServiceMeshOperators();
+        this.watchTrafficPolicies();
+        this.watchServiceEndpoints();
     }
 
     watchServiceRegistries() {
@@ -303,6 +308,470 @@ class MaxineOperator {
             console.error('Error getting registry service:', err);
             return null;
         }
+    }
+
+    // Service Mesh Operator methods
+    watchServiceMeshOperators() {
+        const watch = new k8s.Watch(this.kc);
+        watch.watch('/apis/maxine.io/v1/servicemeshoperators', {}, (type, obj) => {
+            if (type === 'ADDED' || type === 'MODIFIED') {
+                this.reconcileServiceMeshOperator(obj);
+            } else if (type === 'DELETED') {
+                this.deleteServiceMeshOperator(obj);
+            }
+        }, (err) => {
+            console.error('Error watching ServiceMeshOperators:', err);
+        });
+    }
+
+    async reconcileServiceMeshOperator(smo) {
+        const { meshType, namespace, serviceSelector, policies } = smo.spec;
+
+        await this.updateServiceMeshOperatorStatus(smo, 'Configuring', 'Configuring service mesh');
+
+        try {
+            switch (meshType) {
+                case 'istio':
+                    await this.configureIstio(smo);
+                    break;
+                case 'linkerd':
+                    await this.configureLinkerd(smo);
+                    break;
+                case 'envoy':
+                    await this.configureEnvoy(smo);
+                    break;
+                default:
+                    throw new Error(`Unsupported mesh type: ${meshType}`);
+            }
+
+            await this.updateServiceMeshOperatorStatus(smo, 'Running', 'Service mesh configured successfully');
+        } catch (error) {
+            await this.updateServiceMeshOperatorStatus(smo, 'Failed', error.message);
+        }
+    }
+
+    async configureIstio(smo) {
+        const { namespace, serviceSelector, policies } = smo.spec;
+
+        // Get services from Maxine
+        const services = await this.getMaxineServices();
+
+        // Generate Istio configurations
+        const configurations = [];
+
+        for (const [serviceName, serviceData] of Object.entries(services)) {
+            // VirtualService
+            const virtualService = {
+                apiVersion: 'networking.istio.io/v1beta1',
+                kind: 'VirtualService',
+                metadata: {
+                    name: `${serviceName}-operator`,
+                    namespace: namespace
+                },
+                spec: {
+                    hosts: [serviceName],
+                    http: [{
+                        route: [{
+                            destination: {
+                                host: serviceName
+                            }
+                        }],
+                        timeout: policies?.circuitBreaker?.timeout || '30s',
+                        retries: {
+                            attempts: policies?.retry?.attempts || 3,
+                            perTryTimeout: policies?.retry?.timeout || '2s'
+                        }
+                    }]
+                }
+            };
+
+            // DestinationRule
+            const destinationRule = {
+                apiVersion: 'networking.istio.io/v1beta1',
+                kind: 'DestinationRule',
+                metadata: {
+                    name: `${serviceName}-operator`,
+                    namespace: namespace
+                },
+                spec: {
+                    host: serviceName,
+                    trafficPolicy: {
+                        loadBalancer: {
+                            simple: this.mapLoadBalancingStrategy(policies?.loadBalancing)
+                        },
+                        connectionPool: {
+                            http: {
+                                http1MaxPendingRequests: policies?.circuitBreaker?.maxRequests || 100,
+                                maxRequestsPerConnection: 10
+                            }
+                        },
+                        outlierDetection: {
+                            consecutive5xxErrors: 5,
+                            interval: '10s',
+                            baseEjectionTime: '30s',
+                            maxEjectionPercent: 50
+                        }
+                    }
+                }
+            };
+
+            configurations.push(virtualService, destinationRule);
+        }
+
+        // Apply configurations to Kubernetes
+        for (const config of configurations) {
+            await this.applyKubernetesResource(config);
+        }
+    }
+
+    async configureLinkerd(smo) {
+        const { namespace, serviceSelector, policies } = smo.spec;
+
+        // Get services from Maxine
+        const services = await this.getMaxineServices();
+
+        // Generate Linkerd configurations
+        const configurations = [];
+
+        for (const [serviceName, serviceData] of Object.entries(services)) {
+            const serviceProfile = {
+                apiVersion: 'linkerd.io/v1alpha2',
+                kind: 'ServiceProfile',
+                metadata: {
+                    name: `${serviceName}-operator`,
+                    namespace: namespace
+                },
+                spec: {
+                    routes: [{
+                        name: 'default',
+                        condition: {
+                            all: true
+                        },
+                        responseClasses: [{
+                            condition: {
+                                status: {
+                                    min: 500,
+                                    max: 599
+                                }
+                            },
+                            isFailure: true
+                        }],
+                        timeout: policies?.circuitBreaker?.timeout || '30s',
+                        retries: {
+                            limit: policies?.retry?.attempts || 3,
+                            timeout: policies?.retry?.timeout || '2s'
+                        }
+                    }]
+                }
+            };
+
+            configurations.push(serviceProfile);
+        }
+
+        // Apply configurations to Kubernetes
+        for (const config of configurations) {
+            await this.applyKubernetesResource(config);
+        }
+    }
+
+    async configureEnvoy(smo) {
+        const { namespace, serviceSelector, policies } = smo.spec;
+
+        // Generate Envoy configurations
+        const envoyConfig = {
+            apiVersion: 'v1',
+            kind: 'ConfigMap',
+            metadata: {
+                name: 'envoy-config-operator',
+                namespace: namespace
+            },
+            data: {
+                'envoy.yaml': this.generateEnvoyConfig(smo)
+            }
+        };
+
+        await this.applyKubernetesResource(envoyConfig);
+    }
+
+    generateEnvoyConfig(smo) {
+        const { policies } = smo.spec;
+
+        // Simplified Envoy configuration
+        return `
+static_resources:
+  listeners:
+  - name: listener_0
+    address:
+      socket_address:
+        address: 0.0.0.0
+        port_value: 10000
+    filter_chains:
+    - filters:
+      - name: envoy.filters.network.http_connection_manager
+        typed_config:
+          "@type": type.googleapis.com/envoy.extensions.filters.network.http_connection_manager.v3.HttpConnectionManager
+          stat_prefix: ingress_http
+          route_config:
+            name: local_route
+            virtual_hosts:
+            - name: local_service
+              domains: ["*"]
+              routes:
+              - match:
+                  prefix: "/"
+                route:
+                  cluster: service_cluster
+                  timeout: ${policies?.circuitBreaker?.timeout || '30s'}
+          http_filters:
+          - name: envoy.filters.http.router
+            typed_config:
+              "@type": type.googleapis.com/envoy.extensions.filters.http.router.v3.Router
+
+  clusters:
+  - name: service_cluster
+    type: STRICT_DNS
+    lb_policy: ${this.mapEnvoyLoadBalancing(policies?.loadBalancing)}
+    circuit_breakers:
+      thresholds:
+      - max_requests: ${policies?.circuitBreaker?.maxRequests || 100}
+    http2_protocol_options: {}
+    upstream_connection_options:
+      tcp_keepalive:
+        keepalive_probes: 3
+        keepalive_time: 600
+        keepalive_interval: 60
+`;
+    }
+
+    mapLoadBalancingStrategy(strategy) {
+        switch (strategy) {
+            case 'least_request': return 'LEAST_REQUEST';
+            case 'consistent_hash': return 'RING_HASH';
+            default: return 'ROUND_ROBIN';
+        }
+    }
+
+    mapEnvoyLoadBalancing(strategy) {
+        switch (strategy) {
+            case 'least_request': return 'LEAST_REQUEST';
+            case 'consistent_hash': return 'RING_HASH';
+            default: return 'ROUND_ROBIN';
+        }
+    }
+
+    async applyKubernetesResource(resource) {
+        try {
+            const { apiVersion, kind, metadata, spec } = resource;
+
+            // Use appropriate Kubernetes API
+            if (kind === 'VirtualService' || kind === 'DestinationRule') {
+                // Istio CRDs
+                await this.customApi.createNamespacedCustomObject(
+                    'networking.istio.io',
+                    'v1beta1',
+                    metadata.namespace,
+                    kind.toLowerCase() + 's',
+                    resource
+                );
+            } else if (kind === 'ServiceProfile') {
+                // Linkerd CRDs
+                await this.customApi.createNamespacedCustomObject(
+                    'linkerd.io',
+                    'v1alpha2',
+                    metadata.namespace,
+                    'serviceprofiles',
+                    resource
+                );
+            } else {
+                // Standard Kubernetes resources
+                await this.coreApi.createNamespacedConfigMap(metadata.namespace, resource);
+            }
+        } catch (error) {
+            console.error('Failed to apply Kubernetes resource:', error);
+            throw error;
+        }
+    }
+
+    async getMaxineServices() {
+        const response = await axios.get(`${this.maxineUrl}/api/maxine/servers`, {
+            headers: {
+                'Authorization': `Bearer ${process.env.MAXINE_API_KEY || 'admin'}`
+            }
+        });
+
+        return response.data;
+    }
+
+    async updateServiceMeshOperatorStatus(smo, phase, message) {
+        const status = {
+            phase,
+            conditions: [{
+                type: 'Ready',
+                status: phase === 'Running' ? 'True' : 'False',
+                lastTransitionTime: new Date().toISOString(),
+                reason: phase,
+                message
+            }]
+        };
+
+        await this.customApi.patchNamespacedCustomObjectStatus(
+            'maxine.io',
+            'v1',
+            smo.metadata.namespace,
+            'servicemeshoperators',
+            smo.metadata.name,
+            { status },
+            undefined,
+            undefined,
+            undefined,
+            { headers: { 'Content-Type': 'application/merge-patch+json' } }
+        );
+    }
+
+    async deleteServiceMeshOperator(smo) {
+        // Cleanup logic for when SMO is deleted
+        console.log(`Cleaning up ServiceMeshOperator: ${smo.metadata.name}`);
+        // Remove associated Kubernetes resources
+    }
+
+    watchTrafficPolicies() {
+        const watch = new k8s.Watch(this.kc);
+        watch.watch('/apis/maxine.io/v1/trafficpolicies', {}, (type, obj) => {
+            if (type === 'ADDED' || type === 'MODIFIED') {
+                this.reconcileTrafficPolicy(obj);
+            } else if (type === 'DELETED') {
+                this.deleteTrafficPolicy(obj);
+            }
+        }, (err) => {
+            console.error('Error watching TrafficPolicies:', err);
+        });
+    }
+
+    async reconcileTrafficPolicy(tp) {
+        const { serviceName, rules } = tp.spec;
+
+        await this.updateTrafficPolicyStatus(tp, 'Applying', 'Applying traffic policy');
+
+        try {
+            // Apply traffic rules to Maxine
+            await this.applyTrafficRulesToMaxine(serviceName, rules);
+            await this.updateTrafficPolicyStatus(tp, 'Applied', 'Traffic policy applied successfully');
+        } catch (error) {
+            await this.updateTrafficPolicyStatus(tp, 'Failed', error.message);
+        }
+    }
+
+    async applyTrafficRulesToMaxine(serviceName, rules) {
+        // Send traffic rules to Maxine service mesh AI optimization
+        const response = await axios.post(`${this.maxineUrl}/api/maxine/service-mesh/ai/optimize/istio`, {
+            serviceName,
+            rules
+        }, {
+            headers: {
+                'Authorization': `Bearer ${process.env.MAXINE_API_KEY || 'admin'}`
+            }
+        });
+
+        return response.data;
+    }
+
+    async updateTrafficPolicyStatus(tp, phase, message) {
+        const status = {
+            phase,
+            appliedAt: new Date().toISOString()
+        };
+
+        await this.customApi.patchNamespacedCustomObjectStatus(
+            'maxine.io',
+            'v1',
+            tp.metadata.namespace,
+            'trafficpolicies',
+            tp.metadata.name,
+            { status },
+            undefined,
+            undefined,
+            undefined,
+            { headers: { 'Content-Type': 'application/merge-patch+json' } }
+        );
+    }
+
+    async deleteTrafficPolicy(tp) {
+        // Cleanup logic for when TrafficPolicy is deleted
+        console.log(`Cleaning up TrafficPolicy: ${tp.metadata.name}`);
+    }
+
+    watchServiceEndpoints() {
+        const watch = new k8s.Watch(this.kc);
+        watch.watch('/apis/maxine.io/v1/serviceendpoints', {}, (type, obj) => {
+            if (type === 'ADDED' || type === 'MODIFIED') {
+                this.reconcileServiceEndpoint(obj);
+            } else if (type === 'DELETED') {
+                this.deleteServiceEndpoint(obj);
+            }
+        }, (err) => {
+            console.error('Error watching ServiceEndpoints:', err);
+        });
+    }
+
+    async reconcileServiceEndpoint(se) {
+        const { serviceName, endpoints } = se.spec;
+
+        await this.updateServiceEndpointStatus(se, 'Registering', 'Registering service endpoints');
+
+        try {
+            // Register endpoints with Maxine
+            for (const endpoint of endpoints) {
+                await this.registerEndpointWithMaxine(serviceName, endpoint);
+            }
+
+            await this.updateServiceEndpointStatus(se, 'Registered', 'Service endpoints registered successfully', endpoints.length);
+        } catch (error) {
+            await this.updateServiceEndpointStatus(se, 'Failed', error.message);
+        }
+    }
+
+    async registerEndpointWithMaxine(serviceName, endpoint) {
+        // Register endpoint with Maxine
+        const response = await axios.post(`${this.maxineUrl}/api/maxine/register`, {
+            serviceName,
+            hostName: endpoint.address,
+            nodeName: `${serviceName}-${endpoint.address.replace(/\./g, '-')}`,
+            port: endpoint.port,
+            weight: 1
+        }, {
+            headers: {
+                'Authorization': `Bearer ${process.env.MAXINE_API_KEY || 'admin'}`
+            }
+        });
+
+        return response.data;
+    }
+
+    async updateServiceEndpointStatus(se, phase, message, endpointCount = 0) {
+        const status = {
+            phase,
+            registeredAt: new Date().toISOString(),
+            endpointCount
+        };
+
+        await this.customApi.patchNamespacedCustomObjectStatus(
+            'maxine.io',
+            'v1',
+            se.metadata.namespace,
+            'serviceendpoints',
+            se.metadata.name,
+            { status },
+            undefined,
+            undefined,
+            undefined,
+            { headers: { 'Content-Type': 'application/merge-patch+json' } }
+        );
+    }
+
+    async deleteServiceEndpoint(se) {
+        // Cleanup logic for when ServiceEndpoint is deleted
+        console.log(`Cleaning up ServiceEndpoint: ${se.metadata.name}`);
+        // Deregister endpoints from Maxine
     }
 }
 
