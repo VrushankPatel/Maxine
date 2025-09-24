@@ -14,6 +14,7 @@ A minimal, high-performance service discovery and registry for microservices.
 - **Rate Limiting**: Protect services from excessive requests with configurable limits
 - **Access Control Lists (ACLs)**: Fine-grained permissions for service discovery access
 - **Service Intentions**: Define allowed communication patterns between services
+- **Service Dependencies**: Manage service dependencies with cycle detection and graph visualization
 - **Metrics**: Basic /metrics endpoint with request counts, errors, uptime, and basic stats
 - **Audit Logging**: Comprehensive logging of all registry operations using Winston, including user actions, system events, and security incidents with log rotation and export capabilities
 - **Persistence**: Optional persistence to survive restarts with file-based or Redis storage
@@ -387,6 +388,79 @@ GET /config/all?serviceName=my-service
 ##### Delete Service Config
 ```http
 DELETE /config/delete?serviceName=my-service&key=timeout
+```
+
+##### Add Service Dependency
+```http
+POST /api/maxine/serviceops/dependency/add
+Content-Type: application/json
+
+{
+  "serviceName": "my-service",
+  "dependsOn": "dependent-service"
+}
+```
+
+##### Remove Service Dependency
+```http
+POST /api/maxine/serviceops/dependency/remove
+Content-Type: application/json
+
+{
+  "serviceName": "my-service",
+  "dependsOn": "dependent-service"
+}
+```
+
+##### Get Service Dependencies
+```http
+GET /api/maxine/serviceops/dependency/get?serviceName=my-service
+```
+
+Response:
+```json
+{
+  "serviceName": "my-service",
+  "dependencies": ["dependent-service"]
+}
+```
+
+##### Get Service Dependents
+```http
+GET /api/maxine/serviceops/dependency/dependents?serviceName=my-service
+```
+
+Response:
+```json
+{
+  "serviceName": "my-service",
+  "dependents": ["dependent-service"]
+}
+```
+
+##### Get Dependency Graph
+```http
+GET /api/maxine/serviceops/dependency/graph
+```
+
+Response:
+```json
+{
+  "my-service": ["dependent-service"],
+  "another-service": ["my-service"]
+}
+```
+
+##### Detect Circular Dependencies
+```http
+GET /api/maxine/serviceops/dependency/cycles
+```
+
+Response:
+```json
+{
+  "cycles": [["service-a", "service-b", "service-a"]]
+}
 ```
 
 ##### Add Service Dependency
