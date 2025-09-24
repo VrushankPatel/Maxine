@@ -8,7 +8,7 @@
 - Also, the SRD replicates the more weighted services (The service that sends a weight of more than one).
 - After registering the Service, the SRD will run a thread asynchronously that'll remove that service from the registry once the timeout exceeds and that Service is not re-registered.
 - If the service sends the heartbeat before the timeout passes since it was registered, then the thread that was executed earlier will be suspended and a new thread will start doing the same again.
-- The registry now supports optional disk persistence using registry.json, allowing services to survive server restarts in lightning mode.
+ - The registry now supports optional disk persistence using registry.json or Redis, allowing services to survive server restarts in lightning mode.
 ### Service discovery
 - The service discovery discovers the service that is registered in the registry.
 - When the service discovery receives the request, it extracts the serviceName from the request and discovers the service with that service name.
@@ -36,6 +36,15 @@
 - Service Intentions define allowed communication patterns between services, enabling policy-based access control for microservices architectures.
 - Health check history is tracked for each service node, accessible via `/api/maxine/serviceops/health/history?serviceName=<name>&nodeName=<node>` to monitor service stability over time.
   - Advanced health checks support custom HTTP methods (GET, POST, etc.) via `healthMethod` in service metadata, custom headers via `healthHeaders` in service metadata, TCP checks via `healthType: 'tcp'`, and script-based checks via `healthType: 'script'` with `healthScript` containing the command to execute.
+### Persistence
+- Maxine supports optional persistence to maintain registry state across server restarts.
+- **File-based persistence**: Saves registry state to `registry.json` in the working directory on every change.
+- **Redis persistence**: Uses Redis for distributed persistence across multiple instances.
+- Enable with `PERSISTENCE_ENABLED=true` and set `PERSISTENCE_TYPE=file` or `PERSISTENCE_TYPE=redis`.
+- Backup and restore endpoints allow exporting/importing registry state as JSON.
+- Persistence maintains service registrations, heartbeats, and metadata across restarts.
+- Minimal performance impact with asynchronous saves and optimized data structures.
+
 ### Metrics
 - Maxine provides comprehensive metrics collection for monitoring performance and usage.
   - In lightning mode, the `/metrics` endpoint provides basic metrics including request counts, errors, uptime, and basic stats.
