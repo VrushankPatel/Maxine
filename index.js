@@ -1149,8 +1149,55 @@ if (config.ultraFastMode) {
         }
     };
 
+    // Handle Linkerd service mesh config generation
+    const handleLinkerdConfig = (req, res, query, body) => {
+        try {
+            const clientIP = req.connection.remoteAddress || req.socket.remoteAddress || 'unknown';
+            const services = serviceRegistry.getAllServices();
+            const configs = [];
+            for (const [serviceName, nodes] of services) {
+                const routes = [];
+                // Generate routes based on common patterns or metadata
+                // For simplicity, add a default route
+                routes.push({
+                    name: 'default',
+                    condition: {
+                        pathRegex: '.*'
+                    }
+                });
+
+                const serviceProfile = {
+                    apiVersion: 'linkerd.io/v1alpha2',
+                    kind: 'ServiceProfile',
+                    metadata: {
+                        name: `${serviceName}.default.svc.cluster.local`,
+                        namespace: 'default'
+                    },
+                    spec: {
+                        routes: routes,
+                        retryBudget: {
+                            retryRatio: 0.2,
+                            minRetriesPerSecond: 10,
+                            ttl: '10s'
+                        }
+                    }
+                };
+                configs.push(serviceProfile);
+            }
+            // winston.info(`AUDIT: Linkerd config requested - services: ${services.size}, clientIP: ${clientIP}`);
+            res.writeHead(200, { 'Content-Type': 'application/json' });
+            res.end(JSON.stringify(configs, null, 2));
+        } catch (error) {
+            // winston.error(`AUDIT: Linkerd config failed - error: ${error.message}, clientIP: ${req.connection.remoteAddress || req.socket.remoteAddress || 'unknown'}`);
+            errorCount++;
+            res.writeHead(500, { 'Content-Type': 'application/json' });
+            res.end('{"error": "Internal server error"}');
+        }
+    };
+
     routes.set('GET /service-mesh/envoy-config', handleEnvoyConfig);
     routes.set('GET /service-mesh/istio-config', handleIstioConfig);
+    routes.set('GET /service-mesh/linkerd-config', handleLinkerdConfig);
 
     // Versioning endpoints
     routes.set('GET /versions', (req, res, query, body) => {

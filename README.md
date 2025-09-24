@@ -15,8 +15,6 @@ A minimal, high-performance service discovery and registry for microservices.
 - **Access Control Lists (ACLs)**: Fine-grained permissions for service discovery access
 - **Service Intentions**: Define allowed communication patterns between services
 - **Service Dependencies**: Manage service dependencies with cycle detection and graph visualization
-- **Access Control Lists (ACLs)**: Fine-grained permissions for service discovery access
-- **Service Intentions**: Define allowed communication patterns between services
 - **Metrics**: Basic /metrics endpoint with request counts, errors, uptime, and basic stats
 - **Audit Logging**: Comprehensive logging of all registry operations using Winston, including user actions, system events, and security incidents with log rotation and export capabilities
 - **Persistence**: Optional persistence to survive restarts with file-based or Redis storage
@@ -29,6 +27,7 @@ A minimal, high-performance service discovery and registry for microservices.
 - **Authentication/Authorization**: Optional JWT-based auth for Lightning Mode to secure sensitive operations
 - **Configuration Management**: Dynamic configuration updates for services with versioning and event notifications
 - **gRPC Support**: High-performance gRPC API for service operations
+- **Service Mesh Integration**: Automatic Envoy, Istio, and Linkerd configuration generation for seamless service mesh deployment
 
 
 
@@ -364,6 +363,12 @@ Returns Envoy proxy configuration JSON based on registered services, suitable fo
 GET /service-mesh/istio-config
 ```
 Returns Istio VirtualService and DestinationRule configurations in JSON format for service mesh deployment.
+
+##### Generate Linkerd Config
+```http
+GET /service-mesh/linkerd-config
+```
+Returns Linkerd ServiceProfile configurations in JSON format for service mesh deployment, including retry budgets and route conditions.
 
 ##### Get Circuit Breaker State
 ```http
