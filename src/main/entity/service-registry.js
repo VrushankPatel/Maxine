@@ -44,6 +44,7 @@ class ServiceRegistry extends EventEmitter {
         super();
         // Lazy load integrations for better startup performance
         this.isLeader = false;
+        this.recentEvents = []; // Store recent events for dashboard
 
         // Initialize essential Maps for lightning mode - minimal but complete
         if (config.lightningMode) {
@@ -473,6 +474,39 @@ class ServiceRegistry extends EventEmitter {
     };
 
     getRegServers = () => Object.fromEntries(this.registry);
+
+    getRecentEvents = (limit = 10) => this.recentEvents.slice(-limit);
+
+    getDashboardStats = () => {
+        const services = this.getRegServers();
+        const serviceCount = Object.keys(services).length;
+        let totalNodes = 0;
+        let healthyNodes = 0;
+        let unhealthyNodes = 0;
+        for (const serviceName in services) {
+            const nodes = services[serviceName].nodes;
+            totalNodes += Object.keys(nodes).length;
+            for (const nodeName in nodes) {
+                if (nodes[nodeName].healthy) healthyNodes++;
+                else unhealthyNodes++;
+            }
+        }
+        const cacheStats = this.discoveryService ? {
+            cacheHits: this.discoveryService.cacheHits || 0,
+            cacheMisses: this.discoveryService.cacheMisses || 0,
+            cacheSize: this.discoveryService.cache.size || 0
+        } : { cacheHits: 0, cacheMisses: 0, cacheSize: 0 };
+
+        return {
+            serviceCount,
+            totalNodes,
+            healthyNodes,
+            unhealthyNodes,
+            cacheHits: cacheStats.cacheHits,
+            cacheMisses: cacheStats.cacheMisses,
+            services
+        };
+    };
 
     getServiceUptime = (serviceName) => {
         const startTime = this.serviceUptime.get(serviceName);

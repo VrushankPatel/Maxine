@@ -27,6 +27,7 @@ if (config.lightningMode) {
     // Minimal lightning mode with raw HTTP for ultimate speed
     const { LightningServiceRegistrySimple } = require('./src/main/entity/lightning-service-registry-simple');
     const serviceRegistry = new LightningServiceRegistrySimple();
+    global.serviceRegistry = serviceRegistry;
 
     // Raw HTTP server for maximum performance
     const http = require('http');
@@ -1588,6 +1589,13 @@ if (config.lightningMode) {
             if (eventHistory.length > maxHistory) {
                 eventHistory.shift();
             }
+            // Store in service registry for dashboard
+            if (global.serviceRegistry && global.serviceRegistry.recentEvents) {
+                global.serviceRegistry.recentEvents.push(messageObj);
+                if (global.serviceRegistry.recentEvents.length > 100) {
+                    global.serviceRegistry.recentEvents.shift();
+                }
+            }
             // Save to file periodically or on important events
             if (eventHistory.length % 100 === 0) {
                 saveEventHistory();
@@ -1696,6 +1704,14 @@ if (config.lightningMode) {
 
         // Make broadcast available to handlers
         global.broadcast = broadcast;
+
+        // Periodic stats broadcast for dashboard
+        setInterval(() => {
+            if (global.serviceRegistry && global.serviceRegistry.getDashboardStats) {
+                const stats = global.serviceRegistry.getDashboardStats();
+                broadcast('stats_update', stats);
+            }
+        }, 5000); // Every 5 seconds
     }
 
     // Start gRPC server
@@ -1711,6 +1727,7 @@ if (config.lightningMode) {
     const { discoveryService } = require('./src/main/service/discovery-service');
     const { healthService } = require('./src/main/service/health-service');
     const { serviceRegistry } = require('./src/main/entity/service-registry');
+    global.serviceRegistry = serviceRegistry;
     const path = require("path");
     const currDir = require('./conf');
 
