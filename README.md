@@ -1268,6 +1268,8 @@ GET /api/maxine/serviceops/blacklist/service/:serviceName
 
 Maxine provides client SDKs for easy integration:
 
+- **Swift**: Lightning Mode API support with async/await for iOS/macOS/watchOS/tvOS
+- **Kotlin**: Lightning Mode API support with coroutines for Android
 - **Python**: Supports both Full Mode and Lightning Mode APIs, including WebSocket for real-time events
 - **Go**: Full Mode API support
 - **Java**: Full Mode API support
