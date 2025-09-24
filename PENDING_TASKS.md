@@ -12,19 +12,22 @@
 - [x] Implement Service Intentions: Added definition of allowed communication patterns between services.
 - [x] Implement Multi-Region Deployment Support: Added geo-aware load balancing for global deployments, selecting closest node based on client IP location.
 - [x] Optimize Memory Usage: Added heap dump endpoint for memory profiling and optimization in large-scale deployments.
+- [x] Performance Optimizations: Implemented async debounced persistence saves and async WebSocket broadcasting to reduce I/O blocking and improve response times.
+- [x] Simple Monitoring Dashboard: Added /dashboard endpoint with HTML interface showing key metrics and recent events for basic monitoring.
 
 ## Next Steps
 
 ### High Priority
+- Implement Kubernetes Operator: Create a custom Kubernetes operator for automated Maxine deployment and management, including CRDs for ServiceRegistry, automated scaling, and integration with K8s services.
+- Add Advanced Monitoring Dashboard: Build a comprehensive web-based dashboard using React/Vue for real-time service registry monitoring, metrics visualization, alerting, and service topology graphs.
+- Implement Service Mesh Integration Enhancements: Deep integration with Istio, Linkerd, and Envoy for advanced traffic management, including automatic sidecar injection and policy enforcement.
+- Add Distributed Tracing Enhancements: Full OpenTelemetry integration for end-to-end request tracing across services, with Jaeger/Zipkin support and trace correlation.
 
 ### Medium Priority
-- Implement Advanced Security: OAuth2 integration and encrypted communication
-- Implement Observability Enhancements: Distributed tracing integration with OpenTelemetry, log aggregation, and advanced monitoring dashboards
-
-- Implement Kubernetes Operator: Create a custom Kubernetes operator for automated Maxine deployment and management
-- Add Advanced Monitoring Dashboard: Build a web-based dashboard for real-time service registry monitoring, metrics visualization, and alerting
-- Implement OAuth2 integration for enhanced security
-- Add distributed tracing integration with OpenTelemetry
+- Implement Advanced Security: OAuth2 integration with providers like Google/Auth0, mTLS for encrypted communication, certificate management, and fine-grained access controls with RBAC.
+- Implement Observability Enhancements: Distributed tracing integration with OpenTelemetry, centralized log aggregation with ELK stack, advanced monitoring dashboards with Grafana, and anomaly detection.
+- Create Service Dependency Graph Visualization: Web UI for visualizing and managing service dependencies, with interactive graphs and cycle detection alerts.
+- Implement Auto-Scaling Integration: Integration with Kubernetes HPA and cloud auto-scaling (AWS ECS, GCP, Azure) for dynamic service scaling based on load metrics.
 
 ### Low Priority
 - Update Client SDKs: Add new features like tags support and WebSocket client examples

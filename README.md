@@ -167,6 +167,12 @@ GET /metrics
 ```
 Returns uptime, requests, errors, services, nodes, persistenceEnabled, persistenceType, wsConnections, eventsBroadcasted.
 
+##### Dashboard
+```http
+GET /dashboard
+```
+Returns a simple HTML dashboard with key metrics and recent events for monitoring.
+
 ##### Heap Dump
 ```http
 GET /heapdump
