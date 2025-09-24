@@ -240,14 +240,15 @@ if (config.lightningMode) {
             const version = query.version;
             const fullServiceName = version ? `${serviceName}:${version}` : serviceName;
             const strategy = query.loadBalancing || 'round-robin';
-            const node = serviceRegistry.getRandomNode(fullServiceName, strategy, clientIP);
+            const tags = query.tags ? query.tags.split(',') : null;
+            const node = serviceRegistry.getRandomNode(fullServiceName, strategy, clientIP, tags);
             if (!node) {
-                winston.info(`AUDIT: Service discovery failed - serviceName: ${fullServiceName}, strategy: ${strategy}, clientIP: ${clientIP}`);
+                winston.info(`AUDIT: Service discovery failed - serviceName: ${fullServiceName}, strategy: ${strategy}, tags: ${tags}, clientIP: ${clientIP}`);
                 res.writeHead(404, { 'Content-Type': 'application/json' });
                 res.end(serviceUnavailable);
                 return;
             }
-            winston.info(`AUDIT: Service discovered - serviceName: ${fullServiceName}, strategy: ${strategy}, node: ${node.nodeName}, clientIP: ${clientIP}`);
+            winston.info(`AUDIT: Service discovered - serviceName: ${fullServiceName}, strategy: ${strategy}, tags: ${tags}, node: ${node.nodeName}, clientIP: ${clientIP}`);
             res.writeHead(200, { 'Content-Type': 'application/json' });
             res.end(stringifyDiscover({ address: node.address, nodeName: node.nodeName, healthy: true }));
         } catch (error) {
@@ -960,8 +961,12 @@ if (config.lightningMode) {
         }
     });
 
-     const server = http.createServer({ keepAlive: false }, (req, res) => {
-         const clientIP = req.connection.remoteAddress || req.socket.remoteAddress || 'unknown';
+    const server = http.createServer({ keepAlive: false }, (req, res) => {
+          if (req.headers.upgrade && req.headers.upgrade.toLowerCase() === 'websocket') {
+              // Let WebSocket handle upgrade
+              return;
+          }
+          const clientIP = req.connection.remoteAddress || req.socket.remoteAddress || 'unknown';
 
           // Rate limiting disabled in lightning mode for ultimate speed
           // const now = Date.now();
@@ -1047,14 +1052,20 @@ if (config.lightningMode) {
         }
     });
 
-    if (!config.isTestMode) {
-        server.listen(constants.PORT, '0.0.0.0', () => {
-            console.log('Maxine lightning-fast server listening on port', constants.PORT);
-            console.log('Lightning mode: minimal features for maximum performance using raw HTTP');
-        });
+    if (!config.isTestMode || process.env.WEBSOCKET_ENABLED === 'true') {
+        if (!config.isTestMode) {
+            server.listen(constants.PORT, '0.0.0.0', () => {
+                console.log('Maxine lightning-fast server listening on port', constants.PORT);
+                console.log('Lightning mode: minimal features for maximum performance using raw HTTP');
+            });
+        }
 
         // WebSocket server for real-time event streaming
         const wss = new WebSocket.Server({ server });
+        if (config.isTestMode && !process.env.WEBSOCKET_ENABLED) {
+            // Skip WebSocket setup in test mode unless explicitly enabled
+            return;
+        }
 
         // MQTT client for event publishing
         // let mqttClient = null;
