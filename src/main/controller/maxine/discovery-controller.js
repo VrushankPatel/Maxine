@@ -578,7 +578,7 @@ const lightningDiscovery = async (req, res) => {
         const strategy = req.query.strategy || 'round-robin';
         const clientId = req.query.clientId;
         const tags = req.query.tags ? req.query.tags.split(',') : [];
-        let serviceNode = serviceRegistry.getRandomNode(fullServiceName, strategy, clientId, tags);
+        let serviceNode = serviceRegistry.ultraFastGetRandomNode(fullServiceName, strategy, clientId);
         if (!serviceNode && config.federationEnabled) {
             // Try federation
             const federatedResults = await federationService.discoverFromFederation(serviceName);
