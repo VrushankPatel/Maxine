@@ -5,7 +5,7 @@
   "main": "index.js",
   "scripts": {
     "start": "npm run prod",
-     "prod": "taskset -c 0 node --max-old-space-size=4096 --max-new-space-size=1024 --optimize-for-size --gc-interval=100 --no-incremental-marking --max-semi-space-size=16 --optimize-for-size --max-old-space-size=4096 --optimize-for-size index.js",
+    "prod": "taskset -c 0 node --max-old-space-size=4096 --max-new-space-size=1024 --optimize-for-size --gc-interval=100 --no-incremental-marking --max-semi-space-size=16 --optimize-for-size --max-old-space-size=4096 --optimize-for-size index.js",
     "dev": "nodemon index.js --env dev",
     "test": "npm run unit-test",
     "maxibuild": "npx pkg -t node14-linux-arm64,node14-macos-arm64,node14-win-arm64 --out-path artifacts/build/ .",
@@ -41,6 +41,7 @@
     "express-session": "^1.17.3",
     "fast-json-stringify": "^6.0.1",
     "geoip-lite": "^1.4.10",
+    "graphql-subscriptions": "^2.0.0",
     "hashring": "^3.2.0",
     "heapdump": "^0.3.15",
     "http-proxy": "^1.18.1",

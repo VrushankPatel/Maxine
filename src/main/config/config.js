@@ -75,8 +75,9 @@ const config = {
     noLogging: ultraFastDefault || extremeFastDefault || lightningDefault,
           persistenceEnabled: process.env.PERSISTENCE_ENABLED === 'true', // Optional persistence
         persistenceType: process.env.PERSISTENCE_TYPE || 'file', // file, redis, mmap, shm, postgres, mysql, mongo, cassandra
-      rateLimitMax: process.env.RATE_LIMIT_MAX ? parseInt(process.env.RATE_LIMIT_MAX) : (ultraFastDefault ? 1000000 : 10000),
-     rateLimitWindowMs: process.env.RATE_LIMIT_WINDOW_MS ? parseInt(process.env.RATE_LIMIT_WINDOW_MS) : 900000, // 15 minutes
+        rateLimitMax: process.env.RATE_LIMIT_MAX ? parseInt(process.env.RATE_LIMIT_MAX) : (ultraFastDefault ? 1000000 : 10000),
+      rateLimitWindowMs: process.env.RATE_LIMIT_WINDOW_MS ? parseInt(process.env.RATE_LIMIT_WINDOW_MS) : 900000, // 15 minutes
+      rateLimitEnabled: process.env.RATE_LIMIT_ENABLED !== 'false' && !isTestMode,
                  healthCheckInterval: process.env.HEALTH_CHECK_INTERVAL ? parseInt(process.env.HEALTH_CHECK_INTERVAL) : (ultraFastDefault ? 30000 : 30000), // Same interval for reliability
                 healthCheckConcurrency: process.env.HEALTH_CHECK_CONCURRENCY ? parseInt(process.env.HEALTH_CHECK_CONCURRENCY) : (ultraFastDefault ? 100 : 50), // Higher concurrency in ultra-fast for speed
      defaultProxyMode: process.env.DEFAULT_PROXY_MODE === 'true' || false,
