@@ -100,6 +100,42 @@ class FederationService {
         return results;
     }
 
+    async replicateRegistration(serviceName, serviceData) {
+        if (!config.federationEnabled) return;
+
+        const promises = Array.from(this.federatedRegistries.entries()).map(async ([name, registry]) => {
+            if (!registry.isHealthy) return;
+
+            try {
+                await axios.post(`${registry.url}/register`, serviceData, {
+                    timeout: config.federationTimeout
+                });
+            } catch (error) {
+                console.warn(`Failed to replicate registration to ${name}: ${error.message}`);
+            }
+        });
+
+        await Promise.allSettled(promises);
+    }
+
+    async replicateDeregistration(serviceName, nodeName) {
+        if (!config.federationEnabled) return;
+
+        const promises = Array.from(this.federatedRegistries.entries()).map(async ([name, registry]) => {
+            if (!registry.isHealthy) return;
+
+            try {
+                await axios.delete(`${registry.url}/deregister?serviceName=${serviceName}&nodeName=${nodeName}`, {
+                    timeout: config.federationTimeout
+                });
+            } catch (error) {
+                console.warn(`Failed to replicate deregistration to ${name}: ${error.message}`);
+            }
+        });
+
+        await Promise.allSettled(promises);
+    }
+
     async healthCheckFederatedRegistries() {
         if (!config.federationEnabled) return;
 

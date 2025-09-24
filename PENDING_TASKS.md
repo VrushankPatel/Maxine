@@ -16,7 +16,7 @@
     - [x] Implement Federation: Connect multiple Maxine instances across datacenters
     - [x] Implement Distributed Tracing: Track service calls across the mesh (basic tracing added to Lightning Mode)
     - [x] Implement Authentication/Authorization: Secure access to registry operations (JWT auth added to Lightning Mode)
-    - [ ] Implement Multi-Datacenter Support: Global service discovery across multiple datacenters
+    - [x] Implement Multi-Datacenter Support: Global service discovery across multiple datacenters
     - [ ] Implement Service Mesh Integration: Integration with Istio, Linkerd, etc.
     - [ ] Implement Advanced Health Checks: Custom health check scripts and proactive monitoring
      - [x] Implement Service Versioning: Support multiple versions of the same service
@@ -42,14 +42,10 @@
  - [ ] Update Docker and Helm configurations
  - [ ] Update CI/CD pipelines for new features
 
-    ## Next Feature Implementation: Multi-Datacenter Support
-    - [ ] Implement global service discovery across multiple datacenters
-    - [ ] Add datacenter-aware load balancing strategies
-    - [ ] Implement cross-datacenter service replication
-    - [ ] Add datacenter health monitoring and failover
-    - [ ] Update federation to support multi-datacenter topologies
-    - [ ] Add configuration for datacenter settings (DATACENTER_ID, etc.)
-    - [ ] Implement datacenter-specific service filtering
-    - [ ] Add multi-datacenter tests
-    - [ ] Update README.md and docs/ with multi-datacenter details
-    - [ ] Ensure multi-datacenter support is optional and doesn't impact single-datacenter performance
+    ## Next Feature Implementation: Service Mesh Integration
+    - [ ] Implement Istio integration for service mesh capabilities
+    - [ ] Add Envoy proxy configuration support
+    - [ ] Implement Linkerd integration
+    - [ ] Add service mesh health checks and metrics
+    - [ ] Update Helm charts for service mesh deployment
+    - [ ] Add service mesh documentation

@@ -17,7 +17,7 @@ const fastRandom = () => {
     return lcgSeed / lcgM;
 };
 
-const batchDiscoveryController = (req, res) => {
+const batchDiscoveryController = async (req, res) => {
     const startTime = Date.now();
     const ip = req.clientIp || (req.clientIp = req.ip
     || req.connection.remoteAddress
@@ -69,7 +69,7 @@ const batchDiscoveryController = (req, res) => {
             }
         }
 
-        const serviceNode = discoveryService.getNode(fullServiceName, ip);
+        const serviceNode = await discoveryService.getNode(fullServiceName, ip);
 
         if (!serviceNode) {
             results.push({ serviceName, error: statusAndMsgs.MSG_SERVICE_UNAVAILABLE });

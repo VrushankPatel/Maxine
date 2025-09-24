@@ -20,6 +20,7 @@ A minimal, high-performance service discovery and registry for microservices.
 - **Optimized Parsing**: Fast JSON parsing with error handling
 - **Event-Driven**: Real-time events for service changes and notifications
 - **Federation**: Connect multiple Maxine instances across datacenters for global service discovery
+- **Multi-Datacenter Support**: Global service discovery with cross-datacenter replication and load balancing
 - **Authentication/Authorization**: Optional JWT-based auth for Lightning Mode to secure sensitive operations
 
 ## Missing Features (Future Enhancements)
@@ -28,7 +29,6 @@ While Maxine provides core service registry functionality with lightning-fast pe
 
 - **Distributed Tracing**: Track service calls across the mesh
 - **Authentication/Authorization**: Secure access to registry operations
-- **Multi-Datacenter Support**: Global service discovery
 - **Service Mesh Integration**: Integration with Istio, Linkerd, etc.
 
 ## Quick Start
@@ -53,13 +53,13 @@ For Redis, configure `REDIS_HOST`, `REDIS_PORT`, `REDIS_PASSWORD`.
 
 ## Federation
 
-Maxine supports federation to connect multiple instances across datacenters for global service discovery.
+Maxine supports federation to connect multiple instances across datacenters for global service discovery, cross-datacenter replication, and load balancing.
 
 Enable with `FEDERATION_ENABLED=true` and configure peers with `FEDERATION_PEERS=name1:url1,name2:url2`.
 
 Additional options: `FEDERATION_TIMEOUT` (default 5000ms), `FEDERATION_RETRY_ATTEMPTS` (default 3).
 
-Federated registries are queried automatically if a service is not found locally.
+Federated registries are queried automatically if a service is not found locally. Registrations and deregistrations are replicated across datacenters. Load balancing selects from available instances across all connected datacenters.
 
 ## Authentication (Lightning Mode)
 

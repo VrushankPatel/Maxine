@@ -278,7 +278,7 @@ const extremeFastDiscovery = (req, res) => {
 
 
 
-const normalDiscovery = (req, res) => {
+const normalDiscovery = async (req, res) => {
     const startTime = Date.now();
       // Retrieving the serviceName from query params
         const serviceName = req.query.serviceName;
@@ -373,7 +373,7 @@ const normalDiscovery = (req, res) => {
              return;
          }
      } else {
-         const serviceNode = discoveryService.getNode(fullServiceName, ip, null, null, null, null, clientId);
+          const serviceNode = await discoveryService.getNode(fullServiceName, ip, null, null, null, null, clientId);
          serviceNodes = serviceNode ? [serviceNode] : [];
          if (serviceNodes.length === 0) {
              if (hasMetrics && !isHighPerformanceMode && !isUltraFastMode) {

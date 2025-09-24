@@ -425,6 +425,95 @@ if (config.lightningMode) {
         res.end(JSON.stringify(trace));
     });
 
+    // Service Mesh Integration
+    const handleEnvoyConfig = (req, res, query, body) => {
+        const services = serviceRegistry.getAllServices();
+        const clusters = [];
+        for (const [serviceName, nodes] of services) {
+            const lbEndpoints = nodes.map(node => ({
+                endpoint: {
+                    address: {
+                        socket_address: {
+                            address: node.host,
+                            port_value: node.port
+                        }
+                    }
+                }
+            }));
+            clusters.push({
+                name: serviceName,
+                type: 'STATIC',
+                lb_policy: 'ROUND_ROBIN',
+                load_assignment: {
+                    cluster_name: serviceName,
+                    endpoints: [{
+                        lb_endpoints: lbEndpoints
+                    }]
+                }
+            });
+        }
+        const envoyConfig = {
+            static_resources: {
+                clusters: clusters
+            }
+        };
+        res.writeHead(200, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify(envoyConfig, null, 2));
+    };
+
+    const handleIstioConfig = (req, res, query, body) => {
+        const services = serviceRegistry.getAllServices();
+        const configs = [];
+        for (const [serviceName, nodes] of services) {
+            const subsets = [];
+            const versionMap = new Map();
+            nodes.forEach(node => {
+                const version = node.metadata?.version || 'default';
+                if (!versionMap.has(version)) {
+                    versionMap.set(version, []);
+                }
+                versionMap.get(version).push(`${node.host}:${node.port}`);
+            });
+            for (const [version, addresses] of versionMap) {
+                subsets.push({
+                    name: version,
+                    labels: { version: version }
+                });
+            }
+            const virtualService = {
+                apiVersion: 'networking.istio.io/v1alpha3',
+                kind: 'VirtualService',
+                metadata: { name: serviceName },
+                spec: {
+                    hosts: [serviceName],
+                    http: [{
+                        route: [{
+                            destination: {
+                                host: serviceName,
+                                subset: 'default'
+                            }
+                        }]
+                    }]
+                }
+            };
+            const destinationRule = {
+                apiVersion: 'networking.istio.io/v1alpha3',
+                kind: 'DestinationRule',
+                metadata: { name: serviceName },
+                spec: {
+                    host: serviceName,
+                    subsets: subsets
+                }
+            };
+            configs.push({ virtualService, destinationRule });
+        }
+        res.writeHead(200, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify(configs, null, 2));
+    };
+
+    routes.set('GET /service-mesh/envoy-config', handleEnvoyConfig);
+    routes.set('GET /service-mesh/istio-config', handleIstioConfig);
+
     // Actuator endpoints for compatibility
     routes.set('GET /api/actuator/health', (req, res, query, body) => {
         res.writeHead(200, { 'Content-Type': 'application/json' });

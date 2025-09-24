@@ -568,7 +568,7 @@ const cacheStatsController = (req, res) => {
     res.status(statusAndMsgs.STATUS_SUCCESS).json(stats);
 }
 
-const discoveryInfoController = (req, res) => {
+const discoveryInfoController = async (req, res) => {
     const startTime = Date.now();
     const serviceName = req.query.serviceName;
     const version = req.query.version;
@@ -586,7 +586,7 @@ const discoveryInfoController = (req, res) => {
         return;
     }
 
-    const serviceNode = discoveryService.getNode(serviceName, ip, version, namespace);
+    const serviceNode = await discoveryService.getNode(serviceName, ip, version, namespace);
 
     if(!serviceNode){
         const latency = Date.now() - startTime;

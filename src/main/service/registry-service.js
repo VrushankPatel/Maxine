@@ -2,6 +2,7 @@ const Service = require("../entity/service-body");
 const { serviceRegistry: sRegistry } = require("../entity/service-registry");
 const { discoveryService } = require("../service/discovery-service");
 const { healthService } = require("../service/health-service");
+const federationService = require("./federation-service");
 const config = require("../config/config");
 const fs = require('fs');
 const path = require('path');
@@ -187,6 +188,9 @@ class RegistryService{
             sRegistry.addChange('register', fullServiceName, nodeName, { node: svc.nodes[`${nodeName}-0`], address, metadata, aliases });
             this.auditLog('register', { fullServiceName, nodeName, address, metadata, aliases });
         }
+
+        // Replicate to federated datacenters
+        federationService.replicateRegistration(fullServiceName, serviceObj);
         if (!config.lightningMode) discoveryService.invalidateServiceCache(fullServiceName);
         return { serviceName, nodeName, address, timeOut, weight };
     }
@@ -275,6 +279,10 @@ class RegistryService{
             this.auditLog('deregister', { fullServiceName, nodeName });
         }
         if (!config.lightningMode) discoveryService.invalidateServiceCache(fullServiceName);
+
+        // Replicate deregistration to federated datacenters
+        federationService.replicateDeregistration(fullServiceName, nodeName);
+
         return true;
     }
 

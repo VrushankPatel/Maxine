@@ -45,9 +45,9 @@ const root = {
       nodes: Object.values(service.nodes)
     };
   },
-  discover: ({ serviceName, ip, group, tags, deployment, filter }) => {
+  discover: async ({ serviceName, ip, group, tags, deployment, filter }) => {
     const filterObj = filter ? JSON.parse(filter) : undefined;
-    return discoveryService.getNode(serviceName, ip || 'unknown', group, tags, deployment, filterObj);
+    return await discoveryService.getNode(serviceName, ip || 'unknown', group, tags, deployment, filterObj);
   },
   register: ({ serviceName, nodeName, address, metadata }) => {
     const metadataObj = metadata ? JSON.parse(metadata) : {};
