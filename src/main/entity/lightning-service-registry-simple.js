@@ -1,6 +1,8 @@
 // Lightning-fast service registry for minimal overhead in lightning mode
 const config = require('../config/config');
 const HashRing = require('hashring');
+const fs = require('fs');
+const path = require('path');
 
 // Fast LCG PRNG for random load balancing
 let lcgSeed = Date.now();
@@ -23,6 +25,18 @@ class LightningServiceRegistrySimple {
         // Cached counts for performance
         this.servicesCount = 0;
         this.nodesCount = 0;
+
+        // Persistence
+        this.persistenceEnabled = config.persistenceEnabled;
+        this.persistenceType = config.persistenceType;
+        this.registryFile = path.join(process.cwd(), 'registry.json');
+
+        if (this.persistenceEnabled) {
+            this.loadRegistry();
+            if (this.persistenceType === 'redis') {
+                this.initRedis();
+            }
+        }
 
         // Periodic cleanup
         setInterval(() => this.cleanup(), 30000);
@@ -49,6 +63,7 @@ class LightningServiceRegistrySimple {
         this.lastHeartbeats.set(nodeName, Date.now());
         this.nodesCount++;
 
+        this.saveRegistry();
         return nodeName;
     }
 
@@ -76,6 +91,7 @@ class LightningServiceRegistrySimple {
         }
         this.lastHeartbeats.delete(nodeId);
         this.nodeToService.delete(nodeId);
+        this.saveRegistry();
     }
 
     heartbeat(nodeId) {
@@ -191,10 +207,147 @@ class LightningServiceRegistrySimple {
             }
             this.nodeToService.delete(nodeName);
         }
+        if (toRemove.length > 0) {
+            this.saveRegistry();
+        }
     }
 
     getServices() {
         return Array.from(this.services.keys());
+    }
+
+    getRegistryData() {
+        const data = {
+            services: {},
+            lastHeartbeats: {},
+            nodeToService: {},
+            servicesCount: this.servicesCount,
+            nodesCount: this.nodesCount
+        };
+        for (const [serviceName, service] of this.services) {
+            data.services[serviceName] = {
+                nodes: {},
+                healthyNodesArray: service.healthyNodesArray,
+                roundRobinIndex: service.roundRobinIndex
+            };
+            for (const [nodeName, node] of service.nodes) {
+                data.services[serviceName].nodes[nodeName] = node;
+            }
+        }
+        for (const [node, ts] of this.lastHeartbeats) {
+            data.lastHeartbeats[node] = ts;
+        }
+        for (const [node, service] of this.nodeToService) {
+            data.nodeToService[node] = service;
+        }
+        return data;
+    }
+
+    setRegistryData(data) {
+        this.services = new Map();
+        for (const [serviceName, serviceData] of Object.entries(data.services || {})) {
+            const service = {
+                nodes: new Map(),
+                healthyNodesArray: serviceData.healthyNodesArray || [],
+                roundRobinIndex: serviceData.roundRobinIndex || 0
+            };
+            for (const [nodeName, node] of Object.entries(serviceData.nodes || {})) {
+                service.nodes.set(nodeName, node);
+            }
+            this.services.set(serviceName, service);
+        }
+        this.lastHeartbeats = new Map(Object.entries(data.lastHeartbeats || {}));
+        this.nodeToService = new Map(Object.entries(data.nodeToService || {}));
+        this.servicesCount = data.servicesCount || 0;
+        this.nodesCount = data.nodesCount || 0;
+        this.saveRegistry();
+    }
+
+    saveRegistry() {
+        if (!this.persistenceEnabled) return;
+        try {
+            const data = {
+                services: {},
+                lastHeartbeats: {},
+                nodeToService: {},
+                servicesCount: this.servicesCount,
+                nodesCount: this.nodesCount
+            };
+            for (const [serviceName, service] of this.services) {
+                data.services[serviceName] = {
+                    nodes: {},
+                    healthyNodesArray: service.healthyNodesArray.map(n => ({ ...n, connections: 0 })), // reset connections
+                    roundRobinIndex: service.roundRobinIndex
+                };
+                for (const [nodeName, node] of service.nodes) {
+                    data.services[serviceName].nodes[nodeName] = { ...node, connections: 0 };
+                }
+            }
+            for (const [node, ts] of this.lastHeartbeats) {
+                data.lastHeartbeats[node] = ts;
+            }
+            for (const [node, service] of this.nodeToService) {
+                data.nodeToService[node] = service;
+            }
+
+            if (this.persistenceType === 'file') {
+                fs.writeFileSync(this.registryFile, JSON.stringify(data, null, 2));
+            } else if (this.persistenceType === 'redis') {
+                if (this.redisClient) {
+                    this.redisClient.set('maxine:registry', JSON.stringify(data)).catch(err => console.error('Redis save error:', err));
+                }
+            }
+            // DB persistence to be implemented
+        } catch (err) {
+            console.error('Error saving registry:', err);
+        }
+    }
+
+    initRedis() {
+        if (this.redisClient) return;
+        const redis = require('redis');
+        this.redisClient = redis.createClient({
+            host: config.redisHost,
+            port: config.redisPort,
+            password: config.redisPassword
+        });
+        this.redisClient.connect().catch(err => console.error('Redis connect error:', err));
+    }
+
+    loadRegistry() {
+        if (!this.persistenceEnabled) return;
+        try {
+            let data;
+            if (this.persistenceType === 'file') {
+                if (fs.existsSync(this.registryFile)) {
+                    data = JSON.parse(fs.readFileSync(this.registryFile, 'utf8'));
+                }
+            } else if (this.persistenceType === 'redis') {
+                // For Redis, load is async, so skip for now in constructor
+                // Will load on first save or manually
+            }
+            // DB load to be implemented
+            if (data) {
+                this.services = new Map();
+                for (const [serviceName, serviceData] of Object.entries(data.services || {})) {
+                    const service = {
+                        nodes: new Map(),
+                        healthyNodesArray: serviceData.healthyNodesArray || [],
+                        roundRobinIndex: serviceData.roundRobinIndex || 0
+                    };
+                    for (const [nodeName, node] of Object.entries(serviceData.nodes || {})) {
+                        service.nodes.set(nodeName, node);
+                    }
+                    this.services.set(serviceName, service);
+                }
+                this.lastHeartbeats = new Map(Object.entries(data.lastHeartbeats || {}));
+                this.nodeToService = new Map(Object.entries(data.nodeToService || {}));
+                this.servicesCount = data.servicesCount || 0;
+                this.nodesCount = data.nodesCount || 0;
+            }
+        } catch (err) {
+            console.error('Error loading registry:', err);
+        }
     }
 }
 
