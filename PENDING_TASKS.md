@@ -28,7 +28,7 @@
        - [x] Implement WebSocket server for real-time event notifications
        - [x] Add event types: service_registered, service_deregistered, service_heartbeat, service_unhealthy, config_changed, config_deleted
        - [x] Broadcast events to connected WebSocket clients
-        - [x] Support MQTT integration for event publishing
+         - [x] Support MQTT integration for event publishing - Enabled MQTT client and publishing in broadcast function
         - [x] Add event filtering by service name or event type
         - [x] Implement event persistence for missed events
         - [x] Add client authentication for WebSocket connections
