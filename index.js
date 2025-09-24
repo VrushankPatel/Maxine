@@ -25,6 +25,8 @@ if (config.lightningMode) {
     // Raw HTTP server for maximum performance
     const http = require('http');
     const url = require('url');
+    const jwt = require('jsonwebtoken');
+    const bcrypt = require('bcrypt');
 
     const stringify = require('fast-json-stringify');
 
@@ -95,9 +97,46 @@ if (config.lightningMode) {
     const errorNotFound = Buffer.from('{"message": "Not found"}');
     const successTrue = Buffer.from('{"success":true}');
     const serviceUnavailable = Buffer.from('{"message": "Service unavailable"}');
+    const errorUnauthorized = Buffer.from('{"error": "Unauthorized"}');
+    const errorForbidden = Buffer.from('{"error": "Forbidden"}');
 
     // Routes map for O(1) lookup
     const routes = new Map();
+
+    // Auth middleware
+    const authMiddleware = (req, res, next) => {
+        if (!config.authEnabled) {
+            return next();
+        }
+        const authHeader = req.headers.authorization;
+        if (!authHeader || !authHeader.startsWith('Bearer ')) {
+            res.writeHead(401, { 'Content-Type': 'application/json' });
+            res.end(errorUnauthorized);
+            return;
+        }
+        const token = authHeader.substring(7);
+        try {
+            const decoded = jwt.verify(token, config.jwtSecret);
+            req.user = decoded;
+            next();
+        } catch (err) {
+            res.writeHead(401, { 'Content-Type': 'application/json' });
+            res.end(errorUnauthorized);
+        }
+    };
+
+    // Admin role check
+    const adminMiddleware = (req, res, next) => {
+        if (!config.authEnabled) {
+            return next();
+        }
+        if (req.user && req.user.role === 'admin') {
+            next();
+        } else {
+            res.writeHead(403, { 'Content-Type': 'application/json' });
+            res.end(errorForbidden);
+        }
+    };
 
     // Metrics
     let requestCount = 0;
@@ -194,9 +233,41 @@ if (config.lightningMode) {
     routes.set('GET /servers', handleServers);
     routes.set('GET /health', handleHealth);
     routes.set('GET /metrics', handleMetrics);
+    routes.set('POST /signin', (req, res, query, body) => {
+        const { username, password } = body;
+        if (!username || !password) {
+            res.writeHead(400, { 'Content-Type': 'application/json' });
+            res.end('{"error": "Missing username or password"}');
+            return;
+        }
+        if (username === config.adminUsername && bcrypt.compareSync(password, config.adminPasswordHash)) {
+            const token = jwt.sign({ username, role: 'admin' }, config.jwtSecret, { expiresIn: config.jwtExpiresIn });
+            res.writeHead(200, { 'Content-Type': 'application/json' });
+            res.end(JSON.stringify({ token }));
+        } else {
+            res.writeHead(401, { 'Content-Type': 'application/json' });
+            res.end(errorUnauthorized);
+        }
+    });
 
     // Persistence endpoints
     routes.set('GET /backup', (req, res, query, body) => {
+        if (config.authEnabled) {
+            const authHeader = req.headers.authorization;
+            if (!authHeader || !authHeader.startsWith('Bearer ')) {
+                res.writeHead(401, { 'Content-Type': 'application/json' });
+                res.end(errorUnauthorized);
+                return;
+            }
+            const token = authHeader.substring(7);
+            try {
+                jwt.verify(token, config.jwtSecret);
+            } catch (err) {
+                res.writeHead(401, { 'Content-Type': 'application/json' });
+                res.end(errorUnauthorized);
+                return;
+            }
+        }
         if (!config.persistenceEnabled) {
             res.writeHead(400, { 'Content-Type': 'application/json' });
             res.end('{"error": "Persistence not enabled"}');
@@ -213,6 +284,22 @@ if (config.lightningMode) {
     });
 
     routes.set('POST /restore', (req, res, query, body) => {
+        if (config.authEnabled) {
+            const authHeader = req.headers.authorization;
+            if (!authHeader || !authHeader.startsWith('Bearer ')) {
+                res.writeHead(401, { 'Content-Type': 'application/json' });
+                res.end(errorUnauthorized);
+                return;
+            }
+            const token = authHeader.substring(7);
+            try {
+                jwt.verify(token, config.jwtSecret);
+            } catch (err) {
+                res.writeHead(401, { 'Content-Type': 'application/json' });
+                res.end(errorUnauthorized);
+                return;
+            }
+        }
         if (!config.persistenceEnabled) {
             res.writeHead(400, { 'Content-Type': 'application/json' });
             res.end('{"error": "Persistence not enabled"}');
@@ -230,6 +317,22 @@ if (config.lightningMode) {
 
     // Basic tracing endpoints
     routes.set('POST /trace/start', (req, res, query, body) => {
+        if (config.authEnabled) {
+            const authHeader = req.headers.authorization;
+            if (!authHeader || !authHeader.startsWith('Bearer ')) {
+                res.writeHead(401, { 'Content-Type': 'application/json' });
+                res.end(errorUnauthorized);
+                return;
+            }
+            const token = authHeader.substring(7);
+            try {
+                jwt.verify(token, config.jwtSecret);
+            } catch (err) {
+                res.writeHead(401, { 'Content-Type': 'application/json' });
+                res.end(errorUnauthorized);
+                return;
+            }
+        }
         const { operation, id } = body;
         if (!id || !operation) {
             res.writeHead(400, { 'Content-Type': 'application/json' });
@@ -242,6 +345,22 @@ if (config.lightningMode) {
     });
 
     routes.set('POST /trace/event', (req, res, query, body) => {
+        if (config.authEnabled) {
+            const authHeader = req.headers.authorization;
+            if (!authHeader || !authHeader.startsWith('Bearer ')) {
+                res.writeHead(401, { 'Content-Type': 'application/json' });
+                res.end(errorUnauthorized);
+                return;
+            }
+            const token = authHeader.substring(7);
+            try {
+                jwt.verify(token, config.jwtSecret);
+            } catch (err) {
+                res.writeHead(401, { 'Content-Type': 'application/json' });
+                res.end(errorUnauthorized);
+                return;
+            }
+        }
         const { id, event } = body;
         if (!id || !event) {
             res.writeHead(400, { 'Content-Type': 'application/json' });
@@ -254,6 +373,22 @@ if (config.lightningMode) {
     });
 
     routes.set('POST /trace/end', (req, res, query, body) => {
+        if (config.authEnabled) {
+            const authHeader = req.headers.authorization;
+            if (!authHeader || !authHeader.startsWith('Bearer ')) {
+                res.writeHead(401, { 'Content-Type': 'application/json' });
+                res.end(errorUnauthorized);
+                return;
+            }
+            const token = authHeader.substring(7);
+            try {
+                jwt.verify(token, config.jwtSecret);
+            } catch (err) {
+                res.writeHead(401, { 'Content-Type': 'application/json' });
+                res.end(errorUnauthorized);
+                return;
+            }
+        }
         const { id } = body;
         if (!id) {
             res.writeHead(400, { 'Content-Type': 'application/json' });
@@ -266,6 +401,22 @@ if (config.lightningMode) {
     });
 
     routes.set('GET /trace/:id', (req, res, query, body) => {
+        if (config.authEnabled) {
+            const authHeader = req.headers.authorization;
+            if (!authHeader || !authHeader.startsWith('Bearer ')) {
+                res.writeHead(401, { 'Content-Type': 'application/json' });
+                res.end(errorUnauthorized);
+                return;
+            }
+            const token = authHeader.substring(7);
+            try {
+                jwt.verify(token, config.jwtSecret);
+            } catch (err) {
+                res.writeHead(401, { 'Content-Type': 'application/json' });
+                res.end(errorUnauthorized);
+                return;
+            }
+        }
         const id = req.url.split('/').pop();
         const trace = serviceRegistry.getTrace(id);
         res.writeHead(200, { 'Content-Type': 'application/json' });
