@@ -7,7 +7,7 @@ A minimal, high-performance service discovery and registry for microservices.
 - **Lightning Fast**: In-memory storage with O(1) lookups, optimized heartbeat with periodic cleanup, pre-allocated response buffers, fast LCG PRNG for random selection
 - **Simple API**: Register, discover, heartbeat, and deregister services with support for service versioning
 - **Automatic Cleanup**: Removes expired services with efficient periodic cleanup (every 30 seconds)
-- **Load Balancing**: Round-robin, random, weighted-random, least-connections, consistent-hash, ip-hash, geo-aware, predictive selection for advanced load balancing
+- **Load Balancing**: Round-robin, random, weighted-random, least-connections, consistent-hash, ip-hash, geo-aware, predictive, cost-aware selection for advanced load balancing
 - **Health Checks**: /health endpoint returning service and node counts, active health monitoring for real-time status
 - **Advanced Health Checks**: Custom health check endpoints with proactive monitoring, configurable intervals, and health status integration with load balancing decisions
 - **Circuit Breakers**: Automatic failure detection and recovery to protect against cascading failures
@@ -295,7 +295,7 @@ Response:
 GET /discover?serviceName=my-service&loadBalancing=round-robin&version=1.0&tags=web,api
 ```
 
-Load balancing options: `round-robin` (default), `random`, `weighted-random`, `least-connections`, `weighted-least-connections`, `consistent-hash`, `ip-hash`, `geo-aware`, `least-response-time`, `health-score`, `predictive` (uses time-series trend analysis for optimal node selection), `ai-driven` (uses reinforcement learning for optimal routing). Use `version` parameter for service versioning. Use `tags` parameter to filter services by tags (comma-separated).
+Load balancing options: `round-robin` (default), `random`, `weighted-random`, `least-connections`, `weighted-least-connections`, `consistent-hash`, `ip-hash`, `geo-aware`, `least-response-time`, `health-score`, `predictive` (uses time-series trend analysis for optimal node selection), `ai-driven` (uses reinforcement learning for optimal routing), `cost-aware` (prefers lower-cost nodes like on-prem over cloud). Use `version` parameter for service versioning. Use `tags` parameter to filter services by tags (comma-separated).
 
 Response: Returns a service instance or 404 if not found.
 
