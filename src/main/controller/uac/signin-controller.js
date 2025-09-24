@@ -24,7 +24,7 @@ const signInController = (req, res) => {
     if (demoUsers[userName] && demoUsers[userName].password === password) {
         const userWithRole = { userName, password, role: demoUsers[userName].role };
         const token = generateAccessToken(userWithRole);
-        audit(`LOGIN_SUCCESS: user ${userName} with role ${userWithRole.role}`);
+        audit(`LOGIN_SUCCESS`, { user: userName, role: userWithRole.role, ip: req.ip, userAgent: req.get('User-Agent') });
         res.json({"accessToken" : token});
         return;
     }
@@ -33,11 +33,11 @@ const signInController = (req, res) => {
     if (new User(userName, password).userName === admin.userName && new User(userName, password).password === admin.password){
         const userWithRole = { ...req.body, role: admin.role };
         const token = generateAccessToken(userWithRole);
-        audit(`LOGIN_SUCCESS: user ${userName}`);
+        audit(`LOGIN_SUCCESS`, { user: userName, role: userWithRole.role, ip: req.ip, userAgent: req.get('User-Agent') });
         res.json({"accessToken" : token});
         return;
     }
-    audit(`LOGIN_FAILED: user ${userName}`);
+    audit(`LOGIN_FAILED`, { user: userName, ip: req.ip, userAgent: req.get('User-Agent') });
     res.status(statusAndMsgs.STATUS_UNAUTHORIZED).json({"message" : statusAndMsgs.MSG_UNAUTHORIZED});
 }
 

@@ -14,7 +14,15 @@ const log = (logFunction) => {
 
 const info = (msg) => log(() => logger.info(logBuilder("INFO", "GENERIC", null, null, msg)));
 
-const audit = (msg) => log(() => logger.info(msg)); // for audit log
+const audit = (msg, details = {}) => {
+    const auditEntry = {
+        timestamp: new Date().toISOString(),
+        event: 'AUDIT',
+        message: msg,
+        ...details
+    };
+    log(() => logger.info(JSON.stringify(auditEntry)));
+}; // for audit log
 
 const error = (msg) => log(() => logger.error(logBuilder("ERROR", "GENERIC", null, null, msg)));
 
