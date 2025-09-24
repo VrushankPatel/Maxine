@@ -867,6 +867,58 @@ Response:
 
 Use the token in Authorization header: `Bearer <token>` for protected endpoints like /backup, /restore, /trace/*.
 
+##### OAuth2 Authentication
+Maxine supports OAuth2 with Google for external authentication.
+
+Enable with `OAUTH2_ENABLED=true` and configure:
+- `GOOGLE_CLIENT_ID`: Google OAuth2 client ID
+- `GOOGLE_CLIENT_SECRET`: Google OAuth2 client secret
+- `GOOGLE_CALLBACK_URL`: Callback URL (default: http://localhost:8080/auth/google/callback)
+
+Start OAuth flow: `GET /auth/google`
+
+Callback: `GET /auth/google/callback` returns JWT token.
+
+##### Chaos Engineering
+Maxine includes chaos engineering tools for resilience testing.
+
+###### Inject Latency
+```http
+POST /api/maxine/chaos/inject-latency
+Content-Type: application/json
+
+{
+  "serviceName": "my-service",
+  "delay": 1000
+}
+```
+
+###### Inject Failure
+```http
+POST /api/maxine/chaos/inject-failure
+Content-Type: application/json
+
+{
+  "serviceName": "my-service",
+  "rate": 0.1
+}
+```
+
+###### Reset Chaos
+```http
+POST /api/maxine/chaos/reset
+Content-Type: application/json
+
+{
+  "serviceName": "my-service"
+}
+```
+
+###### Get Chaos Status
+```http
+GET /api/maxine/chaos/status
+```
+
 ##### Refresh Token
 ```http
 POST /refresh-token
@@ -1196,9 +1248,9 @@ Maxine maintains an in-memory registry of services and their instances. Services
 - Optimized heartbeat and discovery logic with parallel operations and async I/O
 - Active health checks for proactive service monitoring
 - Event-driven notifications for real-time updates
-    - Load test results: 5,000 requests with 50 concurrent users in ~0.2s, average response time 1.81ms, 95th percentile 2.63ms, 100% success rate
+    - Load test results: 5,000 requests with 50 concurrent users in ~0.1s, average response time 1.15ms, 95th percentile 2.44ms, 100% success rate
     - Load test target: 95th percentile < 10ms for 50 concurrent users (achieved)
-    - Recent optimizations: Enabled ultra-fast mode by default, removed deprecated OpenTelemetry start() call, switched to lightning mode for better performance, optimized memory-mapped persistence
+    - Recent optimizations: Enabled ultra-fast mode by default, removed deprecated OpenTelemetry start() call, switched to lightning mode for better performance, optimized memory-mapped persistence, fixed load test endpoints for ultra-fast mode
 
 ## License
 
