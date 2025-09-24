@@ -430,6 +430,11 @@ if (config.ultraFastMode) {
 
     // Disable other endpoints in ultra-fast mode
 
+    // Correlation ID generation
+    const generateCorrelationId = () => {
+        return `corr-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+    };
+
     const server = http.createServer({ keepAlive: false }, (req, res) => {
         if (req.headers.upgrade && req.headers.upgrade.toLowerCase() === 'websocket') {
             return;
@@ -712,11 +717,6 @@ if (config.ultraFastMode) {
     let errorCount = 0;
     let wsConnectionCount = 0;
     let eventBroadcastCount = 0;
-
-    // Correlation ID generation
-    const generateCorrelationId = () => {
-        return `corr-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
-    };
 
     // Rate limiting disabled in lightning mode for ultimate speed
     // const rateLimitMap = new Map(); // ip -> { count, resetTime }
