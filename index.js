@@ -42,6 +42,7 @@ if (config.lightningMode) {
     const winston = require('winston');
     const { logConfiguration } = require('./src/main/config/logging/logging-config');
     winston.configure(logConfiguration);
+    const GrpcServer = require('./src/main/grpc/grpc-server');
 
     // Precompiled stringify functions for performance
     const registerResponseSchema = {
@@ -243,8 +244,8 @@ if (config.lightningMode) {
             }
             const version = query.version;
             const strategy = query.loadBalancing || 'round-robin';
-            const tags = query.tags ? query.tags.split(',') : null;
-            const node = serviceRegistry.getRandomNode(serviceName, strategy, clientIP, tags, version);
+            const tags = query.tags ? query.tags.split(',') : [];
+            const node = serviceRegistry.discover(serviceName, { version, loadBalancing: strategy, tags, ip: clientIP });
             if (!node) {
                 winston.info(`AUDIT: Service discovery failed - serviceName: ${serviceName}, version: ${version}, strategy: ${strategy}, tags: ${tags}, clientIP: ${clientIP}`);
                 res.writeHead(404, { 'Content-Type': 'application/json' });
@@ -842,6 +843,117 @@ if (config.lightningMode) {
     routes.set('GET /service-mesh/envoy-config', handleEnvoyConfig);
     routes.set('GET /service-mesh/istio-config', handleIstioConfig);
 
+    // Versioning endpoints
+    routes.set('GET /versions', (req, res, query, body) => {
+        try {
+            const clientIP = req.connection.remoteAddress || req.socket.remoteAddress || 'unknown';
+            const serviceName = query.serviceName;
+            if (!serviceName) {
+                winston.warn(`AUDIT: Invalid versions request - missing serviceName, clientIP: ${clientIP}`);
+                res.writeHead(400, { 'Content-Type': 'application/json' });
+                res.end('{"error": "Missing serviceName"}');
+                return;
+            }
+            const versions = serviceRegistry.getVersions(serviceName);
+            winston.info(`AUDIT: Versions requested - serviceName: ${serviceName}, versions: ${versions.join(',')}, clientIP: ${clientIP}`);
+            res.writeHead(200, { 'Content-Type': 'application/json' });
+            res.end(JSON.stringify({ serviceName, versions }));
+        } catch (error) {
+            winston.error(`AUDIT: Versions failed - error: ${error.message}, clientIP: ${req.connection.remoteAddress || req.socket.remoteAddress || 'unknown'}`);
+            errorCount++;
+            res.writeHead(500, { 'Content-Type': 'application/json' });
+            res.end('{"error": "Internal server error"}');
+        }
+    });
+
+    routes.set('POST /traffic/set', (req, res, query, body) => {
+        try {
+            const clientIP = req.connection.remoteAddress || req.socket.remoteAddress || 'unknown';
+            const { serviceName, distribution } = body;
+            if (!serviceName || !distribution) {
+                winston.warn(`AUDIT: Invalid traffic set - missing serviceName or distribution, clientIP: ${clientIP}`);
+                res.writeHead(400, { 'Content-Type': 'application/json' });
+                res.end('{"error": "Missing serviceName or distribution"}');
+                return;
+            }
+            serviceRegistry.setTrafficDistribution(serviceName, distribution);
+            winston.info(`AUDIT: Traffic set - serviceName: ${serviceName}, distribution: ${JSON.stringify(distribution)}, clientIP: ${clientIP}`);
+            res.writeHead(200, { 'Content-Type': 'application/json' });
+            res.end(successTrue);
+        } catch (error) {
+            winston.error(`AUDIT: Traffic set failed - error: ${error.message}, clientIP: ${req.connection.remoteAddress || req.socket.remoteAddress || 'unknown'}`);
+            errorCount++;
+            res.writeHead(500, { 'Content-Type': 'application/json' });
+            res.end('{"error": "Internal server error"}');
+        }
+    });
+
+    routes.set('POST /version/promote', (req, res, query, body) => {
+        try {
+            const clientIP = req.connection.remoteAddress || req.socket.remoteAddress || 'unknown';
+            const { serviceName, version } = body;
+            if (!serviceName || !version) {
+                winston.warn(`AUDIT: Invalid version promote - missing serviceName or version, clientIP: ${clientIP}`);
+                res.writeHead(400, { 'Content-Type': 'application/json' });
+                res.end('{"error": "Missing serviceName or version"}');
+                return;
+            }
+            serviceRegistry.promoteVersion(serviceName, version);
+            winston.info(`AUDIT: Version promoted - serviceName: ${serviceName}, version: ${version}, clientIP: ${clientIP}`);
+            res.writeHead(200, { 'Content-Type': 'application/json' });
+            res.end(successTrue);
+        } catch (error) {
+            winston.error(`AUDIT: Version promote failed - error: ${error.message}, clientIP: ${req.connection.remoteAddress || req.socket.remoteAddress || 'unknown'}`);
+            errorCount++;
+            res.writeHead(500, { 'Content-Type': 'application/json' });
+            res.end('{"error": "Internal server error"}');
+        }
+    });
+
+    routes.set('POST /version/retire', (req, res, query, body) => {
+        try {
+            const clientIP = req.connection.remoteAddress || req.socket.remoteAddress || 'unknown';
+            const { serviceName, version } = body;
+            if (!serviceName || !version) {
+                winston.warn(`AUDIT: Invalid version retire - missing serviceName or version, clientIP: ${clientIP}`);
+                res.writeHead(400, { 'Content-Type': 'application/json' });
+                res.end('{"error": "Missing serviceName or version"}');
+                return;
+            }
+            serviceRegistry.retireVersion(serviceName, version);
+            winston.info(`AUDIT: Version retired - serviceName: ${serviceName}, version: ${version}, clientIP: ${clientIP}`);
+            res.writeHead(200, { 'Content-Type': 'application/json' });
+            res.end(successTrue);
+        } catch (error) {
+            winston.error(`AUDIT: Version retire failed - error: ${error.message}, clientIP: ${req.connection.remoteAddress || req.socket.remoteAddress || 'unknown'}`);
+            errorCount++;
+            res.writeHead(500, { 'Content-Type': 'application/json' });
+            res.end('{"error": "Internal server error"}');
+        }
+    });
+
+    routes.set('POST /traffic/shift', (req, res, query, body) => {
+        try {
+            const clientIP = req.connection.remoteAddress || req.socket.remoteAddress || 'unknown';
+            const { serviceName, fromVersion, toVersion, percentage } = body;
+            if (!serviceName || !fromVersion || !toVersion || percentage == null) {
+                winston.warn(`AUDIT: Invalid traffic shift - missing parameters, clientIP: ${clientIP}`);
+                res.writeHead(400, { 'Content-Type': 'application/json' });
+                res.end('{"error": "Missing serviceName, fromVersion, toVersion, or percentage"}');
+                return;
+            }
+            serviceRegistry.shiftTraffic(serviceName, fromVersion, toVersion, percentage);
+            winston.info(`AUDIT: Traffic shifted - serviceName: ${serviceName}, from: ${fromVersion}, to: ${toVersion}, percentage: ${percentage}, clientIP: ${clientIP}`);
+            res.writeHead(200, { 'Content-Type': 'application/json' });
+            res.end(successTrue);
+        } catch (error) {
+            winston.error(`AUDIT: Traffic shift failed - error: ${error.message}, clientIP: ${req.connection.remoteAddress || req.socket.remoteAddress || 'unknown'}`);
+            errorCount++;
+            res.writeHead(500, { 'Content-Type': 'application/json' });
+            res.end('{"error": "Internal server error"}');
+        }
+    });
+
     // Circuit Breaker endpoints
     // Handle circuit breaker state query
     routes.set('GET /circuit-breaker/:nodeId', (req, res, query, body) => {
@@ -1200,6 +1312,10 @@ if (config.lightningMode) {
         // Make broadcast available to handlers
         global.broadcast = broadcast;
     }
+
+    // Start gRPC server
+    const grpcServer = new GrpcServer(serviceRegistry, config);
+    grpcServer.start(50051); // Default gRPC port
 
     console.log('Server setup complete');
     builder = { getApp: () => server };
