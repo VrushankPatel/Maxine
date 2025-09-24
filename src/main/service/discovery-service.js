@@ -3,6 +3,7 @@ const config = require("../config/config");
 const { constants } = require("../util/constants/constants");
 const { serviceRegistry } = require("../entity/service-registry");
 const { consoleError } = require("../util/logging/logging-util");
+const federationService = require("./federation-service");
 
 class DiscoveryService{
     strategyMap = new Map();
@@ -73,7 +74,7 @@ class DiscoveryService{
      * @param {string} deployment
      * @returns {object}
      */
-             getNode = (fullServiceName, ip, group, tags, deployment, filter, clientId) => {
+              getNode = async (fullServiceName, ip, group, tags, deployment, filter, clientId) => {
                    if (config.ultraFastMode || config.extremeFastMode || config.lightningMode) {
                        // Fast modes: direct lookup with zero overhead
                        return this.ultraFastGetNode(fullServiceName);
@@ -113,7 +114,7 @@ class DiscoveryService{
          }
          this.cacheMisses++;
 
-          const node = this.getNodeUncached(fullServiceName, ip, group, tags, deployment, filter, clientId);
+          const node = await this.getNodeUncached(fullServiceName, ip, group, tags, deployment, filter, clientId);
          if (node) {
              this.cache.set(cacheKey, node);
              // Track keys per service
@@ -130,7 +131,7 @@ class DiscoveryService{
              return serviceRegistry.ultraFastGetRandomNode(serviceName);
          }
 
-        getNodeUncached = (fullServiceName, ip, group, tags, deployment, filter, clientId) => {
+        getNodeUncached = async (fullServiceName, ip, group, tags, deployment, filter, clientId) => {
             const strategy = this.getStrategy(config.serverSelectionStrategy);
            let node;
            if (config.serverSelectionStrategy === constants.SSS.CH) {
@@ -142,6 +143,16 @@ class DiscoveryService{
            } else {
                node = strategy.getNode(fullServiceName, group, tags, deployment, filter);
            }
+
+           // If no local node found and federation is enabled, try federated discovery
+           if (!node && config.federationEnabled) {
+               const federatedResults = await federationService.discoverFromFederation(fullServiceName);
+               if (federatedResults.length > 0) {
+                   // Simple random selection for load balancing across datacenters
+                   node = federatedResults[Math.floor(Math.random() * federatedResults.length)];
+               }
+           }
+
            return node;
        }
 

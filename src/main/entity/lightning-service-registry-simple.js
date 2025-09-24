@@ -221,6 +221,14 @@ class LightningServiceRegistrySimple {
         return Array.from(this.services.keys());
     }
 
+    getAllServices() {
+        const result = new Map();
+        for (const [serviceName, service] of this.services) {
+            result.set(serviceName, Array.from(service.nodes.values()));
+        }
+        return result;
+    }
+
     // Basic tracing methods
     startTrace(id, operation) {
         this.traces.set(id, { operation, events: [], start: Date.now() });
