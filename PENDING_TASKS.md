@@ -214,13 +214,13 @@
   - [x] OAuth2 integration with Google, Auth0, and other identity providers
   - [x] Mutual TLS (mTLS) for encrypted service-to-service communication
   - [x] Certificate management and rotation (basic cert generation script provided)
-  - Implement Role-Based Access Control (RBAC) with fine-grained permissions:
-    - Define roles: admin (full access), operator (service management), viewer (read-only), service (limited API access)
-    - Implement permission matrix for all API endpoints
-    - Add role assignment to JWT tokens and mTLS client certs
-    - Enforce permissions in all request handlers
-    - Add role management endpoints (/roles, /user/roles)
-    - Integrate role mapping with OAuth2 providers
+   - [x] Implement Role-Based Access Control (RBAC) with fine-grained permissions:
+     - [x] Define roles: admin (full access), operator (service management), viewer (read-only), service (limited API access)
+     - [x] Implement permission matrix for all API endpoints
+     - [x] Add role assignment to JWT tokens and mTLS client certs
+     - [x] Enforce permissions in all request handlers
+     - [x] Add role management endpoints (/roles, /user/roles)
+     - Integrate role mapping with OAuth2 providers
   - Implement API Key Management and Rate Limiting:
     - Create API key generation, storage, and validation system
     - Add configurable rate limiting per API key (requests per minute/hour)
@@ -235,9 +235,25 @@
     - Log API key usage and rate limit hits
     - Implement structured audit logs with compliance-ready format
     - Add audit log aggregation and alerting for security incidents
-  - Integrate with External Security Systems:
-    - LDAP integration for enterprise user authentication
-    - SAML 2.0 support for single sign-on
+   - Integrate with External Security Systems:
+     - LDAP integration for enterprise user authentication
+     - SAML 2.0 support for single sign-on
+
+### Next High Priority Tasks
+- Implement API Key Management and Rate Limiting:
+  - Create API key generation, storage, and validation system
+  - Add configurable rate limiting per API key (requests per minute/hour)
+  - Implement key rotation and revocation with audit logging
+  - Add API key authentication middleware for service clients
+  - Provide management endpoints for key lifecycle (/api-keys)
+  - Support multiple keys per service with different permissions
+- Enhance Audit Logging for Security Events:
+  - Log all authentication attempts (success/failure) with IP and user agent
+  - Log authorization decisions and permission denials
+  - Log mTLS certificate validation events
+  - Log API key usage and rate limit hits
+  - Implement structured audit logs with compliance-ready format
+  - Add audit log aggregation and alerting for security incidents
     - Integration with HashiCorp Vault for certificate and secret management
     - Support for external identity providers (Auth0, Okta, Keycloak)
 
