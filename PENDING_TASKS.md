@@ -11,6 +11,7 @@
 - [x] Implement Access Control Lists (ACLs): Added fine-grained permissions for service discovery access with allow/deny lists.
 - [x] Implement Service Intentions: Added definition of allowed communication patterns between services.
 - [x] Implement Multi-Region Deployment Support: Added geo-aware load balancing for global deployments, selecting closest node based on client IP location.
+- [x] Optimize Memory Usage: Added heap dump endpoint for memory profiling and optimization in large-scale deployments.
 
 ## Next Steps
 
@@ -19,7 +20,7 @@
 ### Medium Priority
 - Implement Advanced Security: OAuth2 integration and encrypted communication
 - Implement Observability Enhancements: Distributed tracing integration with OpenTelemetry, log aggregation, and advanced monitoring dashboards
-- Optimize Memory Usage: Add memory profiling and optimization for large-scale deployments with thousands of services
+
 - Implement Kubernetes Operator: Create a custom Kubernetes operator for automated Maxine deployment and management
 - Add Advanced Monitoring Dashboard: Build a web-based dashboard for real-time service registry monitoring, metrics visualization, and alerting
 - Implement OAuth2 integration for enhanced security
