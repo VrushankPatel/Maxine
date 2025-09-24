@@ -88,7 +88,7 @@ MQTT publishing is now enabled in the broadcast function for real-time event dis
 
 ## Modes
 
-- **Lightning Mode** (default): Ultra-fast with minimal features for maximum speed. Core operations: register, heartbeat, deregister, discover with round-robin/random/geo-aware load balancing. Optional JWT auth for sensitive endpoints. Uses root-level API endpoints like `/register`, `/discover`.
+- **Lightning Mode** (default): Ultra-fast with minimal features for maximum speed. Core operations: register, heartbeat, deregister, discover with round-robin/random/geo-aware load balancing and lightweight caching. Optional JWT auth for sensitive endpoints. Uses root-level API endpoints like `/register`, `/discover`.
 - **Full Mode**: Comprehensive features including federation, tracing, ACLs, intentions, service blacklists, management UI, security, metrics, etc. Uses `/api/*` endpoints.
 
 To run in full mode: `LIGHTNING_MODE=false npm start`
@@ -948,7 +948,7 @@ Maxine maintains an in-memory registry of services and their instances. Services
 
 ## Performance
 
-- **Lightning Mode**: Ultra-fast response times using raw Node.js HTTP server, O(1) lookups using optimized in-memory data structures, pre-allocated buffer responses, fast LCG PRNG for random selection, advanced load balancing strategies (round-robin, random, weighted-random, least-connections, consistent-hash, ip-hash, geo-aware), optimized request handling without deferred execution for minimal latency, stripped-down registry with only core features for minimal overhead
+- **Lightning Mode**: Ultra-fast response times using raw Node.js HTTP server, O(1) lookups using optimized in-memory data structures with lightweight LRU caching (10k entries, 30s TTL), pre-allocated buffer responses, fast LCG PRNG for random selection, advanced load balancing strategies (round-robin, random, weighted-random, least-connections, consistent-hash, ip-hash, geo-aware), optimized request handling without deferred execution for minimal latency, stripped-down registry with only core features for minimal overhead
 - **Full Mode**: Comprehensive features with optimized caching, async operations, and JWT authentication
 - Minimal memory footprint with efficient data structures
 - Automatic cleanup prevents memory leaks with periodic sweeps (every 30 seconds)
