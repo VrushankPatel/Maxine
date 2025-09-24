@@ -18,11 +18,18 @@
      - [x] Implement Authentication/Authorization: Secure access to registry operations (JWT auth added to Lightning Mode)
      - [x] Implement Multi-Datacenter Support: Global service discovery across multiple datacenters
      - [x] Implement Service Mesh Integration: Integration with Istio, Linkerd, etc. (Envoy and Istio config generation added)
-     - [ ] Implement Advanced Health Checks: Custom health check scripts and proactive monitoring
+      - [x] Implement Advanced Health Checks: Custom health check scripts and proactive monitoring
      - [x] Implement Service Versioning: Support multiple versions of the same service
     - [ ] Implement Circuit Breaker Enhancements: More sophisticated failure detection and recovery
      - [x] Implement Metrics Enhancements: Detailed performance metrics and monitoring
-    - [ ] Implement Event Streaming: Real-time event notifications via WebSockets or MQTT
+ ## Next Feature Implementation: Event Streaming
+     - [ ] Implement WebSocket server for real-time event notifications
+     - [ ] Add event types: service_registered, service_deregistered, service_heartbeat, service_unhealthy
+     - [ ] Broadcast events to connected WebSocket clients
+     - [ ] Support MQTT integration for event publishing
+     - [ ] Add event filtering by service name or event type
+     - [ ] Implement event persistence for missed events
+     - [ ] Add client authentication for WebSocket connections
      - [x] Implement API Gateway Integration: Built-in reverse proxy capabilities
     - [ ] Implement Configuration Management: Dynamic configuration updates for services
     - [ ] Implement Audit Logging: Comprehensive logging of all registry operations
