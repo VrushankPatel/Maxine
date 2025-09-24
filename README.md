@@ -158,6 +158,18 @@ Enable with `LDAP_ENABLED=true` and configure:
 
 When LDAP is enabled, the `/signin` endpoint will first attempt LDAP authentication, falling back to local users if LDAP fails.
 
+## SAML Authentication
+
+Maxine supports SAML 2.0 authentication for enterprise single sign-on integration.
+
+Enable with `SAML_ENABLED=true` and configure:
+- `SAML_ENTRY_POINT`: SAML identity provider entry point URL
+- `SAML_ISSUER`: SAML service provider issuer
+- `SAML_CERT`: SAML identity provider certificate (public key)
+- `SAML_CALLBACK_URL`: SAML callback URL (default: `http://localhost:8080/auth/saml/callback`)
+
+Redirect users to GET `/auth/saml` to start SAML authentication flow, then handle the callback at POST `/auth/saml/callback` to receive JWT token.
+
 ## Mutual TLS (mTLS) Support
 
 Maxine supports Mutual TLS for encrypted and authenticated service-to-service communication in Lightning Mode.

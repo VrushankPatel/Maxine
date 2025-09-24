@@ -144,7 +144,12 @@ const config = {
                         ldapUrl: process.env.LDAP_URL,
                         ldapBaseDN: process.env.LDAP_BASE_DN,
                         ldapBindUser: process.env.LDAP_BIND_USER,
-                        ldapBindPassword: process.env.LDAP_BIND_PASSWORD
+                        ldapBindPassword: process.env.LDAP_BIND_PASSWORD,
+                        samlEnabled: process.env.SAML_ENABLED === 'true',
+                        samlEntryPoint: process.env.SAML_ENTRY_POINT,
+                        samlIssuer: process.env.SAML_ISSUER,
+                        samlCert: process.env.SAML_CERT,
+                        samlCallbackUrl: process.env.SAML_CALLBACK_URL || 'http://localhost:8080/auth/saml/callback'
 }
 
 Object.defineProperty(config, "profile", {
