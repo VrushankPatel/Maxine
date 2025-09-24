@@ -1,4 +1,5 @@
 const { statusAndMsgs } = require('../../util/constants/constants');
+const { ROLES, requirePermission } = require('../../security/rbac');
 
 function requireRole(role) {
     return (req, res, next) => {
@@ -6,7 +7,7 @@ function requireRole(role) {
             res.status(statusAndMsgs.STATUS_UNAUTHORIZED).json({"message": statusAndMsgs.MSG_UNAUTHORIZED});
             return;
         }
-        if (req.user.role === 'admin' || req.user.role === role) {
+        if (req.user.role === ROLES.ADMIN || req.user.role === role) {
             next();
         } else {
             res.status(statusAndMsgs.STATUS_FORBIDDEN).json({"message": "Insufficient permissions"});
@@ -15,5 +16,6 @@ function requireRole(role) {
 }
 
 module.exports = {
-    requireRole
+    requireRole,
+    requirePermission
 };
