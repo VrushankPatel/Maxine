@@ -20,7 +20,7 @@
      - [x] Implement Service Mesh Integration: Integration with Istio, Linkerd, etc. (Envoy and Istio config generation added)
       - [x] Implement Advanced Health Checks: Custom health check scripts and proactive monitoring
      - [x] Implement Service Versioning: Support multiple versions of the same service
-    - [ ] Implement Circuit Breaker Enhancements: More sophisticated failure detection and recovery
+      - [x] Implement Circuit Breaker Enhancements: Add half-open state with retry logic, exponential backoff for recovery attempts, configurable failure thresholds per service, and integration with event streaming for circuit state changes
      - [x] Implement Metrics Enhancements: Detailed performance metrics and monitoring
   ## Next Feature Implementation: Event Streaming
       - [x] Implement WebSocket server for real-time event notifications
@@ -53,8 +53,7 @@
    - [ ] Update CI/CD pipelines to include WebSocket testing and event streaming validation
    - [ ] Add monitoring and alerting for WebSocket connections and event rates
 
-  ## Next Priority Features
-  - [ ] Implement Circuit Breaker Enhancements: Add half-open state with retry logic, exponential backoff for recovery attempts, configurable failure thresholds per service, and integration with event streaming for circuit state changes
+   ## Next Priority Features
   - [ ] Implement MQTT Integration: Add MQTT client for publishing events to MQTT brokers, support for topics based on service names, and QoS levels for reliable event delivery
   - [ ] Implement Event Filtering: Add WebSocket message filtering by event type, service name, or custom criteria; support subscription-based event delivery
   - [ ] Implement Event Persistence: Store recent events in memory or database for clients to retrieve missed events on reconnection; add event replay functionality
