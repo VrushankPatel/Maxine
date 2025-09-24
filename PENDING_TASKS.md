@@ -32,7 +32,7 @@
 - Implement Auto-Scaling Integration: Integration with Kubernetes HPA and cloud auto-scaling (AWS ECS, GCP, Azure) for dynamic service scaling based on load metrics.
 
 ### Low Priority
-- Update Client SDKs: Add new features like tags support and WebSocket client examples
+- [x] Update Client SDKs: Add new features like tags support and WebSocket client examples
 - Create Comprehensive Tutorials: Guides for using event streaming, service tagging, and advanced load balancing
 - Update Docker Configuration: Expose WebSocket port and handle protocol upgrades
 - Update Helm Charts: Kubernetes deployment with WebSocket support

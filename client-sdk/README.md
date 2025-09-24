@@ -51,6 +51,36 @@ const serviceTcp = await client.discoverTcp('my-service', 8082);
 - `getMetrics()`: Get registry metrics
 - And more...
 
+## Python SDK
+
+The Python SDK supports HTTP, UDP, TCP, and WebSocket connections for comprehensive service discovery and real-time event streaming.
+
+### Installation
+
+```bash
+pip install maxine-client
+```
+
+### Usage
+
+```python
+from maxine_client import MaxineClient, WebSocketClient
+
+# HTTP client
+client = MaxineClient()
+
+# Register service
+client.register_service_lightning("my-service", "localhost", 3000, tags=["web"])
+
+# Discover service
+service = client.discover_service_lightning("my-service")
+
+# WebSocket client for real-time events
+ws_client = WebSocketClient()
+ws_client.on_event("service_registered", lambda data: print(data))
+ws_client.connect()
+```
+
 ## Other SDKs
 
-See individual README files in subdirectories for Python, Java, Go, and C# SDKs.
+See individual README files in subdirectories for Java, Go, and C# SDKs.

@@ -58,6 +58,33 @@ print(heartbeat)
 # Ultra-fast UDP discovery
 service = client.discover_service_udp("my-service")
 print(service)
+
+# Real-time event streaming with WebSocket
+from maxine_client import WebSocketClient
+
+# Initialize WebSocket client
+ws_client = WebSocketClient(base_url="ws://localhost:8080", token="your-jwt-token")
+
+# Register event handlers
+def on_service_registered(event_data):
+    print(f"Service registered: {event_data}")
+
+def on_service_deregistered(event_data):
+    print(f"Service deregistered: {event_data}")
+
+ws_client.on_event("service_registered", on_service_registered)
+ws_client.on_event("service_deregistered", on_service_deregistered)
+
+# Connect and subscribe
+ws_client.connect()
+ws_client.subscribe("service_registered", service_name="my-service")
+
+# Keep connection alive
+import time
+time.sleep(60)
+
+# Disconnect
+ws_client.disconnect()
 ```
 
 ## API Reference
@@ -136,6 +163,46 @@ Discover a service via UDP for ultra-fast lookups.
 ##### `discover_service_tcp(service_name, tcp_port=8082, tcp_host="localhost")`
 
 Discover a service via TCP for reliable fast lookups.
+
+### WebSocketClient
+
+#### `__init__(base_url="ws://localhost:8080", token=None)`
+
+Initialize the WebSocket client for real-time events.
+
+- `base_url`: WebSocket URL (ws:// or wss://)
+- `token`: JWT token for authentication
+
+#### `on_event(event_type, handler)`
+
+Register an event handler function.
+
+- `event_type`: Event type (e.g., 'service_registered')
+- `handler`: Function that takes event data dict
+
+#### `connect()`
+
+Connect to the WebSocket server.
+
+#### `disconnect()`
+
+Disconnect from the WebSocket server.
+
+#### `subscribe(event_type, service_name=None, node_id=None)`
+
+Subscribe to specific events with optional filters.
+
+- `event_type`: Event type to subscribe to
+- `service_name`: Filter by service name
+- `node_id`: Filter by node ID
+
+#### `unsubscribe()`
+
+Unsubscribe from all events.
+
+#### `refresh_token()`
+
+Refresh the JWT token.
 
 ## License
 
