@@ -88,6 +88,7 @@ MQTT publishing is now enabled in the broadcast function for real-time event dis
 
 ## Modes
 
+- **Ultra-Fast Mode**: Extreme performance with minimal features. Core operations only: register, heartbeat (UDP), deregister, discover. No logging, metrics, auth, WebSocket, MQTT, gRPC. Uses UDP for heartbeats for speed. Set `ULTRA_FAST_MODE=true`.
 - **Lightning Mode** (default): Ultra-fast with minimal features for maximum speed. Core operations: register, heartbeat, deregister, discover with round-robin/random/geo-aware load balancing and lightweight caching. Optional JWT auth for sensitive endpoints. Uses root-level API endpoints like `/register`, `/discover`.
 - **Full Mode**: Comprehensive features including federation, tracing, ACLs, intentions, service blacklists, management UI, security, metrics, etc. Uses `/api/*` endpoints.
 
