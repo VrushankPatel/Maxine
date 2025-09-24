@@ -3,12 +3,12 @@
 ## Recently Implemented Features
 - [x] Enable GraphQL API in Lightning Mode: Added GraphQL endpoint (/graphql) to Lightning Mode for flexible service queries and mutations, matching the functionality available in Full Mode.
 - [x] Stabilize Lightning Mode Server: Fixed server crashes under load by commenting out excessive winston logging in request handlers, preventing I/O bottlenecks. Server now handles 50 concurrent users with p95 < 2ms response time.
+- [x] Enhance WebSocket authentication and authorization: Added role-based access control for WebSocket subscriptions and token refresh functionality via HTTP and WebSocket.
+- [x] Add comprehensive monitoring for WebSocket connections: Added metrics for active WebSocket connections and event broadcast rates in /metrics endpoint.
 
 ## Next Steps
 
 ### High Priority
-- Enhance WebSocket authentication and authorization (add role-based access, token refresh)
-- Add comprehensive monitoring and alerting for WebSocket connections (metrics for active connections, event rates)
 - Implement advanced service mesh features (traffic splitting, canary deployments)
 - Add multi-cluster federation with conflict resolution
 
