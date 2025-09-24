@@ -317,7 +317,7 @@ Response:
 GET /discover?serviceName=my-service&loadBalancing=round-robin&version=1.0&tags=web,api
 ```
 
-Load balancing options: `round-robin` (default), `random`, `weighted-random`, `least-connections`, `weighted-least-connections`, `consistent-hash`, `ip-hash`, `geo-aware`, `least-response-time`, `health-score`, `predictive` (uses time-series trend analysis for optimal node selection), `ai-driven` (uses reinforcement learning for optimal routing), `advanced-ml` (uses machine learning with predictive analytics for intelligent load balancing), `cost-aware` (prefers lower-cost nodes like on-prem over cloud), `power-of-two-choices` (selects two random nodes and picks the one with fewer connections for better load distribution). Use `version` parameter for service versioning. Use `tags` parameter to filter services by tags (comma-separated).
+Load balancing options: `round-robin` (default), `random`, `weighted-random`, `least-connections`, `weighted-least-connections`, `consistent-hash`, `ip-hash`, `geo-aware`, `least-response-time`, `health-score`, `predictive` (uses time-series trend analysis for optimal node selection), `ai-driven` (uses reinforcement learning for optimal routing), `advanced-ml` (uses machine learning with predictive analytics for intelligent load balancing), `cost-aware` (prefers lower-cost nodes like on-prem over cloud), `power-of-two-choices` (selects two random nodes and picks the one with fewer connections for better load distribution). Custom load balancing strategies can be registered via plugins. Use `version` parameter for service versioning. Use `tags` parameter to filter services by tags (comma-separated).
 
 Response: Returns a service instance or 404 if not found.
 
@@ -1509,6 +1509,38 @@ Content-Type: application/json
 ##### Check if Service is Blacklisted
 ```http
 GET /api/maxine/serviceops/blacklist/service/:serviceName
+```
+
+## Custom Load Balancing Plugins
+
+Maxine supports custom load balancing strategies through a plugin system. You can register your own load balancing algorithms for specialized routing needs.
+
+### Registering a Custom Plugin
+
+```javascript
+const serviceRegistry = global.serviceRegistry;
+
+// Register a custom strategy
+serviceRegistry.registerLBPlugin('my-custom-strategy', (nodes, context) => {
+    // nodes: array of available service nodes
+    // context: { clientIP, serviceName, tags }
+    // Return the selected node
+
+    // Example: select node with lowest CPU usage (assuming metadata has cpu field)
+    let bestNode = null;
+    let lowestCpu = Infinity;
+    for (const node of nodes) {
+        const cpu = node.metadata?.cpu || 0;
+        if (cpu < lowestCpu) {
+            lowestCpu = cpu;
+            bestNode = node;
+        }
+    }
+    return bestNode || nodes[0];
+});
+
+// Now you can use 'my-custom-strategy' in discovery requests
+GET /discover?serviceName=my-service&loadBalancing=my-custom-strategy
 ```
 
 ## Client SDKs

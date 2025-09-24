@@ -86,6 +86,14 @@ class LightningServiceRegistrySimple extends EventEmitter {
         this.aiSelections = new Map(); // clientId -> {state, action, nodeId, timestamp}
         this.redisCachePrefix = 'maxine:cache:';
 
+        // Custom Load Balancing Plugins
+        this.lbPlugins = new Map(); // strategyName -> pluginFunction
+
+        // Method to register custom load balancing plugins
+        this.registerLBPlugin = (strategyName, pluginFunction) => {
+            this.lbPlugins.set(strategyName, pluginFunction);
+        };
+
         // Cache metrics
         this.cacheHits = 0;
         this.cacheMisses = 0;
@@ -600,51 +608,56 @@ class LightningServiceRegistrySimple extends EventEmitter {
                 }
 
         let selectedNode;
-        switch (strategy) {
-            case 'random':
-                const randomIndex = (fastRandom() * availableNodes.length) | 0;
-                selectedNode = availableNodes[randomIndex];
-                break;
-            case 'weighted-random':
-                selectedNode = this.selectWeightedRandom(availableNodes);
-                break;
-            case 'least-connections':
-                selectedNode = this.selectLeastConnections(availableNodes);
-                break;
-            case 'weighted-least-connections':
-                selectedNode = this.selectWeightedLeastConnections(availableNodes);
-                break;
-            case 'consistent-hash':
-                selectedNode = this.selectConsistentHash(availableNodes, clientIP || 'default');
-                break;
-            case 'ip-hash':
-                selectedNode = this.selectIPHash(availableNodes, clientIP);
-                break;
-             case 'geo-aware':
-                 selectedNode = this.selectGeoAware(availableNodes, clientIP);
-                 break;
-              case 'least-response-time':
-                  selectedNode = this.selectLeastResponseTime(availableNodes);
-                  break;
-               case 'health-score':
-                   selectedNode = this.selectHealthScore(availableNodes);
-                   break;
-                case 'predictive':
-                    selectedNode = this.selectPredictive(availableNodes);
+        // Check for custom plugin first
+        if (this.lbPlugins.has(strategy)) {
+            selectedNode = this.lbPlugins.get(strategy)(availableNodes, { clientIP, serviceName: fullServiceName, tags });
+        } else {
+            switch (strategy) {
+                case 'random':
+                    const randomIndex = (fastRandom() * availableNodes.length) | 0;
+                    selectedNode = availableNodes[randomIndex];
                     break;
-                 case 'ai-driven':
-                     selectedNode = this.selectAIDriven(availableNodes, clientIP);
+                case 'weighted-random':
+                    selectedNode = this.selectWeightedRandom(availableNodes);
+                    break;
+                case 'least-connections':
+                    selectedNode = this.selectLeastConnections(availableNodes);
+                    break;
+                case 'weighted-least-connections':
+                    selectedNode = this.selectWeightedLeastConnections(availableNodes);
+                    break;
+                case 'consistent-hash':
+                    selectedNode = this.selectConsistentHash(availableNodes, clientIP || 'default');
+                    break;
+                case 'ip-hash':
+                    selectedNode = this.selectIPHash(availableNodes, clientIP);
+                    break;
+                 case 'geo-aware':
+                     selectedNode = this.selectGeoAware(availableNodes, clientIP);
                      break;
-                  case 'cost-aware':
-                      selectedNode = this.selectCostAware(availableNodes);
+                  case 'least-response-time':
+                      selectedNode = this.selectLeastResponseTime(availableNodes);
                       break;
-                  case 'power-of-two-choices':
-                      selectedNode = this.selectPowerOfTwoChoices(availableNodes);
-                      break;
-                 default: // round-robin
-                let index = service.roundRobinIndex || 0;
-                selectedNode = availableNodes[index % availableNodes.length];
-                service.roundRobinIndex = (index + 1) % availableNodes.length;
+                   case 'health-score':
+                       selectedNode = this.selectHealthScore(availableNodes);
+                       break;
+                    case 'predictive':
+                        selectedNode = this.selectPredictive(availableNodes);
+                        break;
+                     case 'ai-driven':
+                         selectedNode = this.selectAIDriven(availableNodes, clientIP);
+                         break;
+                      case 'cost-aware':
+                          selectedNode = this.selectCostAware(availableNodes);
+                          break;
+                      case 'power-of-two-choices':
+                          selectedNode = this.selectPowerOfTwoChoices(availableNodes);
+                          break;
+                     default: // round-robin
+                    let index = service.roundRobinIndex || 0;
+                    selectedNode = availableNodes[index % availableNodes.length];
+                    service.roundRobinIndex = (index + 1) % availableNodes.length;
+            }
         }
         if (selectedNode) {
             selectedNode.connections++; // Increment for least-connections
@@ -772,6 +785,122 @@ class LightningServiceRegistrySimple extends EventEmitter {
         return bestNode || nodes[0];
     }
 
+    selectHealthScore(nodes) {
+        let bestNode = null;
+        let bestScore = -Infinity;
+        for (const node of nodes) {
+            const score = this.healthScores.get(node.nodeName) || 50; // Default score 50
+            if (score > bestScore) {
+                bestScore = score;
+                bestNode = node;
+            }
+        }
+        return bestNode || nodes[0];
+    }
+
+    selectPredictive(nodes) {
+        // Simple predictive: use recent trend in response times
+        let bestNode = null;
+        let bestTrend = Infinity; // Lower trend (decreasing response time) is better
+        for (const node of nodes) {
+            const history = this.responseTimeHistory.get(node.nodeName) || [];
+            if (history.length < 2) {
+                // Not enough data, use least connections
+                const connections = node.connections || 0;
+                if (bestNode === null || connections < (bestNode.connections || 0)) {
+                    bestNode = node;
+                }
+                continue;
+            }
+            // Calculate trend (slope of last few points)
+            const recent = history.slice(-5);
+            const n = recent.length;
+            const sumX = (n * (n - 1)) / 2;
+            const sumY = recent.reduce((sum, h) => sum + h.responseTime, 0);
+            const sumXY = recent.reduce((sum, h, i) => sum + i * h.responseTime, 0);
+            const sumXX = (n * (n - 1) * (2 * n - 1)) / 6;
+            const slope = (n * sumXY - sumX * sumY) / (n * sumXX - sumX * sumX);
+            if (slope < bestTrend) {
+                bestTrend = slope;
+                bestNode = node;
+            }
+        }
+        return bestNode || nodes[0];
+    }
+
+    selectCostAware(nodes) {
+        // Prefer nodes with lower cost (e.g., on-prem over cloud)
+        let bestNode = null;
+        let bestCost = Infinity;
+        for (const node of nodes) {
+            const cost = (node.metadata && node.metadata.cost) || 1; // Default cost 1
+            if (cost < bestCost) {
+                bestCost = cost;
+                bestNode = node;
+            }
+        }
+        return bestNode || nodes[0];
+    }
+
+    selectPowerOfTwoChoices(nodes) {
+        // Select two random nodes, pick the one with fewer connections
+        if (nodes.length < 2) return nodes[0];
+        const choice1 = nodes[(fastRandom() * nodes.length) | 0];
+        const choice2 = nodes[(fastRandom() * nodes.length) | 0];
+        const conn1 = choice1.connections || 0;
+        const conn2 = choice2.connections || 0;
+        return conn1 <= conn2 ? choice1 : choice2;
+    }
+
+    selectAdvancedML(nodes, serviceName, clientId) {
+        // Use advanced ML model for prediction
+        if (nodes.length === 0) return null;
+        if (nodes.length === 1) return nodes[0];
+
+        const now = Date.now();
+
+        // Calculate predicted performance for each node
+        const predictions = nodes.map(node => {
+            const prediction = this.predictNodePerformance(node.nodeName, now);
+            return {
+                node,
+                predictedResponseTime: prediction.responseTime,
+                predictedErrorRate: prediction.errorRate,
+                predictedLoad: prediction.load,
+                confidence: prediction.confidence
+            };
+        });
+
+        // Score nodes based on multiple factors
+        const scoredNodes = predictions.map(pred => {
+            let score = 0;
+
+            // Response time score (lower is better)
+            score += (1000 - Math.min(pred.predictedResponseTime, 1000)) / 10;
+
+            // Error rate score (lower is better)
+            score += (1 - pred.predictedErrorRate) * 50;
+
+            // Load score (lower load is better)
+            score += (1 - pred.predictedLoad) * 30;
+
+            // Confidence bonus
+            score += pred.confidence * 20;
+
+            return { ...pred, score };
+        });
+
+        // Select node with highest score, with some exploration
+        if (fastRandom() < this.epsilon) {
+            // Exploration: random selection
+            return nodes[Math.floor(fastRandom() * nodes.length)];
+        } else {
+            // Exploitation: best predicted node
+            scoredNodes.sort((a, b) => b.score - a.score);
+            return scoredNodes[0].node;
+        }
+    }
+
     haversineDistance(lat1, lon1, lat2, lon2) {
         const R = 6371; // Radius of the Earth in km
         const dLat = (lat2 - lat1) * Math.PI / 180;
@@ -853,7 +982,10 @@ class LightningServiceRegistrySimple extends EventEmitter {
             });
             if (nodes.length === 0) return null;
         }
-        if (strategy === 'least-connections') {
+        // Check for custom plugin first
+        if (this.lbPlugins.has(strategy)) {
+            return this.lbPlugins.get(strategy)(nodes, { clientId, serviceName, tags });
+        } else if (strategy === 'least-connections') {
             let minConnections = Infinity;
             let selectedNode = nodes[0];
             for (let i = 0; i < nodes.length; i++) {
@@ -963,61 +1095,7 @@ class LightningServiceRegistrySimple extends EventEmitter {
         qValues.set(nodeName, newQ);
     }
 
-    // Advanced ML-based node selection using predictive analytics
-    selectAdvancedML(nodes, serviceName, clientId) {
-        if (nodes.length === 0) return null;
-        if (nodes.length === 1) return nodes[0];
 
-        const now = Date.now();
-
-        // Calculate predicted performance for each node
-        const predictions = nodes.map(node => {
-            const prediction = this.predictNodePerformance(node.nodeName, now);
-            return {
-                node,
-                predictedResponseTime: prediction.responseTime,
-                predictedErrorRate: prediction.errorRate,
-                predictedLoad: prediction.load,
-                confidence: prediction.confidence
-            };
-        });
-
-        // Score nodes based on multiple factors
-        const scoredNodes = predictions.map(pred => {
-            let score = 0;
-
-            // Response time score (lower is better)
-            score += (1000 - Math.min(pred.predictedResponseTime, 1000)) / 10;
-
-            // Error rate score (lower is better)
-            score += (1 - pred.predictedErrorRate) * 50;
-
-            // Load score (lower load is better)
-            score += (1 - pred.predictedLoad) * 30;
-
-            // Confidence bonus
-            score += pred.confidence * 20;
-
-            // Q-learning bonus for this client
-            const state = clientId || 'default';
-            const qValues = this.qTable.get(state);
-            if (qValues) {
-                score += (qValues.get(pred.node.nodeName) || 0) * 10;
-            }
-
-            return { ...pred, score };
-        });
-
-        // Select node with highest score, with some exploration
-        if (fastRandom() < this.epsilon) {
-            // Exploration: random selection
-            return nodes[Math.floor(fastRandom() * nodes.length)];
-        } else {
-            // Exploitation: best predicted node
-            scoredNodes.sort((a, b) => b.score - a.score);
-            return scoredNodes[0].node;
-        }
-    }
 
     // Predict node performance using time-series analysis
     predictNodePerformance(nodeName, timestamp) {
