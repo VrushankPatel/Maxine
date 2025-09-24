@@ -23,6 +23,40 @@ const dependencyGraphController = (req, res) => {
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Maxine Service Dependency Graph</title>
     <script src="https://d3js.org/d3.v7.min.js"></script>
+    <script>
+        let ws;
+        let reconnectInterval;
+
+        function connectWebSocket() {
+            ws = new WebSocket('ws://' + window.location.host);
+
+            ws.onopen = function() {
+                console.log('WebSocket connected for dependency graph updates');
+                clearInterval(reconnectInterval);
+            };
+
+            ws.onmessage = function(event) {
+                const data = JSON.parse(event.data);
+                if (data.event === 'dependency_added' || data.event === 'dependency_removed') {
+                    console.log('Dependency change detected, refreshing graph...');
+                    // Refresh the page or update the graph dynamically
+                    setTimeout(() => window.location.reload(), 1000); // Simple refresh for now
+                }
+            };
+
+            ws.onclose = function() {
+                console.log('WebSocket disconnected, attempting to reconnect...');
+                reconnectInterval = setInterval(connectWebSocket, 5000);
+            };
+
+            ws.onerror = function(error) {
+                console.error('WebSocket error:', error);
+            };
+        }
+
+        // Connect to WebSocket on page load
+        connectWebSocket();
+    </script>
     <style>
         body { font-family: Arial, sans-serif; margin: 0; padding: 20px; background-color: #f5f5f5; }
         .header { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 20px; border-radius: 10px; margin-bottom: 20px; text-align: center; }
