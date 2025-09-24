@@ -167,6 +167,7 @@
 
 ### Low Priority
 - [x] Update Client SDKs: Add new features like tags support and WebSocket client examples
+- [x] Implement C++ Client SDK: High-performance C++ SDK with async support for game servers and low-latency applications
 - Create Comprehensive Tutorials: Detailed guides and examples:
   - Event streaming tutorials with WebSocket clients
   - Service tagging and filtering examples
