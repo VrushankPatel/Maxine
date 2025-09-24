@@ -1247,6 +1247,45 @@ if (config.lightningMode) {
         }
     });
 
+    // ACL endpoints
+    routes.set('POST /api/maxine/serviceops/acl/set', (req, res, query, body) => {
+        try {
+            const clientIP = req.connection.remoteAddress || req.socket.remoteAddress || 'unknown';
+            const { serviceName, allow, deny } = body;
+            if (!serviceName) {
+                winston.warn(`AUDIT: Invalid ACL set - missing serviceName, clientIP: ${clientIP}`);
+                res.writeHead(400, { 'Content-Type': 'application/json' });
+                res.end('{"error": "Missing serviceName"}');
+                return;
+            }
+            serviceRegistry.setACL(serviceName, allow, deny);
+            winston.info(`AUDIT: ACL set - serviceName: ${serviceName}, allow: ${allow}, deny: ${deny}, clientIP: ${clientIP}`);
+            res.writeHead(200, { 'Content-Type': 'application/json' });
+            res.end(successTrue);
+        } catch (error) {
+            winston.error(`AUDIT: ACL set failed - error: ${error.message}, clientIP: ${req.connection.remoteAddress || req.socket.remoteAddress || 'unknown'}`);
+            errorCount++;
+            res.writeHead(500, { 'Content-Type': 'application/json' });
+            res.end('{"error": "Internal server error"}');
+        }
+    });
+
+    routes.set('GET /api/maxine/serviceops/acl/:serviceName', (req, res, query, body) => {
+        try {
+            const clientIP = req.connection.remoteAddress || req.socket.remoteAddress || 'unknown';
+            const serviceName = req.url.split('/').pop();
+            const acl = serviceRegistry.getACL(serviceName);
+            winston.info(`AUDIT: ACL retrieved - serviceName: ${serviceName}, clientIP: ${clientIP}`);
+            res.writeHead(200, { 'Content-Type': 'application/json' });
+            res.end(JSON.stringify(acl));
+        } catch (error) {
+            winston.error(`AUDIT: ACL get failed - error: ${error.message}, clientIP: ${req.connection.remoteAddress || req.socket.remoteAddress || 'unknown'}`);
+            errorCount++;
+            res.writeHead(500, { 'Content-Type': 'application/json' });
+            res.end('{"error": "Internal server error"}');
+        }
+    });
+
     const server = http.createServer({ keepAlive: false }, (req, res) => {
           if (req.headers.upgrade && req.headers.upgrade.toLowerCase() === 'websocket') {
               // Let WebSocket handle upgrade
