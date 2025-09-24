@@ -3,14 +3,14 @@ const { constants } = require("../util/constants/constants");
 
 // Performance modes - simplified to lightning mode only
 let lightningDefault = process.env.LIGHTNING_MODE !== 'false'; // Lightning mode: ultimate speed, only basic discovery/registration
-let ultraFastDefault = false; // Ultra-fast mode: high performance with some features
+let ultraFastDefault = process.env.ULTRA_FAST_MODE === 'true'; // Ultra-fast mode: extreme performance with minimal features
 let highPerfDefault = false; // High performance mode: balanced performance and features
 let extremeFastDefault = false; // Extreme fast mode: maximum speed, minimal features
 
 // Ultra-fast modes can be controlled via environment variables
 const isTestMode = process.argv.some(arg => arg.includes('mocha'));
 if (isTestMode) {
-    ultraFastDefault = false;
+    ultraFastDefault = process.env.ULTRA_FAST_MODE === 'true';
     highPerfDefault = false;
     extremeFastDefault = false;
     lightningDefault = process.env.LIGHTNING_MODE === 'true';
@@ -21,6 +21,7 @@ const fs = require('fs');
 const path = require('path');
 
 const lightningMode = process.env.LIGHTNING_MODE === 'true' || lightningDefault;
+const ultraFastMode = process.env.ULTRA_FAST_MODE === 'true' || ultraFastDefault;
 
 const config = {
     isTestMode: isTestMode,
