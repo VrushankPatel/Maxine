@@ -270,6 +270,34 @@ Maxine supports real-time event streaming via WebSocket for monitoring service c
 ws://localhost:8080
 ```
 
+##### Subscription and Filtering
+
+Clients can subscribe to specific events by sending a JSON message:
+
+```json
+{
+  "subscribe": {
+    "event": "service_registered",
+    "serviceName": "my-service"
+  }
+}
+```
+
+Supported filter criteria:
+- `event`: Filter by event type (e.g., "service_registered", "circuit_open")
+- `serviceName`: Filter by service name
+- `nodeId`: Filter by node ID
+
+To unsubscribe:
+
+```json
+{
+  "unsubscribe": true
+}
+```
+
+If no filter is set, all events are received.
+
 ##### Events
 
 The server broadcasts the following events as JSON messages:
