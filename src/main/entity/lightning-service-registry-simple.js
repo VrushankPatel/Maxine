@@ -71,6 +71,9 @@ class LightningServiceRegistrySimple extends EventEmitter {
         // Response time tracking for predictive load balancing
         this.responseTimes = new Map(); // nodeName -> { count, sum, average }
 
+        // Health scores for nodes (0-100, higher better)
+        this.healthScores = new Map(); // nodeName -> score
+
         // Method to invalidate discovery cache for a service
         this.invalidateDiscoveryCache = (serviceName) => {
             // Since keys start with serviceName, we can iterate and delete
@@ -140,6 +143,8 @@ class LightningServiceRegistrySimple extends EventEmitter {
         for (const serviceName of affectedServices) {
             this.invalidateDiscoveryCache(serviceName);
         }
+        // Update health scores periodically
+        this.updateAllHealthScores();
         if (toRemove.length > 0) {
             this.saveRegistry();
         }
@@ -267,7 +272,7 @@ class LightningServiceRegistrySimple extends EventEmitter {
                 }
 
         // Check cache for deterministic strategies
-        const cacheableStrategies = ['consistent-hash', 'ip-hash', 'geo-aware', 'least-response-time'];
+        const cacheableStrategies = ['consistent-hash', 'ip-hash', 'geo-aware', 'least-response-time', 'health-score'];
         if (cacheableStrategies.includes(strategy)) {
             const cacheKey = `${fullServiceName}:${strategy}:${clientIP || 'default'}:${tags ? tags.sort().join(',') : ''}`;
             const cached = this.discoveryCache.get(cacheKey);
@@ -321,9 +326,12 @@ class LightningServiceRegistrySimple extends EventEmitter {
              case 'geo-aware':
                  selectedNode = this.selectGeoAware(availableNodes, clientIP);
                  break;
-             case 'least-response-time':
-                 selectedNode = this.selectLeastResponseTime(availableNodes);
-                 break;
+              case 'least-response-time':
+                  selectedNode = this.selectLeastResponseTime(availableNodes);
+                  break;
+              case 'health-score':
+                  selectedNode = this.selectHealthScore(availableNodes);
+                  break;
              default: // round-robin
                 let index = service.roundRobinIndex || 0;
                 selectedNode = availableNodes[index % availableNodes.length];
@@ -1117,6 +1125,64 @@ class LightningServiceRegistrySimple extends EventEmitter {
             rt.count++;
             rt.sum += responseTime;
             rt.average = rt.sum / rt.count;
+            // Update health score after recording response time
+            this.updateHealthScore(nodeId);
+        }
+
+        // Health score calculation (0-100, higher better)
+        calculateHealthScore(nodeId) {
+            const rt = this.responseTimes.get(nodeId);
+            const failures = this.circuitFailures.get(nodeId) || 0;
+            const circuitOpen = this.isCircuitOpen(nodeId);
+            let score = 100;
+            if (rt && rt.count > 0) {
+                // Penalize for slow average response time (up to 20 points for >2s average)
+                score -= Math.min(rt.average / 100, 20);
+            }
+            // Penalize for circuit breaker failures (5 points per failure, up to 30)
+            score -= Math.min(failures * 5, 30);
+            // Heavy penalty for open circuit
+            if (circuitOpen) score -= 50;
+            return Math.max(0, Math.min(100, score));
+        }
+
+        // Update health score for a node
+        updateHealthScore(nodeId) {
+            this.healthScores.set(nodeId, this.calculateHealthScore(nodeId));
+        }
+
+        // Update health scores for all nodes (called periodically)
+        updateAllHealthScores() {
+            for (const [serviceName, service] of this.services) {
+                for (const node of service.healthyNodesArray) {
+                    this.updateHealthScore(node.nodeName);
+                }
+            }
+        }
+
+        // Select node with highest health score
+        selectHealthScore(nodes) {
+            let bestNode = null;
+            let bestScore = -1;
+            for (const node of nodes) {
+                const score = this.healthScores.get(node.nodeName) || 0;
+                if (score > bestScore) {
+                    bestScore = score;
+                    bestNode = node;
+                }
+            }
+            return bestNode || nodes[0];
+        }
+
+        // Get health scores for a service
+        getHealthScores(serviceName) {
+            const service = this.services.get(serviceName);
+            if (!service) return {};
+            const scores = {};
+            for (const node of service.healthyNodesArray) {
+                scores[node.nodeName] = this.healthScores.get(node.nodeName) || 0;
+            }
+            return scores;
         }
 
         // Anomaly detection

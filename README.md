@@ -256,7 +256,7 @@ Response:
 GET /discover?serviceName=my-service&loadBalancing=round-robin&version=1.0&tags=web,api
 ```
 
-Load balancing options: `round-robin` (default), `random`, `weighted-random`, `least-connections`, `weighted-least-connections`, `consistent-hash`, `ip-hash`, `geo-aware`, `least-response-time`. Use `version` parameter for service versioning. Use `tags` parameter to filter services by tags (comma-separated).
+Load balancing options: `round-robin` (default), `random`, `weighted-random`, `least-connections`, `weighted-least-connections`, `consistent-hash`, `ip-hash`, `geo-aware`, `least-response-time`, `health-score`. Use `version` parameter for service versioning. Use `tags` parameter to filter services by tags (comma-separated).
 
 Response: Returns a service instance or 404 if not found.
 
@@ -406,6 +406,24 @@ Response:
       "value": 15
     }
   ]
+}
+```
+
+##### Get Health Scores
+```http
+GET /health-score?serviceName=my-service
+```
+
+Returns health scores (0-100, higher better) for all healthy nodes in the service, based on response times, failure rates, and circuit breaker state.
+
+Response:
+```json
+{
+  "serviceName": "my-service",
+  "scores": {
+    "my-service:localhost:3000": 85,
+    "my-service:localhost:3001": 92
+  }
 }
 ```
 
