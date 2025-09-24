@@ -171,7 +171,12 @@ Returns uptime, requests, errors, services, nodes, persistenceEnabled, persisten
 ```http
 GET /dashboard
 ```
-Returns a simple HTML dashboard with key metrics and recent events for monitoring.
+Returns an advanced HTML dashboard with real-time metrics, charts, service topology, and event streaming for comprehensive monitoring. Features include:
+- Real-time stats updates via WebSocket
+- Interactive charts for node health and cache performance
+- Service and node status visualization
+- Recent events feed
+- Connection status indicators
 
 ##### Heap Dump
 ```http
