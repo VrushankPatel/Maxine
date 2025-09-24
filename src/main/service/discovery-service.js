@@ -13,13 +13,13 @@ class DiscoveryService{
          if (!config.ultraFastMode && !config.extremeFastMode && !config.lightningMode) {
              this.preloadStrategies();
          }
-         // In lightning mode, disable caching for ultimate speed
-         if (config.lightningMode) {
-             this.cache = null;
-             this.serviceKeys = null;
-             this.aliasCache = null;
-             this.cacheKeyCache = null;
-         }
+          // In lightning mode, enable lightweight caching for better performance
+          if (config.lightningMode) {
+              this.cache = new LRUCache({ max: 10000, ttl: 30000 }); // 10k entries, 30s TTL
+              this.serviceKeys = new Map();
+              this.aliasCache = new LRUCache({ max: 1000, ttl: 60000 }); // 1k aliases, 1min TTL
+              this.cacheKeyCache = new LRUCache({ max: 5000, ttl: 60000 }); // 5k keys, 1min TTL
+          }
      }
 
     preloadStrategies() {
@@ -75,10 +75,29 @@ class DiscoveryService{
      * @returns {object}
      */
               getNode = async (fullServiceName, ip, group, tags, deployment, filter, clientId) => {
-                   if (config.ultraFastMode || config.extremeFastMode || config.lightningMode) {
-                       // Fast modes: direct lookup with zero overhead
-                       return this.ultraFastGetNode(fullServiceName);
-                   }
+                    if (config.ultraFastMode || config.extremeFastMode) {
+                        // Ultra/extreme fast modes: direct lookup with zero overhead
+                        return this.ultraFastGetNode(fullServiceName);
+                    }
+                    if (config.lightningMode) {
+                        // Lightning mode with lightweight caching
+                        const cacheKey = `${fullServiceName}:${tags ? tags.join(',') : ''}`;
+                        const cached = this.cache.get(cacheKey);
+                        if (cached) {
+                            this.cacheHits++;
+                            return cached;
+                        }
+                        this.cacheMisses++;
+                        const node = this.ultraFastGetNode(fullServiceName);
+                        if (node) {
+                            this.cache.set(cacheKey, node);
+                            if (!this.serviceKeys.has(fullServiceName)) {
+                                this.serviceKeys.set(fullServiceName, new Set());
+                            }
+                            this.serviceKeys.get(fullServiceName).add(cacheKey);
+                        }
+                        return node;
+                    }
 
              // Check if serviceName is an alias (cached) - disabled in high performance mode
              if (!config.highPerformanceMode) {
