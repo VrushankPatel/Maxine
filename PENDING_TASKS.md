@@ -5,12 +5,12 @@
 - [x] Stabilize Lightning Mode Server: Fixed server crashes under load by commenting out excessive winston logging in request handlers, preventing I/O bottlenecks. Server now handles 50 concurrent users with p95 < 2ms response time.
 - [x] Enhance WebSocket authentication and authorization: Added role-based access control for WebSocket subscriptions and token refresh functionality via HTTP and WebSocket.
 - [x] Add comprehensive monitoring for WebSocket connections: Added metrics for active WebSocket connections and event broadcast rates in /metrics endpoint.
+- [x] Implement multi-cluster federation with conflict resolution: Added federation support in Lightning Mode for cross-datacenter service discovery and replication.
+- [x] Implement advanced service mesh features (traffic splitting, canary deployments): Traffic distribution, version promotion, retirement, and gradual traffic shifting are already implemented.
 
 ## Next Steps
 
 ### High Priority
-- Implement advanced service mesh features (traffic splitting, canary deployments)
-- Add multi-cluster federation with conflict resolution
 
 ### Medium Priority
 - Implement Advanced Security: OAuth2 integration, fine-grained ACLs, and encrypted communication
