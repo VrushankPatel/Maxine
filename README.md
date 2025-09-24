@@ -16,7 +16,7 @@ A minimal, high-performance service discovery and registry for microservices.
 - **Metrics**: Basic /metrics endpoint with request counts, errors, uptime, and basic stats
 - **Persistence**: Optional persistence to survive restarts with file-based or Redis storage
 - **Minimal Dependencies**: Only essential packages for maximum performance
-- **Lightning Mode**: Dedicated mode for ultimate speed with core features: register, heartbeat, deregister, discover with round-robin/random load balancing, health, metrics
+- **Lightning Mode**: Dedicated mode for ultimate speed with core features: register, heartbeat, deregister, discover with round-robin/random load balancing, health, metrics, basic tracing
 - **Optimized Parsing**: Fast JSON parsing with error handling
 - **Event-Driven**: Real-time events for service changes and notifications
 - **Federation**: Connect multiple Maxine instances across datacenters for global service discovery
@@ -155,6 +155,44 @@ Content-Type: application/json
 { ... registry data ... }
 ```
 Restores registry from backup data (requires persistence enabled).
+
+##### Start Trace
+```http
+POST /trace/start
+Content-Type: application/json
+
+{
+  "id": "trace-123",
+  "operation": "discover"
+}
+```
+
+##### Add Trace Event
+```http
+POST /trace/event
+Content-Type: application/json
+
+{
+  "id": "trace-123",
+  "event": "node selected"
+}
+```
+
+##### End Trace
+```http
+POST /trace/end
+Content-Type: application/json
+
+{
+  "id": "trace-123"
+}
+```
+
+##### Get Trace
+```http
+GET /trace/:id
+```
+Returns the trace data for the given id.
 
 
 
