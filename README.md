@@ -40,9 +40,11 @@ A minimal, high-performance service discovery and registry for microservices.
 
 Maxine delivers exceptional performance for service discovery operations:
 
-- **Response Time**: Average 3.01ms, P95 5.46ms for discovery requests
-- **Throughput**: 15,000+ requests per second under load (50 concurrent users, 5000 iterations)
-- **Optimizations**: Removed OpenTelemetry tracing overhead, disabled Prometheus metrics collection, and eliminated federation replication calls for ultra-fast operations in Lightning Mode
+- **Ultra-Fast Mode**: Average 4.47ms, P95 6.54ms, P99 8.86ms for discovery requests
+- **Throughput**: 22,000+ requests per second under load (100 concurrent users, 1000 iterations each)
+- **Lightning Mode**: Average 2.75ms, P95 6.16ms for discovery requests
+- **Throughput**: 17,800+ requests per second under load (50 concurrent users, 1000 iterations each)
+- **Optimizations**: Disabled OpenTelemetry tracing and Prometheus metrics in Lightning Mode, ultra-fast mode with minimal features for maximum speed
 
 ## Quick Start
 
@@ -51,7 +53,7 @@ npm install
 npm start
 ```
 
-Maxine runs in **Lightning Mode** by default for maximum performance with minimal features. For full features, set environment variables to disable lightning mode.
+Maxine runs in **Ultra-Fast Mode** by default for maximum performance with core features only. For more features, set `ULTRA_FAST_MODE=false` and `LIGHTNING_MODE=true`.
 
 ## Persistence
 
@@ -265,9 +267,9 @@ Tracing is enabled by default and provides detailed spans for:
 
 ## Modes
 
-- **Ultra-Fast Mode**: Extreme performance with minimal features. Core operations only: register, heartbeat (UDP), deregister, discover. No logging, metrics, auth, WebSocket, MQTT, gRPC. Uses UDP for heartbeats for speed. Set `ULTRA_FAST_MODE=true`.
-- **Lightning Mode** (default): Ultra-fast with minimal features for maximum speed. Core operations: register, heartbeat, deregister, discover with round-robin/random/geo-aware load balancing and lightweight caching. Optional JWT auth for sensitive endpoints. Uses root-level API endpoints like `/register`, `/discover`.
-- **Full Mode**: Comprehensive features including federation, tracing, ACLs, intentions, service blacklists, management UI, security, metrics, etc. Uses `/api/*` endpoints.
+- **Ultra-Fast Mode** (default): Extreme performance with minimal features. Core operations only: register, heartbeat, deregister, discover. No logging, metrics, auth, WebSocket, MQTT, gRPC. Uses UDP for heartbeats for speed. Set `ULTRA_FAST_MODE=true`.
+- **Lightning Mode**: Ultra-fast with additional features for maximum speed. Core operations: register, heartbeat, deregister, discover with advanced load balancing, caching, health checks. Optional JWT auth for sensitive endpoints. Uses root-level API endpoints like `/register`, `/discover`. Set `ULTRA_FAST_MODE=false LIGHTNING_MODE=true`.
+- **Full Mode**: Comprehensive features including federation, tracing, ACLs, intentions, service blacklists, management UI, security, metrics, etc. Uses `/api/*` endpoints. Set `LIGHTNING_MODE=false`.
 
 To run in full mode: `LIGHTNING_MODE=false npm start`
 

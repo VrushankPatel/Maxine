@@ -7,9 +7,10 @@ const config = require('./src/main/config/config');
 console.log('Config loaded:', { ultraFastMode: config.ultraFastMode, lightningMode: config.lightningMode });
 const { trace, metrics } = require('@opentelemetry/api');
 
-// Initialize OpenTelemetry tracing and metrics only if not ultra-fast mode
+// Initialize OpenTelemetry tracing and metrics only if not ultra-fast mode and not lightning mode
 let sdk;
-if (!config.ultraFastMode) {
+if (!config.ultraFastMode && !config.lightningMode) {
+  // Tracing and metrics disabled in ultra-fast and lightning modes for performance
   const { NodeSDK } = require('@opentelemetry/sdk-node');
   const { JaegerExporter } = require('@opentelemetry/exporter-jaeger');
 
