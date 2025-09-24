@@ -477,3 +477,27 @@
 #### Nginx Configuration Generation
 - Generate Nginx upstream configurations via `/api/maxine/serviceops/nginx/config`.
 - Enables reverse proxy and load balancing with Nginx for high-traffic scenarios.
+
+### Circuit Breaker Enhancements (Lightning Mode)
+- Advanced circuit breaker with half-open state, exponential backoff retry logic, and configurable failure thresholds per node.
+- Automatic recovery attempts with increasing delays to prevent cascading failures.
+- Integration with WebSocket event streaming for real-time circuit state notifications.
+- API endpoint `/circuit-breaker/:nodeId` for monitoring circuit breaker states.
+
+### MQTT Integration (Lightning Mode)
+- Optional MQTT client for publishing real-time events to MQTT brokers.
+- Configurable broker URL and topic base for event publishing.
+- QoS 1 reliability for event delivery.
+- Enables integration with IoT and event-driven architectures.
+
+### WebSocket Event Filtering and Persistence (Lightning Mode)
+- Subscription-based event filtering by event type, service name, and node ID.
+- In-memory event history storage for retrieving missed events.
+- Event replay API `/events?since=<timestamp>&limit=<number>` for client reconnection.
+- JWT-based authentication for secure WebSocket connections.
+
+### Event Streaming Enhancements
+- Real-time event broadcasting via WebSocket and MQTT.
+- Event types include service_registered, service_deregistered, service_heartbeat, service_unhealthy, circuit_open, circuit_closed, circuit_half_open.
+- Filtered subscriptions for targeted event delivery.
+- Persistent event history for missed event retrieval.
