@@ -52,21 +52,28 @@
     - [x] Implement Rate Limiting Enhancements: Per-service rate limiting, burst handling, and integration with circuit breakers for overload protection
     - [x] Implement Metrics Enhancements: Detailed Prometheus metrics for WebSocket connections, event rates, circuit breaker states, and service health statistics
 
-    ## Next Steps
-    - Implement Service Mesh Enhancements: Advanced service mesh features like traffic splitting, canary deployments, and fault injection
-    - Implement Multi-Cluster Federation: Enhanced federation with conflict resolution and cross-cluster service discovery
-    - Implement Advanced Security: OAuth2 integration, fine-grained ACLs, and encrypted communication
-    - Implement Observability Enhancements: Distributed tracing integration, log aggregation, and advanced monitoring dashboards
-    - Update client SDKs with new features and examples
-    - Create comprehensive tutorials and guides
-    - Optimize performance further with caching layers and async processing
-    - Add support for service versioning and blue-green deployments
-   - Update client SDK documentation to include WebSocket client examples
-   - Create tutorials or guides for using event streaming in client applications
-   - Update Docker configuration to expose WebSocket port and handle upgrades
-   - Update Helm charts for Kubernetes deployment with WebSocket support
-   - Update CI/CD pipelines to include WebSocket testing and event streaming validation
-   - Add monitoring and alerting for WebSocket connections and event rates
+ ## Next Steps
+
+ ### High Priority
+ - Implement Advanced Health Checks: Add custom health check scripts, proactive monitoring with configurable intervals, and health status integration with load balancing decisions
+ - Implement Service Versioning Enhancements: Support for blue-green deployments, canary releases, and automatic traffic shifting based on version
+ - Implement gRPC Protocol Support: Add gRPC endpoints for service registration and discovery to support modern microservices
+ - Fix WebSocket Test Issues: Resolve the timeout issues in WebSocket integration tests for reliable event streaming validation
+
+ ### Medium Priority
+ - Implement Service Mesh Enhancements: Advanced service mesh features like traffic splitting, canary deployments, and fault injection
+ - Implement Multi-Cluster Federation: Enhanced federation with conflict resolution and cross-cluster service discovery
+ - Implement Advanced Security: OAuth2 integration, fine-grained ACLs, and encrypted communication
+ - Implement Observability Enhancements: Distributed tracing integration, log aggregation, and advanced monitoring dashboards
+ - Optimize Memory Usage: Add memory profiling and optimization for large-scale deployments with thousands of services
+
+ ### Low Priority
+ - Update Client SDKs: Add new features like tags support and WebSocket client examples
+ - Create Comprehensive Tutorials: Guides for using event streaming, service tagging, and advanced load balancing
+ - Update Docker Configuration: Expose WebSocket port and handle protocol upgrades
+ - Update Helm Charts: Kubernetes deployment with WebSocket support
+ - Update CI/CD Pipelines: Include WebSocket testing and event streaming validation
+ - Add Monitoring and Alerting: For WebSocket connections, event rates, and service health metrics
 
   ## Documentation Updates
   - [x] Update README.md with WebSocket event streaming API
