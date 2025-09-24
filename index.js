@@ -1020,6 +1020,66 @@ if (config.lightningMode) {
         }
     });
 
+    // Service blacklist endpoints
+    routes.set('POST /blacklist/add', (req, res, query, body) => {
+        try {
+            const clientIP = req.connection.remoteAddress || req.socket.remoteAddress || 'unknown';
+            const { serviceName } = body;
+            if (!serviceName) {
+                winston.warn(`AUDIT: Invalid blacklist add - missing serviceName, clientIP: ${clientIP}`);
+                res.writeHead(400, { 'Content-Type': 'application/json' });
+                res.end('{"error": "Missing serviceName"}');
+                return;
+            }
+            serviceRegistry.addToBlacklist(serviceName);
+            winston.info(`AUDIT: Service added to blacklist - serviceName: ${serviceName}, clientIP: ${clientIP}`);
+            res.writeHead(200, { 'Content-Type': 'application/json' });
+            res.end(successTrue);
+        } catch (error) {
+            winston.error(`AUDIT: Blacklist add failed - error: ${error.message}, clientIP: ${req.connection.remoteAddress || req.socket.remoteAddress || 'unknown'}`);
+            errorCount++;
+            res.writeHead(500, { 'Content-Type': 'application/json' });
+            res.end('{"error": "Internal server error"}');
+        }
+    });
+
+    routes.set('DELETE /blacklist/remove', (req, res, query, body) => {
+        try {
+            const clientIP = req.connection.remoteAddress || req.socket.remoteAddress || 'unknown';
+            const { serviceName } = body;
+            if (!serviceName) {
+                winston.warn(`AUDIT: Invalid blacklist remove - missing serviceName, clientIP: ${clientIP}`);
+                res.writeHead(400, { 'Content-Type': 'application/json' });
+                res.end('{"error": "Missing serviceName"}');
+                return;
+            }
+            serviceRegistry.removeFromBlacklist(serviceName);
+            winston.info(`AUDIT: Service removed from blacklist - serviceName: ${serviceName}, clientIP: ${clientIP}`);
+            res.writeHead(200, { 'Content-Type': 'application/json' });
+            res.end(successTrue);
+        } catch (error) {
+            winston.error(`AUDIT: Blacklist remove failed - error: ${error.message}, clientIP: ${req.connection.remoteAddress || req.socket.remoteAddress || 'unknown'}`);
+            errorCount++;
+            res.writeHead(500, { 'Content-Type': 'application/json' });
+            res.end('{"error": "Internal server error"}');
+        }
+    });
+
+    routes.set('GET /blacklist', (req, res, query, body) => {
+        try {
+            const clientIP = req.connection.remoteAddress || req.socket.remoteAddress || 'unknown';
+            const blacklist = serviceRegistry.getBlacklist();
+            winston.info(`AUDIT: Blacklist requested - count: ${blacklist.length}, clientIP: ${clientIP}`);
+            res.writeHead(200, { 'Content-Type': 'application/json' });
+            res.end(JSON.stringify({ blacklist }));
+        } catch (error) {
+            winston.error(`AUDIT: Blacklist get failed - error: ${error.message}, clientIP: ${req.connection.remoteAddress || req.socket.remoteAddress || 'unknown'}`);
+            errorCount++;
+            res.writeHead(500, { 'Content-Type': 'application/json' });
+            res.end('{"error": "Internal server error"}');
+        }
+    });
+
     // Simple dashboard endpoint
     routes.set('GET /dashboard', (req, res, query, body) => {
         try {

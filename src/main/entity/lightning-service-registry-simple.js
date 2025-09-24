@@ -49,6 +49,9 @@ class LightningServiceRegistrySimple extends EventEmitter {
         // Service Intentions
         this.intentions = new Map(); // source:destination -> action ('allow' | 'deny')
 
+        // Service Blacklist
+        this.blacklistedServices = new Set();
+
         // Circuit Breaker
         this.circuitFailures = new Map(); // nodeName -> failure count
         this.circuitState = new Map(); // nodeName -> 'closed' | 'open' | 'half-open'
@@ -115,6 +118,9 @@ class LightningServiceRegistrySimple extends EventEmitter {
     }
 
     register(serviceName, nodeInfo) {
+        if (this.isBlacklisted(serviceName)) {
+            throw new Error(`Service ${serviceName} is blacklisted`);
+        }
         const nodeName = `${nodeInfo.host}:${nodeInfo.port}`;
         const weight = nodeInfo.metadata && nodeInfo.metadata.weight ? parseInt(nodeInfo.metadata.weight) : 1;
         const version = nodeInfo.metadata && nodeInfo.metadata.version ? nodeInfo.metadata.version : null;
@@ -542,11 +548,12 @@ class LightningServiceRegistrySimple extends EventEmitter {
          for (const [service, acl] of this.acls) {
              data.acls[service] = { allow: Array.from(acl.allow), deny: Array.from(acl.deny) };
          }
-         data.intentions = {};
-         for (const [key, action] of this.intentions) {
-             data.intentions[key] = action;
-         }
-         return data;
+          data.intentions = {};
+          for (const [key, action] of this.intentions) {
+              data.intentions[key] = action;
+          }
+          data.blacklistedServices = Array.from(this.blacklistedServices);
+          return data;
     }
 
     setRegistryData(data) {
@@ -594,11 +601,13 @@ class LightningServiceRegistrySimple extends EventEmitter {
          for (const [service, acl] of Object.entries(data.acls || {})) {
              this.acls.set(service, { allow: new Set(acl.allow || []), deny: new Set(acl.deny || []) });
          }
-         this.intentions = new Map();
-         for (const [key, action] of Object.entries(data.intentions || {})) {
-             this.intentions.set(key, action);
-         }
-         this.saveRegistry();
+                  this.intentions = new Map();
+                  for (const [key, action] of Object.entries(data.intentions || {})) {
+                      this.intentions.set(key, action);
+                  }
+                  this.blacklistedServices = new Set(data.blacklistedServices || []);
+          this.blacklistedServices = new Set(data.blacklistedServices || []);
+          this.saveRegistry();
     }
 
     saveRegistry() {
@@ -1023,6 +1032,25 @@ class LightningServiceRegistrySimple extends EventEmitter {
 
         getIntention(source, destination) {
             return this.intentions.get(`${source}:${destination}`) || 'allow';
+        }
+
+        // Blacklist methods
+        addToBlacklist(serviceName) {
+            this.blacklistedServices.add(serviceName);
+            this.saveRegistry();
+        }
+
+        removeFromBlacklist(serviceName) {
+            this.blacklistedServices.delete(serviceName);
+            this.saveRegistry();
+        }
+
+        isBlacklisted(serviceName) {
+            return this.blacklistedServices.has(serviceName);
+        }
+
+        getBlacklist() {
+            return Array.from(this.blacklistedServices);
         }
 }
 
