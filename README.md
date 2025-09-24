@@ -87,6 +87,8 @@ Enable with `MQTT_ENABLED=true` and configure:
 
 Events are published to topics like `maxine/registry/events/service_registered`, `maxine/registry/events/circuit_open`, etc. with QoS 1.
 
+MQTT publishing is now enabled in the broadcast function for real-time event distribution.
+
 ## Modes
 
 - **Lightning Mode** (default): Ultra-fast with minimal features for maximum speed. Core operations: register, heartbeat, deregister, discover with round-robin/random load balancing. Optional JWT auth for sensitive endpoints. Uses root-level API endpoints like `/register`, `/discover`.

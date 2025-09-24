@@ -1206,16 +1206,16 @@ if (config.lightningMode) {
         }
 
         // MQTT client for event publishing
-        // let mqttClient = null;
-        // if (config.mqttEnabled) {
-        //     mqttClient = mqtt.connect(config.mqttBroker);
-        //     mqttClient.on('connect', () => {
-        //         console.log('Connected to MQTT broker');
-        //     });
-        //     mqttClient.on('error', (err) => {
-        //         console.error('MQTT connection error:', err);
-        //     });
-        // }
+        let mqttClient = null;
+        if (config.mqttEnabled) {
+            mqttClient = mqtt.connect(config.mqttBroker);
+            mqttClient.on('connect', () => {
+                console.log('Connected to MQTT broker');
+            });
+            mqttClient.on('error', (err) => {
+                console.error('MQTT connection error:', err);
+            });
+        }
 
         // Event persistence
         const eventHistory = [];
@@ -1243,12 +1243,12 @@ if (config.lightningMode) {
                 }
             });
             // MQTT publish
-            // if (mqttClient && mqttClient.connected) {
-            //     const topic = `${config.mqttTopic}/${event}`;
-            //     mqttClient.publish(topic, message, { qos: 1 }, (err) => {
-            //         if (err) console.error('MQTT publish error:', err);
-            //     });
-            // }
+            if (mqttClient && mqttClient.connected) {
+                const topic = `${config.mqttTopic}/${event}`;
+                mqttClient.publish(topic, message, { qos: 1 }, (err) => {
+                    if (err) console.error('MQTT publish error:', err);
+                });
+            }
         };
 
         // Make broadcast available globally for service registry
