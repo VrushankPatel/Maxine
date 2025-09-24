@@ -63,6 +63,8 @@ class LightningServiceRegistrySimple extends EventEmitter {
         this.persistenceEnabled = config.persistenceEnabled;
         this.persistenceType = config.persistenceType;
         this.registryFile = path.join(process.cwd(), 'registry.json');
+        this.savePending = false;
+        this.saveTimeout = null;
 
         if (this.persistenceEnabled) {
             this.loadRegistry();
@@ -600,85 +602,38 @@ class LightningServiceRegistrySimple extends EventEmitter {
     }
 
     saveRegistry() {
-        if (!this.persistenceEnabled) return;
-        try {
-            const data = {
-                services: {},
-                lastHeartbeats: {},
-                nodeToService: {},
-                servicesCount: this.servicesCount,
-                nodesCount: this.nodesCount,
-                circuitFailures: {},
-                circuitState: {},
-                circuitLastFailure: {},
-                circuitNextTry: {}
-            };
-            for (const [serviceName, service] of this.services) {
-                data.services[serviceName] = {
-                    nodes: {},
-                    healthyNodesArray: service.healthyNodesArray.map(n => ({ ...n, connections: 0 })), // reset connections
-                    roundRobinIndex: service.roundRobinIndex
-                };
-                for (const [nodeName, node] of service.nodes) {
-                    data.services[serviceName].nodes[nodeName] = { ...node, connections: 0 };
-                }
-            }
-            for (const [node, ts] of this.lastHeartbeats) {
-                data.lastHeartbeats[node] = ts;
-            }
-            for (const [node, service] of this.nodeToService) {
-                data.nodeToService[node] = service;
-            }
-            for (const [node, failures] of this.circuitFailures) {
-                data.circuitFailures[node] = failures;
-            }
-            for (const [node, state] of this.circuitState) {
-                data.circuitState[node] = state;
-            }
-            for (const [node, ts] of this.circuitLastFailure) {
-                data.circuitLastFailure[node] = ts;
-            }
-            for (const [node, ts] of this.circuitNextTry) {
-                data.circuitNextTry[node] = ts;
-            }
-            data.configurations = {};
-            for (const [serviceName, serviceConfigs] of this.configurations) {
-                data.configurations[serviceName] = {};
-                for (const [key, config] of serviceConfigs) {
-                    data.configurations[serviceName][key] = config;
-                }
-            }
-             data.trafficDistribution = {};
-             for (const [serviceName, distribution] of this.trafficDistribution) {
-                 data.trafficDistribution[serviceName] = distribution;
-             }
-             data.dependencies = {};
-             for (const [service, deps] of this.dependencies) {
-                 data.dependencies[service] = Array.from(deps);
-             }
-             data.dependents = {};
-             for (const [service, deps] of this.dependents) {
-                 data.dependents[service] = Array.from(deps);
-             }
-             data.acls = {};
-             for (const [service, acl] of this.acls) {
-                 data.acls[service] = { allow: Array.from(acl.allow), deny: Array.from(acl.deny) };
-             }
-             data.intentions = {};
-             for (const [key, action] of this.intentions) {
-                 data.intentions[key] = action;
-             }
+        if (!this.persistenceEnabled || this.savePending) return;
+        this.savePending = true;
+        if (this.saveTimeout) clearTimeout(this.saveTimeout);
+        this.saveTimeout = setTimeout(() => {
+            this._doSave();
+        }, 100); // Debounce saves by 100ms
+    }
 
+    _doSave() {
+        try {
+            const data = this.getRegistryData();
             if (this.persistenceType === 'file') {
-                fs.writeFileSync(this.registryFile, JSON.stringify(data, null, 2));
+                fs.writeFile(this.registryFile, JSON.stringify(data, null, 2), (err) => {
+                    if (err) console.error('Error saving registry to file:', err);
+                    this.savePending = false;
+                });
             } else if (this.persistenceType === 'redis') {
                 if (this.redisClient) {
-                    this.redisClient.set('maxine:registry', JSON.stringify(data)).catch(err => console.error('Redis save error:', err));
+                    this.redisClient.set('maxine:registry', JSON.stringify(data)).then(() => {
+                        this.savePending = false;
+                    }).catch(err => {
+                        console.error('Redis save error:', err);
+                        this.savePending = false;
+                    });
+                } else {
+                    this.savePending = false;
                 }
             }
             // DB persistence to be implemented
         } catch (err) {
-            console.error('Error saving registry:', err);
+            console.error('Error preparing save data:', err);
+            this.savePending = false;
         }
     }
 
