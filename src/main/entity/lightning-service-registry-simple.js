@@ -26,6 +26,9 @@ class LightningServiceRegistrySimple {
         this.servicesCount = 0;
         this.nodesCount = 0;
 
+        // Basic tracing
+        this.traces = new Map();
+
         // Persistence
         this.persistenceEnabled = config.persistenceEnabled;
         this.persistenceType = config.persistenceType;
@@ -214,6 +217,30 @@ class LightningServiceRegistrySimple {
 
     getServices() {
         return Array.from(this.services.keys());
+    }
+
+    // Basic tracing methods
+    startTrace(id, operation) {
+        this.traces.set(id, { operation, events: [], start: Date.now() });
+    }
+
+    addTraceEvent(id, event) {
+        const trace = this.traces.get(id);
+        if (trace) {
+            trace.events.push({ event, timestamp: Date.now() });
+        }
+    }
+
+    endTrace(id) {
+        const trace = this.traces.get(id);
+        if (trace) {
+            trace.end = Date.now();
+            trace.duration = trace.end - trace.start;
+        }
+    }
+
+    getTrace(id) {
+        return this.traces.get(id) || {};
     }
 
     getRegistryData() {

@@ -228,6 +228,50 @@ if (config.lightningMode) {
         }
     });
 
+    // Basic tracing endpoints
+    routes.set('POST /trace/start', (req, res, query, body) => {
+        const { operation, id } = body;
+        if (!id || !operation) {
+            res.writeHead(400, { 'Content-Type': 'application/json' });
+            res.end('{"error": "Missing id or operation"}');
+            return;
+        }
+        serviceRegistry.startTrace(id, operation);
+        res.writeHead(200, { 'Content-Type': 'application/json' });
+        res.end('{"success": true}');
+    });
+
+    routes.set('POST /trace/event', (req, res, query, body) => {
+        const { id, event } = body;
+        if (!id || !event) {
+            res.writeHead(400, { 'Content-Type': 'application/json' });
+            res.end('{"error": "Missing id or event"}');
+            return;
+        }
+        serviceRegistry.addTraceEvent(id, event);
+        res.writeHead(200, { 'Content-Type': 'application/json' });
+        res.end('{"success": true}');
+    });
+
+    routes.set('POST /trace/end', (req, res, query, body) => {
+        const { id } = body;
+        if (!id) {
+            res.writeHead(400, { 'Content-Type': 'application/json' });
+            res.end('{"error": "Missing id"}');
+            return;
+        }
+        serviceRegistry.endTrace(id);
+        res.writeHead(200, { 'Content-Type': 'application/json' });
+        res.end('{"success": true}');
+    });
+
+    routes.set('GET /trace/:id', (req, res, query, body) => {
+        const id = req.url.split('/').pop();
+        const trace = serviceRegistry.getTrace(id);
+        res.writeHead(200, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify(trace));
+    });
+
     // Actuator endpoints for compatibility
     routes.set('GET /api/actuator/health', (req, res, query, body) => {
         res.writeHead(200, { 'Content-Type': 'application/json' });
