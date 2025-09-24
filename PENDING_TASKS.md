@@ -25,6 +25,7 @@
 - [x] Add Configurable Cleanup Interval: Made the periodic cleanup interval configurable via CLEANUP_INTERVAL environment variable for fine-tuning performance.
 - [x] Add Cache Hit/Miss Metrics: Implemented metrics for discovery cache performance monitoring, including cacheHits and cacheMisses in /metrics endpoint.
 - [x] Implement Anomaly Detection: Added /anomalies endpoint to detect services with high circuit breaker failures, no healthy nodes, or no nodes at all.
+- [x] Implement Service Catalog Integration: Added Open Service Broker API endpoints for enterprise service catalog compatibility, enabling integration with Kubernetes Service Catalog and other OSB implementations.
 
 ## Next Steps
 
