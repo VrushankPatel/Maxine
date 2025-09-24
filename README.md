@@ -17,6 +17,7 @@ A minimal, high-performance service discovery and registry for microservices.
 - **Service Intentions**: Define allowed communication patterns between services
  - **Service Dependencies**: Manage service dependencies with cycle detection, graph visualization, and automatic dependency detection through call logging
 - **Service Call Analytics**: Real-time dashboard visualizing service communication patterns, call frequencies, and dependency graphs with interactive D3.js charts
+- **Advanced Service Validation**: Comprehensive schema validation for service registrations including metadata fields (tags, healthCheck, version, weight)
 - **Chaos Engineering Tools**: Built-in chaos testing with latency injection, failure simulation, and automated experiments for resilience validation
 - **Metrics**: Basic /metrics endpoint with request counts, errors, uptime, and basic stats including cache performance metrics
 - **OpenTelemetry Metrics**: Comprehensive observability with Prometheus-compatible metrics for service registrations, discoveries, heartbeats, deregistrations, cache hits/misses, and total services/nodes
