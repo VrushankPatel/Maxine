@@ -165,7 +165,7 @@ Returns status, services count, nodes count.
 ```http
 GET /metrics
 ```
-Returns uptime, requests, errors, services, nodes, persistenceEnabled, persistenceType, wsConnections, eventsBroadcasted.
+Returns uptime, requests, errors, services, nodes, persistenceEnabled, persistenceType, wsConnections, eventsBroadcasted, cacheHits, cacheMisses.
 
 ##### Dashboard
 ```http
