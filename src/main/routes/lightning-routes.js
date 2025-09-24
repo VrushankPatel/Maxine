@@ -342,7 +342,7 @@ router.post('/restore', rawBodyParser, (req, res, next) => {
             return res.status(400).json({ error: "Missing serviceName parameter" });
         }
 
-        const prediction = getServiceRegistry().predictHealth(serviceName, window);
+        const prediction = getServiceRegistry().predictServiceHealth(serviceName, window);
         res.json(prediction);
     });
 

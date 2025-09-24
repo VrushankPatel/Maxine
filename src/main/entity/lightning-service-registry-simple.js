@@ -779,6 +779,11 @@ class LightningServiceRegistrySimple extends EventEmitter {
         return R * c;
     }
 
+    isInDraining(serviceName, nodeName) {
+        // Simple implementation: no draining in lightning mode
+        return false;
+    }
+
     getServices() {
         return Array.from(this.services.keys());
     }
