@@ -201,6 +201,10 @@ proxy.on('error', (err, req, res) => {
 const registryController = (req, res) => {
     const { serviceName, namespace = "default", leaseTime } = req.body;
     const fullServiceName = `${namespace}:${serviceName}`;
+    if (serviceRegistry.isBlacklisted(fullServiceName)) {
+        res.status(statusAndMsgs.STATUS_GENERIC_ERROR).json({"message" : "Service is blacklisted"});
+        return;
+    }
     const existingNodes = serviceRegistry.getNodes(fullServiceName);
     const nodeCount = existingNodes ? Object.keys(existingNodes).length : 0;
     if (nodeCount >= config.maxInstancesPerService) {

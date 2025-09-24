@@ -32,6 +32,8 @@
 - Health status is cached in optimized data structures, enabling circuit breaker functionality with failure counting that automatically skips unhealthy nodes during discovery.
 - Circuit breaker includes automatic recovery when services become healthy again, improving overall system reliability and performance.
 - Rate limiting protects the registry from excessive requests with configurable limits per IP address.
+- Access Control Lists (ACLs) provide fine-grained permissions for service discovery access, allowing administrators to restrict which services can discover others based on allow/deny lists.
+- Service Intentions define allowed communication patterns between services, enabling policy-based access control for microservices architectures.
 - Health check history is tracked for each service node, accessible via `/api/maxine/serviceops/health/history?serviceName=<name>&nodeName=<node>` to monitor service stability over time.
   - Advanced health checks support custom HTTP methods (GET, POST, etc.) via `healthMethod` in service metadata, custom headers via `healthHeaders` in service metadata, TCP checks via `healthType: 'tcp'`, and script-based checks via `healthType: 'script'` with `healthScript` containing the command to execute.
 ### Metrics

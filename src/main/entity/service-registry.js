@@ -70,9 +70,10 @@ class ServiceRegistry extends EventEmitter {
               this.blacklistNodes = new Map(); // Essential for registration
               this.maintenanceNodes = new Map(); // Essential for health checks
               this.drainingNodes = new Map(); // Essential for health checks
-              this.acls = new Map(); // serviceName -> { allow: [], deny: [] }
-              this.intentions = new Map(); // `${source}:${destination}` -> action
-              this.serviceVersions = new Map(); // Track service versions for cleanup
+               this.acls = new Map(); // serviceName -> { allow: [], deny: [] }
+               this.intentions = new Map(); // `${source}:${destination}` -> action
+               this.blacklists = new Set(); // Blacklisted services
+               this.serviceVersions = new Map(); // Track service versions for cleanup
 
             // Initialize Maps only if not fast modes for maximum performance
             if (!config.ultraFastMode && !config.extremeFastMode) {
@@ -885,13 +886,14 @@ class ServiceRegistry extends EventEmitter {
                   lightningNodes: config.lightningMode ? Object.fromEntries(
                         Array.from(this.registry.entries()).map(([k, v]) => [k, { ...v, nodes: Array.from(v.nodes.entries()) }])
                     ) : {},
-                 serviceIntentions: Object.fromEntries(
-                     Array.from(this.serviceIntentions.entries()).map(([k, v]) => [k, Object.fromEntries(v)])
-                 ),
-                 aclPolicies: Object.fromEntries(this.aclPolicies),
-                 blacklistNodes: Object.fromEntries(
-                     Array.from(this.blacklistNodes.entries()).map(([k, v]) => [k, Array.from(v)])
-                 )
+                  serviceIntentions: Object.fromEntries(
+                      Array.from(this.serviceIntentions.entries()).map(([k, v]) => [k, Object.fromEntries(v)])
+                  ),
+                  aclPolicies: Object.fromEntries(this.aclPolicies),
+                  blacklists: Array.from(this.blacklists),
+                  blacklistNodes: Object.fromEntries(
+                      Array.from(this.blacklistNodes.entries()).map(([k, v]) => [k, Array.from(v)])
+                  )
           };
     }
 
@@ -951,6 +953,7 @@ class ServiceRegistry extends EventEmitter {
                 Object.entries(data.serviceIntentions || {}).map(([k, v]) => [k, new Map(Object.entries(v))])
             );
              this.aclPolicies = new Map(Object.entries(data.aclPolicies || {}));
+             this.blacklists = new Set(data.blacklists || []);
              this.blacklistNodes = new Map(
                  Object.entries(data.blacklistNodes || {}).map(([k, v]) => [k, new Set(v)])
              );
@@ -1135,6 +1138,9 @@ class ServiceRegistry extends EventEmitter {
     };
 
     getHealthyNodes = (serviceName, group, tags, deployment, filter) => {
+        // Check if service is blacklisted
+        if (this.blacklists.has(serviceName)) return [];
+
         // Ultra-fast mode: return array from Map without any filtering
         if (config.ultraFastMode) {
             return this.ultraFastHealthyNodes.get(serviceName)?.array || [];
@@ -2342,7 +2348,6 @@ class ServiceRegistry extends EventEmitter {
         const srcMap = this.intentions.get(source);
         return srcMap ? srcMap.get(destination) : null;
     }
-
     blacklists = new Set();
 
     addToBlacklist(serviceName) {
@@ -2355,13 +2360,6 @@ class ServiceRegistry extends EventEmitter {
 
     isBlacklisted(serviceName) {
         return this.blacklists.has(serviceName);
-    }
-
-    // Override getRandomNode to check blacklist
-    getRandomNode(serviceName, strategy = 'round-robin', clientId = null, tags = [], version = null, environment = null) {
-        if (this.isBlacklisted(serviceName)) return null;
-        // Call the original method
-        return super.getRandomNode ? super.getRandomNode(serviceName, strategy, clientId, tags, version, environment) : null;
     }
 }
 
