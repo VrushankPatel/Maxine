@@ -124,12 +124,12 @@ const { injectLatency, injectFailure, resetChaos, getChaosStatus } = require('..
 const isHighPerformanceMode = config.highPerformanceMode;
 const isLightningMode = config.lightningMode;
 
-const limiter = isHighPerformanceMode ? null : createRedisRateLimiter({
+const limiter = (isHighPerformanceMode || !config.rateLimitEnabled) ? null : createRedisRateLimiter({
     windowMs: 15 * 60 * 1000, // 15 minutes
     max: 10000, // limit each IP to 10000 requests per windowMs for non-discovery endpoints
 });
 
-const discoveryLimiter = (isHighPerformanceMode || config.ultraFastMode) ? null : createRedisRateLimiter({
+const discoveryLimiter = (isHighPerformanceMode || config.ultraFastMode || !config.rateLimitEnabled) ? null : createRedisRateLimiter({
     windowMs: 60 * 1000, // 1 minute
     max: 100000, // allow high rate for discovery requests
     keyGenerator: (req) => `${req.query.serviceName || 'unknown'}:${req.ip}`,

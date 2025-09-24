@@ -19,12 +19,18 @@ const schema = buildSchema(`
     deregister(serviceName: String!, nodeName: String!): String
   }
 
+  type HealthScore {
+    nodeId: String
+    score: Float
+  }
+
   type Query {
     services: [Service]
     service(serviceName: String!): Service
     discover(serviceName: String!, ip: String, group: String, tags: [String], deployment: String, filter: String): ServiceNode
+    healthScores(serviceName: String!): [HealthScore]
   }
-`);
+ `);
 
 const root = {
   services: () => {
@@ -48,6 +54,10 @@ const root = {
   discover: async ({ serviceName, ip, group, tags, deployment, filter }) => {
     const filterObj = filter ? JSON.parse(filter) : undefined;
     return await discoveryService.getNode(serviceName, ip || 'unknown', group, tags, deployment, filterObj);
+  },
+  healthScores: ({ serviceName }) => {
+    const scores = serviceRegistry.getHealthScores(serviceName);
+    return Object.entries(scores).map(([nodeId, score]) => ({ nodeId, score }));
   },
   register: ({ serviceName, nodeName, address, metadata }) => {
     const metadataObj = metadata ? JSON.parse(metadata) : {};
