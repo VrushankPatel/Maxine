@@ -9,6 +9,7 @@ A minimal, high-performance service discovery and registry for microservices.
 - **Automatic Cleanup**: Removes expired services with efficient periodic cleanup (every 30 seconds)
 - **Load Balancing**: Round-robin, random, weighted-random, least-connections, consistent-hash, ip-hash selection for advanced load balancing
 - **Health Checks**: /health endpoint returning service and node counts, active health monitoring for real-time status
+- **Advanced Health Checks**: Custom health check endpoints with proactive monitoring, configurable intervals, and health status integration with load balancing decisions
 - **Circuit Breakers**: Automatic failure detection and recovery to protect against cascading failures
 - **Rate Limiting**: Protect services from excessive requests with configurable limits
 - **Access Control Lists (ACLs)**: Fine-grained permissions for service discovery access
@@ -107,11 +108,11 @@ Content-Type: application/json
    "serviceName": "my-service",
    "host": "localhost",
    "port": 3000,
-   "metadata": {"version": "1.0", "weight": 1, "tags": ["web", "api"]}
+   "metadata": {"version": "1.0", "weight": 1, "tags": ["web", "api"], "healthCheck": {"url": "/health", "interval": 30000, "timeout": 5000}}
 }
 ```
 
-Note: `version` in metadata enables service versioning. `weight` in metadata is used for `weighted-random` load balancing (default 1). `tags` in metadata is an array of strings for service tagging and filtering.
+Note: `version` in metadata enables service versioning. `weight` in metadata is used for `weighted-random` load balancing (default 1). `tags` in metadata is an array of strings for service tagging and filtering. `healthCheck` in metadata configures proactive health monitoring with `url` (default "/health"), `interval` (default 30000ms), and `timeout` (default 5000ms).
 
 Response:
 ```json
