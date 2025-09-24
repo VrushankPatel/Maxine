@@ -18,7 +18,7 @@ A minimal, high-performance service discovery and registry for microservices.
 - **Minimal Dependencies**: Only essential packages for maximum performance
 - **Lightning Mode**: Dedicated mode for ultimate speed with core features: register, heartbeat, deregister, discover with round-robin/random load balancing, health, metrics, basic tracing
 - **Optimized Parsing**: Fast JSON parsing with error handling
-- **Event-Driven**: Real-time events for service changes and notifications
+- **Event-Driven**: Real-time events for service changes and notifications via WebSocket
 - **Federation**: Connect multiple Maxine instances across datacenters for global service discovery
 - **Multi-Datacenter Support**: Global service discovery with cross-datacenter replication and load balancing
 - **Authentication/Authorization**: Optional JWT-based auth for Lightning Mode to secure sensitive operations
@@ -244,6 +244,64 @@ Response:
 ```
 
 Use the token in Authorization header: `Bearer <token>` for protected endpoints like /backup, /restore, /trace/*.
+
+#### WebSocket API
+
+Maxine supports real-time event streaming via WebSocket for monitoring service changes.
+
+##### Connect to WebSocket
+```
+ws://localhost:8080
+```
+
+##### Events
+
+The server broadcasts the following events as JSON messages:
+
+- `service_registered`: When a new service instance is registered
+  ```json
+  {
+    "event": "service_registered",
+    "data": {
+      "serviceName": "my-service",
+      "nodeId": "my-service:localhost:3000"
+    },
+    "timestamp": 1640995200000
+  }
+  ```
+
+- `service_deregistered`: When a service instance is deregistered
+  ```json
+  {
+    "event": "service_deregistered",
+    "data": {
+      "nodeId": "my-service:localhost:3000"
+    },
+    "timestamp": 1640995200000
+  }
+  ```
+
+- `service_heartbeat`: When a service instance sends a heartbeat
+  ```json
+  {
+    "event": "service_heartbeat",
+    "data": {
+      "nodeId": "my-service:localhost:3000"
+    },
+    "timestamp": 1640995200000
+  }
+  ```
+
+- `service_unhealthy`: When a service instance is removed due to expired heartbeat
+  ```json
+  {
+    "event": "service_unhealthy",
+    "data": {
+      "nodeId": "my-service:localhost:3000"
+    },
+    "timestamp": 1640995200000
+  }
+  ```
 
 
 
