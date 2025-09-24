@@ -89,12 +89,18 @@ class LightningServiceRegistrySimple extends EventEmitter {
         this.redisCacheHits = 0;
         this.redisCacheMisses = 0;
 
-        // AI-Driven Load Balancing (Reinforcement Learning)
+        // Advanced AI-Driven Load Balancing (Reinforcement Learning + Predictive Analytics)
         this.qTable = new Map(); // serviceName -> Map<nodeName, qValue>
         this.alpha = 0.1; // Learning rate
         this.gamma = 0.9; // Discount factor
         this.epsilon = 0.1; // Exploration rate
         this.rewardHistory = new Map(); // nodeName -> recent rewards
+
+        // Advanced ML features
+        this.nodePerformanceModel = new Map(); // nodeName -> { responseTimeModel, errorRateModel, loadModel }
+        this.timeSeriesData = new Map(); // nodeName -> [{timestamp, responseTime, success, load}, ...]
+        this.predictionWindow = 300000; // 5 minutes for predictions
+        this.modelUpdateInterval = 60000; // Update models every minute
 
         // Rate limiting
         this.rateLimits = new Map(); // For in-memory fallback
@@ -801,11 +807,21 @@ class LightningServiceRegistrySimple extends EventEmitter {
         return result;
     }
 
-    ultraFastGetRandomNode(serviceName, strategy = 'round-robin', clientId = null) {
+    ultraFastGetRandomNode(serviceName, strategy = 'round-robin', clientId = null, tags = []) {
         const service = this.services.get(serviceName);
         if (!service || service.healthyNodesArray.length === 0) return null;
 
-        const nodes = service.healthyNodesArray;
+        let nodes = service.healthyNodesArray;
+
+        // Filter by tags if specified
+        if (tags && tags.length > 0) {
+            nodes = nodes.filter(node => {
+                const nodeTags = node.metadata && node.metadata.tags;
+                if (!nodeTags || !Array.isArray(nodeTags)) return false;
+                return tags.every(tag => nodeTags.includes(tag));
+            });
+            if (nodes.length === 0) return null;
+        }
         if (strategy === 'least-connections') {
             let minConnections = Infinity;
             let selectedNode = nodes[0];
@@ -835,6 +851,9 @@ class LightningServiceRegistrySimple extends EventEmitter {
             const hash = this.simpleHash(clientId);
             const index = hash % nodes.length;
             return nodes[index];
+        } else if (strategy === 'ai-driven' || strategy === 'advanced-ml') {
+            // Advanced ML-based selection
+            return this.selectAdvancedML(nodes, serviceName, clientId);
         } else {
             // round-robin
             let index = service.roundRobinIndex || 0;
@@ -891,6 +910,137 @@ class LightningServiceRegistrySimple extends EventEmitter {
         const reward = success ? (1000 / (responseTime + 1)) : -1;
         const newQ = currentQ + this.alpha * (reward + this.gamma * 0 - currentQ); // Simplified, no next state
         qValues.set(nodeName, newQ);
+    }
+
+    // Advanced ML-based node selection using predictive analytics
+    selectAdvancedML(nodes, serviceName, clientId) {
+        if (nodes.length === 0) return null;
+        if (nodes.length === 1) return nodes[0];
+
+        const now = Date.now();
+
+        // Calculate predicted performance for each node
+        const predictions = nodes.map(node => {
+            const prediction = this.predictNodePerformance(node.nodeName, now);
+            return {
+                node,
+                predictedResponseTime: prediction.responseTime,
+                predictedErrorRate: prediction.errorRate,
+                predictedLoad: prediction.load,
+                confidence: prediction.confidence
+            };
+        });
+
+        // Score nodes based on multiple factors
+        const scoredNodes = predictions.map(pred => {
+            let score = 0;
+
+            // Response time score (lower is better)
+            score += (1000 - Math.min(pred.predictedResponseTime, 1000)) / 10;
+
+            // Error rate score (lower is better)
+            score += (1 - pred.predictedErrorRate) * 50;
+
+            // Load score (lower load is better)
+            score += (1 - pred.predictedLoad) * 30;
+
+            // Confidence bonus
+            score += pred.confidence * 20;
+
+            // Q-learning bonus for this client
+            const state = clientId || 'default';
+            const qValues = this.qTable.get(state);
+            if (qValues) {
+                score += (qValues.get(pred.node.nodeName) || 0) * 10;
+            }
+
+            return { ...pred, score };
+        });
+
+        // Select node with highest score, with some exploration
+        if (fastRandom() < this.epsilon) {
+            // Exploration: random selection
+            return nodes[Math.floor(fastRandom() * nodes.length)];
+        } else {
+            // Exploitation: best predicted node
+            scoredNodes.sort((a, b) => b.score - a.score);
+            return scoredNodes[0].node;
+        }
+    }
+
+    // Predict node performance using time-series analysis
+    predictNodePerformance(nodeName, timestamp) {
+        const data = this.timeSeriesData.get(nodeName) || [];
+        if (data.length < 5) {
+            // Not enough data, return defaults
+            return { responseTime: 100, errorRate: 0.01, load: 0.5, confidence: 0.1 };
+        }
+
+        // Simple exponential moving average for prediction
+        const recentData = data.filter(d => timestamp - d.timestamp < this.predictionWindow);
+        if (recentData.length === 0) {
+            return { responseTime: 100, errorRate: 0.01, load: 0.5, confidence: 0.1 };
+        }
+
+        // Calculate trends
+        const responseTimes = recentData.map(d => d.responseTime);
+        const avgResponseTime = responseTimes.reduce((a, b) => a + b, 0) / responseTimes.length;
+
+        const errorRate = recentData.filter(d => !d.success).length / recentData.length;
+
+        // Simple trend analysis (linear regression slope)
+        const timePoints = recentData.map((d, i) => i);
+        const slope = this.calculateSlope(timePoints, responseTimes);
+
+        // Predict next response time based on trend
+        const predictedResponseTime = Math.max(10, avgResponseTime + slope * 5); // Predict 5 steps ahead
+
+        // Estimate load based on recent activity
+        const recentActivity = recentData.filter(d => timestamp - d.timestamp < 60000).length; // Last minute
+        const predictedLoad = Math.min(1, recentActivity / 100); // Normalize to 0-1
+
+        const confidence = Math.min(1, recentData.length / 20); // Confidence based on data points
+
+        return {
+            responseTime: predictedResponseTime,
+            errorRate,
+            load: predictedLoad,
+            confidence
+        };
+    }
+
+    // Calculate slope for linear regression
+    calculateSlope(x, y) {
+        const n = x.length;
+        if (n < 2) return 0;
+
+        const sumX = x.reduce((a, b) => a + b, 0);
+        const sumY = y.reduce((a, b) => a + b, 0);
+        const sumXY = x.reduce((sum, xi, i) => sum + xi * y[i], 0);
+        const sumXX = x.reduce((sum, xi) => sum + xi * xi, 0);
+
+        const slope = (n * sumXY - sumX * sumY) / (n * sumXX - sumX * sumX);
+        return isNaN(slope) ? 0 : slope;
+    }
+
+    // Record performance data for ML training
+    recordPerformanceData(nodeName, responseTime, success, load = 0.5) {
+        if (!this.timeSeriesData.has(nodeName)) {
+            this.timeSeriesData.set(nodeName, []);
+        }
+
+        const data = this.timeSeriesData.get(nodeName);
+        data.push({
+            timestamp: Date.now(),
+            responseTime,
+            success,
+            load
+        });
+
+        // Keep only recent data (last 24 hours)
+        const cutoff = Date.now() - 24 * 60 * 60 * 1000;
+        const filtered = data.filter(d => d.timestamp > cutoff);
+        this.timeSeriesData.set(nodeName, filtered.slice(-1000)); // Keep max 1000 entries
     }
 
     // Basic tracing methods
@@ -1702,6 +1852,9 @@ class LightningServiceRegistrySimple extends EventEmitter {
             if (history.length > 100) {
                 history.shift();
             }
+
+            // Record data for ML training (assume success for now, could be enhanced)
+            this.recordPerformanceData(nodeId, responseTime, true);
 
             // Update health score after recording response time
             this.updateHealthScore(nodeId);

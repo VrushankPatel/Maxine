@@ -335,7 +335,7 @@ if (config.ultraFastMode) {
             res.end('{"error": "Internal server error"}');
         }
     };
-    // Handle service discovery
+    // Handle service discovery - ultra-fast mode uses optimized method
     const handleDiscover = async (req, res, query, body) => {
         try {
             const clientIP = req.connection.remoteAddress || req.socket.remoteAddress || 'unknown';
@@ -355,7 +355,34 @@ if (config.ultraFastMode) {
             const strategy = query.loadBalancing || 'round-robin';
             const tags = query.tags ? query.tags.split(',') : [];
 
-            const node = await serviceRegistry.discover(serviceName, { version, loadBalancing: strategy, tags, ip: req.connection.remoteAddress });
+            // Use ultra-fast method for maximum performance
+            let fullServiceName = serviceName;
+            if (version) {
+                if (version === 'latest') {
+                    const latest = serviceRegistry.getLatestVersion(serviceName);
+                    if (latest) {
+                        fullServiceName = `${serviceName}:${latest}`;
+                    }
+                } else {
+                    fullServiceName = `${serviceName}:${version}`;
+                }
+            }
+
+            // Check for traffic distribution (canary)
+            const distribution = serviceRegistry.getTrafficDistribution ? serviceRegistry.getTrafficDistribution(serviceName) : {};
+            if (Object.keys(distribution).length > 0) {
+                const rand = Math.random() * 100;
+                let cumulative = 0;
+                for (const [ver, percent] of Object.entries(distribution)) {
+                    cumulative += percent;
+                    if (rand <= cumulative) {
+                        fullServiceName = `${serviceName}:${ver}`;
+                        break;
+                    }
+                }
+            }
+
+            const node = serviceRegistry.ultraFastGetRandomNode(fullServiceName, strategy, clientIP, tags);
             if (!node) {
                 res.writeHead(404, { 'Content-Type': 'application/json' });
                 res.end(serviceUnavailable);
