@@ -39,8 +39,9 @@ class DiscoveryService{
             { key: constants.SSS.STICKY, module: "./discovery-services/sticky-discovery", className: "StickyDiscovery" },
             { key: constants.SSS.LR, module: "./discovery-services/least-request-discovery", className: "LeastRequestDiscovery" },
             { key: constants.SSS.PRIORITY, module: "./discovery-services/priority-discovery", className: "PriorityDiscovery" },
-            { key: constants.SSS.BHS, module: "./discovery-services/best-health-score-discovery", className: "BestHealthScoreDiscovery" },
-            { key: constants.SSS.GEO, module: "./discovery-services/geo-discovery", className: "GeoDiscovery" },
+             { key: constants.SSS.BHS, module: "./discovery-services/best-health-score-discovery", className: "BestHealthScoreDiscovery" },
+             { key: constants.SSS.GEO, module: "./discovery-services/geo-discovery", className: "GeoDiscovery" },
+             { key: constants.SSS.PREDICTIVE, module: "./discovery-services/predictive-discovery", className: "PredictiveDiscovery" },
             { key: constants.SSS.AFFINITY, module: "./discovery-services/affinity-discovery", className: "AffinityDiscovery" },
         ];
 

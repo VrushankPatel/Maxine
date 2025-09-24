@@ -69,7 +69,7 @@ const config = {
     highPerformanceMode: highPerfDefault && !ultraFastDefault,
     noLogging: ultraFastDefault || extremeFastDefault || lightningDefault,
           persistenceEnabled: process.env.PERSISTENCE_ENABLED === 'true', // Optional persistence
-        persistenceType: process.env.PERSISTENCE_TYPE || 'file', // file, redis, postgres, mysql, mongo, cassandra
+        persistenceType: process.env.PERSISTENCE_TYPE || 'file', // file, redis, mmap, shm, postgres, mysql, mongo, cassandra
       rateLimitMax: process.env.RATE_LIMIT_MAX ? parseInt(process.env.RATE_LIMIT_MAX) : (ultraFastDefault ? 1000000 : 10000),
      rateLimitWindowMs: process.env.RATE_LIMIT_WINDOW_MS ? parseInt(process.env.RATE_LIMIT_WINDOW_MS) : 900000, // 15 minutes
                  healthCheckInterval: process.env.HEALTH_CHECK_INTERVAL ? parseInt(process.env.HEALTH_CHECK_INTERVAL) : (ultraFastDefault ? 30000 : 30000), // Same interval for reliability
