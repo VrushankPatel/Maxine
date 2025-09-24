@@ -695,6 +695,7 @@
 - Added power-of-two-choices load balancing strategy for better load distribution
 - Performance further improved to 0.74ms avg, 1.41ms p95, 62k req/s
 - Verified current performance metrics and updated documentation
+- Fixed additional bugs: Added missing isInDraining method to lightning-service-registry-simple.js and corrected predictHealth method call in lightning routes
 
 ## Next Steps
 
