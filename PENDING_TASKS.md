@@ -37,6 +37,8 @@
 - [x] Implement Predictive Load Balancing: Added predictive load balancing strategy using time-series analysis, exponential moving averages, and trend analysis for optimal node selection based on historical performance data.
 - [x] Optimize Garbage Collection: Fine-tuned Node.js GC settings with additional flags for reduced GC pauses.
 - [x] Add CPU Affinity: Added taskset to pin processes to specific CPU cores for consistent performance.
+- [x] Optimize tag filtering with index: Implemented tag index for O(1) tag-based service filtering, improving performance for services with many tags.
+- [x] Add predictive load balancing with trend analysis: Enhanced predictive strategy with slope calculation of response time trends for better node selection.
 
 ## Next Steps
 
