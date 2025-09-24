@@ -5,6 +5,7 @@ const fs = require('fs');
 const path = require('path');
 const { EventEmitter } = require('events');
 const axios = require('axios');
+const geoip = require('geoip-lite');
 
 // Fast LCG PRNG for random load balancing
 let lcgSeed = Date.now();
@@ -234,6 +235,9 @@ class LightningServiceRegistrySimple extends EventEmitter {
             case 'ip-hash':
                 selectedNode = this.selectIPHash(availableNodes, clientIP);
                 break;
+            case 'geo-aware':
+                selectedNode = this.selectGeoAware(availableNodes, clientIP);
+                break;
             default: // round-robin
                 let index = service.roundRobinIndex || 0;
                 selectedNode = availableNodes[index % availableNodes.length];
@@ -274,6 +278,43 @@ class LightningServiceRegistrySimple extends EventEmitter {
         }
         const index = Math.abs(hash) % nodes.length;
         return nodes[index];
+    }
+
+    selectGeoAware(nodes, clientIP) {
+        if (!clientIP) return nodes[0];
+        const clientGeo = geoip.lookup(clientIP);
+        if (!clientGeo) return nodes[0];
+        const clientLat = clientGeo.ll[0];
+        const clientLon = clientGeo.ll[1];
+
+        let closestNode = null;
+        let minDistance = Infinity;
+
+        for (const node of nodes) {
+            // Assume node has location in metadata: { lat: number, lon: number }
+            const meta = node.metadata || {};
+            if (meta.lat !== undefined && meta.lon !== undefined) {
+                const distance = this.haversineDistance(clientLat, clientLon, meta.lat, meta.lon);
+                if (distance < minDistance) {
+                    minDistance = distance;
+                    closestNode = node;
+                }
+            }
+        }
+
+        // If no node has location, fall back to random
+        return closestNode || nodes[(fastRandom() * nodes.length) | 0];
+    }
+
+    haversineDistance(lat1, lon1, lat2, lon2) {
+        const R = 6371; // Radius of the Earth in km
+        const dLat = (lat2 - lat1) * Math.PI / 180;
+        const dLon = (lon2 - lon1) * Math.PI / 180;
+        const a = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+                  Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
+                  Math.sin(dLon / 2) * Math.sin(dLon / 2);
+        const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+        return R * c;
     }
 
     cleanup() {
