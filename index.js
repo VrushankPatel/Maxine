@@ -382,7 +382,9 @@ if (config.ultraFastMode) {
             persistenceEnabled: { type: 'boolean' },
             persistenceType: { type: 'string' },
             wsConnections: { type: 'number' },
-            eventsBroadcasted: { type: 'number' }
+            eventsBroadcasted: { type: 'number' },
+            cacheHits: { type: 'number' },
+            cacheMisses: { type: 'number' }
         }
     };
     const stringifyMetrics = stringify(metricsResponseSchema);
@@ -594,7 +596,7 @@ if (config.ultraFastMode) {
             const persistenceType = config.persistenceType;
             // winston.info(`AUDIT: Metrics requested - clientIP: ${clientIP}`);
             res.writeHead(200, { 'Content-Type': 'application/json' });
-            res.end(stringifyMetrics({ uptime, requests: requestCount, errors: errorCount, services, nodes, persistenceEnabled, persistenceType, wsConnections: wsConnectionCount, eventsBroadcasted: eventBroadcastCount }));
+            res.end(stringifyMetrics({ uptime, requests: requestCount, errors: errorCount, services, nodes, persistenceEnabled, persistenceType, wsConnections: wsConnectionCount, eventsBroadcasted: eventBroadcastCount, cacheHits: serviceRegistry.cacheHits, cacheMisses: serviceRegistry.cacheMisses }));
         } catch (error) {
             // winston.error(`AUDIT: Metrics failed - error: ${error.message}, clientIP: ${req.connection.remoteAddress || req.socket.remoteAddress || 'unknown'}`);
             errorCount++;
