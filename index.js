@@ -679,10 +679,13 @@ if (config.lightningMode) {
 
         const broadcast = (event, data) => {
             const message = JSON.stringify({ event, data, timestamp: Date.now() });
-            // WebSocket broadcast
+            // WebSocket broadcast with filtering
             wss.clients.forEach(client => {
                 if (client.readyState === WebSocket.OPEN) {
-                    client.send(message);
+                    const filter = clientFilters.get(client);
+                    if (!filter || matchesFilter(event, data, filter)) {
+                        client.send(message);
+                    }
                 }
             });
             // MQTT publish
@@ -694,10 +697,38 @@ if (config.lightningMode) {
             }
         };
 
+        const matchesFilter = (event, data, filter) => {
+            if (filter.event && filter.event !== event) return false;
+            if (filter.serviceName && data.serviceName && filter.serviceName !== data.serviceName) return false;
+            if (filter.nodeId && data.nodeId && filter.nodeId !== data.nodeId) return false;
+            // Add more criteria as needed
+            return true;
+        };
+
+        const clientFilters = new Map(); // ws -> filter object
+
         wss.on('connection', (ws) => {
             console.log('WebSocket client connected for event streaming');
+            clientFilters.set(ws, null); // no filter by default
+
+            ws.on('message', (message) => {
+                try {
+                    const data = JSON.parse(message);
+                    if (data.subscribe) {
+                        clientFilters.set(ws, data.subscribe);
+                        ws.send(JSON.stringify({ type: 'subscribed', filter: data.subscribe }));
+                    } else if (data.unsubscribe) {
+                        clientFilters.set(ws, null);
+                        ws.send(JSON.stringify({ type: 'unsubscribed' }));
+                    }
+                } catch (e) {
+                    // ignore invalid messages
+                }
+            });
+
             ws.on('close', () => {
                 console.log('WebSocket client disconnected');
+                clientFilters.delete(ws);
             });
         });
 
