@@ -1286,6 +1286,47 @@ if (config.lightningMode) {
         }
     });
 
+    // Intention endpoints
+    routes.set('POST /api/maxine/serviceops/intention/set', (req, res, query, body) => {
+        try {
+            const clientIP = req.connection.remoteAddress || req.socket.remoteAddress || 'unknown';
+            const { source, destination, action } = body;
+            if (!source || !destination || !action) {
+                winston.warn(`AUDIT: Invalid intention set - missing parameters, clientIP: ${clientIP}`);
+                res.writeHead(400, { 'Content-Type': 'application/json' });
+                res.end('{"error": "Missing source, destination, or action"}');
+                return;
+            }
+            serviceRegistry.setIntention(source, destination, action);
+            winston.info(`AUDIT: Intention set - source: ${source}, destination: ${destination}, action: ${action}, clientIP: ${clientIP}`);
+            res.writeHead(200, { 'Content-Type': 'application/json' });
+            res.end(successTrue);
+        } catch (error) {
+            winston.error(`AUDIT: Intention set failed - error: ${error.message}, clientIP: ${req.connection.remoteAddress || req.socket.remoteAddress || 'unknown'}`);
+            errorCount++;
+            res.writeHead(500, { 'Content-Type': 'application/json' });
+            res.end('{"error": "Internal server error"}');
+        }
+    });
+
+    routes.set('GET /api/maxine/serviceops/intention/:source/:destination', (req, res, query, body) => {
+        try {
+            const clientIP = req.connection.remoteAddress || req.socket.remoteAddress || 'unknown';
+            const parts = req.url.split('/');
+            const source = parts[parts.length - 2];
+            const destination = parts[parts.length - 1];
+            const action = serviceRegistry.getIntention(source, destination);
+            winston.info(`AUDIT: Intention retrieved - source: ${source}, destination: ${destination}, action: ${action}, clientIP: ${clientIP}`);
+            res.writeHead(200, { 'Content-Type': 'application/json' });
+            res.end(JSON.stringify({ source, destination, action }));
+        } catch (error) {
+            winston.error(`AUDIT: Intention get failed - error: ${error.message}, clientIP: ${req.connection.remoteAddress || req.socket.remoteAddress || 'unknown'}`);
+            errorCount++;
+            res.writeHead(500, { 'Content-Type': 'application/json' });
+            res.end('{"error": "Internal server error"}');
+        }
+    });
+
     const server = http.createServer({ keepAlive: false }, (req, res) => {
           if (req.headers.upgrade && req.headers.upgrade.toLowerCase() === 'websocket') {
               // Let WebSocket handle upgrade

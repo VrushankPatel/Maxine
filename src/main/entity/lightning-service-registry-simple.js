@@ -45,6 +45,9 @@ class LightningServiceRegistrySimple extends EventEmitter {
         // Access Control Lists
         this.acls = new Map(); // serviceName -> { allow: Set, deny: Set }
 
+        // Service Intentions
+        this.intentions = new Map(); // source:destination -> action ('allow' | 'deny')
+
         // Circuit Breaker
         this.circuitFailures = new Map(); // nodeName -> failure count
         this.circuitState = new Map(); // nodeName -> 'closed' | 'open' | 'half-open'
@@ -496,6 +499,10 @@ class LightningServiceRegistrySimple extends EventEmitter {
          for (const [service, acl] of this.acls) {
              data.acls[service] = { allow: Array.from(acl.allow), deny: Array.from(acl.deny) };
          }
+         data.intentions = {};
+         for (const [key, action] of this.intentions) {
+             data.intentions[key] = action;
+         }
          return data;
     }
 
@@ -543,6 +550,10 @@ class LightningServiceRegistrySimple extends EventEmitter {
          this.acls = new Map();
          for (const [service, acl] of Object.entries(data.acls || {})) {
              this.acls.set(service, { allow: new Set(acl.allow || []), deny: new Set(acl.deny || []) });
+         }
+         this.intentions = new Map();
+         for (const [key, action] of Object.entries(data.intentions || {})) {
+             this.intentions.set(key, action);
          }
          this.saveRegistry();
     }
@@ -611,6 +622,10 @@ class LightningServiceRegistrySimple extends EventEmitter {
              data.acls = {};
              for (const [service, acl] of this.acls) {
                  data.acls[service] = { allow: Array.from(acl.allow), deny: Array.from(acl.deny) };
+             }
+             data.intentions = {};
+             for (const [key, action] of this.intentions) {
+                 data.intentions[key] = action;
              }
 
             if (this.persistenceType === 'file') {
@@ -739,6 +754,10 @@ class LightningServiceRegistrySimple extends EventEmitter {
                  this.acls = new Map();
                  for (const [service, acl] of Object.entries(data.acls || {})) {
                      this.acls.set(service, { allow: new Set(acl.allow || []), deny: new Set(acl.deny || []) });
+                 }
+                 this.intentions = new Map();
+                 for (const [key, action] of Object.entries(data.intentions || {})) {
+                     this.intentions.set(key, action);
                  }
             }
         } catch (err) {
@@ -998,6 +1017,16 @@ class LightningServiceRegistrySimple extends EventEmitter {
             if (acl.deny.has(requester)) return false;
             if (acl.allow.size > 0 && !acl.allow.has(requester)) return false;
             return true;
+        }
+
+        // Intention methods
+        setIntention(source, destination, action) {
+            this.intentions.set(`${source}:${destination}`, action);
+            this.saveRegistry();
+        }
+
+        getIntention(source, destination) {
+            return this.intentions.get(`${source}:${destination}`) || 'allow';
         }
 }
 
