@@ -19,7 +19,7 @@ A minimal, high-performance service discovery and registry for microservices.
 - **Audit Logging**: Comprehensive logging of all registry operations using Winston, including user actions, system events, and security incidents with log rotation and export capabilities
 - **Persistence**: Optional persistence to survive restarts with file-based or Redis storage
 - **Minimal Dependencies**: Only essential packages for maximum performance
-- **Lightning Mode**: Dedicated mode for ultimate speed with core features: register, heartbeat, deregister, discover with round-robin/random load balancing, health, metrics, basic tracing, audit logging
+- **Lightning Mode**: Dedicated mode for ultimate speed with core features: register, heartbeat, deregister, discover with round-robin/random load balancing, health, metrics, OpenTelemetry tracing, audit logging
 - **Optimized Parsing**: Fast JSON parsing with error handling
 - **Event-Driven**: Real-time events for service changes and notifications via WebSocket and MQTT
 - **Federation**: Connect multiple Maxine instances across datacenters for global service discovery (available in Lightning Mode)
@@ -85,6 +85,18 @@ Events are published to topics like `maxine/registry/events/service_registered`,
 
 MQTT publishing is now enabled in the broadcast function for real-time event distribution.
 
+## OpenTelemetry Tracing
+
+Maxine supports OpenTelemetry tracing for distributed observability. Traces are automatically generated for key operations like service registration, discovery, and deregistration.
+
+Configure Jaeger exporter with `JAEGER_ENDPOINT` environment variable (default: `http://localhost:14268/api/traces`).
+
+Tracing is enabled by default and provides detailed spans for:
+- Service registration/deregistration
+- Service discovery with load balancing
+- API request handling
+- Registry operations
+
 ## Modes
 
 - **Ultra-Fast Mode**: Extreme performance with minimal features. Core operations only: register, heartbeat (UDP), deregister, discover. No logging, metrics, auth, WebSocket, MQTT, gRPC. Uses UDP for heartbeats for speed. Set `ULTRA_FAST_MODE=true`.
@@ -126,7 +138,7 @@ Response:
 GET /discover?serviceName=my-service&loadBalancing=round-robin&version=1.0&tags=web,api
 ```
 
-Load balancing options: `round-robin` (default), `random`, `weighted-random`, `least-connections`, `weighted-least-connections`, `consistent-hash`, `ip-hash`, `geo-aware`. Use `version` parameter for service versioning. Use `tags` parameter to filter services by tags (comma-separated).
+Load balancing options: `round-robin` (default), `random`, `weighted-random`, `least-connections`, `weighted-least-connections`, `consistent-hash`, `ip-hash`, `geo-aware`, `least-response-time`. Use `version` parameter for service versioning. Use `tags` parameter to filter services by tags (comma-separated).
 
 Response: Returns a service instance or 404 if not found.
 
@@ -469,6 +481,18 @@ GET /config/all?serviceName=my-service
 ```http
 DELETE /config/delete?serviceName=my-service&key=timeout
 ```
+
+##### Record Response Time
+```http
+POST /record-response-time
+Content-Type: application/json
+
+{
+  "nodeId": "my-service:localhost:3000",
+  "responseTime": 150
+}
+```
+Records the response time for a node to enable predictive load balancing based on historical performance data.
 
 ##### Add Service Dependency
 ```http

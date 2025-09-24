@@ -36,7 +36,7 @@
   - [x] Integrate with Kubernetes services and endpoints for seamless discovery
   - [x] Provide Helm charts for easy deployment
   - [x] Enable declarative management of Maxine instances in K8s clusters
-- [ ] Implement OpenTelemetry Tracing: Add full OpenTelemetry integration for distributed tracing across registry operations, including Jaeger and Zipkin exporters for observability.
+- [x] Implement OpenTelemetry Tracing: Add full OpenTelemetry integration for distributed tracing across registry operations, including Jaeger and Zipkin exporters for observability.
 - [ ] Add Machine Learning-Based Load Balancing: Implement predictive load balancing using historical performance data and simple ML algorithms to optimize service selection.
 - [x] Implement Service Mesh Integration Enhancements: Deep integration with popular service meshes:
   - Istio: Automatic Envoy configuration generation, traffic policies, and service mesh integration
@@ -144,6 +144,13 @@
 ### Next Steps for Implementation
 
 #### High Priority
+- [x] Implement OpenTelemetry Tracing: Add full OpenTelemetry integration for distributed tracing across registry operations.
+  - Initialize NodeSDK with Jaeger and Zipkin exporters in index.js
+  - Add tracing spans for all registry operations (register, discover, heartbeat, deregister)
+  - Implement trace correlation for federation and service mesh calls
+  - Add configurable sampling rates and trace filtering
+  - Enable performance profiling with flame graphs
+  - Integrate with external tracing backends for observability
 - Implement Kubernetes Operator: Create a custom Kubernetes operator for automated Maxine deployment and management. This involves:
   - Define CRDs for ServiceRegistry, ServiceInstance, and ServicePolicy
   - Implement controller logic for watching CRD changes and reconciling Maxine state

@@ -1,6 +1,7 @@
 // Lightning-fast service registry for minimal overhead
 const config = require('../config/config');
 const { LRUCache } = require('lru-cache');
+const { trace } = require('@opentelemetry/api');
 
 class LightningServiceRegistry {
     constructor() {
@@ -23,7 +24,6 @@ class LightningServiceRegistry {
         this.versionIndex = new Map(); // version -> Set<nodeName>
         this.environmentIndex = new Map(); // environment -> Set<nodeName>
         this.federatedRegistries = new Map(); // federation support
-        this.traces = new Map(); // basic tracing
         this.dependencies = new Map(); // service dependencies
         this.heartbeatTimeout = 60000; // 60 seconds
         this.circuitBreakerThreshold = 5;
@@ -171,9 +171,18 @@ class LightningServiceRegistry {
     }
 
     register(serviceName, nodeInfo, namespace = "default", datacenter = "default") {
-        const fullServiceName = datacenter !== "default" ? `${datacenter}:${namespace}:${serviceName}` : `${namespace}:${serviceName}`;
-        const nodeName = `${nodeInfo.host}:${nodeInfo.port}`;
-        const node = { ...nodeInfo, nodeName, address: `${nodeInfo.host}:${nodeInfo.port}`, tags: nodeInfo.tags || [], version: nodeInfo.version, environment: nodeInfo.environment };
+        const tracer = trace.getTracer('maxine-registry', '1.0.0');
+        return tracer.startActiveSpan('register', (span) => {
+            span.setAttribute('service.name', serviceName);
+            span.setAttribute('node.host', nodeInfo.host);
+            span.setAttribute('node.port', nodeInfo.port);
+            span.setAttribute('namespace', namespace);
+            span.setAttribute('datacenter', datacenter);
+
+            try {
+                const fullServiceName = datacenter !== "default" ? `${datacenter}:${namespace}:${serviceName}` : `${namespace}:${serviceName}`;
+                const nodeName = `${nodeInfo.host}:${nodeInfo.port}`;
+                const node = { ...nodeInfo, nodeName, address: `${nodeInfo.host}:${nodeInfo.port}`, tags: nodeInfo.tags || [], version: nodeInfo.version, environment: nodeInfo.environment };
 
         if (!this.services.has(fullServiceName)) {
             this.services.set(fullServiceName, { nodes: new Map(), healthyNodes: new Set(), healthyNodesArray: [], availableNodesArray: [], roundRobinIndex: 0, minConnectionNode: null, minConnectionCount: 0, minResponseTimeNode: null, minResponseTime: Infinity, connectionSortedNodes: [], responseTimeSortedNodes: [] });
@@ -222,55 +231,69 @@ class LightningServiceRegistry {
              }
          }
 
-        // Update min connection node if this is the first or has fewer connections
-        const connCount = this.activeConnections.get(nodeName) || 0;
-        if (service.minConnectionNode === null || connCount < service.minConnectionCount) {
-            service.minConnectionNode = node;
-            service.minConnectionCount = connCount;
-        }
+                // Update min connection node if this is the first or has fewer connections
+                const connCount = this.activeConnections.get(nodeName) || 0;
+                if (service.minConnectionNode === null || connCount < service.minConnectionCount) {
+                    service.minConnectionNode = node;
+                    service.minConnectionCount = connCount;
+                }
 
-        return nodeName;
+                span.end();
+                return nodeName;
+            } catch (error) {
+                span.recordException(error);
+                span.setStatus({ code: 2, message: error.message });
+                span.end();
+                throw error;
+            }
+        });
     }
 
     deregister(serviceName, nodeName) {
-        const service = this.services.get(serviceName);
-        if (service) {
-            const node = service.nodes.get(nodeName);
-            if (node) {
-                service.nodes.delete(nodeName);
-                service.healthyNodes.delete(node);
-                // Remove from healthyNodesArray
-                const healthyIndex = service.healthyNodesArray.findIndex(n => n.nodeName === nodeName);
-                if (healthyIndex !== -1) {
-                    service.healthyNodesArray.splice(healthyIndex, 1);
+        const tracer = trace.getTracer('maxine-registry', '1.0.0');
+        return tracer.startActiveSpan('deregister', (span) => {
+            span.setAttribute('service.name', serviceName);
+            span.setAttribute('node.name', nodeName);
+
+            try {
+                const service = this.services.get(serviceName);
+                if (service) {
+                    const node = service.nodes.get(nodeName);
+                    if (node) {
+                        service.nodes.delete(nodeName);
+                        service.healthyNodes.delete(node);
+                        // Remove from healthyNodesArray
+                        const healthyIndex = service.healthyNodesArray.findIndex(n => n.nodeName === nodeName);
+                        if (healthyIndex !== -1) {
+                            service.healthyNodesArray.splice(healthyIndex, 1);
+                        }
+                        // Remove from availableNodesArray
+                        const availableIndex = service.availableNodesArray.findIndex(n => n.nodeName === nodeName);
+                        if (availableIndex !== -1) {
+                            service.availableNodesArray.splice(availableIndex, 1);
+                        }
+                    }
+                    if (service.nodes.size === 0) {
+                        this.services.delete(serviceName);
+                    } else {
+                        // Update min connection node if it was the deregistered one
+                        if (service.minConnectionNode && service.minConnectionNode.nodeName === nodeName) {
+                            this._updateMinConnectionNode(service);
+                        }
+                        // Update min response time node if it was the deregistered one
+                        if (service.minResponseTimeNode && service.minResponseTimeNode.nodeName === nodeName) {
+                            this._updateMinResponseTimeNode(service);
+                        }
+                        // Reset roundRobinIndex if out of bounds
+                        if (service.roundRobinIndex >= service.availableNodesArray.length) {
+                            service.roundRobinIndex = 0;
+                        }
+                    }
                 }
-                // Remove from availableNodesArray
-                const availableIndex = service.availableNodesArray.findIndex(n => n.nodeName === nodeName);
-                if (availableIndex !== -1) {
-                    service.availableNodesArray.splice(availableIndex, 1);
-                }
-            }
-            if (service.nodes.size === 0) {
-                this.services.delete(serviceName);
-            } else {
-                // Update min connection node if it was the deregistered one
-                if (service.minConnectionNode && service.minConnectionNode.nodeName === nodeName) {
-                    this._updateMinConnectionNode(service);
-                }
-                // Update min response time node if it was the deregistered one
-                if (service.minResponseTimeNode && service.minResponseTimeNode.nodeName === nodeName) {
-                    this._updateMinResponseTimeNode(service);
-                }
-                // Reset roundRobinIndex if out of bounds
-                if (service.roundRobinIndex >= service.availableNodesArray.length) {
-                    service.roundRobinIndex = 0;
-                }
-            }
-        }
-        this.lastHeartbeats.delete(nodeName);
-        this.nodeToService.delete(nodeName);
-        this.activeConnections.delete(nodeName);
-        this.maintenanceNodes.delete(nodeName);
+                this.lastHeartbeats.delete(nodeName);
+                this.nodeToService.delete(nodeName);
+                this.activeConnections.delete(nodeName);
+                this.maintenanceNodes.delete(nodeName);
 
          // Remove from indexes if not lightning mode
          if (!config.lightningMode) {
@@ -296,15 +319,25 @@ class LightningServiceRegistry {
                  }
              }
 
-             // Remove from environment index
-             if (node && node.environment) {
-                 const envSet = this.environmentIndex.get(node.environment);
-                 if (envSet) {
-                     envSet.delete(nodeName);
-                     if (envSet.size === 0) this.environmentIndex.delete(node.environment);
-                 }
-             }
-         }
+                      // Remove from environment index
+                      if (node && node.environment) {
+                          const envSet = this.environmentIndex.get(node.environment);
+                          if (envSet) {
+                              envSet.delete(nodeName);
+                              if (envSet.size === 0) this.environmentIndex.delete(node.environment);
+                          }
+                      }
+                  }
+                }
+
+                span.end();
+            } catch (error) {
+                span.recordException(error);
+                span.setStatus({ code: 2, message: error.message });
+                span.end();
+                throw error;
+            }
+        });
     }
 
     _updateMinConnectionNode(service) {
@@ -354,23 +387,40 @@ class LightningServiceRegistry {
     }
 
     getRandomNode(serviceName, strategy = 'round-robin', clientId = null, tags = [], version = null, environment = null) {
-        // Resolve alias
-        if (!this.services.has(serviceName)) {
-            serviceName = this.aliases.get(serviceName) || serviceName;
-        }
+        const tracer = trace.getTracer('maxine-registry', '1.0.0');
+        return tracer.startActiveSpan('getRandomNode', (span) => {
+            span.setAttribute('service.name', serviceName);
+            span.setAttribute('strategy', strategy);
+            span.setAttribute('client.id', clientId || '');
+            span.setAttribute('tags', tags.join(','));
+            span.setAttribute('version', version || '');
+            span.setAttribute('environment', environment || '');
 
-        const cacheKey = `${serviceName}:${strategy}:${clientId || ''}:${tags.join(',')}:${version || ''}:${environment || ''}`;
-        const cached = this.discoveryCache.get(cacheKey);
-        if (cached) {
-            return cached.node || cached;
-        }
+            try {
+                // Resolve alias
+                if (!this.services.has(serviceName)) {
+                    serviceName = this.aliases.get(serviceName) || serviceName;
+                }
 
-        const service = this.services.get(serviceName);
-        if (!service || service.availableNodesArray.length === 0) return null;
+                const cacheKey = `${serviceName}:${strategy}:${clientId || ''}:${tags.join(',')}:${version || ''}:${environment || ''}`;
+                const cached = this.discoveryCache.get(cacheKey);
+                if (cached) {
+                    span.end();
+                    return cached.node || cached;
+                }
 
-        // availableNodesArray already excludes maintenance and open circuits
-        let availableNodes = service.availableNodesArray;
-        if (availableNodes.length === 0) return null;
+                const service = this.services.get(serviceName);
+                if (!service || service.availableNodesArray.length === 0) {
+                    span.end();
+                    return null;
+                }
+
+                // availableNodesArray already excludes maintenance and open circuits
+                let availableNodes = service.availableNodesArray;
+                if (availableNodes.length === 0) {
+                    span.end();
+                    return null;
+                }
 
         // Combined filtering using indexes for O(1) performance if not lightning mode
         if (!config.lightningMode && (tags.length > 0 || version || environment)) {
@@ -420,44 +470,57 @@ class LightningServiceRegistry {
                     candidateNodeNames = new Set(); // no nodes have this environment
                 }
             }
-            availableNodes = availableNodes.filter(node => candidateNodeNames.has(node.nodeName));
-        }
-        if (availableNodes.length === 0) return null;
+                availableNodes = availableNodes.filter(node => candidateNodeNames.has(node.nodeName));
+            }
+            if (availableNodes.length === 0) {
+                span.end();
+                return null;
+            }
 
-        // Check for blue-green deployment
-        const bgNode = this.getBlueGreenNode(serviceName);
-        if (bgNode && !this.isCircuitOpen(serviceName, bgNode.nodeName)) {
-            this.discoveryCache.set(cacheKey, bgNode);
-            return bgNode;
-        }
-
-        // Check for canary deployment
-        const canaryConfig = this.canaryConfigs.get(serviceName);
-        if (canaryConfig) {
-            if (Math.random() * 100 < canaryConfig.percentage) {
-                const canaryNode = this.getCanaryNode(serviceName);
-                if (canaryNode && !this.isCircuitOpen(serviceName, canaryNode.nodeName)) {
-                    this.discoveryCache.set(cacheKey, canaryNode);
-                    return canaryNode;
+                // Check for blue-green deployment
+                const bgNode = this.getBlueGreenNode(serviceName);
+                if (bgNode && !this.isCircuitOpen(serviceName, bgNode.nodeName)) {
+                    this.discoveryCache.set(cacheKey, bgNode);
+                    span.end();
+                    return bgNode;
                 }
-            }
-        }
 
-        // Use strategy
-        const strategyFunc = this.strategies[strategy];
-        if (strategyFunc) {
-            const node = strategyFunc(service, availableNodes, clientId);
-            if (node) {
-                this.discoveryCache.set(cacheKey, node);
+                // Check for canary deployment
+                const canaryConfig = this.canaryConfigs.get(serviceName);
+                if (canaryConfig) {
+                    if (Math.random() * 100 < canaryConfig.percentage) {
+                        const canaryNode = this.getCanaryNode(serviceName);
+                        if (canaryNode && !this.isCircuitOpen(serviceName, canaryNode.nodeName)) {
+                            this.discoveryCache.set(cacheKey, canaryNode);
+                            span.end();
+                            return canaryNode;
+                        }
+                    }
+                }
+
+                // Use strategy
+                const strategyFunc = this.strategies[strategy];
+                let node;
+                if (strategyFunc) {
+                    node = strategyFunc(service, availableNodes, clientId);
+                    if (node) {
+                        this.discoveryCache.set(cacheKey, node);
+                    }
+                } else {
+                    node = this.strategies['round-robin'](service, availableNodes, clientId);
+                    if (node) {
+                        this.discoveryCache.set(cacheKey, node);
+                    }
+                }
+                span.end();
+                return node;
+            } catch (error) {
+                span.recordException(error);
+                span.setStatus({ code: 2, message: error.message });
+                span.end();
+                throw error;
             }
-            return node;
-        } else {
-            const node = this.strategies['round-robin'](service, availableNodes, clientId);
-            if (node) {
-                this.discoveryCache.set(cacheKey, node);
-            }
-            return node;
-        }
+        });
     }
 
     simpleHash(str) {
@@ -697,29 +760,7 @@ class LightningServiceRegistry {
         return null;
     }
 
-    // Basic tracing
-    startTrace(operation, id) {
-        this.traces.set(id, { operation, start: Date.now(), events: [] });
-    }
 
-    addTraceEvent(id, event) {
-        const trace = this.traces.get(id);
-        if (trace) {
-            trace.events.push({ event, timestamp: Date.now() });
-        }
-    }
-
-    endTrace(id) {
-        const trace = this.traces.get(id);
-        if (trace) {
-            trace.end = Date.now();
-            trace.duration = trace.end - trace.start;
-        }
-    }
-
-    getTrace(id) {
-        return this.traces.get(id);
-    }
 
     // Dependency mapping
     addDependency(serviceName, dependsOn) {
