@@ -12,6 +12,7 @@ A minimal, high-performance service discovery and registry for microservices.
 - **Advanced Health Checks**: Custom health check endpoints with proactive monitoring, configurable intervals, and health status integration with load balancing decisions
 - **Circuit Breakers**: Automatic failure detection and recovery to protect against cascading failures
 - **Rate Limiting**: Protect services from excessive requests with configurable limits
+- **API Key Management**: Generate, validate, and revoke API keys with per-key rate limiting for secure service access
 - **Access Control Lists (ACLs)**: Fine-grained permissions for service discovery access
 - **Service Intentions**: Define allowed communication patterns between services
 - **Service Dependencies**: Manage service dependencies with cycle detection and graph visualization
@@ -107,6 +108,43 @@ For testing, Maxine includes demo users with different roles:
 - operator/operator (operator role)
 - viewer/viewer (viewer role)
 - service/service (service role)
+
+## API Key Management
+
+Maxine supports API key-based authentication with configurable rate limiting for secure service access.
+
+#### API Key Endpoints
+
+- `POST /api/maxine/api-keys/generate` - Generate a new API key (admin only)
+  ```json
+  {
+    "serviceName": "my-service",
+    "rateLimit": 1000
+  }
+  ```
+- `POST /api/maxine/api-keys/revoke` - Revoke an API key (admin only)
+  ```json
+  {
+    "apiKey": "your-api-key-here"
+  }
+  ```
+- `GET /api/maxine/api-keys` - List all API keys (admin only)
+- `POST /api/maxine/api-keys/validate` - Validate an API key
+  ```json
+  {
+    "apiKey": "your-api-key-here"
+  }
+  ```
+
+#### Using API Keys
+
+Include the API key in requests using the `X-API-Key` header or `apiKey` query parameter:
+
+```bash
+curl -H "X-API-Key: your-api-key" http://localhost:8080/discover?serviceName=my-service
+```
+
+API keys are automatically rate limited based on their configured limits.
 
 ## Mutual TLS (mTLS) Support
 
