@@ -16,6 +16,7 @@ A minimal, high-performance service discovery and registry for microservices.
 - **Access Control Lists (ACLs)**: Fine-grained permissions for service discovery access
 - **Service Intentions**: Define allowed communication patterns between services
  - **Service Dependencies**: Manage service dependencies with cycle detection, graph visualization, and automatic dependency detection through call logging
+ - **Version Compatibility Checking**: Define compatibility rules for service versions to prevent incompatible service interactions
 - **Service Call Analytics**: Real-time dashboard visualizing service communication patterns, call frequencies, and dependency graphs with interactive D3.js charts
 - **Advanced Service Validation**: Comprehensive schema validation for service registrations including metadata fields (tags, healthCheck, version, weight)
 - **Chaos Engineering Tools**: Built-in chaos testing with latency injection, failure simulation, and automated experiments for resilience validation
@@ -901,20 +902,68 @@ Response:
 }
 ```
 
-##### Analyze Dependencies
-```http
-POST /api/maxine/serviceops/dependency/analyze
-```
+ ##### Analyze Dependencies
+ ```http
+ POST /api/maxine/serviceops/dependency/analyze
+ ```
 
-Triggers automatic dependency analysis based on recorded service calls. Dependencies are inferred from call logs where services have called each other above the configured threshold within the time window.
+ Triggers automatic dependency analysis based on recorded service calls. Dependencies are inferred from call logs where services have called each other above the configured threshold within the time window.
 
-Response:
-```json
-{
-  "success": true,
-  "message": "Dependency analysis completed"
-}
-```
+ Response:
+ ```json
+ {
+   "success": true,
+   "message": "Dependency analysis completed"
+ }
+ ```
+
+ ##### Set Compatibility Rule
+ ```http
+ POST /api/maxine/serviceops/compatibility/set
+ Content-Type: application/json
+
+ {
+   "serviceName": "my-service",
+   "version": "1.0",
+   "compatibleVersions": ["1.0", "1.1", "^1.0.0"]
+ }
+ ```
+
+ ##### Get Compatibility Rules
+ ```http
+ GET /api/maxine/serviceops/compatibility/get?serviceName=my-service&version=1.0
+ ```
+
+ Response:
+ ```json
+ {
+   "serviceName": "my-service",
+   "version": "1.0",
+   "rules": ["1.0", "1.1", "^1.0.0"]
+ }
+ ```
+
+ ##### Check Compatibility
+ ```http
+ POST /api/maxine/serviceops/compatibility/check
+ Content-Type: application/json
+
+ {
+   "serviceName": "my-service",
+   "version": "1.0",
+   "requiredVersion": "1.1"
+ }
+ ```
+
+ Response:
+ ```json
+ {
+   "serviceName": "my-service",
+   "version": "1.0",
+   "requiredVersion": "1.1",
+   "compatible": true
+ }
+ ```
 
 ##### Set ACL
 ```http

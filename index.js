@@ -2968,6 +2968,79 @@ if (config.ultraFastMode) {
             res.writeHead(500, { 'Content-Type': 'application/json' });
             res.end('{"error": "Internal server error"}');
         }
+      });
+
+     // Compatibility endpoints
+     routes.set('POST /api/maxine/serviceops/compatibility/set', (req, res, query, body) => {
+         try {
+             const clientIP = req.connection.remoteAddress || req.socket.remoteAddress || 'unknown';
+             const { serviceName, version, compatibleVersions } = body;
+             if (!serviceName || !version || !compatibleVersions) {
+                 winston.warn(`AUDIT: Invalid compatibility set - missing parameters, clientIP: ${clientIP}`);
+                 res.writeHead(400, { 'Content-Type': 'application/json' });
+                 res.end('{"error": "Missing serviceName, version, or compatibleVersions"}');
+                 return;
+             }
+             serviceRegistry.setCompatibilityRule(serviceName, version, compatibleVersions);
+             // winston.info(`AUDIT: Compatibility rule set - serviceName: ${serviceName}, version: ${version}, compatibleVersions: ${JSON.stringify(compatibleVersions)}, clientIP: ${clientIP}`);
+             res.writeHead(200, { 'Content-Type': 'application/json' });
+             res.end(successTrue);
+         } catch (error) {
+             // winston.error(`AUDIT: Compatibility set failed - error: ${error.message}, clientIP: ${req.connection.remoteAddress || req.socket.remoteAddress || 'unknown'}`);
+             errorCount++;
+             res.writeHead(500, { 'Content-Type': 'application/json' });
+             res.end('{"error": "Internal server error"}');
+         }
+     });
+
+     routes.set('GET /api/maxine/serviceops/compatibility/get', (req, res, query, body) => {
+         try {
+             const clientIP = req.connection.remoteAddress || req.socket.remoteAddress || 'unknown';
+             const serviceName = query.serviceName;
+             const version = query.version;
+             if (!serviceName) {
+                 winston.warn(`AUDIT: Invalid compatibility get - missing serviceName, clientIP: ${clientIP}`);
+                 res.writeHead(400, { 'Content-Type': 'application/json' });
+                 res.end('{"error": "Missing serviceName"}');
+                 return;
+             }
+             let rules;
+             if (version) {
+                 rules = serviceRegistry.getCompatibilityRule(serviceName, version);
+             } else {
+                 rules = serviceRegistry.getAllCompatibilityRules(serviceName);
+             }
+             // winston.info(`AUDIT: Compatibility rules retrieved - serviceName: ${serviceName}, version: ${version}, clientIP: ${clientIP}`);
+             res.writeHead(200, { 'Content-Type': 'application/json' });
+             res.end(JSON.stringify({ serviceName, version, rules }));
+         } catch (error) {
+             // winston.error(`AUDIT: Compatibility get failed - error: ${error.message}, clientIP: ${req.connection.remoteAddress || req.socket.remoteAddress || 'unknown'}`);
+             errorCount++;
+             res.writeHead(500, { 'Content-Type': 'application/json' });
+             res.end('{"error": "Internal server error"}');
+         }
+     });
+
+     routes.set('POST /api/maxine/serviceops/compatibility/check', (req, res, query, body) => {
+         try {
+             const clientIP = req.connection.remoteAddress || req.socket.remoteAddress || 'unknown';
+             const { serviceName, version, requiredVersion } = body;
+             if (!serviceName || !version || !requiredVersion) {
+                 winston.warn(`AUDIT: Invalid compatibility check - missing parameters, clientIP: ${clientIP}`);
+                 res.writeHead(400, { 'Content-Type': 'application/json' });
+                 res.end('{"error": "Missing serviceName, version, or requiredVersion"}');
+                 return;
+             }
+             const compatible = serviceRegistry.checkCompatibility(serviceName, version, requiredVersion);
+             // winston.info(`AUDIT: Compatibility checked - serviceName: ${serviceName}, version: ${version}, requiredVersion: ${requiredVersion}, compatible: ${compatible}, clientIP: ${clientIP}`);
+             res.writeHead(200, { 'Content-Type': 'application/json' });
+             res.end(JSON.stringify({ serviceName, version, requiredVersion, compatible }));
+         } catch (error) {
+             // winston.error(`AUDIT: Compatibility check failed - error: ${error.message}, clientIP: ${req.connection.remoteAddress || req.socket.remoteAddress || 'unknown'}`);
+             errorCount++;
+             res.writeHead(500, { 'Content-Type': 'application/json' });
+             res.end('{"error": "Internal server error"}');
+         }
      });
 
      let server;

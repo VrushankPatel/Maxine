@@ -55,6 +55,9 @@ class LightningServiceRegistrySimple extends EventEmitter {
         // Service Intentions
         this.intentions = new Map(); // source:destination -> action ('allow' | 'deny')
 
+        // Version Compatibility Rules
+        this.compatibilityRules = new Map(); // serviceName -> { version: compatibleVersions[] or semverRange }
+
         // Service Blacklist
         this.blacklistedServices = new Set();
 
@@ -1230,6 +1233,13 @@ class LightningServiceRegistrySimple extends EventEmitter {
           for (const [key, action] of this.intentions) {
               data.intentions[key] = action;
           }
+          data.compatibilityRules = {};
+          for (const [serviceName, rules] of this.compatibilityRules) {
+              data.compatibilityRules[serviceName] = {};
+              for (const [version, compatible] of rules) {
+                  data.compatibilityRules[serviceName][version] = compatible;
+              }
+          }
            data.blacklistedServices = Array.from(this.blacklistedServices);
            data.tagIndex = {};
            for (const [tag, nodes] of this.tagIndex) {
@@ -1286,6 +1296,14 @@ class LightningServiceRegistrySimple extends EventEmitter {
                   this.intentions = new Map();
                   for (const [key, action] of Object.entries(data.intentions || {})) {
                       this.intentions.set(key, action);
+                  }
+                  this.compatibilityRules = new Map();
+                  for (const [serviceName, rules] of Object.entries(data.compatibilityRules || {})) {
+                      const serviceRules = new Map();
+                      for (const [version, compatible] of Object.entries(rules)) {
+                          serviceRules.set(version, compatible);
+                      }
+                      this.compatibilityRules.set(serviceName, serviceRules);
                   }
                    this.blacklistedServices = new Set(data.blacklistedServices || []);
                     this.cacheHits = data.cacheHits || 0;
@@ -1868,6 +1886,55 @@ class LightningServiceRegistrySimple extends EventEmitter {
 
         getBlacklist() {
             return Array.from(this.blacklistedServices);
+        }
+
+        // Compatibility methods
+        setCompatibilityRule(serviceName, version, compatibleVersions) {
+            if (!this.compatibilityRules.has(serviceName)) {
+                this.compatibilityRules.set(serviceName, new Map());
+            }
+            this.compatibilityRules.get(serviceName).set(version, compatibleVersions);
+            this.saveRegistry();
+        }
+
+        getCompatibilityRule(serviceName, version) {
+            const serviceRules = this.compatibilityRules.get(serviceName);
+            return serviceRules ? serviceRules.get(version) : null;
+        }
+
+        getAllCompatibilityRules(serviceName) {
+            return this.compatibilityRules.get(serviceName) || new Map();
+        }
+
+        checkCompatibility(serviceName, version, requiredVersion) {
+            const rules = this.getCompatibilityRule(serviceName, version);
+            if (!rules) return true; // no rules, assume compatible
+
+            // Check if requiredVersion matches any compatible version
+            if (Array.isArray(rules)) {
+                return rules.includes(requiredVersion);
+            } else if (typeof rules === 'string') {
+                // Semver range check (simple implementation)
+                return this.checkSemverRange(requiredVersion, rules);
+            }
+            return false;
+        }
+
+        checkSemverRange(version, range) {
+            // Simple semver range check (can be enhanced with semver library)
+            if (range.startsWith('^')) {
+                const base = range.slice(1);
+                const [major] = base.split('.');
+                const [vMajor] = version.split('.');
+                return vMajor === major;
+            } else if (range.startsWith('~')) {
+                const base = range.slice(1);
+                const [major, minor] = base.split('.');
+                const [vMajor, vMinor] = version.split('.');
+                return vMajor === major && vMinor === minor;
+            } else {
+                return version === range;
+            }
         }
 
         // Response time recording for predictive load balancing
