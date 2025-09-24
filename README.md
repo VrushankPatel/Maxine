@@ -146,6 +146,18 @@ curl -H "X-API-Key: your-api-key" http://localhost:8080/discover?serviceName=my-
 
 API keys are automatically rate limited based on their configured limits.
 
+## LDAP Authentication
+
+Maxine supports LDAP/Active Directory authentication for enterprise environments.
+
+Enable with `LDAP_ENABLED=true` and configure:
+- `LDAP_URL`: LDAP server URL (e.g., `ldap://localhost:389`)
+- `LDAP_BASE_DN`: Base DN for searches (e.g., `dc=example,dc=com`)
+- `LDAP_BIND_USER`: Bind user DN for authentication
+- `LDAP_BIND_PASSWORD`: Bind user password
+
+When LDAP is enabled, the `/signin` endpoint will first attempt LDAP authentication, falling back to local users if LDAP fails.
+
 ## Mutual TLS (mTLS) Support
 
 Maxine supports Mutual TLS for encrypted and authenticated service-to-service communication in Lightning Mode.

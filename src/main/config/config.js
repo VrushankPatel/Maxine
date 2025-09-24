@@ -139,7 +139,12 @@ const config = {
                         serverKeyPath: process.env.SERVER_KEY_PATH || path.join(__dirname, 'certs', 'server.key'),
                         caCertPath: process.env.CA_CERT_PATH || path.join(__dirname, 'certs', 'ca.crt'),
                         apiKeyEnabled: process.env.API_KEY_ENABLED === 'true',
-                        apiKeyRequired: process.env.API_KEY_REQUIRED === 'true'
+                        apiKeyRequired: process.env.API_KEY_REQUIRED === 'true',
+                        ldapEnabled: process.env.LDAP_ENABLED === 'true',
+                        ldapUrl: process.env.LDAP_URL,
+                        ldapBaseDN: process.env.LDAP_BASE_DN,
+                        ldapBindUser: process.env.LDAP_BIND_USER,
+                        ldapBindPassword: process.env.LDAP_BIND_PASSWORD
 }
 
 Object.defineProperty(config, "profile", {
