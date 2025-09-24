@@ -66,7 +66,7 @@
   - [x] Provide Helm charts for easy deployment
   - [x] Enable declarative management of Maxine instances in K8s clusters
 - [x] Implement OpenTelemetry Tracing: Add full OpenTelemetry integration for distributed tracing across registry operations, including Jaeger and Zipkin exporters for observability.
- - [x] Add Machine Learning-Based Load Balancing: Implemented predictive load balancing with least-response-time strategy using historical response time data to select optimal nodes.
+- [x] Implement Advanced Machine Learning Load Balancing: Enhanced AI-driven load balancing with predictive analytics using time-series analysis, reinforcement learning, and multi-factor scoring for optimal service node selection.
 
 ## Next Implementation Steps
 

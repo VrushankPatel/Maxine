@@ -306,7 +306,7 @@ Response:
 GET /discover?serviceName=my-service&loadBalancing=round-robin&version=1.0&tags=web,api
 ```
 
-Load balancing options: `round-robin` (default), `random`, `weighted-random`, `least-connections`, `weighted-least-connections`, `consistent-hash`, `ip-hash`, `geo-aware`, `least-response-time`, `health-score`, `predictive` (uses time-series trend analysis for optimal node selection), `ai-driven` (uses reinforcement learning for optimal routing), `cost-aware` (prefers lower-cost nodes like on-prem over cloud). Use `version` parameter for service versioning. Use `tags` parameter to filter services by tags (comma-separated).
+Load balancing options: `round-robin` (default), `random`, `weighted-random`, `least-connections`, `weighted-least-connections`, `consistent-hash`, `ip-hash`, `geo-aware`, `least-response-time`, `health-score`, `predictive` (uses time-series trend analysis for optimal node selection), `ai-driven` (uses reinforcement learning for optimal routing), `advanced-ml` (uses machine learning with predictive analytics for intelligent load balancing), `cost-aware` (prefers lower-cost nodes like on-prem over cloud). Use `version` parameter for service versioning. Use `tags` parameter to filter services by tags (comma-separated).
 
 Response: Returns a service instance or 404 if not found.
 
