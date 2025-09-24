@@ -17,6 +17,7 @@ A minimal, high-performance service discovery and registry for microservices.
 - **Service Intentions**: Define allowed communication patterns between services
  - **Service Dependencies**: Manage service dependencies with cycle detection, graph visualization, and automatic dependency detection through call logging
 - **Service Call Analytics**: Real-time dashboard visualizing service communication patterns, call frequencies, and dependency graphs with interactive D3.js charts
+- **Chaos Engineering Tools**: Built-in chaos testing with latency injection, failure simulation, and automated experiments for resilience validation
 - **Metrics**: Basic /metrics endpoint with request counts, errors, uptime, and basic stats including cache performance metrics
 - **OpenTelemetry Metrics**: Comprehensive observability with Prometheus-compatible metrics for service registrations, discoveries, heartbeats, deregistrations, cache hits/misses, and total services/nodes
 - **Advanced Rate Limiting**: Distributed rate limiting with configurable limits per client IP to protect against excessive requests
@@ -1297,6 +1298,46 @@ The server broadcasts the following events as JSON messages:
 ### Full Mode API
 
 Full Mode provides additional endpoints for advanced features like federation, tracing, ACLs, intentions, and service blacklists. These are available under `/api/maxine/serviceops/`.
+
+##### Chaos Engineering
+Maxine includes chaos engineering tools for resilience testing.
+
+###### Inject Latency
+```http
+POST /api/maxine/chaos/inject-latency
+Content-Type: application/json
+
+{
+  "serviceName": "my-service",
+  "delay": 1000
+}
+```
+
+###### Inject Failure
+```http
+POST /api/maxine/chaos/inject-failure
+Content-Type: application/json
+
+{
+  "serviceName": "my-service",
+  "rate": 0.1
+}
+```
+
+###### Reset Chaos
+```http
+POST /api/maxine/chaos/reset
+Content-Type: application/json
+
+{
+  "serviceName": "my-service"
+}
+```
+
+###### Get Chaos Status
+```http
+GET /api/maxine/chaos/status
+```
 
 ##### Add Federated Registry
 ```http
