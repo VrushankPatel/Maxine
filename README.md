@@ -29,6 +29,7 @@ A minimal, high-performance service discovery and registry for microservices.
 - **Configuration Management**: Dynamic configuration updates for services with versioning and event notifications
 - **gRPC Support**: High-performance gRPC API for service operations
 - **Service Mesh Integration**: Automatic Envoy, Istio, and Linkerd configuration generation for seamless service mesh deployment
+- **Open Service Broker API Integration**: Compatible with enterprise service catalogs for seamless integration with Kubernetes Service Catalog and other OSB implementations
 
 
 
@@ -535,6 +536,38 @@ Returns Istio VirtualService and DestinationRule configurations in JSON format f
 GET /service-mesh/linkerd-config
 ```
 Returns Linkerd ServiceProfile configurations in JSON format for service mesh deployment, including retry budgets and route conditions.
+
+### Open Service Broker API
+
+Maxine supports the Open Service Broker API for integration with enterprise service catalogs.
+
+##### Get Catalog
+```http
+GET /v2/catalog
+```
+
+Returns the service catalog in OSB format, listing all registered services and their versions as plans.
+
+Response:
+```json
+{
+  "services": [
+    {
+      "id": "my-service",
+      "name": "my-service",
+      "description": "Service my-service",
+      "bindable": false,
+      "plans": [
+        {
+          "id": "my-service-1.0",
+          "name": "1.0",
+          "description": "Version 1.0 of my-service"
+        }
+      ]
+    }
+  ]
+}
+```
 
 ##### Get Circuit Breaker State
 ```http

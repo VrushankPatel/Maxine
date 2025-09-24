@@ -1431,6 +1431,38 @@ if (config.ultraFastMode) {
         }
     });
 
+    // Open Service Broker API integration
+    routes.set('GET /v2/catalog', (req, res, query, body) => {
+        try {
+            const clientIP = req.connection.remoteAddress || req.socket.remoteAddress || 'unknown';
+            const services = serviceRegistry.getAllServices();
+            const catalog = {
+                services: Array.from(services, ([serviceName, nodes]) => {
+                    const versions = serviceRegistry.getVersions(serviceName);
+                    return {
+                        id: serviceName,
+                        name: serviceName,
+                        description: `Service ${serviceName}`,
+                        bindable: false,
+                        plans: versions.map(v => ({
+                            id: `${serviceName}-${v}`,
+                            name: v,
+                            description: `Version ${v} of ${serviceName}`
+                        }))
+                    };
+                })
+            };
+            // winston.info(`AUDIT: OSB catalog requested - services: ${catalog.services.length}, clientIP: ${clientIP}`);
+            res.writeHead(200, { 'Content-Type': 'application/json' });
+            res.end(JSON.stringify(catalog));
+        } catch (error) {
+            // winston.error(`AUDIT: OSB catalog failed - error: ${error.message}, clientIP: ${req.connection.remoteAddress || req.socket.remoteAddress || 'unknown'}`);
+            errorCount++;
+            res.writeHead(500, { 'Content-Type': 'application/json' });
+            res.end('{"error": "Internal server error"}');
+        }
+    });
+
     routes.set('GET /anomalies', (req, res, query, body) => {
         try {
             const clientIP = req.connection.remoteAddress || req.socket.remoteAddress || 'unknown';
@@ -2376,12 +2408,10 @@ if (config.ultraFastMode) {
     }
 
     if (!config.isTestMode || process.env.WEBSOCKET_ENABLED === 'true') {
-        if (!config.isTestMode) {
-            server.listen(constants.PORT, () => {
-                console.log('Maxine lightning-fast server listening on port', constants.PORT);
-                console.log(`Lightning mode: minimal features for maximum performance using ${config.mtlsEnabled ? 'HTTPS with mTLS' : 'raw HTTP'}`);
-            });
-        }
+        server.listen(constants.PORT, () => {
+            console.log('Maxine lightning-fast server listening on port', constants.PORT);
+            console.log(`Lightning mode: minimal features for maximum performance using ${config.mtlsEnabled ? 'HTTPS with mTLS' : 'raw HTTP'}`);
+        });
 
         // WebSocket server for real-time event streaming
         const wss = new WebSocket.Server({ server });

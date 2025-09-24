@@ -1,103 +1,112 @@
-const http = require('http');
 const { expect } = require('chai');
+const chai = require('chai');
+const chaiHttp = require('chai-http');
+const WebSocket = require('ws');
+chai.use(chaiHttp);
+const app = require('../../../index');
 
 describe('Event Streaming', () => {
-  let server;
-  let port = 8081; // Use different port for tests
+    // Server is already started in test environment
+    it('should emit service_registered event via WebSocket', (done) => {
+      // Connect to WebSocket
+      const ws = new WebSocket('ws://localhost:8080');
 
-  before((done) => {
-      // Start server on test port
-      process.env.PORT = port;
-      process.env.LIGHTNING_MODE = 'true';
-      process.env.WEBSOCKET_ENABLED = 'true';
+      ws.on('open', () => {
+        // Once connected, register a service
+        chai.request(app)
+          .post('/register')
+          .set('Content-Type', 'application/json')
+          .send({
+            serviceName: 'test-service',
+            host: '127.0.0.1',
+            port: 3000
+          })
+          .end(() => {
+            // Wait for event
+          });
+      });
 
-      server = require('../../../index');
-      server.listen(port, () => {
-        done();
+      ws.on('message', (data) => {
+        const event = JSON.parse(data.toString());
+        if (event.event === 'service_registered') {
+          expect(event.event).to.equal('service_registered');
+          expect(event.data.serviceName).to.equal('test-service');
+          expect(event.data.nodeId).to.equal('127.0.0.1:3000');
+          ws.close();
+          done();
+        }
+      });
+
+      ws.on('error', (err) => {
+        done(err);
       });
     });
 
-   after((done) => {
-     server.close(done);
-   });
+    it.skip('should handle authentication', (done) => {
+      // Skipped due to WebSocket test issues
+    });
 
-   it('should emit service_registered event', (done) => {
-     // Trigger an event by registering a service
-     setTimeout(() => {
-       const req = http.request({
-         hostname: 'localhost',
-         port: port,
-         path: '/register',
-         method: 'POST',
-         headers: {
-           'Content-Type': 'application/json'
-         }
-       }, (res) => {
-         // Event should be emitted
-       });
+    it('should filter events by service name', (done) => {
+      const ws = new WebSocket('ws://localhost:8080');
 
-       req.write(JSON.stringify({
-         serviceName: 'test-service',
-         host: '127.0.0.1',
-         port: 3000
-       }));
-       req.end();
+      ws.on('open', () => {
+        // Subscribe to specific service
+        ws.send(JSON.stringify({
+          subscribe: {
+            event: 'service_registered',
+            serviceName: 'specific-service'
+          }
+        }));
 
-       // Check if event was emitted
-       setTimeout(() => {
-         expect(global.lastEvent.event).to.equal('service_registered');
-         expect(global.lastEvent.data.serviceName).to.equal('test-service');
-         expect(global.lastEvent.data.nodeId).to.equal('127.0.0.1:3000');
-         done();
-       }, 100);
-     }, 500);
-   });
-
-   it.skip('should handle authentication', (done) => {
-     // Skipped due to WebSocket test issues
-   });
-
-   it('should filter events by service name', (done) => {
-     // Register different services
-     setTimeout(() => {
-       // Register non-matching service
-        const req1 = http.request({
-          hostname: 'localhost',
-          port: port,
-          path: '/register',
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' }
-        });
-       req1.write(JSON.stringify({
-         serviceName: 'other-service',
-         host: 'localhost',
-         port: 3001
-       }));
-       req1.end();
-
-       // Register matching service
-       setTimeout(() => {
-          const req2 = http.request({
-            hostname: 'localhost',
-            port: port,
-            path: '/register',
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' }
+        // Register non-matching service
+        chai.request(app)
+          .post('/register')
+          .set('Content-Type', 'application/json')
+          .send({
+            serviceName: 'other-service',
+            host: 'localhost',
+            port: 3001
+          })
+          .end(() => {
+            // Should not receive event
+            setTimeout(() => {
+              // Register matching service
+              chai.request(app)
+                .post('/register')
+                .set('Content-Type', 'application/json')
+                .send({
+                  serviceName: 'specific-service',
+                  host: 'localhost',
+                  port: 3002
+                })
+                .end(() => {
+                  // Should receive event
+                });
+            }, 100);
           });
-         req2.write(JSON.stringify({
-           serviceName: 'specific-service',
-           host: 'localhost',
-           port: 3002
-         }));
-         req2.end();
+      });
 
-         // Check if event was emitted for specific service
-         setTimeout(() => {
-           expect(global.lastEvent.event).to.equal('service_registered');
-           expect(global.lastEvent.data.serviceName).to.equal('specific-service');
-           done();
-         }, 100);
-       }, 50);
-      }, 500);
-   });
+      let receivedEvent = false;
+      ws.on('message', (data) => {
+        const event = JSON.parse(data.toString());
+        if (event.event === 'service_registered' && event.data.serviceName === 'specific-service') {
+          expect(event.data.serviceName).to.equal('specific-service');
+          receivedEvent = true;
+          ws.close();
+          done();
+        }
+      });
+
+      ws.on('error', (err) => {
+        done(err);
+      });
+
+      // Timeout if no event received
+      setTimeout(() => {
+        if (!receivedEvent) {
+          ws.close();
+          done(new Error('Expected event not received'));
+        }
+      }, 2000);
+    });
 });
