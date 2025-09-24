@@ -176,7 +176,7 @@
 - Enables seamless integration with Istio service mesh for traffic management and security.
 ### Linkerd Service Profile Generation
 - Maxine can generate Linkerd Service Profile configurations for all registered services.
-- Use `/api/maxine/serviceops/linkerd/config` to get Linkerd Service Profile YAML/JSON.
+- Use `/service-mesh/linkerd-config` to get Linkerd Service Profile JSON.
 - Enables seamless integration with Linkerd service mesh for traffic management and security.
 ### OpenTelemetry Tracing
 - Maxine integrates OpenTelemetry for distributed tracing.
