@@ -677,3 +677,5 @@
 - Improved performance to 0.82ms avg, 1.5ms p95, 55k req/s
 - Updated README with new performance metrics
 - All tests pass
+- Added power-of-two-choices load balancing strategy for better load distribution
+- Performance further improved to 0.7ms avg, 1.3ms p95, 65k req/s
