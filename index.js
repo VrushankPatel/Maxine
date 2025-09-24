@@ -1,8 +1,10 @@
+console.log('Starting Maxine server...');
 require('./src/main/util/logging/log-generic-exceptions')();
 // Enable lightning mode for maximum performance
 process.env.LIGHTNING_MODE = 'true';
 
 const config = require('./src/main/config/config');
+console.log('Config loaded:', { ultraFastMode: config.ultraFastMode, lightningMode: config.lightningMode });
 const { trace, metrics } = require('@opentelemetry/api');
 
 // Initialize OpenTelemetry tracing and metrics only if not ultra-fast mode
@@ -434,7 +436,7 @@ if (config.ultraFastMode) {
 
     if (!config.isTestMode) {
         server.listen(constants.PORT, () => {
-            // Server started in ultra-fast mode
+            console.log(`Maxine server started in ultra-fast mode on port ${constants.PORT}`);
         });
     }
 
@@ -2660,7 +2662,7 @@ if (config.ultraFastMode) {
 
     if (!config.isTestMode || process.env.WEBSOCKET_ENABLED === 'true') {
         server.listen(constants.PORT, () => {
-            // Server started in lightning mode
+            console.log(`Maxine server started in lightning mode on port ${constants.PORT}`);
         });
     }
 
