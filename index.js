@@ -725,14 +725,32 @@ if (config.lightningMode) {
         };
 
         const clientFilters = new Map(); // ws -> filter object
+        const clientAuth = new Map(); // ws -> authenticated boolean
 
         wss.on('connection', (ws) => {
             console.log('WebSocket client connected for event streaming');
             clientFilters.set(ws, null); // no filter by default
+            clientAuth.set(ws, !config.authEnabled); // authenticated if auth not enabled
 
             ws.on('message', (message) => {
                 try {
                     const data = JSON.parse(message);
+                    if (data.auth) {
+                        if (config.authEnabled) {
+                            try {
+                                const decoded = jwt.verify(data.auth, config.jwtSecret);
+                                clientAuth.set(ws, true);
+                                ws.send(JSON.stringify({ type: 'authenticated' }));
+                            } catch (err) {
+                                ws.send(JSON.stringify({ type: 'auth_failed' }));
+                                ws.close();
+                            }
+                        }
+                    } else if (!clientAuth.get(ws)) {
+                        ws.send(JSON.stringify({ type: 'auth_required' }));
+                        ws.close();
+                        return;
+                    }
                     if (data.subscribe) {
                         clientFilters.set(ws, data.subscribe);
                         ws.send(JSON.stringify({ type: 'subscribed', filter: data.subscribe }));
@@ -748,6 +766,7 @@ if (config.lightningMode) {
             ws.on('close', () => {
                 console.log('WebSocket client disconnected');
                 clientFilters.delete(ws);
+                clientAuth.delete(ws);
             });
         });
 

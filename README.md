@@ -276,6 +276,18 @@ Maxine supports real-time event streaming via WebSocket for monitoring service c
 ws://localhost:8080
 ```
 
+##### Authentication
+
+If authentication is enabled, clients must authenticate by sending an auth message with JWT token:
+
+```json
+{
+  "auth": "jwt-token-here"
+}
+```
+
+Upon successful authentication, the server responds with `{"type": "authenticated"}`. If authentication fails, the connection is closed.
+
 ##### Subscription and Filtering
 
 Clients can subscribe to specific events by sending a JSON message:

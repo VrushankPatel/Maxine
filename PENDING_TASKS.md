@@ -29,7 +29,7 @@
        - [x] Support MQTT integration for event publishing
        - [x] Add event filtering by service name or event type
        - [x] Implement event persistence for missed events
-      - [ ] Add client authentication for WebSocket connections
+       - [x] Add client authentication for WebSocket connections
      - [x] Implement API Gateway Integration: Built-in reverse proxy capabilities
     - [ ] Implement Configuration Management: Dynamic configuration updates for services
     - [ ] Implement Audit Logging: Comprehensive logging of all registry operations
@@ -57,7 +57,7 @@
 
 
 
-  - [ ] Implement Client Authentication for WebSocket: Add JWT-based authentication for WebSocket connections, role-based access to events, and secure event streaming
+
   - [ ] Implement Configuration Management: Add dynamic configuration updates for services via API endpoints, support for service-specific configs, and integration with event streaming for config change notifications
   - [ ] Implement Audit Logging: Comprehensive logging of all registry operations using Winston, including user actions, system events, and security incidents; add log rotation and export capabilities
   - [ ] Implement Advanced Health Checks: Custom health check scripts for services, proactive monitoring with configurable intervals, and health status integration with load balancing decisions
