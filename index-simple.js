@@ -138,6 +138,6 @@ app.get('/health', (req, res) => {
 });
 
 const PORT = process.env.PORT || 8080;
-app.listen(PORT, () => {
-  console.log(`Maxine Service Registry listening on port ${PORT}`);
+app.listen(PORT, '::', () => {
+  console.log(`Maxine Service Registry listening on port ${PORT} (IPv6)`);
 });

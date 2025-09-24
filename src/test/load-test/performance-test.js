@@ -3,7 +3,7 @@ import { check } from 'k6';
 import { textSummary } from 'https://jslib.k6.io/k6-summary/0.0.1/index.js';
 import { htmlReport } from "https://raw.githubusercontent.com/benc-uk/k6-reporter/main/dist/bundle.js";
 
-const host = "http://127.0.0.1:8080";
+const host = "http://[::1]:8080";
 const apiUrl = host;
 const registerUrl = '/register';
 const heartbeatUrl = '/heartbeat';

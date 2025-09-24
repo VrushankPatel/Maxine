@@ -88,7 +88,7 @@ class LightningServiceRegistrySimple extends EventEmitter {
 
         // Rate limiting
         this.rateLimits = new Map(); // For in-memory fallback
-        this.rateLimitEnabled = config.rateLimitEnabled;
+        this.rateLimitEnabled = config.rateLimitEnabled && !config.ultraFastMode;
 
         this.checkRateLimit = (key, maxRequests = 1000, windowMs = 15 * 60 * 1000) => {
             if (!this.rateLimitEnabled) {
@@ -208,6 +208,10 @@ class LightningServiceRegistrySimple extends EventEmitter {
         this.responseTimeHistory = new Map(); // nodeName -> [{timestamp, responseTime}, ...] (last 100 entries)
         this.timeWindow = 300000; // 5 minutes for historical data
 
+        // Object pooling for response time history entries to reduce GC pressure
+        this.responseTimeEntryPool = [];
+        this.poolMaxSize = 10000;
+
         // Health scores for nodes (0-100, higher better)
         this.healthScores = new Map(); // nodeName -> score
 
@@ -306,14 +310,8 @@ class LightningServiceRegistrySimple extends EventEmitter {
     }
 
     register(serviceName, nodeInfo) {
-        const tracer = trace.getTracer('maxine-registry-simple', '1.0.0');
         const startTime = Date.now();
-        return tracer.startActiveSpan('register', (span) => {
-            span.setAttribute('service.name', serviceName);
-            span.setAttribute('node.host', nodeInfo.host);
-            span.setAttribute('node.port', nodeInfo.port);
-
-            try {
+        try {
                 if (this.isBlacklisted(serviceName)) {
                     throw new Error(`Service ${serviceName} is blacklisted`);
                 }
@@ -331,7 +329,6 @@ class LightningServiceRegistrySimple extends EventEmitter {
                 if (service.nodes.has(nodeName)) {
                     // Already registered, just update heartbeat
                     this.lastHeartbeats.set(nodeName, Date.now());
-                    span.end();
                     return nodeName;
                 }
         service.nodes.set(nodeName, node);
@@ -354,25 +351,20 @@ class LightningServiceRegistrySimple extends EventEmitter {
                 this.invalidateDiscoveryCache(fullServiceName);
                 if (global.broadcast) global.broadcast('service_registered', { serviceName: fullServiceName, nodeId: nodeName });
                 // Replicate to federation peers
-                this.replicateRegistration(fullServiceName, node);
+                // this.replicateRegistration(fullServiceName, node);
 
                 // Update Prometheus metrics
-                if (global.promMetrics) {
-                    global.promMetrics.serviceRegistrations.inc();
-                    global.promMetrics.activeServices.set(this.servicesCount);
-                    global.promMetrics.activeNodes.set(this.nodesCount);
-                    global.promMetrics.responseTimeHistogram.observe('register', (Date.now() - startTime) / 1000);
-                }
+                // if (global.promMetrics) {
+                //     global.promMetrics.serviceRegistrations.inc();
+                //     global.promMetrics.activeServices.set(this.servicesCount);
+                //     global.promMetrics.activeNodes.set(this.nodesCount);
+                //     global.promMetrics.responseTimeHistogram.observe('register', (Date.now() - startTime) / 1000);
+                // }
 
-                span.end();
                 return nodeName;
             } catch (error) {
-                span.recordException(error);
-                span.setStatus({ code: 2, message: error.message });
-                span.end();
                 throw error;
             }
-        });
     }
 
     deregister(nodeId) {
@@ -1629,6 +1621,46 @@ class LightningServiceRegistrySimple extends EventEmitter {
             }
         }
 
+        // Record response time for predictive load balancing
+        recordResponseTime(nodeId, responseTime) {
+            if (!this.responseTimes.has(nodeId)) {
+                this.responseTimes.set(nodeId, { count: 0, sum: 0, average: 0 });
+            }
+            const rt = this.responseTimes.get(nodeId);
+            rt.count++;
+            rt.sum += responseTime;
+            rt.average = rt.sum / rt.count;
+
+            // Store historical data for predictive analytics
+            if (!this.responseTimeHistory.has(nodeId)) {
+                this.responseTimeHistory.set(nodeId, []);
+            }
+            const history = this.responseTimeHistory.get(nodeId);
+            // Use pooled entry to reduce object allocation
+            let entry = this.responseTimeEntryPool.pop();
+            if (!entry) entry = {};
+            entry.timestamp = Date.now();
+            entry.responseTime = responseTime;
+            history.push(entry);
+
+            // Keep only last 100 entries to prevent memory bloat
+            if (history.length > 100) {
+                const removed = history.shift();
+                if (this.responseTimeEntryPool.length < this.poolMaxSize) {
+                    this.responseTimeEntryPool.push(removed);
+                }
+            }
+
+            // Update health score after recording response time
+            this.updateHealthScore(nodeId);
+
+            // Update Q-value for AI-driven load balancing
+            const serviceName = this.nodeToService.get(nodeId);
+            if (serviceName) {
+                this.updateQValue(serviceName, nodeId, responseTime, true);
+            }
+        }
+
         // Select node with highest health score
         selectHealthScore(nodes) {
             let bestNode = null;
@@ -1895,6 +1927,46 @@ class LightningServiceRegistrySimple extends EventEmitter {
             anomalies.sort((a, b) => severityOrder[a.severity] - severityOrder[b.severity]);
 
             return anomalies;
+        }
+
+        // Record response time for predictive load balancing
+        recordResponseTime(nodeId, responseTime) {
+            if (!this.responseTimes.has(nodeId)) {
+                this.responseTimes.set(nodeId, { count: 0, sum: 0, average: 0 });
+            }
+            const rt = this.responseTimes.get(nodeId);
+            rt.count++;
+            rt.sum += responseTime;
+            rt.average = rt.sum / rt.count;
+
+            // Store historical data for predictive analytics
+            if (!this.responseTimeHistory.has(nodeId)) {
+                this.responseTimeHistory.set(nodeId, []);
+            }
+            const history = this.responseTimeHistory.get(nodeId);
+            // Use pooled entry to reduce object allocation
+            let entry = this.responseTimeEntryPool.pop();
+            if (!entry) entry = {};
+            entry.timestamp = Date.now();
+            entry.responseTime = responseTime;
+            history.push(entry);
+
+            // Keep only last 100 entries to prevent memory bloat
+            if (history.length > 100) {
+                const removed = history.shift();
+                if (this.responseTimeEntryPool.length < this.poolMaxSize) {
+                    this.responseTimeEntryPool.push(removed);
+                }
+            }
+
+            // Update health score after recording response time
+            this.updateHealthScore(nodeId);
+
+            // Update Q-value for AI-driven load balancing
+            const serviceName = this.nodeToService.get(nodeId);
+            if (serviceName) {
+                this.updateQValue(serviceName, nodeId, responseTime, true);
+            }
         }
 
         // Record a service call for dependency auto-detection
