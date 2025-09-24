@@ -41,6 +41,7 @@
 - [x] Add predictive load balancing with trend analysis: Enhanced predictive strategy with slope calculation of response time trends for better node selection.
 - [x] Implement Object Pooling: Added object pooling for response objects (register, discover, success, health, metrics) to reduce GC pressure and improve performance under high load.
 - [x] Implement Service Health Prediction: Added /predict-health endpoint using time-series analysis for proactive monitoring and failure prediction.
+- [x] Implement Advanced Distributed Caching: Added Redis-based distributed caching layer for service discovery results across multiple Maxine instances to reduce latency and improve scalability. Enable with REDIS_CACHE_ENABLED=true.
 
 ## Next Steps
 
@@ -64,10 +65,13 @@
   - [x] OAuth2 integration with Google for external authentication
   - [x] Mutual TLS (mTLS) for encrypted service-to-service communication to ensure secure inter-service traffic
   - [x] Certificate management and rotation system for automated certificate lifecycle (basic self-signed cert generation provided)
-  - Role-Based Access Control (RBAC) with fine-grained permissions for different user roles
-  - API key management and rate limiting per key to control access and prevent abuse
-  - Audit logging for all security events with compliance-ready logs
-  - Integration with external security systems like LDAP or SAML for enterprise environments
+  - [x] Role-Based Access Control (RBAC) with fine-grained permissions for different user roles
+  - [x] API key management and rate limiting per key to control access and prevent abuse
+  - [x] Audit logging for all security events with compliance-ready logs
+  - [x] Integration with external security systems like LDAP or SAML for enterprise environments
+- Implement OpenTelemetry Metrics: Add comprehensive metrics collection with OpenTelemetry for better observability, including custom metrics for service discovery performance, cache hit rates, and load balancing efficiency.
+- Implement Advanced Rate Limiting: Add per-service and per-client rate limiting with Redis-backed counters for distributed enforcement across multiple instances.
+- Implement Service Auto-Scaling Recommendations: Use machine learning algorithms to analyze service metrics and provide intelligent scaling recommendations for optimal resource utilization.
 
 ### Medium Priority
 - Implement Observability Enhancements: Full monitoring and observability stack for production monitoring
