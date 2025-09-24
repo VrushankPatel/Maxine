@@ -42,11 +42,11 @@ A minimal, high-performance service discovery and registry for microservices.
 
 Maxine delivers exceptional performance for service discovery operations:
 
-- **Ultra-Fast Mode**: Average 0.97ms, P95 2.04ms for discovery requests
-- **Throughput**: 47,506+ requests per second under load (50 concurrent users, 5000 iterations)
-- **Lightning Mode**: Average 0.97ms, P95 2.04ms for discovery requests
-- **Throughput**: 47,506+ requests per second under load (50 concurrent users, 5000 iterations)
-- **Optimizations**: Disabled OpenTelemetry tracing and Prometheus metrics in Lightning Mode, ultra-fast mode with minimal features for maximum speed, fast LCG PRNG, pre-allocated buffers, object pooling, adaptive caching
+- **Ultra-Fast Mode**: Average 0.95ms, P95 1.72ms for discovery requests
+- **Throughput**: 48,113+ requests per second under load (50 concurrent users, 5000 iterations)
+- **Lightning Mode**: Average 0.95ms, P95 1.72ms for discovery requests
+- **Throughput**: 48,113+ requests per second under load (50 concurrent users, 5000 iterations)
+- **Optimizations**: Disabled OpenTelemetry tracing and Prometheus metrics in Lightning Mode, ultra-fast mode with minimal features for maximum speed, fast LCG PRNG, pre-allocated buffers, object pooling, adaptive caching, binary search for weighted random selection, removed console.log from production code
 
 ## Quick Start
 
