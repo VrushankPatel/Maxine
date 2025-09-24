@@ -407,6 +407,16 @@ Response:
       "serviceName": "my-service",
       "type": "high_circuit_failures",
       "value": 15
+    },
+    {
+      "serviceName": "bad-service",
+      "type": "no_healthy_nodes",
+      "value": 0
+    },
+    {
+      "serviceName": "empty-service",
+      "type": "no_nodes",
+      "value": 0
     }
   ]
 }
