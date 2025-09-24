@@ -35,6 +35,8 @@ const { requireRole, requirePermission } = require('../controller/security/autho
 const { PERMISSIONS } = require('../security/rbac');
 const { getRolesController, getUserRolesController, setUserRoleController } = require('../controller/security/role-controller');
 const { generateApiKey, revokeApiKey, listApiKeys, validateApiKey } = require('../controller/security/api-key-controller');
+const { googleAuth, googleCallback } = require('../controller/security/oauth-controller');
+const { injectLatency, injectFailure, resetChaos, getChaosStatus } = require('../controller/maxine/chaos-controller');
 
 const config = require('../config/config');
 const isHighPerformanceMode = config.highPerformanceMode;
@@ -247,6 +249,16 @@ maxineApiRoutes = maxineApiRoutes
                                .get("health", (req, res) => res.status(200).json({ status: 'UP' }))
                               .get("info", (req, res) => res.status(200).json({ app: { name: 'Maxine', version: '1.0.0' } }))
                               .get("metrics", (req, res) => res.status(200).json({ memory: process.memoryUsage(), uptime: process.uptime() }))
+                          .stepToRoot()
+                           .from("auth")
+                               .get("google", googleAuth)
+                               .get("google/callback", googleCallback)
+                          .stepToRoot()
+                           .from("chaos")
+                               .post("inject-latency", bodyParser.json(), injectLatency)
+                               .post("inject-failure", bodyParser.json(), injectFailure)
+                               .post("reset", bodyParser.json(), resetChaos)
+                               .get("status", getChaosStatus)
                           .stepToRoot()
                            // .use('/api-spec', swaggerUi.serve, swaggerUi.setup('./api-specs/swagger.yaml'))
                           .getRoute();

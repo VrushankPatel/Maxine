@@ -5,18 +5,16 @@ import { htmlReport } from "https://raw.githubusercontent.com/benc-uk/k6-reporte
 
 const host = "http://127.0.0.1:8080";
 const apiUrl = host;
-const registerUrl = '/api/maxine/serviceops/register';
-const heartbeatUrl = '/api/maxine/serviceops/heartbeat';
-const discoverUrl = '/api/maxine/serviceops/discover?serviceName=dbservice&version=1.0';
+const registerUrl = '/register';
+const heartbeatUrl = '/heartbeat';
+const discoverUrl = '/discover?serviceName=dbservice&version=1.0';
 const statusCheck = {"is status 200": response => response.status === 200};
 
 const headers = {headers: {'Content-Type': 'application/json'}};
 
 const serviceObj = JSON.stringify({
     "serviceName": "dbservice",
-    "version": "1.0",
-    "hostName": "localhost",
-    "nodeName": "node1",
+    "host": "localhost",
     "port": 3000,
     "metadata": {"version": "1.0"}
 });
@@ -29,7 +27,7 @@ export function setup() {
         return { headers };
     }
     let registerData = JSON.parse(registerResponse.body);
-    let nodeId = registerData.nodeId;
+    let nodeId = registerData.nodeId || "dbservice:localhost:3000"; // fallback
     let heartbeatResponse = http.post(`${apiUrl}${heartbeatUrl}`, JSON.stringify({ nodeId }), headers);
     if (heartbeatResponse.status !== 200) {
         console.log('Heartbeat failed:', heartbeatResponse.status, heartbeatResponse.body);
