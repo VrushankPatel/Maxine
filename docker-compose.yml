@@ -1,13 +1,41 @@
 version: '3.8'
 
 services:
-  maxine:
+  maxine1:
     build: .
     ports:
       - "8080:8080"
     environment:
       - HIGH_PERFORMANCE_MODE=true
       - CLUSTERING_ENABLED=true
+      - FEDERATION_ENABLED=true
+      - FEDERATION_PEERS=http://maxine2:8080,http://maxine3:8080
     volumes:
       - ./logs:/app/logs
-      - ./registry.json:/app/registry.json
+      - ./registry1.json:/app/registry.json
+
+  maxine2:
+    build: .
+    ports:
+      - "8081:8080"
+    environment:
+      - HIGH_PERFORMANCE_MODE=true
+      - CLUSTERING_ENABLED=true
+      - FEDERATION_ENABLED=true
+      - FEDERATION_PEERS=http://maxine1:8080,http://maxine3:8080
+    volumes:
+      - ./logs:/app/logs
+      - ./registry2.json:/app/registry.json
+
+  maxine3:
+    build: .
+    ports:
+      - "8082:8080"
+    environment:
+      - HIGH_PERFORMANCE_MODE=true
+      - CLUSTERING_ENABLED=true
+      - FEDERATION_ENABLED=true
+      - FEDERATION_PEERS=http://maxine1:8080,http://maxine2:8080
+    volumes:
+      - ./logs:/app/logs
+      - ./registry3.json:/app/registry.json

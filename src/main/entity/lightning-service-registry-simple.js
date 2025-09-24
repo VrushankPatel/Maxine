@@ -1287,7 +1287,14 @@ class LightningServiceRegistrySimple extends EventEmitter {
 
     // Enhanced discover with canary support and federation
     async discover(serviceName, options = {}) {
-        const { version, loadBalancing = 'round-robin', tags = [], ip, proxy } = options;
+        const tracer = trace.getTracer('maxine-registry-simple', '1.0.0');
+        const startTime = Date.now();
+        return tracer.startActiveSpan('discover', async (span) => {
+            const { version, loadBalancing = 'round-robin', tags = [], ip, proxy } = options;
+            span.setAttribute('service.name', serviceName);
+            span.setAttribute('load_balancing.strategy', loadBalancing);
+            span.setAttribute('service.version', version || 'default');
+            span.setAttribute('client.ip', ip || 'unknown');
         let fullServiceName = serviceName;
         if (version) {
             if (version === 'latest') {
@@ -1313,25 +1320,37 @@ class LightningServiceRegistrySimple extends EventEmitter {
                 }
             }
         }
-        let node = await this.getRandomNode(fullServiceName, loadBalancing, ip, tags);
-        if (node) return node;
+            let node = await this.getRandomNode(fullServiceName, loadBalancing, ip, tags);
+            if (node) {
+                span.setAttribute('node.selected', node.nodeName);
+                span.setAttribute('discovery.result', 'local');
+                span.end();
+                return node;
+            }
 
-        // If not found locally and federation enabled, try peers
-        if (config.federationEnabled && config.federationPeers.length > 0) {
-            for (const peer of config.federationPeers) {
-                try {
-                    const url = `${peer}/discover?serviceName=${encodeURIComponent(fullServiceName)}&loadBalancing=${loadBalancing}&tags=${tags.join(',')}${version ? `&version=${version}` : ''}`;
-                    const response = await axios.get(url, { timeout: config.federationTimeout });
-                    if (response.data && response.data.address) {
-                        // Cache locally? For simplicity, just return
-                        return { address: response.data.address, nodeName: response.data.nodeName, healthy: true };
+            // If not found locally and federation enabled, try peers
+            if (config.federationEnabled && config.federationPeers.length > 0) {
+                for (const peer of config.federationPeers) {
+                    try {
+                        const url = `${peer}/discover?serviceName=${encodeURIComponent(fullServiceName)}&loadBalancing=${loadBalancing}&tags=${tags.join(',')}${version ? `&version=${version}` : ''}`;
+                        const response = await axios.get(url, { timeout: config.federationTimeout });
+                        if (response.data && response.data.address) {
+                            // Cache locally? For simplicity, just return
+                            span.setAttribute('node.selected', response.data.nodeName);
+                            span.setAttribute('discovery.result', 'federated');
+                            span.setAttribute('federation.peer', peer);
+                            span.end();
+                            return { address: response.data.address, nodeName: response.data.nodeName, healthy: true };
+                        }
+                    } catch (err) {
+                        // Ignore errors, try next peer
                     }
-                } catch (err) {
-                    // Ignore errors, try next peer
                 }
             }
-        }
-        return null;
+            span.setAttribute('discovery.result', 'not_found');
+            span.end();
+            return null;
+        });
     }
 
     // Version management
@@ -1760,21 +1779,92 @@ class LightningServiceRegistrySimple extends EventEmitter {
             return predictions;
         }
 
-        // Anomaly detection
+        // Enhanced anomaly detection with statistical analysis
         getAnomalies() {
             const anomalies = [];
+            const now = Date.now();
+
             for (const [serviceName, service] of this.services) {
+                // Basic health checks
                 const failureCount = Array.from(this.circuitFailures.values()).reduce((sum, count) => sum + count, 0);
-                if (failureCount > 10) { // threshold
-                    anomalies.push({ serviceName, type: 'high_circuit_failures', value: failureCount });
+                if (failureCount > 10) {
+                    anomalies.push({ serviceName, type: 'high_circuit_failures', value: failureCount, severity: 'high' });
                 }
                 if (service.healthyNodesArray.length === 0 && service.nodes.size > 0) {
-                    anomalies.push({ serviceName, type: 'no_healthy_nodes' });
+                    anomalies.push({ serviceName, type: 'no_healthy_nodes', severity: 'critical' });
                 }
                 if (service.nodes.size === 0) {
-                    anomalies.push({ serviceName, type: 'no_nodes' });
+                    anomalies.push({ serviceName, type: 'no_nodes', severity: 'critical' });
+                }
+
+                // Statistical anomaly detection
+                if (service.responseTimes && service.responseTimes.length > 5) {
+                    const mean = service.responseTimes.reduce((a, b) => a + b, 0) / service.responseTimes.length;
+                    const variance = service.responseTimes.reduce((a, b) => a + Math.pow(b - mean, 2), 0) / service.responseTimes.length;
+                    const stdDev = Math.sqrt(variance);
+
+                    // Check for response time anomalies (3 sigma rule)
+                    const recentResponseTime = service.responseTimes[service.responseTimes.length - 1];
+                    if (recentResponseTime > mean + 3 * stdDev) {
+                        anomalies.push({
+                            serviceName,
+                            type: 'high_response_time',
+                            value: recentResponseTime,
+                            threshold: mean + 3 * stdDev,
+                            severity: 'medium'
+                        });
+                    }
+
+                    // Check for response time trend (increasing)
+                    if (service.responseTimes.length >= 10) {
+                        const recent = service.responseTimes.slice(-5);
+                        const earlier = service.responseTimes.slice(-10, -5);
+                        const recentAvg = recent.reduce((a, b) => a + b, 0) / recent.length;
+                        const earlierAvg = earlier.reduce((a, b) => a + b, 0) / earlier.length;
+                        const trend = (recentAvg - earlierAvg) / earlierAvg;
+
+                        if (trend > 0.5) { // 50% increase
+                            anomalies.push({
+                                serviceName,
+                                type: 'response_time_trend',
+                                value: trend,
+                                severity: 'medium'
+                            });
+                        }
+                    }
+                }
+
+                // Check for stale heartbeats
+                for (const [nodeId, node] of service.nodes) {
+                    if (now - node.lastHeartbeat > this.heartbeatTimeout * 2) {
+                        anomalies.push({
+                            serviceName,
+                            nodeId,
+                            type: 'stale_heartbeat',
+                            lastSeen: node.lastHeartbeat,
+                            severity: 'high'
+                        });
+                    }
+                }
+
+                // Check for high error rates
+                if (service.requestCount && service.requestCount > 100) {
+                    const errorRate = service.errorCount / service.requestCount;
+                    if (errorRate > 0.1) { // 10% error rate
+                        anomalies.push({
+                            serviceName,
+                            type: 'high_error_rate',
+                            value: errorRate,
+                            severity: 'high'
+                        });
+                    }
                 }
             }
+
+            // Sort by severity
+            const severityOrder = { critical: 0, high: 1, medium: 2, low: 3 };
+            anomalies.sort((a, b) => severityOrder[a.severity] - severityOrder[b.severity]);
+
             return anomalies;
         }
 

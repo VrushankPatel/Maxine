@@ -37,6 +37,15 @@ class FederationController {
             res.status(500).json({ error: error.message });
         }
     }
+
+    async getFailoverStatus(req, res) {
+        try {
+            const status = federationService.getFailoverStatus();
+            res.json(status);
+        } catch (error) {
+            res.status(500).json({ error: error.message });
+        }
+    }
 }
 
 module.exports = new FederationController();
