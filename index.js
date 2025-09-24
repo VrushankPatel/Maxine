@@ -33,6 +33,9 @@ if (config.lightningMode) {
     const mqtt = require('mqtt');
 
     const stringify = require('fast-json-stringify');
+    const winston = require('winston');
+    const { logConfiguration } = require('./src/main/config/logging/logging-config');
+    winston.configure(logConfiguration);
 
     // Precompiled stringify functions for performance
     const registerResponseSchema = {
@@ -154,43 +157,54 @@ if (config.lightningMode) {
     // Handler functions - only core features for lightning speed
     const handleRegister = (req, res, query, body) => {
         const { serviceName, host, port, metadata } = body;
+        const clientIP = req.connection.remoteAddress || req.socket.remoteAddress || 'unknown';
         if (!serviceName || !host || !port) {
+            winston.warn(`AUDIT: Invalid registration attempt - missing fields, clientIP: ${clientIP}`);
             res.writeHead(400, { 'Content-Type': 'application/json' });
             res.end(errorMissingServiceName);
             return;
         }
         const nodeId = serviceRegistry.register(serviceName, { host, port, metadata });
+        winston.info(`AUDIT: Service registered - serviceName: ${serviceName}, host: ${host}, port: ${port}, nodeId: ${nodeId}, clientIP: ${clientIP}`);
         res.writeHead(200, { 'Content-Type': 'application/json' });
         res.end(stringifyRegister({ nodeId, status: 'registered' }));
     };
 
     const handleHeartbeat = (req, res, query, body) => {
         const { nodeId } = body;
+        const clientIP = req.connection.remoteAddress || req.socket.remoteAddress || 'unknown';
         if (!nodeId) {
+            winston.warn(`AUDIT: Invalid heartbeat attempt - missing nodeId, clientIP: ${clientIP}`);
             res.writeHead(400, { 'Content-Type': 'application/json' });
             res.end(errorMissingNodeId);
             return;
         }
         const success = serviceRegistry.heartbeat(nodeId);
+        winston.info(`AUDIT: Heartbeat received - nodeId: ${nodeId}, success: ${success}, clientIP: ${clientIP}`);
         res.writeHead(200, { 'Content-Type': 'application/json' });
         res.end(stringifySuccess({ success }));
     };
 
     const handleDeregister = (req, res, query, body) => {
         const { nodeId } = body;
+        const clientIP = req.connection.remoteAddress || req.socket.remoteAddress || 'unknown';
         if (!nodeId) {
+            winston.warn(`AUDIT: Invalid deregister attempt - missing nodeId, clientIP: ${clientIP}`);
             res.writeHead(400, { 'Content-Type': 'application/json' });
             res.end(errorMissingNodeId);
             return;
         }
         serviceRegistry.deregister(nodeId);
+        winston.info(`AUDIT: Service deregistered - nodeId: ${nodeId}, clientIP: ${clientIP}`);
         res.writeHead(200, { 'Content-Type': 'application/json' });
         res.end(successTrue);
     };
 
     const handleDiscover = (req, res, query, body) => {
         const serviceName = query.serviceName;
+        const clientIP = req.connection.remoteAddress;
         if (!serviceName) {
+            winston.warn(`AUDIT: Invalid discover attempt - missing serviceName, clientIP: ${clientIP}`);
             res.writeHead(400, { 'Content-Type': 'application/json' });
             res.end(errorMissingServiceName);
             return;
@@ -198,36 +212,43 @@ if (config.lightningMode) {
         const version = query.version;
         const fullServiceName = version ? `${serviceName}:${version}` : serviceName;
         const strategy = query.loadBalancing || 'round-robin';
-        const clientIP = req.connection.remoteAddress;
         const node = serviceRegistry.getRandomNode(fullServiceName, strategy, clientIP);
         if (!node) {
+            winston.info(`AUDIT: Service discovery failed - serviceName: ${fullServiceName}, strategy: ${strategy}, clientIP: ${clientIP}`);
             res.writeHead(404, { 'Content-Type': 'application/json' });
             res.end(serviceUnavailable);
             return;
         }
+        winston.info(`AUDIT: Service discovered - serviceName: ${fullServiceName}, strategy: ${strategy}, node: ${node.nodeName}, clientIP: ${clientIP}`);
         res.writeHead(200, { 'Content-Type': 'application/json' });
         res.end(stringifyDiscover({ address: node.address, nodeName: node.nodeName, healthy: true }));
     };
 
     const handleServers = (req, res, query, body) => {
+        const clientIP = req.connection.remoteAddress || req.socket.remoteAddress || 'unknown';
         const services = serviceRegistry.getServices();
+        winston.info(`AUDIT: Services list requested - count: ${services.length}, clientIP: ${clientIP}`);
         res.writeHead(200, { 'Content-Type': 'application/json' });
         res.end(stringifyServers({ services }));
     };
 
     const handleHealth = (req, res, query, body) => {
+        const clientIP = req.connection.remoteAddress || req.socket.remoteAddress || 'unknown';
         const services = serviceRegistry.servicesCount;
         const nodes = serviceRegistry.nodesCount;
+        winston.info(`AUDIT: Health check requested - services: ${services}, nodes: ${nodes}, clientIP: ${clientIP}`);
         res.writeHead(200, { 'Content-Type': 'application/json' });
         res.end(stringifyHealth({ status: 'ok', services, nodes }));
     };
 
     const handleMetrics = (req, res, query, body) => {
+        const clientIP = req.connection.remoteAddress || req.socket.remoteAddress || 'unknown';
         const uptime = process.uptime();
         const services = serviceRegistry.servicesCount;
         const nodes = serviceRegistry.nodesCount;
         const persistenceEnabled = config.persistenceEnabled;
         const persistenceType = config.persistenceType;
+        winston.info(`AUDIT: Metrics requested - clientIP: ${clientIP}`);
         res.writeHead(200, { 'Content-Type': 'application/json' });
         res.end(stringifyMetrics({ uptime, requests: requestCount, errors: errorCount, services, nodes, persistenceEnabled, persistenceType }));
     };
@@ -241,16 +262,20 @@ if (config.lightningMode) {
     routes.set('GET /metrics', handleMetrics);
     routes.set('POST /signin', (req, res, query, body) => {
         const { username, password } = body;
+        const clientIP = req.connection.remoteAddress || req.socket.remoteAddress || 'unknown';
         if (!username || !password) {
+            winston.warn(`AUDIT: Signin failed - missing credentials, clientIP: ${clientIP}`);
             res.writeHead(400, { 'Content-Type': 'application/json' });
             res.end('{"error": "Missing username or password"}');
             return;
         }
         if (username === config.adminUsername && bcrypt.compareSync(password, config.adminPasswordHash)) {
             const token = jwt.sign({ username, role: 'admin' }, config.jwtSecret, { expiresIn: config.jwtExpiresIn });
+            winston.info(`AUDIT: Signin successful - username: ${username}, clientIP: ${clientIP}`);
             res.writeHead(200, { 'Content-Type': 'application/json' });
             res.end(JSON.stringify({ token }));
         } else {
+            winston.warn(`AUDIT: Signin failed - invalid credentials, username: ${username}, clientIP: ${clientIP}`);
             res.writeHead(401, { 'Content-Type': 'application/json' });
             res.end(errorUnauthorized);
         }
@@ -258,9 +283,11 @@ if (config.lightningMode) {
 
     // Persistence endpoints
     routes.set('GET /backup', (req, res, query, body) => {
+        const clientIP = req.connection.remoteAddress || req.socket.remoteAddress || 'unknown';
         if (config.authEnabled) {
             const authHeader = req.headers.authorization;
             if (!authHeader || !authHeader.startsWith('Bearer ')) {
+                winston.warn(`AUDIT: Unauthorized backup attempt - clientIP: ${clientIP}`);
                 res.writeHead(401, { 'Content-Type': 'application/json' });
                 res.end(errorUnauthorized);
                 return;
@@ -269,30 +296,36 @@ if (config.lightningMode) {
             try {
                 jwt.verify(token, config.jwtSecret);
             } catch (err) {
+                winston.warn(`AUDIT: Invalid token for backup - clientIP: ${clientIP}`);
                 res.writeHead(401, { 'Content-Type': 'application/json' });
                 res.end(errorUnauthorized);
                 return;
             }
         }
         if (!config.persistenceEnabled) {
+            winston.warn(`AUDIT: Backup attempted but persistence not enabled - clientIP: ${clientIP}`);
             res.writeHead(400, { 'Content-Type': 'application/json' });
             res.end('{"error": "Persistence not enabled"}');
             return;
         }
         try {
             const data = serviceRegistry.getRegistryData();
+            winston.info(`AUDIT: Registry backup performed - clientIP: ${clientIP}`);
             res.writeHead(200, { 'Content-Type': 'application/json' });
             res.end(JSON.stringify(data));
         } catch (err) {
+            winston.error(`AUDIT: Backup failed - error: ${err.message}, clientIP: ${clientIP}`);
             res.writeHead(500, { 'Content-Type': 'application/json' });
             res.end('{"error": "Backup failed"}');
         }
     });
 
     routes.set('POST /restore', (req, res, query, body) => {
+        const clientIP = req.connection.remoteAddress || req.socket.remoteAddress || 'unknown';
         if (config.authEnabled) {
             const authHeader = req.headers.authorization;
             if (!authHeader || !authHeader.startsWith('Bearer ')) {
+                winston.warn(`AUDIT: Unauthorized restore attempt - clientIP: ${clientIP}`);
                 res.writeHead(401, { 'Content-Type': 'application/json' });
                 res.end(errorUnauthorized);
                 return;
@@ -301,21 +334,25 @@ if (config.lightningMode) {
             try {
                 jwt.verify(token, config.jwtSecret);
             } catch (err) {
+                winston.warn(`AUDIT: Invalid token for restore - clientIP: ${clientIP}`);
                 res.writeHead(401, { 'Content-Type': 'application/json' });
                 res.end(errorUnauthorized);
                 return;
             }
         }
         if (!config.persistenceEnabled) {
+            winston.warn(`AUDIT: Restore attempted but persistence not enabled - clientIP: ${clientIP}`);
             res.writeHead(400, { 'Content-Type': 'application/json' });
             res.end('{"error": "Persistence not enabled"}');
             return;
         }
         try {
             serviceRegistry.setRegistryData(body);
+            winston.info(`AUDIT: Registry restore performed - clientIP: ${clientIP}`);
             res.writeHead(200, { 'Content-Type': 'application/json' });
             res.end('{"success": true}');
         } catch (err) {
+            winston.error(`AUDIT: Restore failed - error: ${err.message}, clientIP: ${clientIP}`);
             res.writeHead(500, { 'Content-Type': 'application/json' });
             res.end('{"error": "Restore failed"}');
         }
@@ -323,9 +360,11 @@ if (config.lightningMode) {
 
     // Basic tracing endpoints
     routes.set('POST /trace/start', (req, res, query, body) => {
+        const clientIP = req.connection.remoteAddress || req.socket.remoteAddress || 'unknown';
         if (config.authEnabled) {
             const authHeader = req.headers.authorization;
             if (!authHeader || !authHeader.startsWith('Bearer ')) {
+                winston.warn(`AUDIT: Unauthorized trace start attempt - clientIP: ${clientIP}`);
                 res.writeHead(401, { 'Content-Type': 'application/json' });
                 res.end(errorUnauthorized);
                 return;
@@ -334,6 +373,7 @@ if (config.lightningMode) {
             try {
                 jwt.verify(token, config.jwtSecret);
             } catch (err) {
+                winston.warn(`AUDIT: Invalid token for trace start - clientIP: ${clientIP}`);
                 res.writeHead(401, { 'Content-Type': 'application/json' });
                 res.end(errorUnauthorized);
                 return;
@@ -341,19 +381,23 @@ if (config.lightningMode) {
         }
         const { operation, id } = body;
         if (!id || !operation) {
+            winston.warn(`AUDIT: Invalid trace start - missing id or operation, clientIP: ${clientIP}`);
             res.writeHead(400, { 'Content-Type': 'application/json' });
             res.end('{"error": "Missing id or operation"}');
             return;
         }
         serviceRegistry.startTrace(id, operation);
+        winston.info(`AUDIT: Trace started - id: ${id}, operation: ${operation}, clientIP: ${clientIP}`);
         res.writeHead(200, { 'Content-Type': 'application/json' });
         res.end('{"success": true}');
     });
 
     routes.set('POST /trace/event', (req, res, query, body) => {
+        const clientIP = req.connection.remoteAddress || req.socket.remoteAddress || 'unknown';
         if (config.authEnabled) {
             const authHeader = req.headers.authorization;
             if (!authHeader || !authHeader.startsWith('Bearer ')) {
+                winston.warn(`AUDIT: Unauthorized trace event attempt - clientIP: ${clientIP}`);
                 res.writeHead(401, { 'Content-Type': 'application/json' });
                 res.end(errorUnauthorized);
                 return;
@@ -362,6 +406,7 @@ if (config.lightningMode) {
             try {
                 jwt.verify(token, config.jwtSecret);
             } catch (err) {
+                winston.warn(`AUDIT: Invalid token for trace event - clientIP: ${clientIP}`);
                 res.writeHead(401, { 'Content-Type': 'application/json' });
                 res.end(errorUnauthorized);
                 return;
@@ -369,19 +414,23 @@ if (config.lightningMode) {
         }
         const { id, event } = body;
         if (!id || !event) {
+            winston.warn(`AUDIT: Invalid trace event - missing id or event, clientIP: ${clientIP}`);
             res.writeHead(400, { 'Content-Type': 'application/json' });
             res.end('{"error": "Missing id or event"}');
             return;
         }
         serviceRegistry.addTraceEvent(id, event);
+        winston.info(`AUDIT: Trace event added - id: ${id}, event: ${event}, clientIP: ${clientIP}`);
         res.writeHead(200, { 'Content-Type': 'application/json' });
         res.end('{"success": true}');
     });
 
     routes.set('POST /trace/end', (req, res, query, body) => {
+        const clientIP = req.connection.remoteAddress || req.socket.remoteAddress || 'unknown';
         if (config.authEnabled) {
             const authHeader = req.headers.authorization;
             if (!authHeader || !authHeader.startsWith('Bearer ')) {
+                winston.warn(`AUDIT: Unauthorized trace end attempt - clientIP: ${clientIP}`);
                 res.writeHead(401, { 'Content-Type': 'application/json' });
                 res.end(errorUnauthorized);
                 return;
@@ -390,6 +439,7 @@ if (config.lightningMode) {
             try {
                 jwt.verify(token, config.jwtSecret);
             } catch (err) {
+                winston.warn(`AUDIT: Invalid token for trace end - clientIP: ${clientIP}`);
                 res.writeHead(401, { 'Content-Type': 'application/json' });
                 res.end(errorUnauthorized);
                 return;
@@ -397,19 +447,23 @@ if (config.lightningMode) {
         }
         const { id } = body;
         if (!id) {
+            winston.warn(`AUDIT: Invalid trace end - missing id, clientIP: ${clientIP}`);
             res.writeHead(400, { 'Content-Type': 'application/json' });
             res.end('{"error": "Missing id"}');
             return;
         }
         serviceRegistry.endTrace(id);
+        winston.info(`AUDIT: Trace ended - id: ${id}, clientIP: ${clientIP}`);
         res.writeHead(200, { 'Content-Type': 'application/json' });
         res.end('{"success": true}');
     });
 
     routes.set('GET /trace/:id', (req, res, query, body) => {
+        const clientIP = req.connection.remoteAddress || req.socket.remoteAddress || 'unknown';
         if (config.authEnabled) {
             const authHeader = req.headers.authorization;
             if (!authHeader || !authHeader.startsWith('Bearer ')) {
+                winston.warn(`AUDIT: Unauthorized trace get attempt - clientIP: ${clientIP}`);
                 res.writeHead(401, { 'Content-Type': 'application/json' });
                 res.end(errorUnauthorized);
                 return;
@@ -418,6 +472,7 @@ if (config.lightningMode) {
             try {
                 jwt.verify(token, config.jwtSecret);
             } catch (err) {
+                winston.warn(`AUDIT: Invalid token for trace get - clientIP: ${clientIP}`);
                 res.writeHead(401, { 'Content-Type': 'application/json' });
                 res.end(errorUnauthorized);
                 return;
@@ -425,12 +480,14 @@ if (config.lightningMode) {
         }
         const id = req.url.split('/').pop();
         const trace = serviceRegistry.getTrace(id);
+        winston.info(`AUDIT: Trace retrieved - id: ${id}, clientIP: ${clientIP}`);
         res.writeHead(200, { 'Content-Type': 'application/json' });
         res.end(JSON.stringify(trace));
     });
 
     // Service Mesh Integration
     const handleEnvoyConfig = (req, res, query, body) => {
+        const clientIP = req.connection.remoteAddress || req.socket.remoteAddress || 'unknown';
         const services = serviceRegistry.getAllServices();
         const clusters = [];
         for (const [serviceName, nodes] of services) {
@@ -461,11 +518,13 @@ if (config.lightningMode) {
                 clusters: clusters
             }
         };
+        winston.info(`AUDIT: Envoy config requested - services: ${services.size}, clientIP: ${clientIP}`);
         res.writeHead(200, { 'Content-Type': 'application/json' });
         res.end(JSON.stringify(envoyConfig, null, 2));
     };
 
     const handleIstioConfig = (req, res, query, body) => {
+        const clientIP = req.connection.remoteAddress || req.socket.remoteAddress || 'unknown';
         const services = serviceRegistry.getAllServices();
         const configs = [];
         for (const [serviceName, nodes] of services) {
@@ -511,6 +570,7 @@ if (config.lightningMode) {
             };
             configs.push({ virtualService, destinationRule });
         }
+        winston.info(`AUDIT: Istio config requested - services: ${services.size}, clientIP: ${clientIP}`);
         res.writeHead(200, { 'Content-Type': 'application/json' });
         res.end(JSON.stringify(configs, null, 2));
     };
@@ -520,45 +580,59 @@ if (config.lightningMode) {
 
     // Circuit Breaker endpoints
     routes.set('GET /circuit-breaker/:nodeId', (req, res, query, body) => {
+        const clientIP = req.connection.remoteAddress || req.socket.remoteAddress || 'unknown';
         const nodeId = req.url.split('/').pop();
         const state = serviceRegistry.getCircuitState(nodeId);
+        winston.info(`AUDIT: Circuit breaker state requested - nodeId: ${nodeId}, state: ${JSON.stringify(state)}, clientIP: ${clientIP}`);
         res.writeHead(200, { 'Content-Type': 'application/json' });
         res.end(JSON.stringify(state));
     });
 
     // Event history endpoints
     routes.set('GET /events', (req, res, query, body) => {
+        const clientIP = req.connection.remoteAddress || req.socket.remoteAddress || 'unknown';
         const since = query.since ? parseInt(query.since) : 0;
         const limit = query.limit ? parseInt(query.limit) : 100;
         const filtered = eventHistory.filter(e => e.timestamp > since).slice(-limit);
+        winston.info(`AUDIT: Event history requested - since: ${since}, limit: ${limit}, returned: ${filtered.length}, clientIP: ${clientIP}`);
         res.writeHead(200, { 'Content-Type': 'application/json' });
         res.end(JSON.stringify(filtered));
     });
 
     // Actuator endpoints for compatibility
     routes.set('GET /api/actuator/health', (req, res, query, body) => {
+        const clientIP = req.connection.remoteAddress || req.socket.remoteAddress || 'unknown';
+        winston.info(`AUDIT: Actuator health requested - clientIP: ${clientIP}`);
         res.writeHead(200, { 'Content-Type': 'application/json' });
         res.end('{"status": "UP"}');
     });
     routes.set('GET /api/actuator/info', (req, res, query, body) => {
+        const clientIP = req.connection.remoteAddress || req.socket.remoteAddress || 'unknown';
+        winston.info(`AUDIT: Actuator info requested - clientIP: ${clientIP}`);
         res.writeHead(200, { 'Content-Type': 'application/json' });
         res.end('{"build": {"description": "Maxine Lightning Mode", "name": "maxine-discovery"}}');
     });
     routes.set('GET /api/actuator/metrics', (req, res, query, body) => {
+        const clientIP = req.connection.remoteAddress || req.socket.remoteAddress || 'unknown';
         const mem = process.memoryUsage();
         const uptime = process.uptime();
+        winston.info(`AUDIT: Actuator metrics requested - clientIP: ${clientIP}`);
         res.writeHead(200, { 'Content-Type': 'application/json' });
         res.end(JSON.stringify({ mem, uptime }));
     });
 
     // Logs endpoint for compatibility
     routes.set('GET /api/logs/download', (req, res, query, body) => {
+        const clientIP = req.connection.remoteAddress || req.socket.remoteAddress || 'unknown';
+        winston.info(`AUDIT: Logs download requested - clientIP: ${clientIP}`);
         res.writeHead(200, { 'Content-Type': 'application/json' });
         res.end('{}');
     });
 
     // Config endpoint for compatibility
     routes.set('GET /api/maxine/control/config', (req, res, query, body) => {
+        const clientIP = req.connection.remoteAddress || req.socket.remoteAddress || 'unknown';
+        winston.info(`AUDIT: Config get requested - clientIP: ${clientIP}`);
         res.writeHead(200, { 'Content-Type': 'application/json' });
         res.end(JSON.stringify({
             logAsync: config.logAsync,
@@ -570,6 +644,7 @@ if (config.lightningMode) {
         }));
     });
     routes.set('PUT /api/maxine/control/config', (req, res, query, body) => {
+        const clientIP = req.connection.remoteAddress || req.socket.remoteAddress || 'unknown';
         const key = Object.keys(body)[0];
         const value = body[key];
         if (key === 'serverSelectionStrategy') {
@@ -579,6 +654,7 @@ if (config.lightningMode) {
         } else {
             config[key] = value;
         }
+        winston.info(`AUDIT: Config updated - key: ${key}, value: ${value}, clientIP: ${clientIP}`);
         res.writeHead(200, { 'Content-Type': 'application/json' });
         res.end(JSON.stringify({ [key]: "Success" }));
     });
@@ -610,7 +686,9 @@ if (config.lightningMode) {
         // Handle proxy routes
         if (pathname.startsWith('/proxy/')) {
             const parts = pathname.split('/');
+            const clientIP = req.connection.remoteAddress || req.socket.remoteAddress || 'unknown';
             if (parts.length < 3) {
+                winston.warn(`AUDIT: Invalid proxy request - bad path, clientIP: ${clientIP}`);
                 res.writeHead(400, { 'Content-Type': 'application/json' });
                 res.end('{"error": "Invalid proxy path"}');
                 return;
@@ -619,23 +697,26 @@ if (config.lightningMode) {
             const path = '/' + parts.slice(3).join('/');
             const node = serviceRegistry.getRandomNode(serviceName);
             if (!node) {
+                winston.info(`AUDIT: Proxy failed - service not found: ${serviceName}, clientIP: ${clientIP}`);
                 res.writeHead(404, { 'Content-Type': 'application/json' });
                 res.end(serviceUnavailable);
                 return;
             }
             const target = `http://${node.address}`;
-             req.url = path + parsedUrl.search;
-             proxy.web(req, res, { target }, (err) => {
-                 if (err) {
-                     // Record circuit breaker failure
-                     serviceRegistry.recordFailure(node.nodeName);
-                     res.writeHead(500, { 'Content-Type': 'application/json' });
-                     res.end('{"error": "Proxy error"}');
-                 } else {
-                     // Record success for circuit breaker
-                     serviceRegistry.recordSuccess(node.nodeName);
-                 }
-             });
+              req.url = path + parsedUrl.search;
+              winston.info(`AUDIT: Proxy request - serviceName: ${serviceName}, target: ${target}, path: ${path}, clientIP: ${clientIP}`);
+              proxy.web(req, res, { target }, (err) => {
+                  if (err) {
+                      winston.error(`AUDIT: Proxy error - serviceName: ${serviceName}, target: ${target}, error: ${err.message}, clientIP: ${clientIP}`);
+                      // Record circuit breaker failure
+                      serviceRegistry.recordFailure(node.nodeName);
+                      res.writeHead(500, { 'Content-Type': 'application/json' });
+                      res.end('{"error": "Proxy error"}');
+                  } else {
+                      // Record success for circuit breaker
+                      serviceRegistry.recordSuccess(node.nodeName);
+                  }
+              });
             return;
         }
 
