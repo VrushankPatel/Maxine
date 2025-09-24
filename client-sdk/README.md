@@ -81,6 +81,31 @@ ws_client.on_event("service_registered", lambda data: print(data))
 ws_client.connect()
 ```
 
+## PHP SDK
+
+The PHP SDK provides both Full Mode and Lightning Mode APIs with caching support.
+
+### Installation
+
+```bash
+composer require maxine/maxine-client
+```
+
+### Usage
+
+```php
+use Maxine\MaxineClient;
+
+$client = new MaxineClient("http://localhost:8080");
+
+// Register service
+$client->registerServiceLightning("my-service", "localhost", 3000);
+
+// Discover service
+$service = $client->discoverServiceLightning("my-service");
+echo $service['address'] . ":" . $service['port'];
+```
+
 ## Other SDKs
 
-See individual README files in subdirectories for Java, Go, and C# SDKs.
+See individual README files in subdirectories for Java, Go, C#, and Rust SDKs.
