@@ -281,7 +281,7 @@
 - If there are multiple nodes of that service available in the registry, then the discovery needs to distribute the load across those nodes.
 - Choosing the right server is a very important thing here because if we're using the server-side and server-specific cache, then choosing the wrong node or server might cost us (High latency especially).
 - Maxine implements health-aware load balancing, automatically excluding unhealthy nodes from selection.
-  - Here, the Maxine discovery comes with ten server-selection strategies.
+  - Here, the Maxine discovery comes with eleven server-selection strategies.
     - Round robin: This strategy is very simple, discovery will start forwarding the request to the next healthy server each server in turn and in order. Note that the requests to the same service name can be redirected to different nodes each time.
     - Weighted Round Robin: Distributes load based on node weights, preferring higher-weight nodes for better resource utilization.
     - Weighted Random: Selects nodes randomly with probability proportional to their weights, providing statistical load distribution.
@@ -298,6 +298,7 @@
         - Sticky Round Robin: Routes the same client IP to the same node for session affinity, falling back to round robin for new clients.
         - Least Request: Routes requests to the node with the fewest active connections for minimal active connections.
         - IP Hash: Routes requests based on a hash of the service name for consistent node selection, useful for caching scenarios.
+        - Predictive: Uses time-series trend analysis of response times to select nodes with improving performance trends.
 ### HeartBeat
 - As we know that in order to let the service registry know that the service is alive, service has to send the heartbeat to the registry and after certain period of time (timeout), that service will be removed from the registry automatically so becore that service gets deregistered from registry, the service has to send the heartbeat again, That's why we call it a heart beat because it literally keeps beating in a period of time, Let's understand what is this heartbeat.
 - Heartbeat in maxine is a special kind of request that contains all the meta data about the service.
@@ -387,7 +388,7 @@
 - Circuit breakers for automatic failure detection and recovery.
 - Rate limiting to protect against excessive requests.
 - Event-driven architecture for real-time notifications.
-- Load test results: 5,000 requests with 50 concurrent users in ~0.2s, average response time 1.69ms, 95th percentile 2.4ms, 100% success rate.
+  - Load test results: 5,000 requests with 50 concurrent users in ~0.1s, average response time 1.07ms, 95th percentile 1.71ms, 100% success rate, 40k req/s.
     ### Lightning Mode
      - Maxine lightning mode provides ultra-fast service discovery with core features for maximum performance.
      - Enabled by default for maximum performance, providing sub-millisecond service discovery with minimal overhead.
