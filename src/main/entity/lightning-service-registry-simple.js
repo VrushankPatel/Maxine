@@ -35,6 +35,9 @@ class LightningServiceRegistrySimple extends EventEmitter {
         this.servicesCount = 0;
         this.nodesCount = 0;
 
+        // Ultra-fast lookup
+        this.ultraFastHealthyNodes = new Map(); // serviceName -> { array: [], available: [] }
+
         // Configuration management
         this.configurations = new Map(); // serviceName -> Map<key, {value, version, metadata, updatedAt}>
 
@@ -283,6 +286,19 @@ class LightningServiceRegistrySimple extends EventEmitter {
                             service.roundRobinIndex = 0;
                         }
                     }
+
+                    // Update ultra-fast lookup
+                    const ultraFast = this.ultraFastHealthyNodes.get(serviceName);
+                    if (ultraFast) {
+                        const idx = ultraFast.array.findIndex(n => n.nodeName === nodeName);
+                        if (idx !== -1) {
+                            ultraFast.array.splice(idx, 1);
+                            if (ultraFast.available) {
+                                const availIdx = ultraFast.available.findIndex(n => n.nodeName === nodeName);
+                                if (availIdx !== -1) ultraFast.available.splice(availIdx, 1);
+                            }
+                        }
+                    }
                     if (service.nodes.size === 0) {
                         this.services.delete(serviceName);
                         this.servicesCount--;
@@ -344,6 +360,12 @@ class LightningServiceRegistrySimple extends EventEmitter {
         this.lastHeartbeats.set(nodeName, Date.now());
         this.nodesCount++;
 
+        // Update ultra-fast lookup
+        if (!this.ultraFastHealthyNodes.has(fullServiceName)) {
+            this.ultraFastHealthyNodes.set(fullServiceName, { array: [], available: [] });
+        }
+        this.ultraFastHealthyNodes.get(fullServiceName).array.push(node);
+
         // Update tag index
         if (node.metadata && node.metadata.tags) {
             for (const tag of node.metadata.tags) {
@@ -388,6 +410,19 @@ class LightningServiceRegistrySimple extends EventEmitter {
                     service.healthyNodesArray.splice(index, 1);
                     if (service.roundRobinIndex >= service.healthyNodesArray.length) {
                         service.roundRobinIndex = 0;
+                    }
+                }
+
+                // Update ultra-fast lookup
+                const ultraFast = this.ultraFastHealthyNodes.get(serviceName);
+                if (ultraFast) {
+                    const idx = ultraFast.array.findIndex(n => n.nodeName === nodeId);
+                    if (idx !== -1) {
+                        ultraFast.array.splice(idx, 1);
+                        if (ultraFast.available) {
+                            const availIdx = ultraFast.available.findIndex(n => n.nodeName === nodeId);
+                            if (availIdx !== -1) ultraFast.available.splice(availIdx, 1);
+                        }
                     }
                 }
                 this.nodesCount--;
@@ -764,6 +799,98 @@ class LightningServiceRegistrySimple extends EventEmitter {
             result.set(serviceName, Array.from(service.nodes.values()));
         }
         return result;
+    }
+
+    ultraFastGetRandomNode(serviceName, strategy = 'round-robin', clientId = null) {
+        const service = this.services.get(serviceName);
+        if (!service || service.healthyNodesArray.length === 0) return null;
+
+        const nodes = service.healthyNodesArray;
+        if (strategy === 'least-connections') {
+            let minConnections = Infinity;
+            let selectedNode = nodes[0];
+            for (let i = 0; i < nodes.length; i++) {
+                const node = nodes[i];
+                const connections = node.connections || 0;
+                if (connections < minConnections) {
+                    minConnections = connections;
+                    selectedNode = node;
+                    if (minConnections === 0) break;
+                }
+            }
+            return selectedNode;
+        } else if (strategy === 'weighted-random') {
+            // Simple weighted random
+            const totalWeight = nodes.reduce((sum, n) => sum + (n.weight || 1), 0);
+            let rand = fastRandom() * totalWeight;
+            for (const node of nodes) {
+                rand -= node.weight || 1;
+                if (rand <= 0) return node;
+            }
+            return nodes[0];
+        } else if (strategy === 'random') {
+            const randomIndex = (fastRandom() * nodes.length) | 0;
+            return nodes[randomIndex];
+        } else if (strategy === 'consistent-hash' && clientId) {
+            const hash = this.simpleHash(clientId);
+            const index = hash % nodes.length;
+            return nodes[index];
+        } else {
+            // round-robin
+            let index = service.roundRobinIndex || 0;
+            const node = nodes[index];
+            service.roundRobinIndex = (index + 1) % nodes.length;
+            return node;
+        }
+    }
+
+    simpleHash(str) {
+        let hash = 0;
+        for (let i = 0; i < str.length; i++) {
+            hash = ((hash << 5) - hash) + str.charCodeAt(i);
+            hash |= 0;
+        }
+        return Math.abs(hash);
+    }
+
+    selectAIDriven(nodes, clientId) {
+        // Simple AI-driven: use Q-learning to select best node
+        if (nodes.length === 0) return null;
+        if (nodes.length === 1) return nodes[0];
+
+        // Use clientId as state, or default
+        const state = clientId || 'default';
+        const qValues = this.qTable.get(state);
+        if (!qValues) {
+            // No data, explore randomly
+            const randomIndex = (fastRandom() * nodes.length) | 0;
+            return nodes[randomIndex];
+        }
+
+        // Select node with highest Q-value
+        let bestNode = null;
+        let bestQ = -Infinity;
+        for (const node of nodes) {
+            const q = qValues.get(node.nodeName) || 0;
+            if (q > bestQ) {
+                bestQ = q;
+                bestNode = node;
+            }
+        }
+        return bestNode || nodes[0];
+    }
+
+    updateQValue(nodeName, responseTime, success, serviceName, clientId) {
+        const state = clientId || 'default';
+        if (!this.qTable.has(state)) {
+            this.qTable.set(state, new Map());
+        }
+        const qValues = this.qTable.get(state);
+        const currentQ = qValues.get(nodeName) || 0;
+        // Reward: lower response time is better, success is +1, failure -1
+        const reward = success ? (1000 / (responseTime + 1)) : -1;
+        const newQ = currentQ + this.alpha * (reward + this.gamma * 0 - currentQ); // Simplified, no next state
+        qValues.set(nodeName, newQ);
     }
 
     // Basic tracing methods
