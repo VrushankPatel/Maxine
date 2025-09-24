@@ -855,14 +855,26 @@ class LightningServiceRegistrySimple extends EventEmitter {
             }
             return selectedNode;
         } else if (strategy === 'weighted-random') {
-            // Simple weighted random
+            // Optimized weighted random with binary search (SIMD-inspired)
             const totalWeight = nodes.reduce((sum, n) => sum + (n.weight || 1), 0);
             let rand = fastRandom() * totalWeight;
-            for (const node of nodes) {
-                rand -= node.weight || 1;
-                if (rand <= 0) return node;
+            // Precompute cumulative weights for binary search
+            const cumulativeWeights = new Array(nodes.length);
+            cumulativeWeights[0] = nodes[0].weight || 1;
+            for (let i = 1; i < nodes.length; i++) {
+                cumulativeWeights[i] = cumulativeWeights[i - 1] + (nodes[i].weight || 1);
             }
-            return nodes[0];
+            // Binary search
+            let left = 0, right = nodes.length - 1;
+            while (left < right) {
+                const mid = (left + right) >> 1;
+                if (rand < cumulativeWeights[mid]) {
+                    right = mid;
+                } else {
+                    left = mid + 1;
+                }
+            }
+            return nodes[left];
         } else if (strategy === 'random') {
             const randomIndex = (fastRandom() * nodes.length) | 0;
             return nodes[randomIndex];
