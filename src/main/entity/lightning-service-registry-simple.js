@@ -71,6 +71,13 @@ class LightningServiceRegistrySimple extends EventEmitter {
 
         // Distributed Redis Cache for multi-instance caching
         this.redisCacheEnabled = config.redisCacheEnabled || false;
+
+        // AI-Driven Load Balancing (Reinforcement Learning)
+        this.qTable = new Map(); // state -> array of q-values
+        this.alpha = 0.1; // Learning rate
+        this.gamma = 0.9; // Discount factor
+        this.epsilon = 0.1; // Exploration rate
+        this.aiSelections = new Map(); // clientId -> {state, action, nodeId, timestamp}
         this.redisCachePrefix = 'maxine:cache:';
 
         // Cache metrics
@@ -2011,6 +2018,99 @@ class LightningServiceRegistrySimple extends EventEmitter {
                             }
                         }
                     }
+                }
+            }
+        }
+
+        // AI-Driven Load Balancing using Reinforcement Learning
+        selectAIDriven(availableNodes, clientIP) {
+            if (availableNodes.length === 0) return null;
+
+            const clientId = clientIP || 'default';
+            const state = this.createAIState(availableNodes, clientId);
+
+            // Choose action using epsilon-greedy policy
+            const action = this.chooseAIAction(state, availableNodes.length);
+
+            const selectedNode = availableNodes[action];
+
+            // Store selection for learning
+            this.aiSelections.set(clientId, {
+                state,
+                action,
+                nodeId: selectedNode.nodeName,
+                timestamp: Date.now()
+            });
+
+            return selectedNode;
+        }
+
+        // Create state representation for AI
+        createAIState(availableNodes, clientId) {
+            // State includes node health scores and response times
+            const nodeStates = availableNodes.map(node => {
+                const healthScore = this.getHealthScore(null, node.nodeName) || 50;
+                const avgResponseTime = this.getAverageResponseTime(node.nodeName) || 100;
+                return `${node.nodeName}:${healthScore}:${avgResponseTime}`;
+            }).sort().join('|');
+
+            return `${clientId}:${nodeStates}`;
+        }
+
+        // Choose action using epsilon-greedy
+        chooseAIAction(state, numActions) {
+            if (Math.random() < this.epsilon) {
+                // Explore: random action
+                return Math.floor(Math.random() * numActions);
+            } else {
+                // Exploit: best action based on Q-values
+                return this.getBestAIAction(state, numActions);
+            }
+        }
+
+        // Get best action based on Q-values
+        getBestAIAction(state, numActions) {
+            if (!this.qTable.has(state)) {
+                // Initialize Q-values
+                this.qTable.set(state, new Array(numActions).fill(0));
+            }
+
+            const qValues = this.qTable.get(state);
+            let bestAction = 0;
+            let bestValue = qValues[0];
+
+            for (let i = 1; i < qValues.length; i++) {
+                if (qValues[i] > bestValue) {
+                    bestValue = qValues[i];
+                    bestAction = i;
+                }
+            }
+
+            return bestAction;
+        }
+
+        // Update Q-values based on response
+        updateQValue(serviceName, nodeId, responseTime, success) {
+            // Find the client that selected this node recently
+            for (const [clientId, selection] of this.aiSelections) {
+                if (selection.nodeId === nodeId && (Date.now() - selection.timestamp) < 60000) { // 1 minute window
+                    const reward = success ? Math.max(0, 100 - responseTime / 10) : -50;
+
+                    const { state, action } = selection;
+                    if (this.qTable.has(state)) {
+                        const qValues = this.qTable.get(state);
+                        if (action < qValues.length) {
+                            const oldQValue = qValues[action];
+                            // Simple Q-learning update (simplified, no next state)
+                            const newQValue = oldQValue + this.alpha * (reward - oldQValue);
+                            qValues[action] = newQValue;
+                            this.qTable.set(state, qValues);
+                        }
+                    }
+
+                    // Clean up old selection
+                    this.aiSelections.delete(clientId);
+                    break; // Only update one client per response
                 }
             }
         }

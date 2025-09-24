@@ -57,7 +57,8 @@ const SSS = {
      BHS: '15',
      GEO: '16',
      AFFINITY: '17',
-     PREDICTIVE: '18'
+     PREDICTIVE: '18',
+     AI_DRIVEN: '19'
 };
 const LOG_FORMATS = {
     JSON: '0',
