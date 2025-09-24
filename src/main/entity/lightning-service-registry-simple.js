@@ -3,6 +3,7 @@ const config = require('../config/config');
 const HashRing = require('hashring');
 const fs = require('fs');
 const path = require('path');
+const { EventEmitter } = require('events');
 
 // Fast LCG PRNG for random load balancing
 let lcgSeed = Date.now();
@@ -15,8 +16,9 @@ const fastRandom = () => {
     return lcgSeed / lcgM;
 };
 
-class LightningServiceRegistrySimple {
+class LightningServiceRegistrySimple extends EventEmitter {
     constructor() {
+        super();
         this.services = new Map(); // serviceName -> { nodes: Map<nodeName, node>, healthyNodesArray: [], roundRobinIndex: 0 }
         this.lastHeartbeats = new Map(); // nodeName -> timestamp
         this.nodeToService = new Map(); // nodeName -> serviceName
@@ -56,6 +58,43 @@ class LightningServiceRegistrySimple {
 
         // Periodic cleanup
         setInterval(() => this.cleanup(), 30000);
+    }
+
+    cleanup() {
+        const now = Date.now();
+        const timeoutMs = this.heartbeatTimeout;
+        const toRemove = [];
+        for (const [nodeName, lastBeat] of this.lastHeartbeats) {
+            if (now - lastBeat > timeoutMs) {
+                toRemove.push(nodeName);
+            }
+        }
+        // Remove expired nodes
+        for (const nodeName of toRemove) {
+            this.lastHeartbeats.delete(nodeName);
+            const serviceName = this.nodeToService.get(nodeName);
+            if (serviceName) {
+                const service = this.services.get(serviceName);
+                if (service) {
+                    service.nodes.delete(nodeName);
+                    // Remove from healthyNodesArray
+                    const index = service.healthyNodesArray.findIndex(n => n.nodeName === nodeName);
+                    if (index !== -1) {
+                        service.healthyNodesArray.splice(index, 1);
+                        if (service.roundRobinIndex >= service.healthyNodesArray.length) {
+                            service.roundRobinIndex = 0;
+                        }
+                    }
+                    if (service.nodes.size === 0) {
+                        this.services.delete(serviceName);
+                        this.servicesCount--;
+                    }
+                }
+                this.nodeToService.delete(nodeName);
+                this.nodesCount--;
+                if (global.broadcast) global.broadcast('service_unhealthy', { nodeId: nodeName });
+            }
+        }
     }
 
     register(serviceName, nodeInfo) {

@@ -1100,6 +1100,9 @@ if (config.lightningMode) {
             // }
         };
 
+        // Make broadcast available globally for service registry
+        global.broadcast = broadcast;
+
         const matchesFilter = (event, data, filter) => {
             if (filter.event && filter.event !== event) return false;
             if (filter.serviceName && data.serviceName && filter.serviceName !== data.serviceName) return false;

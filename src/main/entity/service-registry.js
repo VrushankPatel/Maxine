@@ -573,14 +573,6 @@ class ServiceRegistry extends EventEmitter {
         }
         // Emit event for listeners
         this.emit('change', change);
-        // Broadcast to WebSocket clients
-        if (this.wss) {
-            this.wss.clients.forEach(client => {
-                if (client.readyState === WebSocket.OPEN) {
-                    client.send(JSON.stringify(change));
-                }
-            });
-        }
     }
 
     notifyWebhooks = (serviceName, change) => {
@@ -1581,12 +1573,14 @@ class ServiceRegistry extends EventEmitter {
         if (node) this.removeFromTagIndex(nodeName, node.metadata.tags);
         this.removeFromHashRegistry(serviceName, nodeName);
         this.removeFromHealthyNodes(serviceName, nodeName);
-        // Clear lease
-        const key = `${serviceName}:${nodeName}`;
-        const lease = this.leases.get(key);
-        if (lease) {
-            clearTimeout(lease.timeout);
-            this.leases.delete(key);
+        // Clear lease (only if leases are used)
+        if (this.leases) {
+            const key = `${serviceName}:${nodeName}`;
+            const lease = this.leases.get(key);
+            if (lease) {
+                clearTimeout(lease.timeout);
+                this.leases.delete(key);
+            }
         }
         this.debounceSave();
     }
