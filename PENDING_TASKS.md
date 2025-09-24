@@ -368,12 +368,11 @@
   - Service health scoring and predictive maintenance capabilities
 
 ### Low Priority
-- Add Real-Time WebSocket Updates to Service Dependency Graph Visualization: Enhance the existing dependency graph with live updates
-  - Implement WebSocket streaming for real-time dependency changes
-  - Add live cycle detection alerts and impact analysis
-  - Enable real-time updates for dependency graphs without page refresh
-  - Optimize WebSocket message format for efficient data transfer
-  - Add subscription filters for specific services or dependency types
+- [x] Add Real-Time WebSocket Updates to Service Dependency Graph Visualization: Enhanced the existing dependency graph with live updates
+  - [x] Implemented WebSocket connection to /dependency-graph page for real-time updates
+  - [x] Added broadcasting of dependency_added and dependency_removed events
+  - [x] Graph refreshes automatically when dependencies are modified via API
+  - [x] Enables real-time monitoring of service dependency changes
 
 
 
