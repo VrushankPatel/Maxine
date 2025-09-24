@@ -29,6 +29,7 @@ if (config.lightningMode) {
     const bcrypt = require('bcrypt');
     const httpProxy = require('http-proxy');
     const proxy = httpProxy.createProxyServer({});
+    const WebSocket = require('ws');
 
     const stringify = require('fast-json-stringify');
 
@@ -647,7 +648,27 @@ if (config.lightningMode) {
             console.log('Lightning mode: minimal features for maximum performance using raw HTTP');
         });
 
+        // WebSocket server for real-time event streaming
+        const wss = new WebSocket.Server({ server });
 
+        const broadcast = (event, data) => {
+            const message = JSON.stringify({ event, data, timestamp: Date.now() });
+            wss.clients.forEach(client => {
+                if (client.readyState === WebSocket.OPEN) {
+                    client.send(message);
+                }
+            });
+        };
+
+        wss.on('connection', (ws) => {
+            console.log('WebSocket client connected for event streaming');
+            ws.on('close', () => {
+                console.log('WebSocket client disconnected');
+            });
+        });
+
+        // Make broadcast available to handlers
+        global.broadcast = broadcast;
     }
 
     builder = { getApp: () => server };
