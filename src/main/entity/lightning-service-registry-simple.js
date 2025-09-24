@@ -48,13 +48,15 @@ class LightningServiceRegistrySimple {
     register(serviceName, nodeInfo) {
         const nodeName = `${nodeInfo.host}:${nodeInfo.port}`;
         const weight = nodeInfo.metadata && nodeInfo.metadata.weight ? parseInt(nodeInfo.metadata.weight) : 1;
+        const version = nodeInfo.metadata && nodeInfo.metadata.version ? nodeInfo.metadata.version : null;
+        const fullServiceName = version ? `${serviceName}:${version}` : serviceName;
         const node = { ...nodeInfo, nodeName, address: `${nodeInfo.host}:${nodeInfo.port}`, weight, connections: 0 };
 
-        if (!this.services.has(serviceName)) {
-            this.services.set(serviceName, { nodes: new Map(), healthyNodesArray: [], roundRobinIndex: 0 });
+        if (!this.services.has(fullServiceName)) {
+            this.services.set(fullServiceName, { nodes: new Map(), healthyNodesArray: [], roundRobinIndex: 0 });
             this.servicesCount++;
         }
-        const service = this.services.get(serviceName);
+        const service = this.services.get(fullServiceName);
         if (service.nodes.has(nodeName)) {
             // Already registered, just update heartbeat
             this.lastHeartbeats.set(nodeName, Date.now());
@@ -62,7 +64,7 @@ class LightningServiceRegistrySimple {
         }
         service.nodes.set(nodeName, node);
         service.healthyNodesArray.push(node);
-        this.nodeToService.set(nodeName, serviceName);
+        this.nodeToService.set(nodeName, fullServiceName);
         this.lastHeartbeats.set(nodeName, Date.now());
         this.nodesCount++;
 

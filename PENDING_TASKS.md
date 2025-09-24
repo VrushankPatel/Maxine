@@ -18,7 +18,7 @@
     - [ ] Implement Multi-Datacenter Support: Global service discovery across multiple datacenters
     - [ ] Implement Service Mesh Integration: Integration with Istio, Linkerd, etc.
     - [ ] Implement Advanced Health Checks: Custom health check scripts and proactive monitoring
-    - [ ] Implement Service Versioning: Support multiple versions of the same service
+     - [x] Implement Service Versioning: Support multiple versions of the same service
     - [ ] Implement Circuit Breaker Enhancements: More sophisticated failure detection and recovery
     - [ ] Implement Metrics Enhancements: Detailed performance metrics and monitoring
     - [ ] Implement Event Streaming: Real-time event notifications via WebSockets or MQTT
