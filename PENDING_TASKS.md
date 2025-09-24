@@ -1,62 +1,63 @@
 # Pending Tasks for Maxine Service Registry
 
 ## Recently Implemented Features
-- [x] Implement Service Configuration Validation: Add schema validation for service configurations to prevent misconfigurations and improve reliability
-- [x] Implement Service Call Tracing with Correlation IDs: Add distributed tracing with correlation IDs for end-to-end request tracking across service calls
-- [x] Fix Server Startup Issue: Resolved environment variable loading order issue where LIGHTNING_MODE was set after config initialization, preventing proper mode selection. Moved env var setting before logging initialization.
-- [x] Verify Load Tests: Confirmed load tests pass with p95 response time under 2ms in lightning mode, achieving 41k req/s throughput with 1.66ms p95 latency.
-- [x] Run Full Test Suite: All 24 unit tests pass with 4 pending, ensuring code changes don't break functionality.
-- [x] Add DNS-based Service Discovery: Implemented DNS server using dns2 package for compatibility with DNS clients, supporting SRV records for _service._tcp queries and A records for direct IP resolution, integrated with service registry for real-time healthy node responses.
-- [x] Add PHP Client SDK: Implemented comprehensive PHP client SDK with support for both Full Mode and Lightning Mode APIs, caching, and all major operations.
-- [x] Enable Ultra-Fast Mode by Default: Enabled ultra-fast mode in index.js for maximum performance when ULTRA_FAST_MODE=true.
-- [x] Switch to Lightning Mode by Default: Changed default mode to lightning mode in config.js and index.js for better performance.
-- [x] Remove Deprecated OpenTelemetry Call: Removed sdk.start() call to eliminate deprecation warning.
-- [x] Improve Memory-Mapped Persistence: Enhanced initMemoryMapped to load file into buffer for faster access.
-- [x] Update Load Test Results: Updated README with new performance metrics (avg 0.98ms, p95 1.68ms).
-- [x] Fix Critical Bug in Ultra-Fast Mode: Resolved TypeError in service-registry.js where 'isDraining' method was undefined. Replaced with correct 'isInDraining' method calls in ultraFastGetRandomNode and addToHealthyNodes methods. This ensures proper filtering of draining nodes and prevents server crashes under load.
-- [x] Enable GraphQL API in Lightning Mode: Added GraphQL endpoint (/graphql) to Lightning Mode for flexible service queries and mutations, matching the functionality available in Full Mode.
-- [x] Stabilize Lightning Mode Server: Fixed server crashes under load by commenting out excessive winston logging in request handlers, preventing I/O bottlenecks. Server now handles 50 concurrent users with p95 < 2ms response time.
-- [x] Enhance WebSocket authentication and authorization: Added role-based access control for WebSocket subscriptions and token refresh functionality via HTTP and WebSocket.
-- [x] Add comprehensive monitoring for WebSocket connections: Added metrics for active WebSocket connections and event broadcast rates in /metrics endpoint.
-- [x] Implement multi-cluster federation with conflict resolution: Added federation support in Lightning Mode for cross-datacenter service discovery and replication.
-- [x] Implement advanced service mesh features (traffic splitting, canary deployments): Traffic distribution, version promotion, retirement, and gradual traffic shifting are already implemented.
-- [x] Implement Service Dependencies: Added dependency management with add, remove, get dependencies/dependents, cycle detection, and graph visualization.
-- [x] Implement Access Control Lists (ACLs): Added fine-grained permissions for service discovery access with allow/deny lists.
-- [x] Implement Service Intentions: Added definition of allowed communication patterns between services.
-- [x] Implement Multi-Region Deployment Support: Added geo-aware load balancing for global deployments, selecting closest node based on client IP location.
-- [x] Optimize Memory Usage: Added heap dump endpoint for memory profiling and optimization in large-scale deployments.
-- [x] Performance Optimizations: Implemented async debounced persistence saves and async WebSocket broadcasting to reduce I/O blocking and improve response times.
-- [x] Advanced Monitoring Dashboard: Enhanced /dashboard with real-time WebSocket updates, interactive charts using Chart.js, improved UI with modern styling, service topology visualization, and live event streaming.
-- [x] Implement Service Blacklist in Lightning Mode: Added blacklist functionality to prevent registration of unwanted services, with endpoints for add, remove, and list blacklisted services.
-- [x] Optimize Discovery Latency: Implemented lightweight LRU caching layers (10k entries, 30s TTL) for frequently accessed services in Lightning Mode to reduce lookup times further.
-- [x] Implement LRU Caching for Discovery Results: Added LRU cache for deterministic load balancing strategies (consistent-hash, ip-hash, geo-aware) with automatic invalidation on service changes.
-- [x] Performance Optimization: Disabled synchronous winston logging in all request handlers to eliminate I/O bottlenecks and improve response times under load.
-- [x] Create Service Dependency Graph Visualization: Implemented interactive web-based UI for visualizing service dependency graphs with D3.js, including cycle detection alerts, dependency impact analysis on click, and export capabilities to JSON/SVG.
-  - [x] Implement Ultra-Fast Mode: Added extreme performance mode with minimal features, UDP heartbeats, disabled logging/metrics/auth/WebSocket/MQTT/gRPC, pre-allocated buffers for maximum speed.
-  - [x] Implement weighted least connections load balancing: Added weighted-least-connections strategy that selects nodes based on connections per weight for better resource utilization.
-  - [x] Implement Linkerd Service Mesh Configuration Generation: Added /service-mesh/linkerd-config endpoint to generate Linkerd ServiceProfile configurations for seamless service mesh integration.
-- [x] Add Configurable Cleanup Interval: Made the periodic cleanup interval configurable via CLEANUP_INTERVAL environment variable for fine-tuning performance.
-- [x] Add Cache Hit/Miss Metrics: Implemented metrics for discovery cache performance monitoring, including cacheHits and cacheMisses in /metrics endpoint.
-  - [x] Implement Anomaly Detection: Added /anomalies endpoint to detect services with high circuit breaker failures, no healthy nodes, or no nodes at all. (Fully implemented with getAnomalies method and endpoint)
-- [x] Implement Service Catalog Integration: Added Open Service Broker API endpoints for enterprise service catalog compatibility, enabling integration with Kubernetes Service Catalog and other OSB implementations.
-- [x] Implement Shared Memory Persistence: Added shared memory (shm) persistence type for ultra-fast in-memory persistence with file backing across restarts.
-- [x] Implement Memory-Mapped Files Persistence: Added memory-mapped file (mmap) persistence for zero-copy operations and faster data access.
-- [x] Implement Predictive Load Balancing: Added predictive load balancing strategy using time-series analysis, exponential moving averages, and trend analysis for optimal node selection based on historical performance data.
-- [x] Optimize Garbage Collection: Fine-tuned Node.js GC settings with additional flags for reduced GC pauses.
-- [x] Add CPU Affinity: Added taskset to pin processes to specific CPU cores for consistent performance.
-- [x] Optimize tag filtering with index: Implemented tag index for O(1) tag-based service filtering, improving performance for services with many tags.
-- [x] Add predictive load balancing with trend analysis: Enhanced predictive strategy with slope calculation of response time trends for better node selection.
-- [x] Implement Object Pooling: Added object pooling for response objects (register, discover, success, health, metrics) to reduce GC pressure and improve performance under high load.
- - [x] Implement Service Health Prediction: Added /predict-health endpoint using time-series analysis for proactive monitoring and failure prediction.
-  - [x] Implement Service Dependency Auto-Detection: Added /record-call endpoint for services to report outbound calls, enabling automatic dependency detection based on traffic patterns with configurable thresholds and cleanup intervals.
-  - [x] Enhance Service Dependency Auto-Detection: Added periodic automatic dependency analysis in Lightning Mode, cleanup of old call logs, and /dependency/analyze endpoint for manual analysis triggering.
-- [x] Implement SIMD Operations: Added SIMD-inspired fast min and sum operations for bulk data processing in load balancing calculations (least-response-time, adaptive strategies) to reduce latency in high-throughput scenarios.
-- [x] Implement Adaptive Caching: Added ML-inspired adaptive caching with exponential moving average for access patterns, dynamically adjusting cache TTL based on service access frequency to optimize cache performance.
-- [x] Implement Advanced Rate Limiting: Added Redis-backed distributed rate limiting with atomic Redis operations for fair resource allocation across multiple Maxine instances.
- - [x] Implement Advanced Distributed Caching: Added Redis-based distributed caching layer for service discovery results across multiple Maxine instances to reduce latency and improve scalability. Enable with REDIS_CACHE_ENABLED=true. Includes lazy client initialization and comprehensive metrics.
- - [x] Optimize Lightning Mode Discovery: Use ultraFastGetRandomNode in lightning mode discovery controller for maximum performance, skipping tracing overhead in lightning mode.
-- [x] Fix Test Issues: Resolved port 8080 already in use error and Redis rate limit errors in test environment by disabling rate limiting for tests.
-- [x] Enhance GraphQL API: Added healthScores query for retrieving health scores of service nodes, improving monitoring capabilities.
+ - [x] Implement Service Configuration Validation: Add schema validation for service configurations to prevent misconfigurations and improve reliability
+ - [x] Implement Service Call Tracing with Correlation IDs: Add distributed tracing with correlation IDs for end-to-end request tracking across service calls
+ - [x] Fix Server Startup Issue: Resolved environment variable loading order issue where LIGHTNING_MODE was set after config initialization, preventing proper mode selection. Moved env var setting before logging initialization.
+ - [x] Verify Load Tests: Confirmed load tests pass with p95 response time under 2ms in lightning mode, achieving 41k req/s throughput with 1.66ms p95 latency.
+ - [x] Run Full Test Suite: All 24 unit tests pass with 4 pending, ensuring code changes don't break functionality.
+ - [x] Add DNS-based Service Discovery: Implemented DNS server using dns2 package for compatibility with DNS clients, supporting SRV records for _service._tcp queries and A records for direct IP resolution, integrated with service registry for real-time healthy node responses.
+ - [x] Add PHP Client SDK: Implemented comprehensive PHP client SDK with support for both Full Mode and Lightning Mode APIs, caching, and all major operations.
+ - [x] Enable Ultra-Fast Mode by Default: Enabled ultra-fast mode in index.js for maximum performance when ULTRA_FAST_MODE=true.
+ - [x] Switch to Lightning Mode by Default: Changed default mode to lightning mode in config.js and index.js for better performance.
+ - [x] Remove Deprecated OpenTelemetry Call: Removed sdk.start() call to eliminate deprecation warning.
+ - [x] Improve Memory-Mapped Persistence: Enhanced initMemoryMapped to load file into buffer for faster access.
+ - [x] Update Load Test Results: Updated README with new performance metrics (avg 0.98ms, p95 1.68ms).
+ - [x] Fix Critical Bug in Ultra-Fast Mode: Resolved TypeError in service-registry.js where 'isDraining' method was undefined. Replaced with correct 'isInDraining' method calls in ultraFastGetRandomNode and addToHealthyNodes methods. This ensures proper filtering of draining nodes and prevents server crashes under load.
+ - [x] Enable GraphQL API in Lightning Mode: Added GraphQL endpoint (/graphql) to Lightning Mode for flexible service queries and mutations, matching the functionality available in Full Mode.
+ - [x] Stabilize Lightning Mode Server: Fixed server crashes under load by commenting out excessive winston logging in request handlers, preventing I/O bottlenecks. Server now handles 50 concurrent users with p95 < 2ms response time.
+ - [x] Enhance WebSocket authentication and authorization: Added role-based access control for WebSocket subscriptions and token refresh functionality via HTTP and WebSocket.
+ - [x] Add comprehensive monitoring for WebSocket connections: Added metrics for active WebSocket connections and event broadcast rates in /metrics endpoint.
+ - [x] Implement multi-cluster federation with conflict resolution: Added federation support in Lightning Mode for cross-datacenter service discovery and replication.
+ - [x] Implement advanced service mesh features (traffic splitting, canary deployments): Traffic distribution, version promotion, retirement, and gradual traffic shifting are already implemented.
+ - [x] Implement Service Dependencies: Added dependency management with add, remove, get dependencies/dependents, cycle detection, and graph visualization.
+ - [x] Implement Access Control Lists (ACLs): Added fine-grained permissions for service discovery access with allow/deny lists.
+ - [x] Implement Service Intentions: Added definition of allowed communication patterns between services.
+ - [x] Implement Multi-Region Deployment Support: Added geo-aware load balancing for global deployments, selecting closest node based on client IP location.
+ - [x] Optimize Memory Usage: Added heap dump endpoint for memory profiling and optimization in large-scale deployments.
+ - [x] Performance Optimizations: Implemented async debounced persistence saves and async WebSocket broadcasting to reduce I/O blocking and improve response times.
+ - [x] Advanced Monitoring Dashboard: Enhanced /dashboard with real-time WebSocket updates, interactive charts using Chart.js, improved UI with modern styling, service topology visualization, and live event streaming.
+ - [x] Implement Service Blacklist in Lightning Mode: Added blacklist functionality to prevent registration of unwanted services, with endpoints for add, remove, and list blacklisted services.
+ - [x] Optimize Discovery Latency: Implemented lightweight LRU caching layers (10k entries, 30s TTL) for frequently accessed services in Lightning Mode to reduce lookup times further.
+ - [x] Implement LRU Caching for Discovery Results: Added LRU cache for deterministic load balancing strategies (consistent-hash, ip-hash, geo-aware) with automatic invalidation on service changes.
+ - [x] Performance Optimization: Disabled synchronous winston logging in all request handlers to eliminate I/O bottlenecks and improve response times under load.
+ - [x] Create Service Dependency Graph Visualization: Implemented interactive web-based UI for visualizing service dependency graphs with D3.js, including cycle detection alerts, dependency impact analysis on click, and export capabilities to JSON/SVG.
+   - [x] Implement Ultra-Fast Mode: Added extreme performance mode with minimal features, UDP heartbeats, disabled logging/metrics/auth/WebSocket/MQTT/gRPC, pre-allocated buffers for maximum speed.
+   - [x] Implement weighted least connections load balancing: Added weighted-least-connections strategy that selects nodes based on connections per weight for better resource utilization.
+   - [x] Implement Linkerd Service Mesh Configuration Generation: Added /service-mesh/linkerd-config endpoint to generate Linkerd ServiceProfile configurations for seamless service mesh integration.
+ - [x] Add Configurable Cleanup Interval: Made the periodic cleanup interval configurable via CLEANUP_INTERVAL environment variable for fine-tuning performance.
+ - [x] Add Cache Hit/Miss Metrics: Implemented metrics for discovery cache performance monitoring, including cacheHits and cacheMisses in /metrics endpoint.
+   - [x] Implement Anomaly Detection: Added /anomalies endpoint to detect services with high circuit breaker failures, no healthy nodes, or no nodes at all. (Fully implemented with getAnomalies method and endpoint)
+ - [x] Implement Service Catalog Integration: Added Open Service Broker API endpoints for enterprise service catalog compatibility, enabling integration with Kubernetes Service Catalog and other OSB implementations.
+ - [x] Implement Shared Memory Persistence: Added shared memory (shm) persistence type for ultra-fast in-memory persistence with file backing across restarts.
+ - [x] Implement Memory-Mapped Files Persistence: Added memory-mapped file (mmap) persistence for zero-copy operations and faster data access.
+ - [x] Implement Predictive Load Balancing: Added predictive load balancing strategy using time-series analysis, exponential moving averages, and trend analysis for optimal node selection based on historical performance data.
+ - [x] Optimize Garbage Collection: Fine-tuned Node.js GC settings with additional flags for reduced GC pauses.
+ - [x] Add CPU Affinity: Added taskset to pin processes to specific CPU cores for consistent performance.
+ - [x] Optimize tag filtering with index: Implemented tag index for O(1) tag-based service filtering, improving performance for services with many tags.
+ - [x] Add predictive load balancing with trend analysis: Enhanced predictive strategy with slope calculation of response time trends for better node selection.
+ - [x] Implement Object Pooling: Added object pooling for response objects (register, discover, success, health, metrics) to reduce GC pressure and improve performance under high load.
+  - [x] Implement Service Health Prediction: Added /predict-health endpoint using time-series analysis for proactive monitoring and failure prediction.
+   - [x] Implement Service Dependency Auto-Detection: Added /record-call endpoint for services to report outbound calls, enabling automatic dependency detection based on traffic patterns with configurable thresholds and cleanup intervals.
+   - [x] Enhance Service Dependency Auto-Detection: Added periodic automatic dependency analysis in Lightning Mode, cleanup of old call logs, and /dependency/analyze endpoint for manual analysis triggering.
+ - [x] Implement SIMD Operations: Added SIMD-inspired fast min and sum operations for bulk data processing in load balancing calculations (least-response-time, adaptive strategies) to reduce latency in high-throughput scenarios.
+ - [x] Implement Adaptive Caching: Added ML-inspired adaptive caching with exponential moving average for access patterns, dynamically adjusting cache TTL based on service access frequency to optimize cache performance.
+ - [x] Implement Advanced Rate Limiting: Added Redis-backed distributed rate limiting with atomic Redis operations for fair resource allocation across multiple Maxine instances.
+  - [x] Implement Advanced Distributed Caching: Added Redis-based distributed caching layer for service discovery results across multiple Maxine instances to reduce latency and improve scalability. Enable with REDIS_CACHE_ENABLED=true. Includes lazy client initialization and comprehensive metrics.
+  - [x] Optimize Lightning Mode Discovery: Use ultraFastGetRandomNode in lightning mode discovery controller for maximum performance, skipping tracing overhead in lightning mode.
+ - [x] Fix Test Issues: Resolved port 8080 already in use error and Redis rate limit errors in test environment by disabling rate limiting for tests.
+ - [x] Enhance GraphQL API: Added healthScores query for retrieving health scores of service nodes, improving monitoring capabilities.
+ - [x] Implement Service Version Compatibility Checking: Added version compatibility matrix for service dependencies with API endpoints (/api/maxine/serviceops/compatibility/set, /get, /check) to manage rules and validate service interactions.
 
 ## Next Steps
 
