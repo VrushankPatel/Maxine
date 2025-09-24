@@ -1248,7 +1248,7 @@ Maxine maintains an in-memory registry of services and their instances. Services
 - Optimized heartbeat and discovery logic with parallel operations and async I/O
 - Active health checks for proactive service monitoring
 - Event-driven notifications for real-time updates
-    - Load test results: 5,000 requests with 50 concurrent users in ~0.1s, average response time 1.15ms, 95th percentile 2.44ms, 100% success rate
+    - Load test results: 5,000 requests with 50 concurrent users in ~0.1s, average response time 1.14ms, 95th percentile 2.02ms, 100% success rate
     - Load test target: 95th percentile < 10ms for 50 concurrent users (achieved)
     - Recent optimizations: Enabled ultra-fast mode by default, removed deprecated OpenTelemetry start() call, switched to lightning mode for better performance, optimized memory-mapped persistence, fixed load test endpoints for ultra-fast mode
 
