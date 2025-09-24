@@ -77,9 +77,13 @@ if (!config.ultraFastMode && !isLightningMode) {
 }
 
 maxineApiRoutes = maxineApiRoutes
-                                        .post("register", (config.ultraFastMode || isLightningMode) ? null : authenticationController, bodyParser.json(), registryController)
-                                        .post("heartbeat", bodyParser.json(), heartbeatController)
-                                        .post("lease/renew", (config.ultraFastMode || isLightningMode) ? null : authenticationController, bodyParser.json(), renewLeaseController);
+                                         .post("register", (config.ultraFastMode || isLightningMode) ? null : authenticationController, bodyParser.json(), registryController)
+                                         .post("heartbeat", bodyParser.json(), heartbeatController)
+                                         .post("lease/renew", (config.ultraFastMode || isLightningMode) ? null : authenticationController, bodyParser.json(), renewLeaseController)
+                                         .post("config/set", (config.ultraFastMode || isLightningMode) ? null : authenticationController, (config.ultraFastMode || isLightningMode) ? null : limiter, bodyParser.json(), setConfig)
+                                         .get("config/get", (config.ultraFastMode || isLightningMode) ? null : authenticationController, (config.ultraFastMode || isLightningMode) ? null : limiter, getConfig)
+                                         .get("config/all", (config.ultraFastMode || isLightningMode) ? null : authenticationController, (config.ultraFastMode || isLightningMode) ? null : limiter, getAllConfig)
+                                         .delete("config/delete", (config.ultraFastMode || isLightningMode) ? null : authenticationController, (config.ultraFastMode || isLightningMode) ? null : limiter, bodyParser.json(), deleteConfig);
 
 if (!config.ultraFastMode && !isLightningMode) {
     maxineApiRoutes = maxineApiRoutes
