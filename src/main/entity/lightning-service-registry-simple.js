@@ -38,6 +38,10 @@ class LightningServiceRegistrySimple extends EventEmitter {
         // Traffic distribution for canary deployments
         this.trafficDistribution = new Map(); // serviceName -> { version: percentage }
 
+        // Service dependencies
+        this.dependencies = new Map(); // serviceName -> Set of services it depends on
+        this.dependents = new Map(); // serviceName -> Set of services that depend on it
+
         // Circuit Breaker
         this.circuitFailures = new Map(); // nodeName -> failure count
         this.circuitState = new Map(); // nodeName -> 'closed' | 'open' | 'half-open'
@@ -474,10 +478,18 @@ class LightningServiceRegistrySimple extends EventEmitter {
                 data.configurations[serviceName][key] = config;
             }
         }
-        for (const [serviceName, distribution] of this.trafficDistribution) {
-            data.trafficDistribution[serviceName] = distribution;
-        }
-        return data;
+         for (const [serviceName, distribution] of this.trafficDistribution) {
+             data.trafficDistribution[serviceName] = distribution;
+         }
+         data.dependencies = {};
+         for (const [service, deps] of this.dependencies) {
+             data.dependencies[service] = Array.from(deps);
+         }
+         data.dependents = {};
+         for (const [service, deps] of this.dependents) {
+             data.dependents[service] = Array.from(deps);
+         }
+         return data;
     }
 
     setRegistryData(data) {
@@ -509,11 +521,19 @@ class LightningServiceRegistrySimple extends EventEmitter {
             }
             this.configurations.set(serviceName, serviceConfigs);
         }
-        this.trafficDistribution = new Map();
-        for (const [serviceName, distribution] of Object.entries(data.trafficDistribution || {})) {
-            this.trafficDistribution.set(serviceName, distribution);
-        }
-        this.saveRegistry();
+         this.trafficDistribution = new Map();
+         for (const [serviceName, distribution] of Object.entries(data.trafficDistribution || {})) {
+             this.trafficDistribution.set(serviceName, distribution);
+         }
+         this.dependencies = new Map();
+         for (const [service, deps] of Object.entries(data.dependencies || {})) {
+             this.dependencies.set(service, new Set(deps));
+         }
+         this.dependents = new Map();
+         for (const [service, deps] of Object.entries(data.dependents || {})) {
+             this.dependents.set(service, new Set(deps));
+         }
+         this.saveRegistry();
     }
 
     saveRegistry() {
@@ -565,10 +585,18 @@ class LightningServiceRegistrySimple extends EventEmitter {
                     data.configurations[serviceName][key] = config;
                 }
             }
-            data.trafficDistribution = {};
-            for (const [serviceName, distribution] of this.trafficDistribution) {
-                data.trafficDistribution[serviceName] = distribution;
-            }
+             data.trafficDistribution = {};
+             for (const [serviceName, distribution] of this.trafficDistribution) {
+                 data.trafficDistribution[serviceName] = distribution;
+             }
+             data.dependencies = {};
+             for (const [service, deps] of this.dependencies) {
+                 data.dependencies[service] = Array.from(deps);
+             }
+             data.dependents = {};
+             for (const [service, deps] of this.dependents) {
+                 data.dependents[service] = Array.from(deps);
+             }
 
             if (this.persistenceType === 'file') {
                 fs.writeFileSync(this.registryFile, JSON.stringify(data, null, 2));
@@ -679,11 +707,20 @@ class LightningServiceRegistrySimple extends EventEmitter {
                     }
                     this.configurations.set(serviceName, serviceConfigs);
                 }
-                // Load traffic distribution
-                this.trafficDistribution = new Map();
-                for (const [serviceName, distribution] of Object.entries(data.trafficDistribution || {})) {
-                    this.trafficDistribution.set(serviceName, distribution);
-                }
+                 // Load traffic distribution
+                 this.trafficDistribution = new Map();
+                 for (const [serviceName, distribution] of Object.entries(data.trafficDistribution || {})) {
+                     this.trafficDistribution.set(serviceName, distribution);
+                 }
+                 // Load dependencies
+                 this.dependencies = new Map();
+                 for (const [service, deps] of Object.entries(data.dependencies || {})) {
+                     this.dependencies.set(service, new Set(deps));
+                 }
+                 this.dependents = new Map();
+                 for (const [service, deps] of Object.entries(data.dependents || {})) {
+                     this.dependents.set(service, new Set(deps));
+                 }
             }
         } catch (err) {
             console.error('Error loading registry:', err);
@@ -852,6 +889,76 @@ class LightningServiceRegistrySimple extends EventEmitter {
                     // Ignore replication errors
                 }
             }
+        }
+
+        // Service dependency management
+        addDependency(serviceName, dependsOn) {
+            if (!this.dependencies.has(serviceName)) {
+                this.dependencies.set(serviceName, new Set());
+            }
+            this.dependencies.get(serviceName).add(dependsOn);
+
+            if (!this.dependents.has(dependsOn)) {
+                this.dependents.set(dependsOn, new Set());
+            }
+            this.dependents.get(dependsOn).add(serviceName);
+
+            this.saveRegistry();
+        }
+
+        removeDependency(serviceName, dependsOn) {
+            if (this.dependencies.has(serviceName)) {
+                this.dependencies.get(serviceName).delete(dependsOn);
+            }
+            if (this.dependents.has(dependsOn)) {
+                this.dependents.get(dependsOn).delete(serviceName);
+            }
+            this.saveRegistry();
+        }
+
+        getDependencies(serviceName) {
+            return Array.from(this.dependencies.get(serviceName) || []);
+        }
+
+        getDependents(serviceName) {
+            return Array.from(this.dependents.get(serviceName) || []);
+        }
+
+        getDependencyGraph() {
+            const graph = {};
+            for (const [service, deps] of this.dependencies) {
+                graph[service] = Array.from(deps);
+            }
+            return graph;
+        }
+
+        detectCycles() {
+            const visited = new Set();
+            const recStack = new Set();
+            const cycles = [];
+
+            const dfs = (node, path) => {
+                if (recStack.has(node)) {
+                    const cycleStart = path.indexOf(node);
+                    cycles.push(path.slice(cycleStart).concat(node));
+                    return;
+                }
+                if (visited.has(node)) return;
+                visited.add(node);
+                recStack.add(node);
+                const deps = this.dependencies.get(node) || [];
+                for (const dep of deps) {
+                    dfs(dep, [...path, node]);
+                }
+                recStack.delete(node);
+            };
+
+            for (const service of this.services.keys()) {
+                if (!visited.has(service)) {
+                    dfs(service, []);
+                }
+            }
+            return cycles;
         }
 }
 
