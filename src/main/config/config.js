@@ -44,10 +44,11 @@ const config = {
            clusteringEnabled: process.env.CLUSTERING_ENABLED !== 'false' && !process.argv.some(arg => arg.includes('mocha')), // Enabled in lightning mode for better performance, note: registry is per-worker, use Redis for shared
     numWorkers: process.env.NUM_WORKERS ? parseInt(process.env.NUM_WORKERS) : require('os').cpus().length,
                  healthCheckEnabled: process.env.HEALTH_CHECK_ENABLED === 'true' && !ultraFastDefault && !extremeFastDefault || lightningDefault, // Enable health checks in lightning mode for all features
-           redisEnabled: process.env.REDIS_ENABLED === 'true' && !lightningMode,
-       redisHost: process.env.REDIS_HOST || 'localhost',
-       redisPort: process.env.REDIS_PORT ? parseInt(process.env.REDIS_PORT) : 6379,
-       redisPassword: process.env.REDIS_PASSWORD || null,
+            redisEnabled: process.env.REDIS_ENABLED === 'true' && !lightningMode,
+        redisHost: process.env.REDIS_HOST || 'localhost',
+        redisPort: process.env.REDIS_PORT ? parseInt(process.env.REDIS_PORT) : 6379,
+        redisPassword: process.env.REDIS_PASSWORD || null,
+        redisCacheEnabled: process.env.REDIS_CACHE_ENABLED === 'true',
         etcdEnabled: process.env.ETCD_ENABLED === 'true' && !isTestMode && !ultraFastDefault,
       etcdHost: process.env.ETCD_HOST || 'localhost',
       etcdPort: process.env.ETCD_PORT ? parseInt(process.env.ETCD_PORT) : 2379,
