@@ -2,8 +2,10 @@ import requests
 import json
 import time
 import socket
-from typing import Dict, List, Optional, Any
+import threading
+from typing import Dict, List, Optional, Any, Callable
 from urllib.parse import urljoin
+import websocket
 
 
 class MaxineClient:
@@ -536,3 +538,109 @@ class MaxineClient:
         response = self.session.get(url, timeout=self.timeout)
         response.raise_for_status()
         return response.json()
+
+
+class WebSocketClient:
+    """
+    WebSocket client for real-time Maxine service registry events
+    """
+
+    def __init__(self, base_url: str = "ws://localhost:8080", token: Optional[str] = None):
+        """
+        Initialize WebSocket client
+
+        Args:
+            base_url: WebSocket URL (ws:// or wss://)
+            token: JWT token for authentication
+        """
+        self.base_url = base_url.rstrip('/')
+        self.token = token
+        self.ws: Optional[websocket.WebSocketApp] = None
+        self.connected = False
+        self.event_handlers: Dict[str, List[Callable]] = {}
+        self._thread: Optional[threading.Thread] = None
+
+    def on_event(self, event_type: str, handler: Callable):
+        """
+        Register event handler
+
+        Args:
+            event_type: Event type (e.g., 'service_registered')
+            handler: Handler function that takes event data dict
+        """
+        if event_type not in self.event_handlers:
+            self.event_handlers[event_type] = []
+        self.event_handlers[event_type].append(handler)
+
+    def _on_message(self, ws, message):
+        """Handle incoming WebSocket message"""
+        try:
+            data = json.loads(message)
+            event_type = data.get('event')
+            if event_type and event_type in self.event_handlers:
+                for handler in self.event_handlers[event_type]:
+                    handler(data)
+        except json.JSONDecodeError:
+            pass  # Ignore invalid JSON
+
+    def _on_open(self, ws):
+        """Handle WebSocket connection open"""
+        self.connected = True
+        if self.token:
+            ws.send(json.dumps({"auth": self.token}))
+
+    def _on_close(self, ws, close_status_code, close_msg):
+        """Handle WebSocket connection close"""
+        self.connected = False
+
+    def _on_error(self, ws, error):
+        """Handle WebSocket error"""
+        print(f"WebSocket error: {error}")
+
+    def connect(self):
+        """Connect to WebSocket"""
+        websocket.enableTrace(False)
+        self.ws = websocket.WebSocketApp(
+            self.base_url,
+            on_message=self._on_message,
+            on_open=self._on_open,
+            on_close=self._on_close,
+            on_error=self._on_error
+        )
+        self._thread = threading.Thread(target=self.ws.run_forever)
+        self._thread.daemon = True
+        self._thread.start()
+
+    def disconnect(self):
+        """Disconnect from WebSocket"""
+        if self.ws:
+            self.ws.close()
+        if self._thread:
+            self._thread.join(timeout=1)
+
+    def subscribe(self, event_type: str, service_name: Optional[str] = None, node_id: Optional[str] = None):
+        """
+        Subscribe to specific events
+
+        Args:
+            event_type: Event type to subscribe to
+            service_name: Filter by service name
+            node_id: Filter by node ID
+        """
+        if self.ws and self.connected:
+            subscription = {"subscribe": {"event": event_type}}
+            if service_name:
+                subscription["subscribe"]["serviceName"] = service_name
+            if node_id:
+                subscription["subscribe"]["nodeId"] = node_id
+            self.ws.send(json.dumps(subscription))
+
+    def unsubscribe(self):
+        """Unsubscribe from events"""
+        if self.ws and self.connected:
+            self.ws.send(json.dumps({"unsubscribe": True}))
+
+    def refresh_token(self):
+        """Refresh JWT token"""
+        if self.ws and self.connected and self.token:
+            self.ws.send(json.dumps({"refresh_token": True}))
