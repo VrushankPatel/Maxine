@@ -802,10 +802,9 @@ class LightningServiceRegistrySimple extends EventEmitter {
                 const buffer = Buffer.alloc(this.mmapSize);
                 fs.writeFileSync(this.registryFile, buffer);
             }
-            // Memory map the file
-            this.mmapBuffer = fs.openSync(this.registryFile, 'r+');
-            // For simplicity, we'll use regular file I/O but with memory-mapped approach
-            // In a full implementation, we'd use mmap system calls via native addon
+            // Load the entire file into memory for fast access
+            this.mmapBuffer = fs.readFileSync(this.registryFile);
+            this.mmapFd = fs.openSync(this.registryFile, 'r+');
         } catch (err) {
             console.error('Failed to initialize memory-mapped persistence:', err);
             // Fallback to file persistence

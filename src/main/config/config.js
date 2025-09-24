@@ -2,7 +2,7 @@ const { constants } = require("../util/constants/constants");
 
 
 // Performance modes - simplified to lightning mode only
-let lightningDefault = false; // Force full mode for compatibility
+let lightningDefault = true; // Enable lightning mode for maximum performance
 let ultraFastDefault = process.env.ULTRA_FAST_MODE === 'true'; // Ultra-fast mode: extreme performance with minimal features
 let highPerfDefault = false; // High performance mode: balanced performance and features
 let extremeFastDefault = false; // Extreme fast mode: maximum speed, minimal features
