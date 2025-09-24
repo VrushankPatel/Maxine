@@ -1128,6 +1128,125 @@ if (config.lightningMode) {
         }
     });
 
+    // Service dependency endpoints
+    routes.set('POST /api/maxine/serviceops/dependency/add', (req, res, query, body) => {
+        try {
+            const clientIP = req.connection.remoteAddress || req.socket.remoteAddress || 'unknown';
+            const { serviceName, dependsOn } = body;
+            if (!serviceName || !dependsOn) {
+                winston.warn(`AUDIT: Invalid dependency add - missing serviceName or dependsOn, clientIP: ${clientIP}`);
+                res.writeHead(400, { 'Content-Type': 'application/json' });
+                res.end('{"error": "Missing serviceName or dependsOn"}');
+                return;
+            }
+            serviceRegistry.addDependency(serviceName, dependsOn);
+            winston.info(`AUDIT: Dependency added - serviceName: ${serviceName}, dependsOn: ${dependsOn}, clientIP: ${clientIP}`);
+            res.writeHead(200, { 'Content-Type': 'application/json' });
+            res.end(successTrue);
+        } catch (error) {
+            winston.error(`AUDIT: Dependency add failed - error: ${error.message}, clientIP: ${req.connection.remoteAddress || req.socket.remoteAddress || 'unknown'}`);
+            errorCount++;
+            res.writeHead(500, { 'Content-Type': 'application/json' });
+            res.end('{"error": "Internal server error"}');
+        }
+    });
+
+    routes.set('POST /api/maxine/serviceops/dependency/remove', (req, res, query, body) => {
+        try {
+            const clientIP = req.connection.remoteAddress || req.socket.remoteAddress || 'unknown';
+            const { serviceName, dependsOn } = body;
+            if (!serviceName || !dependsOn) {
+                winston.warn(`AUDIT: Invalid dependency remove - missing serviceName or dependsOn, clientIP: ${clientIP}`);
+                res.writeHead(400, { 'Content-Type': 'application/json' });
+                res.end('{"error": "Missing serviceName or dependsOn"}');
+                return;
+            }
+            serviceRegistry.removeDependency(serviceName, dependsOn);
+            winston.info(`AUDIT: Dependency removed - serviceName: ${serviceName}, dependsOn: ${dependsOn}, clientIP: ${clientIP}`);
+            res.writeHead(200, { 'Content-Type': 'application/json' });
+            res.end(successTrue);
+        } catch (error) {
+            winston.error(`AUDIT: Dependency remove failed - error: ${error.message}, clientIP: ${req.connection.remoteAddress || req.socket.remoteAddress || 'unknown'}`);
+            errorCount++;
+            res.writeHead(500, { 'Content-Type': 'application/json' });
+            res.end('{"error": "Internal server error"}');
+        }
+    });
+
+    routes.set('GET /api/maxine/serviceops/dependency/get', (req, res, query, body) => {
+        try {
+            const clientIP = req.connection.remoteAddress || req.socket.remoteAddress || 'unknown';
+            const serviceName = query.serviceName;
+            if (!serviceName) {
+                winston.warn(`AUDIT: Invalid dependency get - missing serviceName, clientIP: ${clientIP}`);
+                res.writeHead(400, { 'Content-Type': 'application/json' });
+                res.end('{"error": "Missing serviceName"}');
+                return;
+            }
+            const dependencies = serviceRegistry.getDependencies(serviceName);
+            winston.info(`AUDIT: Dependencies retrieved - serviceName: ${serviceName}, count: ${dependencies.length}, clientIP: ${clientIP}`);
+            res.writeHead(200, { 'Content-Type': 'application/json' });
+            res.end(JSON.stringify({ serviceName, dependencies }));
+        } catch (error) {
+            winston.error(`AUDIT: Dependency get failed - error: ${error.message}, clientIP: ${req.connection.remoteAddress || req.socket.remoteAddress || 'unknown'}`);
+            errorCount++;
+            res.writeHead(500, { 'Content-Type': 'application/json' });
+            res.end('{"error": "Internal server error"}');
+        }
+    });
+
+    routes.set('GET /api/maxine/serviceops/dependency/dependents', (req, res, query, body) => {
+        try {
+            const clientIP = req.connection.remoteAddress || req.socket.remoteAddress || 'unknown';
+            const serviceName = query.serviceName;
+            if (!serviceName) {
+                winston.warn(`AUDIT: Invalid dependents get - missing serviceName, clientIP: ${clientIP}`);
+                res.writeHead(400, { 'Content-Type': 'application/json' });
+                res.end('{"error": "Missing serviceName"}');
+                return;
+            }
+            const dependents = serviceRegistry.getDependents(serviceName);
+            winston.info(`AUDIT: Dependents retrieved - serviceName: ${serviceName}, count: ${dependents.length}, clientIP: ${clientIP}`);
+            res.writeHead(200, { 'Content-Type': 'application/json' });
+            res.end(JSON.stringify({ serviceName, dependents }));
+        } catch (error) {
+            winston.error(`AUDIT: Dependents get failed - error: ${error.message}, clientIP: ${req.connection.remoteAddress || req.socket.remoteAddress || 'unknown'}`);
+            errorCount++;
+            res.writeHead(500, { 'Content-Type': 'application/json' });
+            res.end('{"error": "Internal server error"}');
+        }
+    });
+
+    routes.set('GET /api/maxine/serviceops/dependency/graph', (req, res, query, body) => {
+        try {
+            const clientIP = req.connection.remoteAddress || req.socket.remoteAddress || 'unknown';
+            const graph = serviceRegistry.getDependencyGraph();
+            winston.info(`AUDIT: Dependency graph retrieved - services: ${Object.keys(graph).length}, clientIP: ${clientIP}`);
+            res.writeHead(200, { 'Content-Type': 'application/json' });
+            res.end(JSON.stringify(graph));
+        } catch (error) {
+            winston.error(`AUDIT: Dependency graph failed - error: ${error.message}, clientIP: ${req.connection.remoteAddress || req.socket.remoteAddress || 'unknown'}`);
+            errorCount++;
+            res.writeHead(500, { 'Content-Type': 'application/json' });
+            res.end('{"error": "Internal server error"}');
+        }
+    });
+
+    routes.set('GET /api/maxine/serviceops/dependency/cycles', (req, res, query, body) => {
+        try {
+            const clientIP = req.connection.remoteAddress || req.socket.remoteAddress || 'unknown';
+            const cycles = serviceRegistry.detectCycles();
+            winston.info(`AUDIT: Cycles detected - count: ${cycles.length}, clientIP: ${clientIP}`);
+            res.writeHead(200, { 'Content-Type': 'application/json' });
+            res.end(JSON.stringify({ cycles }));
+        } catch (error) {
+            winston.error(`AUDIT: Cycles detection failed - error: ${error.message}, clientIP: ${req.connection.remoteAddress || req.socket.remoteAddress || 'unknown'}`);
+            errorCount++;
+            res.writeHead(500, { 'Content-Type': 'application/json' });
+            res.end('{"error": "Internal server error"}');
+        }
+    });
+
     const server = http.createServer({ keepAlive: false }, (req, res) => {
           if (req.headers.upgrade && req.headers.upgrade.toLowerCase() === 'websocket') {
               // Let WebSocket handle upgrade
