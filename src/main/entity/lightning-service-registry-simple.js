@@ -68,34 +68,88 @@ class LightningServiceRegistrySimple extends EventEmitter {
         this.discoveryCache = new Map(); // key -> { value, timestamp, accessCount, lastAccess }
         this.cacheMaxSize = 10000;
 
+        // Distributed Redis Cache for multi-instance caching
+        this.redisCacheEnabled = config.redisCacheEnabled || false;
+        this.redisCachePrefix = 'maxine:cache:';
+
         // Cache metrics
         this.cacheHits = 0;
         this.cacheMisses = 0;
+        this.redisCacheHits = 0;
+        this.redisCacheMisses = 0;
 
         // Adaptive caching methods
-        this.getCache = (key) => {
+        this.getCache = async (key) => {
+            // First check local cache
             const entry = this.discoveryCache.get(key);
-            if (!entry) return null;
-            const now = Date.now();
-            const ttl = this.getAdaptiveTTL(entry.accessCount, now - entry.lastAccess);
-            if (now - entry.timestamp > ttl) {
-                this.discoveryCache.delete(key);
-                return null;
+            if (entry) {
+                const now = Date.now();
+                const ttl = this.getAdaptiveTTL(entry.accessCount, now - entry.lastAccess);
+                if (now - entry.timestamp <= ttl) {
+                    entry.accessCount++;
+                    entry.lastAccess = now;
+                    this.cacheHits++;
+                    return entry.value;
+                } else {
+                    this.discoveryCache.delete(key);
+                }
             }
-            entry.accessCount++;
-            entry.lastAccess = now;
-            this.cacheHits++;
-            return entry.value;
+
+            // Check Redis distributed cache if enabled
+            if (this.redisCacheEnabled && this.redisClient) {
+                try {
+                    const redisKey = this.redisCachePrefix + key;
+                    const cached = await this.redisClient.get(redisKey);
+                    if (cached) {
+                        const parsed = JSON.parse(cached);
+                        const now = Date.now();
+                        if (now - parsed.timestamp <= parsed.ttl) {
+                            // Store in local cache
+                            this.discoveryCache.set(key, {
+                                value: parsed.value,
+                                timestamp: parsed.timestamp,
+                                accessCount: 1,
+                                lastAccess: now
+                            });
+                            this.redisCacheHits++;
+                            return parsed.value;
+                        } else {
+                            // Expired, delete from Redis
+                            await this.redisClient.del(redisKey);
+                        }
+                    }
+                } catch (err) {
+                    // Ignore Redis errors
+                }
+            }
+
+            this.cacheMisses++;
+            if (this.redisCacheEnabled) this.redisCacheMisses++;
+            return null;
         };
 
-        this.setCache = (key, value) => {
+        this.setCache = async (key, value) => {
             const now = Date.now();
+            const ttl = 30000; // 30 seconds for distributed cache
+
+            // Set in local cache
             if (this.discoveryCache.size >= this.cacheMaxSize) {
                 // Evict least recently used (simple: first key)
                 const firstKey = this.discoveryCache.keys().next().value;
                 this.discoveryCache.delete(firstKey);
             }
             this.discoveryCache.set(key, { value, timestamp: now, accessCount: 1, lastAccess: now });
+
+            // Set in Redis distributed cache if enabled
+            if (this.redisCacheEnabled && this.redisClient) {
+                try {
+                    const redisKey = this.redisCachePrefix + key;
+                    const cacheData = JSON.stringify({ value, timestamp: now, ttl });
+                    await this.redisClient.setEx(redisKey, Math.ceil(ttl / 1000), cacheData);
+                } catch (err) {
+                    // Ignore Redis errors
+                }
+            }
         };
 
         this.getAdaptiveTTL = (accessCount, timeSinceLastAccess) => {
@@ -323,9 +377,9 @@ class LightningServiceRegistrySimple extends EventEmitter {
         return false;
     }
 
-    getRandomNode(serviceName, strategy = 'round-robin', clientIP = null, tags = null, version = null) {
+    async getRandomNode(serviceName, strategy = 'round-robin', clientIP = null, tags = null, version = null) {
         const tracer = trace.getTracer('maxine-registry-simple', '1.0.0');
-        return tracer.startActiveSpan('getRandomNode', (span) => {
+        return await tracer.startActiveSpan('getRandomNode', async (span) => {
             span.setAttribute('service.name', serviceName);
             span.setAttribute('strategy', strategy);
             span.setAttribute('client.ip', clientIP || '');
@@ -349,11 +403,9 @@ class LightningServiceRegistrySimple extends EventEmitter {
         const cacheableStrategies = ['consistent-hash', 'ip-hash', 'geo-aware', 'least-response-time', 'health-score', 'predictive'];
         if (cacheableStrategies.includes(strategy)) {
             const cacheKey = `${fullServiceName}:${strategy}:${clientIP || 'default'}:${tags ? tags.sort().join(',') : ''}`;
-            const cached = this.getCache(cacheKey);
+            const cached = await this.getCache(cacheKey);
             if (cached) {
                 return cached;
-            } else {
-                this.cacheMisses++;
             }
         }
 
@@ -440,7 +492,7 @@ class LightningServiceRegistrySimple extends EventEmitter {
                 // Cache the result for cacheable strategies
                 if (cacheableStrategies.includes(strategy) && selectedNode) {
                     const cacheKey = `${fullServiceName}:${strategy}:${clientIP || 'default'}:${tags ? tags.sort().join(',') : ''}`;
-                    this.setCache(cacheKey, selectedNode);
+                    await this.setCache(cacheKey, selectedNode);
                 }
 
                 span.end();
@@ -742,8 +794,10 @@ class LightningServiceRegistrySimple extends EventEmitter {
         for (const [service, deps] of this.dependencies) {
             data.dependencies[service] = Array.from(deps);
         }
-        data.cacheHits = this.cacheHits;
-        data.cacheMisses = this.cacheMisses;
+            data.cacheHits = this.cacheHits;
+            data.cacheMisses = this.cacheMisses;
+            data.redisCacheHits = this.redisCacheHits;
+            data.redisCacheMisses = this.redisCacheMisses;
           data.dependents = {};
           for (const [service, deps] of this.dependents) {
               data.dependents[service] = Array.from(deps);
@@ -818,8 +872,10 @@ class LightningServiceRegistrySimple extends EventEmitter {
                       this.intentions.set(key, action);
                   }
                    this.blacklistedServices = new Set(data.blacklistedServices || []);
-                   this.cacheHits = data.cacheHits || 0;
-                   this.cacheMisses = data.cacheMisses || 0;
+                    this.cacheHits = data.cacheHits || 0;
+                    this.cacheMisses = data.cacheMisses || 0;
+                    this.redisCacheHits = data.redisCacheHits || 0;
+                    this.redisCacheMisses = data.redisCacheMisses || 0;
                     this.responseTimes = new Map();
                     for (const [node, rt] of Object.entries(data.responseTimes || {})) {
                         this.responseTimes.set(node, rt);
@@ -1163,7 +1219,7 @@ class LightningServiceRegistrySimple extends EventEmitter {
                 }
             }
         }
-        let node = this.getRandomNode(fullServiceName, loadBalancing, ip, tags);
+        let node = await this.getRandomNode(fullServiceName, loadBalancing, ip, tags);
         if (node) return node;
 
         // If not found locally and federation enabled, try peers

@@ -458,7 +458,9 @@ if (config.ultraFastMode) {
             wsConnections: { type: 'number' },
             eventsBroadcasted: { type: 'number' },
             cacheHits: { type: 'number' },
-            cacheMisses: { type: 'number' }
+            cacheMisses: { type: 'number' },
+            redisCacheHits: { type: 'number' },
+            redisCacheMisses: { type: 'number' }
         }
     };
     const stringifyMetrics = stringify(metricsResponseSchema);
@@ -721,7 +723,7 @@ if (config.ultraFastMode) {
             res.writeHead(200, { 'Content-Type': 'application/json' });
             let responseObj = responsePool.get('metrics');
             if (!responseObj) {
-                responseObj = { uptime: 0, requests: 0, errors: 0, services: 0, nodes: 0, persistenceEnabled: false, persistenceType: '', wsConnections: 0, eventsBroadcasted: 0, cacheHits: 0, cacheMisses: 0 };
+                responseObj = { uptime: 0, requests: 0, errors: 0, services: 0, nodes: 0, persistenceEnabled: false, persistenceType: '', wsConnections: 0, eventsBroadcasted: 0, cacheHits: 0, cacheMisses: 0, redisCacheHits: 0, redisCacheMisses: 0 };
             }
             responseObj.uptime = uptime;
             responseObj.requests = requestCount;
@@ -734,6 +736,10 @@ if (config.ultraFastMode) {
             responseObj.eventsBroadcasted = eventBroadcastCount;
             responseObj.cacheHits = serviceRegistry.cacheHits;
             responseObj.cacheMisses = serviceRegistry.cacheMisses;
+            responseObj.redisCacheHits = serviceRegistry.redisCacheHits;
+            responseObj.redisCacheMisses = serviceRegistry.redisCacheMisses;
+            responseObj.redisCacheHits = serviceRegistry.redisCacheHits;
+            responseObj.redisCacheMisses = serviceRegistry.redisCacheMisses;
             res.end(stringifyMetrics(responseObj));
             responsePool.put('metrics', responseObj);
         } catch (error) {

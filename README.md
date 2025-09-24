@@ -16,7 +16,7 @@ A minimal, high-performance service discovery and registry for microservices.
 - **Access Control Lists (ACLs)**: Fine-grained permissions for service discovery access
 - **Service Intentions**: Define allowed communication patterns between services
 - **Service Dependencies**: Manage service dependencies with cycle detection and graph visualization
-- **Metrics**: Basic /metrics endpoint with request counts, errors, uptime, and basic stats
+- **Metrics**: Basic /metrics endpoint with request counts, errors, uptime, and basic stats including cache performance metrics
 - **Audit Logging**: Comprehensive logging of all registry operations using Winston, including user actions, system events, and security incidents with log rotation and export capabilities
 - **Persistence**: Optional persistence to survive restarts with file-based, Redis, memory-mapped (mmap), or shared memory (shm) storage
 - **Minimal Dependencies**: Only essential packages for maximum performance
@@ -54,6 +54,12 @@ Maxine supports optional persistence to maintain registry state across restarts:
 Enable with `PERSISTENCE_ENABLED=true` and set `PERSISTENCE_TYPE=file`, `redis`, `mmap`, or `shm`.
 
 For Redis, configure `REDIS_HOST`, `REDIS_PORT`, `REDIS_PASSWORD`.
+
+## Distributed Caching
+
+Maxine supports Redis-based distributed caching for service discovery results across multiple instances, reducing latency and improving scalability.
+
+Enable with `REDIS_CACHE_ENABLED=true` and configure Redis settings. Discovery results for deterministic load balancing strategies (consistent-hash, ip-hash, geo-aware, etc.) are cached in Redis with a 30-second TTL, allowing multiple Maxine instances to share cached results and reduce registry load.
 
 ## Federation
 
