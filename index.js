@@ -5,23 +5,26 @@ process.env.LIGHTNING_MODE = 'true';
 const config = require('./src/main/config/config');
 const { trace } = require('@opentelemetry/api');
 
-// Initialize OpenTelemetry tracing
-const { NodeSDK } = require('@opentelemetry/sdk-node');
-const { JaegerExporter } = require('@opentelemetry/exporter-jaeger');
+// Initialize OpenTelemetry tracing only if not ultra-fast mode
+let sdk;
+if (!config.ultraFastMode) {
+  const { NodeSDK } = require('@opentelemetry/sdk-node');
+  const { JaegerExporter } = require('@opentelemetry/exporter-jaeger');
 
-const jaegerExporter = new JaegerExporter({
-  endpoint: process.env.JAEGER_ENDPOINT || 'http://localhost:14268/api/traces',
-});
+  const jaegerExporter = new JaegerExporter({
+    endpoint: process.env.JAEGER_ENDPOINT || 'http://localhost:14268/api/traces',
+  });
 
-const sdk = new NodeSDK({
-  serviceName: 'maxine-service-registry',
-  traceExporter: jaegerExporter,
-});
+  sdk = new NodeSDK({
+    serviceName: 'maxine-service-registry',
+    traceExporter: jaegerExporter,
+  });
 
-try {
-  console.log('OpenTelemetry tracing initialized');
-} catch (error) {
-  console.error('Error initializing OpenTelemetry:', error);
+  try {
+    console.log('OpenTelemetry tracing initialized');
+  } catch (error) {
+    console.error('Error initializing OpenTelemetry:', error);
+  }
 }
 
 const EventEmitter = require('events');
@@ -150,38 +153,21 @@ if (config.ultraFastMode) {
     // Handler functions - only core features for ultra speed
     // Handle service registration
     const handleRegister = (req, res, query, body) => {
-        const tracer = trace.getTracer('maxine-api', '1.0.0');
-        return tracer.startActiveSpan('handleRegister', (span) => {
-            span.setAttribute('http.method', req.method);
-            span.setAttribute('http.url', req.url);
-            span.setAttribute('client.ip', req.connection.remoteAddress);
+        try {
+            const { serviceName, host, port, metadata } = body;
 
-            try {
-                const { serviceName, host, port, metadata } = body;
-                span.setAttribute('service.name', serviceName);
-                span.setAttribute('node.host', host);
-                span.setAttribute('node.port', port);
-
-                if (!serviceName || !host || !port) {
-                    span.setStatus({ code: 2, message: 'Missing required fields' });
-                    span.end();
-                    res.writeHead(400, { 'Content-Type': 'application/json' });
-                    res.end(errorMissingServiceName);
-                    return;
-                }
-                const nodeId = serviceRegistry.register(serviceName, { host, port, metadata });
-                span.setAttribute('node.id', nodeId);
-                span.end();
-                res.writeHead(200, { 'Content-Type': 'application/json' });
-                res.end(stringifyRegister({ nodeId, status: 'registered' }));
-            } catch (error) {
-                span.recordException(error);
-                span.setStatus({ code: 2, message: error.message });
-                span.end();
-                res.writeHead(500, { 'Content-Type': 'application/json' });
-                res.end('{"error": "Internal server error"}');
+            if (!serviceName || !host || !port) {
+                res.writeHead(400, { 'Content-Type': 'application/json' });
+                res.end(errorMissingServiceName);
+                return;
             }
-        });
+            const nodeId = serviceRegistry.register(serviceName, { host, port, metadata });
+            res.writeHead(200, { 'Content-Type': 'application/json' });
+            res.end(stringifyRegister({ nodeId, status: 'registered' }));
+        } catch (error) {
+            res.writeHead(500, { 'Content-Type': 'application/json' });
+            res.end('{"error": "Internal server error"}');
+        }
     };
 
     // Handle service heartbeat - use UDP if enabled
@@ -220,54 +206,30 @@ if (config.ultraFastMode) {
         }
     };
     // Handle service discovery
-    const handleDiscover = (req, res, query, body) => {
-        const tracer = trace.getTracer('maxine-api', '1.0.0');
-        return tracer.startActiveSpan('handleDiscover', async (span) => {
-            span.setAttribute('http.method', req.method);
-            span.setAttribute('http.url', req.url);
-            span.setAttribute('client.ip', req.connection.remoteAddress);
-
-            try {
-                const serviceName = query.serviceName;
-                span.setAttribute('service.name', serviceName);
-                if (!serviceName) {
-                    span.setStatus({ code: 2, message: 'Missing serviceName' });
-                    span.end();
-                    res.writeHead(400, { 'Content-Type': 'application/json' });
-                    res.end(errorMissingServiceName);
-                    return;
-                }
-                const version = query.version;
-                const strategy = query.loadBalancing || 'round-robin';
-                const tags = query.tags ? query.tags.split(',') : [];
-                span.setAttribute('version', version || '');
-                span.setAttribute('strategy', strategy);
-                span.setAttribute('tags', tags.join(','));
-
-                const node = await serviceRegistry.discover(serviceName, { version, loadBalancing: strategy, tags, ip: req.connection.remoteAddress });
-                if (!node) {
-                    span.setStatus({ code: 2, message: 'Service unavailable' });
-                    span.end();
-                    res.writeHead(404, { 'Content-Type': 'application/json' });
-                    res.end(serviceUnavailable);
-                    return;
-                }
-                span.setAttribute('node.address', node.address);
-                span.setAttribute('node.name', node.nodeName);
-                const resolvedVersion = version === 'latest' ? serviceRegistry.getLatestVersion(serviceName) : version;
-                const fullServiceName = resolvedVersion ? `${serviceName}:${resolvedVersion}` : serviceName;
-
-                span.end();
-                res.writeHead(200, { 'Content-Type': 'application/json' });
-                res.end(stringifyDiscover({ address: node.address, nodeName: node.nodeName, healthy: true }));
-            } catch (error) {
-                span.recordException(error);
-                span.setStatus({ code: 2, message: error.message });
-                span.end();
-                res.writeHead(500, { 'Content-Type': 'application/json' });
-                res.end('{"error": "Internal server error"}');
+    const handleDiscover = async (req, res, query, body) => {
+        try {
+            const serviceName = query.serviceName;
+            if (!serviceName) {
+                res.writeHead(400, { 'Content-Type': 'application/json' });
+                res.end(errorMissingServiceName);
+                return;
             }
-        });
+            const version = query.version;
+            const strategy = query.loadBalancing || 'round-robin';
+            const tags = query.tags ? query.tags.split(',') : [];
+
+            const node = await serviceRegistry.discover(serviceName, { version, loadBalancing: strategy, tags, ip: req.connection.remoteAddress });
+            if (!node) {
+                res.writeHead(404, { 'Content-Type': 'application/json' });
+                res.end(serviceUnavailable);
+                return;
+            }
+            res.writeHead(200, { 'Content-Type': 'application/json' });
+            res.end(stringifyDiscover({ address: node.address, nodeName: node.nodeName, healthy: true }));
+        } catch (error) {
+            res.writeHead(500, { 'Content-Type': 'application/json' });
+            res.end('{"error": "Internal server error"}');
+        }
     };
 
     // Handle list all services
