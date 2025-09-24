@@ -5,7 +5,13 @@ import socket
 import threading
 from typing import Dict, List, Optional, Any, Callable
 from urllib.parse import urljoin
-import websocket
+
+try:
+    import websocket
+    WEBSOCKET_AVAILABLE = True
+except ImportError:
+    WEBSOCKET_AVAILABLE = False
+    websocket = None
 
 
 class MaxineClient:
@@ -553,9 +559,12 @@ class WebSocketClient:
             base_url: WebSocket URL (ws:// or wss://)
             token: JWT token for authentication
         """
+        if not WEBSOCKET_AVAILABLE:
+            raise ImportError("websocket-client package is required for WebSocket functionality. Install with: pip install websocket-client")
+
         self.base_url = base_url.rstrip('/')
         self.token = token
-        self.ws: Optional[websocket.WebSocketApp] = None
+        self.ws: Optional[Any] = None
         self.connected = False
         self.event_handlers: Dict[str, List[Callable]] = {}
         self._thread: Optional[threading.Thread] = None
@@ -599,6 +608,9 @@ class WebSocketClient:
 
     def connect(self):
         """Connect to WebSocket"""
+        if not WEBSOCKET_AVAILABLE or websocket is None:
+            raise ImportError("websocket-client package is required for WebSocket functionality")
+
         websocket.enableTrace(False)
         self.ws = websocket.WebSocketApp(
             self.base_url,

@@ -669,6 +669,11 @@ router.get('/dependency/dependents', (req, res) => {
     res.json({ dependents: deps });
 });
 
+router.post('/dependency/analyze', (req, res) => {
+    getServiceRegistry().analyzeDependencies();
+    res.json({ success: true, message: 'Dependency analysis completed' });
+});
+
 // Tracing routes
 router.post('/trace/start', rawBodyParser, (req, res, next) => {
     try {

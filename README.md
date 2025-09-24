@@ -899,6 +899,21 @@ Response:
 }
 ```
 
+##### Analyze Dependencies
+```http
+POST /api/maxine/serviceops/dependency/analyze
+```
+
+Triggers automatic dependency analysis based on recorded service calls. Dependencies are inferred from call logs where services have called each other above the configured threshold within the time window.
+
+Response:
+```json
+{
+  "success": true,
+  "message": "Dependency analysis completed"
+}
+```
+
 ##### Set ACL
 ```http
 POST /api/maxine/serviceops/acl/set

@@ -263,6 +263,9 @@ class LightningServiceRegistrySimple extends EventEmitter {
 
         // Periodic cleanup
         setInterval(() => this.cleanup(), config.cleanupInterval);
+
+        // Periodic dependency analysis
+        setInterval(() => this.analyzeDependencies(), config.dependencyAnalysisInterval || 60000);
     }
 
     cleanup() {
@@ -335,6 +338,19 @@ class LightningServiceRegistrySimple extends EventEmitter {
 
         if (toRemove.length > 0) {
             this.saveRegistry();
+        }
+
+        // Cleanup old call logs
+        const maxAge = config.dependencyMaxAge || 86400000; // 24 hours default
+        for (const [caller, calls] of this.callLogs) {
+            for (const [called, data] of calls) {
+                if (now - data.lastSeen > maxAge) {
+                    calls.delete(called);
+                }
+            }
+            if (calls.size === 0) {
+                this.callLogs.delete(caller);
+            }
         }
     }
 
