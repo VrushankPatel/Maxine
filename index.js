@@ -142,20 +142,20 @@ if (config.lightningMode) {
     let requestCount = 0;
     let errorCount = 0;
 
-    // Rate limiting
-    const rateLimitMap = new Map(); // ip -> { count, resetTime }
-    const rateLimitMax = 10000;
-    const rateLimitWindow = 15 * 60 * 1000; // 15 minutes
+    // Rate limiting disabled in lightning mode for ultimate speed
+    // const rateLimitMap = new Map(); // ip -> { count, resetTime }
+    // const rateLimitMax = 10000;
+    // const rateLimitWindow = 15 * 60 * 1000; // 15 minutes
 
     // Handler functions - only core features for lightning speed
     const handleRegister = (req, res, query, body) => {
-        const { serviceName, host, port } = body;
+        const { serviceName, host, port, metadata } = body;
         if (!serviceName || !host || !port) {
             res.writeHead(400, { 'Content-Type': 'application/json' });
             res.end(errorMissingServiceName);
             return;
         }
-        const nodeId = serviceRegistry.register(serviceName, { host, port });
+        const nodeId = serviceRegistry.register(serviceName, { host, port, metadata });
         res.writeHead(200, { 'Content-Type': 'application/json' });
         res.end(stringifyRegister({ nodeId, status: 'registered' }));
     };
@@ -191,9 +191,11 @@ if (config.lightningMode) {
             res.end(errorMissingServiceName);
             return;
         }
+        const version = query.version;
+        const fullServiceName = version ? `${serviceName}:${version}` : serviceName;
         const strategy = query.loadBalancing || 'round-robin';
         const clientIP = req.connection.remoteAddress;
-        const node = serviceRegistry.getRandomNode(serviceName, strategy, clientIP);
+        const node = serviceRegistry.getRandomNode(fullServiceName, strategy, clientIP);
         if (!node) {
             res.writeHead(404, { 'Content-Type': 'application/json' });
             res.end(serviceUnavailable);
@@ -474,19 +476,19 @@ if (config.lightningMode) {
      const server = http.createServer({ keepAlive: true, keepAliveInitialDelay: 0 }, (req, res) => {
          const clientIP = req.connection.remoteAddress || req.socket.remoteAddress || 'unknown';
 
-         // Rate limiting
-         const now = Date.now();
-         let rateData = rateLimitMap.get(clientIP);
-         if (!rateData || now > rateData.resetTime) {
-             rateData = { count: 0, resetTime: now + rateLimitWindow };
-             rateLimitMap.set(clientIP, rateData);
-         }
-         if (rateData.count >= rateLimitMax) {
-             res.writeHead(429, { 'Content-Type': 'application/json' });
-             res.end('{"error": "Too many requests"}');
-             return;
-         }
-         rateData.count++;
+          // Rate limiting disabled in lightning mode for ultimate speed
+          // const now = Date.now();
+          // let rateData = rateLimitMap.get(clientIP);
+          // if (!rateData || now > rateData.resetTime) {
+          //     rateData = { count: 0, resetTime: now + rateLimitWindow };
+          //     rateLimitMap.set(clientIP, rateData);
+          // }
+          // if (rateData.count >= rateLimitMax) {
+          //     res.writeHead(429, { 'Content-Type': 'application/json' });
+          //     res.end('{"error": "Too many requests"}');
+          //     return;
+          // }
+          // rateData.count++;
 
          requestCount++;
 

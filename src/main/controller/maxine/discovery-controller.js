@@ -572,7 +572,9 @@ const lightningDiscovery = async (req, res) => {
             }
         }
 
-        // Simplified for lightning: assume default namespace/datacenter, no version
+        // Simplified for lightning: assume default namespace/datacenter
+        const version = req.query.version;
+        if (version) fullServiceName += `:${version}`;
         const strategy = req.query.strategy || 'round-robin';
         const clientId = req.query.clientId;
         const tags = req.query.tags ? req.query.tags.split(',') : [];

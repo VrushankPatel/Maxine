@@ -5,7 +5,7 @@ A minimal, high-performance service discovery and registry for microservices.
 ## Features
 
 - **Lightning Fast**: In-memory storage with O(1) lookups, optimized heartbeat with periodic cleanup, pre-allocated response buffers, fast LCG PRNG for random selection
-- **Simple API**: Register, discover, heartbeat, and deregister services
+- **Simple API**: Register, discover, heartbeat, and deregister services with support for service versioning
 - **Automatic Cleanup**: Removes expired services with efficient periodic cleanup (every 30 seconds)
 - **Load Balancing**: Round-robin, random, weighted-random, least-connections, consistent-hash, ip-hash selection for advanced load balancing
 - **Health Checks**: /health endpoint returning service and node counts, active health monitoring for real-time status
@@ -99,7 +99,7 @@ Content-Type: application/json
 }
 ```
 
-Note: `weight` in metadata is used for `weighted-random` load balancing (default 1).
+Note: `version` in metadata enables service versioning. `weight` in metadata is used for `weighted-random` load balancing (default 1).
 
 Response:
 ```json
@@ -110,10 +110,10 @@ Response:
 
 ##### Discover a Service
 ```http
-GET /discover?serviceName=my-service&loadBalancing=round-robin
+GET /discover?serviceName=my-service&loadBalancing=round-robin&version=1.0
 ```
 
-Load balancing options: `round-robin` (default), `random`, `weighted-random`, `least-connections`, `consistent-hash`, `ip-hash`
+Load balancing options: `round-robin` (default), `random`, `weighted-random`, `least-connections`, `consistent-hash`, `ip-hash`. Use `version` parameter for service versioning.
 
 Response: Returns a service instance or 404 if not found.
 

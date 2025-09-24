@@ -39,7 +39,7 @@ describe(`${fileName} : Lightning Mode API`, () => {
 
     it('GET /discover -> 200 & should discover the service', (done) => {
         chai.request(app)
-            .get('/discover?serviceName=test-service')
+            .get('/discover?serviceName=test-service&version=1.0')
             .end((_, res) => {
                 res.should.have.status(200);
                 res.should.be.json;
