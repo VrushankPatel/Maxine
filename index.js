@@ -438,23 +438,30 @@ if (config.ultraFastMode) {
         const pathname = parsedUrl.pathname;
         const method = req.method;
 
+        // Handle correlation ID
+        let correlationId = req.headers['x-correlation-id'] || req.headers['x-request-id'] || generateCorrelationId();
+        res.setHeader('x-correlation-id', correlationId);
+
         const routeKey = `${method} ${pathname}`;
         const handler = routes.get(routeKey);
         if (handler) {
             if (method === 'POST' || method === 'PUT' || method === 'DELETE') {
-                const chunks = [];
-                req.on('data', chunk => chunks.push(chunk));
-                req.on('end', () => {
-                    const body = Buffer.concat(chunks).toString();
-                    try {
-                        const parsedBody = body ? JSON.parse(body) : {};
-                        handler(req, res, parsedUrl.query, parsedBody);
-                    } catch (e) {
-                        res.writeHead(400, { 'Content-Type': 'application/json' });
-                        res.end(errorInvalidJSON);
-                    }
-                });
+                  const chunks = [];
+                  req.on('data', chunk => chunks.push(chunk));
+                  req.on('end', () => {
+                      const body = Buffer.concat(chunks).toString();
+                      try {
+                          const parsedBody = body ? JSON.parse(body) : {};
+                          // Add correlation ID to request object for handlers
+                          req.correlationId = correlationId;
+                          handler(req, res, parsedUrl.query, parsedBody);
+                      } catch (e) {
+                          res.writeHead(400, { 'Content-Type': 'application/json' });
+                          res.end(errorInvalidJSON);
+                      }
+                  });
             } else {
+                req.correlationId = correlationId;
                 handler(req, res, parsedUrl.query, {});
             }
         } else {
@@ -706,10 +713,89 @@ if (config.ultraFastMode) {
     let wsConnectionCount = 0;
     let eventBroadcastCount = 0;
 
+    // Correlation ID generation
+    const generateCorrelationId = () => {
+        return `corr-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+    };
+
     // Rate limiting disabled in lightning mode for ultimate speed
     // const rateLimitMap = new Map(); // ip -> { count, resetTime }
     // const rateLimitMax = 10000;
     // const rateLimitWindow = 15 * 60 * 1000; // 15 minutes
+
+    // Service configuration validation
+    const validateServiceConfig = (serviceName, host, port, metadata) => {
+        const errors = [];
+
+        // Service name validation
+        if (!serviceName || typeof serviceName !== 'string') {
+            errors.push('serviceName is required and must be a string');
+        } else if (serviceName.length > 100) {
+            errors.push('serviceName must be less than 100 characters');
+        } else if (!/^[a-zA-Z0-9_-]+$/.test(serviceName)) {
+            errors.push('serviceName must contain only alphanumeric characters, hyphens, and underscores');
+        }
+
+        // Host validation
+        if (!host || typeof host !== 'string') {
+            errors.push('host is required and must be a string');
+        } else if (host.length > 253) {
+            errors.push('host must be less than 253 characters');
+        }
+
+        // Port validation
+        if (typeof port !== 'number' || port < 1 || port > 65535) {
+            errors.push('port must be a number between 1 and 65535');
+        }
+
+        // Metadata validation
+        if (metadata) {
+            if (typeof metadata !== 'object') {
+                errors.push('metadata must be an object');
+            } else {
+                // Version validation
+                if (metadata.version && (typeof metadata.version !== 'string' || !/^\d+\.\d+\.\d+$/.test(metadata.version))) {
+                    errors.push('version must be a semantic version string (e.g., 1.0.0)');
+                }
+
+                // Weight validation
+                if (metadata.weight !== undefined && (typeof metadata.weight !== 'number' || metadata.weight < 1 || metadata.weight > 10)) {
+                    errors.push('weight must be a number between 1 and 10');
+                }
+
+                // Tags validation
+                if (metadata.tags) {
+                    if (!Array.isArray(metadata.tags)) {
+                        errors.push('tags must be an array');
+                    } else if (metadata.tags.length > 10) {
+                        errors.push('tags array must have at most 10 elements');
+                    } else if (!metadata.tags.every(tag => typeof tag === 'string' && tag.length <= 50)) {
+                        errors.push('each tag must be a string of at most 50 characters');
+                    }
+                }
+
+                // Health check validation
+                if (metadata.healthCheck) {
+                    const hc = metadata.healthCheck;
+                    if (typeof hc !== 'object') {
+                        errors.push('healthCheck must be an object');
+                    } else {
+                        if (hc.url && typeof hc.url !== 'string') {
+                            errors.push('healthCheck.url must be a string');
+                        }
+                        if (hc.interval !== undefined && (typeof hc.interval !== 'number' || hc.interval < 1000)) {
+                            errors.push('healthCheck.interval must be a number >= 1000ms');
+                        }
+                        if (hc.timeout !== undefined && (typeof hc.timeout !== 'number' || hc.timeout < 100)) {
+                            errors.push('healthCheck.timeout must be a number >= 100ms');
+                        }
+                    }
+                }
+            }
+        }
+
+        return errors;
+    };
 
     // Handler functions - only core features for lightning speed
     // Handle service registration
@@ -717,12 +803,15 @@ if (config.ultraFastMode) {
         try {
             const { serviceName, host, port, metadata } = body;
             const clientIP = req.connection.remoteAddress || req.socket.remoteAddress || 'unknown';
-            if (!serviceName || !host || !port) {
-                // winston.warn(`AUDIT: Invalid registration attempt - missing fields, clientIP: ${clientIP}`);
+
+            // Validate configuration
+            const validationErrors = validateServiceConfig(serviceName, host, port, metadata);
+            if (validationErrors.length > 0) {
                 res.writeHead(400, { 'Content-Type': 'application/json' });
-                res.end(errorMissingServiceName);
+                res.end(JSON.stringify({ error: 'Validation failed', details: validationErrors }));
                 return;
             }
+
             const nodeId = serviceRegistry.register(serviceName, { host, port, metadata });
             // winston.info(`AUDIT: Service registered - serviceName: ${serviceName}, host: ${host}, port: ${port}, nodeId: ${nodeId}, clientIP: ${clientIP}`);
             res.writeHead(200, { 'Content-Type': 'application/json' });
@@ -814,6 +903,22 @@ if (config.ultraFastMode) {
                 res.end(serviceUnavailable);
                 return;
             }
+
+            // Apply chaos engineering
+            const chaos = chaosState.get(serviceName);
+            if (chaos) {
+                // Simulate failure
+                if (chaos.failureRate > 0 && Math.random() < chaos.failureRate) {
+                    res.writeHead(503, { 'Content-Type': 'application/json' });
+                    res.end('{"error": "Service temporarily unavailable (chaos)"}');
+                    return;
+                }
+                // Simulate latency
+                if (chaos.latency > 0) {
+                    await new Promise(resolve => setTimeout(resolve, chaos.latency));
+                }
+            }
+
             const resolvedVersion = version === 'latest' ? serviceRegistry.getLatestVersion(serviceName) : version;
             const fullServiceName = resolvedVersion ? `${serviceName}:${resolvedVersion}` : serviceName;
             // winston.info(`AUDIT: Service discovered - serviceName: ${fullServiceName}, strategy: ${strategy}, tags: ${tags}, node: ${node.nodeName}, clientIP: ${clientIP}`);
@@ -1520,7 +1625,7 @@ if (config.ultraFastMode) {
         }
     };
 
-    // Handle Istio service mesh config generation
+    // Handle Istio service mesh config generation with AI optimization
     const handleIstioConfig = (req, res, query, body) => {
         try {
             const clientIP = req.connection.remoteAddress || req.socket.remoteAddress || 'unknown';
@@ -1542,6 +1647,36 @@ if (config.ultraFastMode) {
                         labels: { version: version }
                     });
                 }
+
+                // AI-optimized policies based on traffic patterns and error rates
+                const errorRate = serviceRegistry.getErrorRate ? serviceRegistry.getErrorRate(serviceName) : 0.05; // Default 5%
+                const avgResponseTime = serviceRegistry.getAvgResponseTime ? serviceRegistry.getAvgResponseTime(serviceName) : 100; // Default 100ms
+                const trafficVolume = serviceRegistry.getTrafficVolume ? serviceRegistry.getTrafficVolume(serviceName) : 1000; // Default requests/min
+
+                // Intelligent circuit breaker settings
+                const circuitBreaker = {
+                    connectionPool: {
+                        tcp: { maxConnections: Math.max(10, Math.min(100, Math.floor(trafficVolume / 10))) },
+                        http: {
+                            http2MaxRequests: Math.max(10, Math.min(100, Math.floor(trafficVolume / 10))),
+                            maxRequestsPerConnection: 10
+                        }
+                    },
+                    outlierDetection: {
+                        consecutive5xxErrors: Math.max(1, Math.floor(errorRate * 10)),
+                        interval: '10s',
+                        baseEjectionTime: '30s',
+                        maxEjectionPercent: Math.min(50, Math.max(10, errorRate * 100))
+                    }
+                };
+
+                // Intelligent retry policy
+                const retryPolicy = {
+                    attempts: Math.max(1, Math.min(5, Math.floor(errorRate * 10) + 1)),
+                    perTryTimeout: `${Math.max(1, avgResponseTime / 1000)}s`,
+                    retryOn: errorRate > 0.1 ? '5xx,connect-failure' : 'connect-failure'
+                };
+
                 const virtualService = {
                     apiVersion: 'networking.istio.io/v1alpha3',
                     kind: 'VirtualService',
@@ -1554,22 +1689,31 @@ if (config.ultraFastMode) {
                                     host: serviceName,
                                     subset: 'default'
                                 }
-                            }]
+                            }],
+                            retries: retryPolicy,
+                            timeout: `${Math.max(5, avgResponseTime * 2 / 1000)}s`
                         }]
                     }
                 };
+
                 const destinationRule = {
                     apiVersion: 'networking.istio.io/v1alpha3',
                     kind: 'DestinationRule',
                     metadata: { name: serviceName },
                     spec: {
                         host: serviceName,
-                        subsets: subsets
+                        subsets: subsets,
+                        trafficPolicy: {
+                            connectionPool: circuitBreaker.connectionPool,
+                            outlierDetection: circuitBreaker.outlierDetection,
+                            tls: { mode: 'ISTIO_MUTUAL' }
+                        }
                     }
                 };
+
                 configs.push({ virtualService, destinationRule });
             }
-            // winston.info(`AUDIT: Istio config requested - services: ${services.size}, clientIP: ${clientIP}`);
+            // winston.info(`AUDIT: AI-optimized Istio config requested - services: ${services.size}, clientIP: ${clientIP}`);
             res.writeHead(200, { 'Content-Type': 'application/json' });
             res.end(JSON.stringify(configs, null, 2));
         } catch (error) {
@@ -1580,7 +1724,7 @@ if (config.ultraFastMode) {
         }
     };
 
-    // Handle Linkerd service mesh config generation
+    // Handle Linkerd service mesh config generation with AI optimization
     const handleLinkerdConfig = (req, res, query, body) => {
         try {
             const clientIP = req.connection.remoteAddress || req.socket.remoteAddress || 'unknown';
@@ -1597,6 +1741,17 @@ if (config.ultraFastMode) {
                     }
                 });
 
+                // AI-optimized retry budget based on traffic patterns and error rates
+                const errorRate = serviceRegistry.getErrorRate ? serviceRegistry.getErrorRate(serviceName) : 0.05; // Default 5%
+                const trafficVolume = serviceRegistry.getTrafficVolume ? serviceRegistry.getTrafficVolume(serviceName) : 1000; // Default requests/min
+
+                // Intelligent retry budget
+                const retryBudget = {
+                    retryRatio: Math.min(0.5, Math.max(0.1, errorRate * 2)), // Higher error rate = more retries
+                    minRetriesPerSecond: Math.max(1, Math.floor(trafficVolume / 100)), // Scale with traffic
+                    ttl: errorRate > 0.1 ? '30s' : '10s' // Longer TTL for high error services
+                };
+
                 const serviceProfile = {
                     apiVersion: 'linkerd.io/v1alpha2',
                     kind: 'ServiceProfile',
@@ -1606,16 +1761,12 @@ if (config.ultraFastMode) {
                     },
                     spec: {
                         routes: routes,
-                        retryBudget: {
-                            retryRatio: 0.2,
-                            minRetriesPerSecond: 10,
-                            ttl: '10s'
-                        }
+                        retryBudget: retryBudget
                     }
                 };
                 configs.push(serviceProfile);
             }
-            // winston.info(`AUDIT: Linkerd config requested - services: ${services.size}, clientIP: ${clientIP}`);
+            // winston.info(`AUDIT: AI-optimized Linkerd config requested - services: ${services.size}, clientIP: ${clientIP}`);
             res.writeHead(200, { 'Content-Type': 'application/json' });
             res.end(JSON.stringify(configs, null, 2));
         } catch (error) {
@@ -1629,6 +1780,79 @@ if (config.ultraFastMode) {
     routes.set('GET /service-mesh/envoy-config', handleEnvoyConfig);
     routes.set('GET /service-mesh/istio-config', handleIstioConfig);
     routes.set('GET /service-mesh/linkerd-config', handleLinkerdConfig);
+
+    // Chaos Engineering Tools
+    const chaosState = new Map(); // serviceName -> { latency: ms, failureRate: 0-1, partition: boolean }
+
+    routes.set('POST /api/maxine/chaos/inject-latency', (req, res, query, body) => {
+        try {
+            const { serviceName, delay } = body;
+            if (!serviceName || typeof delay !== 'number') {
+                res.writeHead(400, { 'Content-Type': 'application/json' });
+                res.end('{"error": "Missing serviceName or invalid delay"}');
+                return;
+            }
+            if (!chaosState.has(serviceName)) {
+                chaosState.set(serviceName, { latency: 0, failureRate: 0, partition: false });
+            }
+            chaosState.get(serviceName).latency = delay;
+            res.writeHead(200, { 'Content-Type': 'application/json' });
+            res.end('{"success": true}');
+        } catch (error) {
+            res.writeHead(500, { 'Content-Type': 'application/json' });
+            res.end('{"error": "Internal server error"}');
+        }
+    });
+
+    routes.set('POST /api/maxine/chaos/inject-failure', (req, res, query, body) => {
+        try {
+            const { serviceName, rate } = body;
+            if (!serviceName || typeof rate !== 'number' || rate < 0 || rate > 1) {
+                res.writeHead(400, { 'Content-Type': 'application/json' });
+                res.end('{"error": "Missing serviceName or invalid rate (0-1)"}');
+                return;
+            }
+            if (!chaosState.has(serviceName)) {
+                chaosState.set(serviceName, { latency: 0, failureRate: 0, partition: false });
+            }
+            chaosState.get(serviceName).failureRate = rate;
+            res.writeHead(200, { 'Content-Type': 'application/json' });
+            res.end('{"success": true}');
+        } catch (error) {
+            res.writeHead(500, { 'Content-Type': 'application/json' });
+            res.end('{"error": "Internal server error"}');
+        }
+    });
+
+    routes.set('POST /api/maxine/chaos/reset', (req, res, query, body) => {
+        try {
+            const { serviceName } = body;
+            if (serviceName) {
+                chaosState.delete(serviceName);
+            } else {
+                chaosState.clear();
+            }
+            res.writeHead(200, { 'Content-Type': 'application/json' });
+            res.end('{"success": true}');
+        } catch (error) {
+            res.writeHead(500, { 'Content-Type': 'application/json' });
+            res.end('{"error": "Internal server error"}');
+        }
+    });
+
+    routes.set('GET /api/maxine/chaos/status', (req, res, query, body) => {
+        try {
+            const status = {};
+            for (const [serviceName, state] of chaosState) {
+                status[serviceName] = state;
+            }
+            res.writeHead(200, { 'Content-Type': 'application/json' });
+            res.end(JSON.stringify({ chaosState: status }));
+        } catch (error) {
+            res.writeHead(500, { 'Content-Type': 'application/json' });
+            res.end('{"error": "Internal server error"}');
+        }
+    });
 
     // Versioning endpoints
     routes.set('GET /versions', (req, res, query, body) => {
