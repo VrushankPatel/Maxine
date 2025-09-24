@@ -4,6 +4,7 @@ const HashRing = require('hashring');
 const fs = require('fs');
 const path = require('path');
 const { EventEmitter } = require('events');
+const axios = require('axios');
 
 // Fast LCG PRNG for random load balancing
 let lcgSeed = Date.now();
@@ -125,6 +126,8 @@ class LightningServiceRegistrySimple extends EventEmitter {
 
         this.saveRegistry();
         if (global.broadcast) global.broadcast('service_registered', { serviceName: fullServiceName, nodeId: nodeName });
+        // Replicate to federation peers
+        this.replicateRegistration(fullServiceName, node);
         return nodeName;
     }
 
@@ -154,6 +157,8 @@ class LightningServiceRegistrySimple extends EventEmitter {
         this.nodeToService.delete(nodeId);
         this.saveRegistry();
         if (global.broadcast) global.broadcast('service_deregistered', { nodeId });
+        // Replicate to federation peers
+        this.replicateDeregistration(nodeId);
     }
 
     heartbeat(nodeId) {
@@ -736,8 +741,8 @@ class LightningServiceRegistrySimple extends EventEmitter {
         return this.trafficDistribution.get(serviceName) || {};
     }
 
-    // Enhanced discover with canary support
-    discover(serviceName, options = {}) {
+    // Enhanced discover with canary support and federation
+    async discover(serviceName, options = {}) {
         const { version, loadBalancing = 'round-robin', tags = [], ip, proxy } = options;
         let fullServiceName = serviceName;
         if (version) {
@@ -764,7 +769,25 @@ class LightningServiceRegistrySimple extends EventEmitter {
                 }
             }
         }
-        return this.getRandomNode(fullServiceName, loadBalancing, ip, tags);
+        let node = this.getRandomNode(fullServiceName, loadBalancing, ip, tags);
+        if (node) return node;
+
+        // If not found locally and federation enabled, try peers
+        if (config.federationEnabled && config.federationPeers.length > 0) {
+            for (const peer of config.federationPeers) {
+                try {
+                    const url = `${peer}/discover?serviceName=${encodeURIComponent(fullServiceName)}&loadBalancing=${loadBalancing}&tags=${tags.join(',')}${version ? `&version=${version}` : ''}`;
+                    const response = await axios.get(url, { timeout: config.federationTimeout });
+                    if (response.data && response.data.address) {
+                        // Cache locally? For simplicity, just return
+                        return { address: response.data.address, nodeName: response.data.nodeName, healthy: true };
+                    }
+                } catch (err) {
+                    // Ignore errors, try next peer
+                }
+            }
+        }
+        return null;
     }
 
     // Version management
@@ -788,17 +811,48 @@ class LightningServiceRegistrySimple extends EventEmitter {
         }
     }
 
-    // Shift traffic gradually
-    shiftTraffic(serviceName, fromVersion, toVersion, percentage) {
-        const distribution = this.getTrafficDistribution(serviceName);
-        const fromPercent = distribution[fromVersion] || 0;
-        const toPercent = distribution[toVersion] || 0;
-        const shiftAmount = Math.min(fromPercent, percentage);
-        distribution[fromVersion] = fromPercent - shiftAmount;
-        distribution[toVersion] = toPercent + shiftAmount;
-        if (distribution[fromVersion] <= 0) delete distribution[fromVersion];
-        this.setTrafficDistribution(serviceName, distribution);
-    }
+        // Shift traffic gradually
+        shiftTraffic(serviceName, fromVersion, toVersion, percentage) {
+            const distribution = this.getTrafficDistribution(serviceName);
+            const fromPercent = distribution[fromVersion] || 0;
+            const toPercent = distribution[toVersion] || 0;
+            const shiftAmount = Math.min(fromPercent, percentage);
+            distribution[fromVersion] = fromPercent - shiftAmount;
+            distribution[toVersion] = toPercent + shiftAmount;
+            if (distribution[fromVersion] <= 0) delete distribution[fromVersion];
+            this.setTrafficDistribution(serviceName, distribution);
+        }
+
+        // Federation replication
+        async replicateRegistration(serviceName, node) {
+            if (!config.federationEnabled || config.federationPeers.length === 0) return;
+            for (const peer of config.federationPeers) {
+                try {
+                    await axios.post(`${peer}/register`, {
+                        serviceName,
+                        host: node.host,
+                        port: node.port,
+                        metadata: node.metadata
+                    }, { timeout: config.federationTimeout });
+                } catch (err) {
+                    // Ignore replication errors
+                }
+            }
+        }
+
+        async replicateDeregistration(nodeId) {
+            if (!config.federationEnabled || config.federationPeers.length === 0) return;
+            for (const peer of config.federationPeers) {
+                try {
+                    await axios.delete(`${peer}/deregister`, {
+                        data: { nodeId },
+                        timeout: config.federationTimeout
+                    });
+                } catch (err) {
+                    // Ignore replication errors
+                }
+            }
+        }
 }
 
 module.exports = { LightningServiceRegistrySimple };
