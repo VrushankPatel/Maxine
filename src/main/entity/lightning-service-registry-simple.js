@@ -1490,6 +1490,54 @@ class LightningServiceRegistrySimple extends EventEmitter {
             return scores;
         }
 
+        // Predict service health using time-series analysis
+        predictServiceHealth(serviceName, predictionWindow = 300000) { // 5 minutes default
+            const service = this.services.get(serviceName);
+            if (!service) return null;
+
+            const predictions = {};
+            for (const node of service.healthyNodesArray) {
+                const history = this.responseTimeHistory.get(node.nodeName);
+                if (history && history.length >= 3) {
+                    // Simple linear regression for trend
+                    const recent = history.slice(-10); // Last 10 points
+                    const n = recent.length;
+                    const sumX = (n * (n - 1)) / 2;
+                    const sumY = recent.reduce((sum, entry) => sum + entry.responseTime, 0);
+                    const sumXY = recent.reduce((sum, entry, i) => sum + i * entry.responseTime, 0);
+                    const sumXX = (n * (n - 1) * (2 * n - 1)) / 6;
+                    const slope = (n * sumXY - sumX * sumY) / (n * sumXX - sumX * sumX);
+
+                    // Predict future response time
+                    const predictedRT = recent[recent.length - 1].responseTime + slope * (predictionWindow / 60000); // per minute
+                    const currentScore = this.healthScores.get(node.nodeName) || 0;
+
+                    // Adjust prediction based on trend
+                    let predictedScore = currentScore;
+                    if (slope > 5) { // Response time increasing significantly
+                        predictedScore = Math.max(0, currentScore - 20);
+                    } else if (slope < -2) { // Improving
+                        predictedScore = Math.min(100, currentScore + 10);
+                    }
+
+                    predictions[node.nodeName] = {
+                        currentScore,
+                        predictedScore,
+                        trend: slope,
+                        predictedResponseTime: predictedRT
+                    };
+                } else {
+                    predictions[node.nodeName] = {
+                        currentScore: this.healthScores.get(node.nodeName) || 0,
+                        predictedScore: null,
+                        trend: 0,
+                        predictedResponseTime: null
+                    };
+                }
+            }
+            return predictions;
+        }
+
         // Anomaly detection
         getAnomalies() {
             const anomalies = [];

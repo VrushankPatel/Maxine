@@ -473,6 +473,29 @@ if (config.ultraFastMode) {
     const errorUnauthorized = Buffer.from('{"error": "Unauthorized"}');
     const errorForbidden = Buffer.from('{"error": "Forbidden"}');
 
+    // Object pooling for response objects to reduce GC pressure
+    const responsePool = {
+        register: [],
+        discover: [],
+        success: [],
+        health: [],
+        metrics: [],
+        maxPoolSize: 1000,
+
+        get(type) {
+            if (this[type].length > 0) {
+                return this[type].pop();
+            }
+            return null;
+        },
+
+        put(type, obj) {
+            if (this[type].length < this.maxPoolSize) {
+                this[type].push(obj);
+            }
+        }
+    };
+
     // Routes map for O(1) lookup
     const routes = new Map();
 
@@ -537,7 +560,13 @@ if (config.ultraFastMode) {
             const nodeId = serviceRegistry.register(serviceName, { host, port, metadata });
             // winston.info(`AUDIT: Service registered - serviceName: ${serviceName}, host: ${host}, port: ${port}, nodeId: ${nodeId}, clientIP: ${clientIP}`);
             res.writeHead(200, { 'Content-Type': 'application/json' });
-            res.end(stringifyRegister({ nodeId, status: 'registered' }));
+            let responseObj = responsePool.get('register');
+            if (!responseObj) {
+                responseObj = { nodeId: '', status: 'registered' };
+            }
+            responseObj.nodeId = nodeId;
+            res.end(stringifyRegister(responseObj));
+            responsePool.put('register', responseObj);
         } catch (error) {
             // winston.error(`AUDIT: Registration failed - error: ${error.message}, clientIP: ${req.connection.remoteAddress || req.socket.remoteAddress || 'unknown'}`);
             errorCount++;
@@ -560,7 +589,13 @@ if (config.ultraFastMode) {
             const success = serviceRegistry.heartbeat(nodeId);
             // winston.info(`AUDIT: Heartbeat received - nodeId: ${nodeId}, success: ${success}, clientIP: ${clientIP}`);
             res.writeHead(200, { 'Content-Type': 'application/json' });
-            res.end(stringifySuccess({ success }));
+            let responseObj = responsePool.get('success');
+            if (!responseObj) {
+                responseObj = { success: true };
+            }
+            responseObj.success = success;
+            res.end(stringifySuccess(responseObj));
+            responsePool.put('success', responseObj);
         } catch (error) {
             // winston.error(`AUDIT: Heartbeat failed - error: ${error.message}, clientIP: ${req.connection.remoteAddress || req.socket.remoteAddress || 'unknown'}`);
             errorCount++;
@@ -617,7 +652,14 @@ if (config.ultraFastMode) {
             const fullServiceName = resolvedVersion ? `${serviceName}:${resolvedVersion}` : serviceName;
             // winston.info(`AUDIT: Service discovered - serviceName: ${fullServiceName}, strategy: ${strategy}, tags: ${tags}, node: ${node.nodeName}, clientIP: ${clientIP}`);
             res.writeHead(200, { 'Content-Type': 'application/json' });
-            res.end(stringifyDiscover({ address: node.address, nodeName: node.nodeName, healthy: true }));
+            let responseObj = responsePool.get('discover');
+            if (!responseObj) {
+                responseObj = { address: '', nodeName: '', healthy: true };
+            }
+            responseObj.address = node.address;
+            responseObj.nodeName = node.nodeName;
+            res.end(stringifyDiscover(responseObj));
+            responsePool.put('discover', responseObj);
         } catch (error) {
             // winston.error(`AUDIT: Discovery failed - error: ${error.message}, clientIP: ${req.connection.remoteAddress || req.socket.remoteAddress || 'unknown'}`);
             errorCount++;
@@ -650,7 +692,14 @@ if (config.ultraFastMode) {
             const nodes = serviceRegistry.nodesCount;
             // winston.info(`AUDIT: Health check requested - services: ${services}, nodes: ${nodes}, clientIP: ${clientIP}`);
             res.writeHead(200, { 'Content-Type': 'application/json' });
-            res.end(stringifyHealth({ status: 'ok', services, nodes }));
+            let responseObj = responsePool.get('health');
+            if (!responseObj) {
+                responseObj = { status: 'ok', services: 0, nodes: 0 };
+            }
+            responseObj.services = services;
+            responseObj.nodes = nodes;
+            res.end(stringifyHealth(responseObj));
+            responsePool.put('health', responseObj);
         } catch (error) {
             // winston.error(`AUDIT: Health check failed - error: ${error.message}, clientIP: ${req.connection.remoteAddress || req.socket.remoteAddress || 'unknown'}`);
             errorCount++;
@@ -670,7 +719,23 @@ if (config.ultraFastMode) {
             const persistenceType = config.persistenceType;
             // winston.info(`AUDIT: Metrics requested - clientIP: ${clientIP}`);
             res.writeHead(200, { 'Content-Type': 'application/json' });
-            res.end(stringifyMetrics({ uptime, requests: requestCount, errors: errorCount, services, nodes, persistenceEnabled, persistenceType, wsConnections: wsConnectionCount, eventsBroadcasted: eventBroadcastCount, cacheHits: serviceRegistry.cacheHits, cacheMisses: serviceRegistry.cacheMisses }));
+            let responseObj = responsePool.get('metrics');
+            if (!responseObj) {
+                responseObj = { uptime: 0, requests: 0, errors: 0, services: 0, nodes: 0, persistenceEnabled: false, persistenceType: '', wsConnections: 0, eventsBroadcasted: 0, cacheHits: 0, cacheMisses: 0 };
+            }
+            responseObj.uptime = uptime;
+            responseObj.requests = requestCount;
+            responseObj.errors = errorCount;
+            responseObj.services = services;
+            responseObj.nodes = nodes;
+            responseObj.persistenceEnabled = persistenceEnabled;
+            responseObj.persistenceType = persistenceType;
+            responseObj.wsConnections = wsConnectionCount;
+            responseObj.eventsBroadcasted = eventBroadcastCount;
+            responseObj.cacheHits = serviceRegistry.cacheHits;
+            responseObj.cacheMisses = serviceRegistry.cacheMisses;
+            res.end(stringifyMetrics(responseObj));
+            responsePool.put('metrics', responseObj);
         } catch (error) {
             // winston.error(`AUDIT: Metrics failed - error: ${error.message}, clientIP: ${req.connection.remoteAddress || req.socket.remoteAddress || 'unknown'}`);
             errorCount++;
@@ -1458,6 +1523,29 @@ if (config.ultraFastMode) {
             res.end(JSON.stringify({ serviceName, scores }));
         } catch (error) {
             // winston.error(`AUDIT: Health scores failed - error: ${error.message}, clientIP: ${req.connection.remoteAddress || req.socket.remoteAddress || 'unknown'}`);
+            errorCount++;
+            res.writeHead(500, { 'Content-Type': 'application/json' });
+            res.end('{"error": "Internal server error"}');
+        }
+    });
+
+    routes.set('GET /predict-health', (req, res, query, body) => {
+        try {
+            const clientIP = req.connection.remoteAddress || req.socket.remoteAddress || 'unknown';
+            const serviceName = query.serviceName;
+            const window = query.window ? parseInt(query.window) : 300000; // 5 minutes default
+            if (!serviceName) {
+                winston.warn(`AUDIT: Invalid predict health request - missing serviceName, clientIP: ${clientIP}`);
+                res.writeHead(400, { 'Content-Type': 'application/json' });
+                res.end('{"error": "Missing serviceName"}');
+                return;
+            }
+            const predictions = serviceRegistry.predictServiceHealth(serviceName, window);
+            // winston.info(`AUDIT: Health prediction requested - serviceName: ${serviceName}, window: ${window}, clientIP: ${clientIP}`);
+            res.writeHead(200, { 'Content-Type': 'application/json' });
+            res.end(JSON.stringify({ serviceName, predictions, predictionWindow: window }));
+        } catch (error) {
+            // winston.error(`AUDIT: Health prediction failed - error: ${error.message}, clientIP: ${req.connection.remoteAddress || req.socket.remoteAddress || 'unknown'}`);
             errorCount++;
             res.writeHead(500, { 'Content-Type': 'application/json' });
             res.end('{"error": "Internal server error"}');
