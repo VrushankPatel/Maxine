@@ -1,4 +1,5 @@
 const RouteBuilder = require('../builders/route-builder');
+const config = require('../config/config');
 const bodyParser = require('body-parser');
 const rateLimit = require('express-rate-limit');
 const { graphqlHTTP } = require('express-graphql');
@@ -56,14 +57,23 @@ const createRedisRateLimiter = (options = {}) => {
 
         try {
             // Use Redis pipeline for atomic operations
-            const multi = redisClient.multi();
-            multi.zremrangebyscore(key, 0, windowStart); // Remove old requests
-            multi.zcard(key); // Get current count
-            multi.zadd(key, now, now); // Add current request
-            multi.pexpire(key, windowMs); // Set expiry
+            if (redisClient && typeof redisClient.multi === 'function') {
+                const multi = redisClient.multi();
+                if (typeof multi.zremrangebyscore === 'function') {
+                    multi.zremrangebyscore(key, 0, windowStart); // Remove old requests
+                    multi.zcard(key); // Get current count
+                    multi.zadd(key, now, now); // Add current request
+                    multi.pexpire(key, windowMs); // Set expiry
 
-            const results = await multi.exec();
-            const currentCount = results[1];
+                    const results = await multi.exec();
+                    const currentCount = results[1];
+                } else {
+                    // Fallback for older Redis clients
+                    throw new Error('Redis method not available');
+                }
+            } else {
+                throw new Error('Redis client not available');
+            }
 
             if (currentCount >= max) {
                 return res.status(429).json({ error: 'Too many requests, please try again later.' });
@@ -111,7 +121,6 @@ const { generateApiKey, revokeApiKey, listApiKeys, validateApiKey } = require('.
 const { googleAuth, googleCallback } = require('../controller/security/oauth-controller');
 const { injectLatency, injectFailure, resetChaos, getChaosStatus } = require('../controller/maxine/chaos-controller');
 
-const config = require('../config/config');
 const isHighPerformanceMode = config.highPerformanceMode;
 const isLightningMode = config.lightningMode;
 
@@ -128,6 +137,12 @@ const discoveryLimiter = (isHighPerformanceMode || config.ultraFastMode) ? null 
 
 
 let maxineApiRoutes = RouteBuilder.createNewRoute();
+
+// Lightning mode routes at root level
+if (isLightningMode) {
+    const { router: lightningRouter } = require('./lightning-routes');
+    maxineApiRoutes = maxineApiRoutes.use('/', lightningRouter);
+}
 
 if (!config.ultraFastMode && !isLightningMode) {
     maxineApiRoutes = maxineApiRoutes
