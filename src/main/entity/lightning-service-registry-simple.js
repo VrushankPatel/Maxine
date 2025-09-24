@@ -171,8 +171,19 @@ class LightningServiceRegistrySimple extends EventEmitter {
         return false;
     }
 
-    getRandomNode(serviceName, strategy = 'round-robin', clientIP = null, tags = null) {
-        const service = this.services.get(serviceName);
+    getRandomNode(serviceName, strategy = 'round-robin', clientIP = null, tags = null, version = null) {
+        let fullServiceName = serviceName;
+        if (version) {
+            if (version === 'latest') {
+                const latest = this.getLatestVersion(serviceName);
+                if (latest) {
+                    fullServiceName = `${serviceName}:${latest}`;
+                }
+            } else {
+                fullServiceName = `${serviceName}:${version}`;
+            }
+        }
+        const service = this.services.get(fullServiceName);
         if (!service || service.healthyNodesArray.length === 0) return null;
 
         // Filter out nodes with open circuit breakers
@@ -287,6 +298,44 @@ class LightningServiceRegistrySimple extends EventEmitter {
 
     getServices() {
         return Array.from(this.services.keys());
+    }
+
+    getLatestVersion(serviceName) {
+        const versions = [];
+        for (const [key] of this.services) {
+            if (key.startsWith(serviceName + ':')) {
+                const version = key.substring(serviceName.length + 1);
+                versions.push(version);
+            }
+        }
+        if (versions.length === 0) return null;
+        // Sort versions, assuming semver like major.minor.patch
+        versions.sort((a, b) => {
+            const aParts = a.split('.').map(Number);
+            const bParts = b.split('.').map(Number);
+            for (let i = 0; i < Math.max(aParts.length, bParts.length); i++) {
+                const aVal = aParts[i] || 0;
+                const bVal = bParts[i] || 0;
+                if (aVal !== bVal) return bVal - aVal; // descending
+            }
+            return 0;
+        });
+        return versions[0];
+    }
+
+    getVersions(serviceName) {
+        const versions = [];
+        for (const [key] of this.services) {
+            if (key.startsWith(serviceName + ':')) {
+                const version = key.substring(serviceName.length + 1);
+                versions.push(version);
+            }
+        }
+        // Also check if there's a versionless service
+        if (this.services.has(serviceName)) {
+            versions.push('default');
+        }
+        return versions.sort();
     }
 
     getAllServices() {
