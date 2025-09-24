@@ -1,7 +1,8 @@
+// Enable lightning mode for maximum performance if not already set
+if (!process.env.LIGHTNING_MODE) process.env.LIGHTNING_MODE = 'true';
+if (!process.env.ULTRA_FAST_MODE) process.env.ULTRA_FAST_MODE = 'false';
 console.log('Starting Maxine server...');
 require('./src/main/util/logging/log-generic-exceptions')();
-// Enable lightning mode for maximum performance
-process.env.LIGHTNING_MODE = 'true';
 
 const config = require('./src/main/config/config');
 console.log('Config loaded:', { ultraFastMode: config.ultraFastMode, lightningMode: config.lightningMode });

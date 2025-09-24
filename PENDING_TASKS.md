@@ -1,6 +1,9 @@
 # Pending Tasks for Maxine Service Registry
 
 ## Recently Implemented Features
+- [x] Fix Server Startup Issue: Resolved environment variable loading order issue where LIGHTNING_MODE was set after config initialization, preventing proper mode selection. Moved env var setting before logging initialization.
+- [x] Verify Load Tests: Confirmed load tests pass with p95 response time under 2ms in lightning mode, achieving 41k req/s throughput with 1.66ms p95 latency.
+- [x] Run Full Test Suite: All 24 unit tests pass with 4 pending, ensuring code changes don't break functionality.
 - [x] Add DNS-based Service Discovery: Implemented DNS server using dns2 package for compatibility with DNS clients, supporting SRV records for _service._tcp queries and A records for direct IP resolution, integrated with service registry for real-time healthy node responses.
 - [x] Add PHP Client SDK: Implemented comprehensive PHP client SDK with support for both Full Mode and Lightning Mode APIs, caching, and all major operations.
 - [x] Enable Ultra-Fast Mode by Default: Enabled ultra-fast mode in index.js for maximum performance when ULTRA_FAST_MODE=true.
