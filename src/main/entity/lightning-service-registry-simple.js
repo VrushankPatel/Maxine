@@ -267,8 +267,10 @@ class LightningServiceRegistrySimple extends EventEmitter {
         // Periodic cleanup
         setInterval(() => this.cleanup(), config.cleanupInterval);
 
-        // Periodic dependency analysis
-        setInterval(() => this.analyzeDependencies(), config.dependencyAnalysisInterval || 60000);
+        // Periodic dependency analysis (disabled in lightning mode for performance)
+        if (!config.lightningMode) {
+            setInterval(() => this.analyzeDependencies(), config.dependencyAnalysisInterval || 60000);
+        }
     }
 
     cleanup() {
@@ -325,8 +327,10 @@ class LightningServiceRegistrySimple extends EventEmitter {
         for (const serviceName of affectedServices) {
             this.invalidateDiscoveryCache(serviceName);
         }
-        // Update health scores periodically
-        this.updateAllHealthScores();
+        // Update health scores periodically (disabled in lightning mode for performance)
+        if (!config.lightningMode) {
+            this.updateAllHealthScores();
+        }
 
         // Update Prometheus metrics
         if (global.promMetrics) {
