@@ -14,6 +14,7 @@ A minimal, high-performance service discovery and registry for microservices.
 - **Access Control Lists (ACLs)**: Fine-grained permissions for service discovery access
 - **Service Intentions**: Define allowed communication patterns between services
 - **Metrics**: Basic /metrics endpoint with request counts, errors, uptime, and basic stats
+- **Persistence**: Optional persistence to survive restarts with file-based or Redis storage
 - **Minimal Dependencies**: Only essential packages for maximum performance
 - **Lightning Mode**: Dedicated mode for ultimate speed with core features: register, heartbeat, deregister, discover with round-robin/random load balancing, health, metrics
 - **Optimized Parsing**: Fast JSON parsing with error handling
@@ -26,7 +27,7 @@ While Maxine provides core service registry functionality with lightning-fast pe
 - **Federation**: Connect multiple Maxine instances across datacenters
 - **Distributed Tracing**: Track service calls across the mesh
 - **Authentication/Authorization**: Secure access to registry operations
-- **Persistence**: Store registry state across restarts
+- **Persistence**: Store registry state across restarts (implemented: file-based and Redis)
 - **Multi-Datacenter Support**: Global service discovery
 - **Service Mesh Integration**: Integration with Istio, Linkerd, etc.
 
@@ -38,6 +39,17 @@ npm start
 ```
 
 Maxine runs in **Lightning Mode** by default for maximum performance with minimal features. For full features, set environment variables to disable lightning mode.
+
+## Persistence
+
+Maxine supports optional persistence to maintain registry state across restarts:
+
+- **File-based**: Saves to `registry.json` in the working directory
+- **Redis**: Uses Redis for distributed storage
+
+Enable with `PERSISTENCE_ENABLED=true` and set `PERSISTENCE_TYPE=file` or `PERSISTENCE_TYPE=redis`.
+
+For Redis, configure `REDIS_HOST`, `REDIS_PORT`, `REDIS_PASSWORD`.
 
 ## Modes
 
@@ -118,7 +130,22 @@ Returns status, services count, nodes count.
 ```http
 GET /metrics
 ```
-Returns uptime, requests, errors, services, nodes.
+Returns uptime, requests, errors, services, nodes, persistenceEnabled, persistenceType.
+
+##### Backup Registry
+```http
+GET /backup
+```
+Returns the current registry state as JSON (requires persistence enabled).
+
+##### Restore Registry
+```http
+POST /restore
+Content-Type: application/json
+
+{ ... registry data ... }
+```
+Restores registry from backup data (requires persistence enabled).
 
 
 
