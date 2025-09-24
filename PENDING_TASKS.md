@@ -18,6 +18,7 @@
 - [x] Optimize Discovery Latency: Implemented lightweight LRU caching layers (10k entries, 30s TTL) for frequently accessed services in Lightning Mode to reduce lookup times further.
 - [x] Implement LRU Caching for Discovery Results: Added LRU cache for deterministic load balancing strategies (consistent-hash, ip-hash, geo-aware) with automatic invalidation on service changes.
 - [x] Performance Optimization: Disabled synchronous winston logging in all request handlers to eliminate I/O bottlenecks and improve response times under load.
+- [x] Create Service Dependency Graph Visualization: Implemented interactive web-based UI for visualizing service dependency graphs with D3.js, including cycle detection alerts, dependency impact analysis on click, and export capabilities to JSON/SVG.
 
 ## Next Steps
 

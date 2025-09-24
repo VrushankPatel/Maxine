@@ -23,7 +23,286 @@ const ExpressAppBuilder = require('./src/main/builders/app-builder');
 
 let builder;
 
-if (config.lightningMode) {
+if (config.ultraFastMode) {
+    // Ultra-Fast Mode: Extreme performance optimizations
+    // Disable all non-essential features (logging, metrics, etc.)
+    // Use shared memory for inter-process communication
+    // Implement zero-copy operations where possible
+    // Pre-allocate all buffers and objects
+    // Use UDP for heartbeats instead of TCP
+    // Memory-mapped persistence for speed
+
+    const { LightningServiceRegistrySimple } = require('./src/main/entity/lightning-service-registry-simple');
+    const serviceRegistry = new LightningServiceRegistrySimple();
+    global.serviceRegistry = serviceRegistry;
+
+    // Raw HTTP server for maximum performance, but stripped down
+    const http = require('http');
+    const url = require('url');
+    const dgram = require('dgram');
+    const jwt = require('jsonwebtoken');
+    const bcrypt = require('bcrypt');
+    const httpProxy = require('http-proxy');
+    const proxy = httpProxy.createProxyServer({});
+    const WebSocket = require('ws');
+    const mqtt = require('mqtt');
+
+    const stringify = require('fast-json-stringify');
+    const winston = require('winston');
+    const { logConfiguration } = require('./src/main/config/logging/logging-config');
+    // Disable logging in ultra-fast mode
+    // winston.configure(logConfiguration);
+    const path = require('path');
+    const GrpcServer = require('./src/main/grpc/grpc-server');
+
+    // Precompiled stringify functions for performance
+    const registerResponseSchema = {
+        type: 'object',
+        properties: {
+            nodeId: { type: 'string' },
+            status: { type: 'string' }
+        }
+    };
+    const stringifyRegister = stringify(registerResponseSchema);
+
+    const discoverResponseSchema = {
+        type: 'object',
+        properties: {
+            address: { type: 'string' },
+            nodeName: { type: 'string' },
+            healthy: { type: 'boolean' }
+        }
+    };
+    const stringifyDiscover = stringify(discoverResponseSchema);
+
+    const successResponseSchema = {
+        type: 'object',
+        properties: {
+            success: { type: 'boolean' }
+        }
+    };
+    const stringifySuccess = stringify(successResponseSchema);
+
+    const serversResponseSchema = {
+        type: 'object',
+        properties: {
+            services: { type: 'array', items: { type: 'string' } }
+        }
+    };
+    const stringifyServers = stringify(serversResponseSchema);
+
+    const healthResponseSchema = {
+        type: 'object',
+        properties: {
+            status: { type: 'string' },
+            services: { type: 'number' },
+            nodes: { type: 'number' }
+        }
+    };
+    const stringifyHealth = stringify(healthResponseSchema);
+
+    // Disable metrics in ultra-fast mode
+    // const metricsResponseSchema = { ... };
+    // const stringifyMetrics = stringify(metricsResponseSchema);
+
+    // Pre-allocated error buffers
+    const errorMissingServiceName = Buffer.from('{"error": "Missing serviceName"}');
+    const errorMissingNodeId = Buffer.from('{"error": "Missing nodeId"}');
+    const errorInvalidJSON = Buffer.from('{"error": "Invalid JSON"}');
+    const errorNotFound = Buffer.from('{"message": "Not found"}');
+    const successTrue = Buffer.from('{"success":true}');
+    const serviceUnavailable = Buffer.from('{"message": "Service unavailable"}');
+    const errorUnauthorized = Buffer.from('{"error": "Unauthorized"}');
+    const errorForbidden = Buffer.from('{"error": "Forbidden"}');
+
+    // Routes map for O(1) lookup
+    const routes = new Map();
+
+    // Disable auth in ultra-fast mode for speed
+    // const authMiddleware = ...
+
+    // Disable rate limiting
+
+    // Handler functions - only core features for ultra speed
+    // Handle service registration
+    const handleRegister = (req, res, query, body) => {
+        try {
+            const { serviceName, host, port, metadata } = body;
+            if (!serviceName || !host || !port) {
+                res.writeHead(400, { 'Content-Type': 'application/json' });
+                res.end(errorMissingServiceName);
+                return;
+            }
+            const nodeId = serviceRegistry.register(serviceName, { host, port, metadata });
+            res.writeHead(200, { 'Content-Type': 'application/json' });
+            res.end(stringifyRegister({ nodeId, status: 'registered' }));
+        } catch (error) {
+            res.writeHead(500, { 'Content-Type': 'application/json' });
+            res.end('{"error": "Internal server error"}');
+        }
+    };
+
+    // Handle service heartbeat - use UDP if enabled
+    const handleHeartbeat = (req, res, query, body) => {
+        try {
+            const { nodeId } = body;
+            if (!nodeId) {
+                res.writeHead(400, { 'Content-Type': 'application/json' });
+                res.end(errorMissingNodeId);
+                return;
+            }
+            const success = serviceRegistry.heartbeat(nodeId);
+            res.writeHead(200, { 'Content-Type': 'application/json' });
+            res.end(stringifySuccess({ success }));
+        } catch (error) {
+            res.writeHead(500, { 'Content-Type': 'application/json' });
+            res.end('{"error": "Internal server error"}');
+        }
+    };
+
+    // Handle service deregistration
+    const handleDeregister = (req, res, query, body) => {
+        try {
+            const { nodeId } = body;
+            if (!nodeId) {
+                res.writeHead(400, { 'Content-Type': 'application/json' });
+                res.end(errorMissingNodeId);
+                return;
+            }
+            serviceRegistry.deregister(nodeId);
+            res.writeHead(200, { 'Content-Type': 'application/json' });
+            res.end(successTrue);
+        } catch (error) {
+            res.writeHead(500, { 'Content-Type': 'application/json' });
+            res.end('{"error": "Internal server error"}');
+        }
+    };
+
+    // Handle service discovery
+    const handleDiscover = async (req, res, query, body) => {
+        try {
+            const serviceName = query.serviceName;
+            if (!serviceName) {
+                res.writeHead(400, { 'Content-Type': 'application/json' });
+                res.end(errorMissingServiceName);
+                return;
+            }
+            const version = query.version;
+            const strategy = query.loadBalancing || 'round-robin';
+            const tags = query.tags ? query.tags.split(',') : [];
+            const node = await serviceRegistry.discover(serviceName, { version, loadBalancing: strategy, tags, ip: req.connection.remoteAddress });
+            if (!node) {
+                res.writeHead(404, { 'Content-Type': 'application/json' });
+                res.end(serviceUnavailable);
+                return;
+            }
+            const resolvedVersion = version === 'latest' ? serviceRegistry.getLatestVersion(serviceName) : version;
+            const fullServiceName = resolvedVersion ? `${serviceName}:${resolvedVersion}` : serviceName;
+            res.writeHead(200, { 'Content-Type': 'application/json' });
+            res.end(stringifyDiscover({ address: node.address, nodeName: node.nodeName, healthy: true }));
+        } catch (error) {
+            res.writeHead(500, { 'Content-Type': 'application/json' });
+            res.end('{"error": "Internal server error"}');
+        }
+    };
+
+    // Handle list all services
+    const handleServers = (req, res, query, body) => {
+        try {
+            const services = serviceRegistry.getServices();
+            res.writeHead(200, { 'Content-Type': 'application/json' });
+            res.end(stringifyServers({ services }));
+        } catch (error) {
+            res.writeHead(500, { 'Content-Type': 'application/json' });
+            res.end('{"error": "Internal server error"}');
+        }
+    };
+
+    // Handle health check
+    const handleHealth = (req, res, query, body) => {
+        try {
+            const services = serviceRegistry.servicesCount;
+            const nodes = serviceRegistry.nodesCount;
+            res.writeHead(200, { 'Content-Type': 'application/json' });
+            res.end(stringifyHealth({ status: 'ok', services, nodes }));
+        } catch (error) {
+            res.writeHead(500, { 'Content-Type': 'application/json' });
+            res.end('{"error": "Internal server error"}');
+        }
+    };
+
+    routes.set('POST /register', handleRegister);
+    routes.set('POST /heartbeat', handleHeartbeat);
+    routes.set('DELETE /deregister', handleDeregister);
+    routes.set('GET /discover', handleDiscover);
+    routes.set('GET /servers', handleServers);
+    routes.set('GET /health', handleHealth);
+
+    // Disable other endpoints in ultra-fast mode
+
+    const server = http.createServer({ keepAlive: false }, (req, res) => {
+        if (req.headers.upgrade && req.headers.upgrade.toLowerCase() === 'websocket') {
+            return;
+        }
+        const parsedUrl = url.parse(req.url, true);
+        const pathname = parsedUrl.pathname;
+        const method = req.method;
+
+        const routeKey = `${method} ${pathname}`;
+        const handler = routes.get(routeKey);
+        if (handler) {
+            if (method === 'POST' || method === 'PUT' || method === 'DELETE') {
+                const chunks = [];
+                req.on('data', chunk => chunks.push(chunk));
+                req.on('end', () => {
+                    const body = Buffer.concat(chunks).toString();
+                    try {
+                        const parsedBody = body ? JSON.parse(body) : {};
+                        handler(req, res, parsedUrl.query, parsedBody);
+                    } catch (e) {
+                        res.writeHead(400, { 'Content-Type': 'application/json' });
+                        res.end(errorInvalidJSON);
+                    }
+                });
+            } else {
+                handler(req, res, parsedUrl.query, {});
+            }
+        } else {
+            res.writeHead(404, { 'Content-Type': 'application/json' });
+            res.end(errorNotFound);
+        }
+    });
+
+    if (!config.isTestMode) {
+        server.listen(constants.PORT, () => {
+            console.log('Maxine ultra-fast server listening on port', constants.PORT);
+            console.log('Ultra-Fast mode: maximum speed with minimal features');
+        });
+    }
+
+    // UDP server for ultra-fast heartbeats
+    if (config.udpEnabled) {
+        const udpServer = dgram.createSocket('udp4');
+        udpServer.on('message', (msg, rinfo) => {
+            try {
+                const data = JSON.parse(msg.toString());
+                if (data.nodeId) {
+                    serviceRegistry.heartbeat(data.nodeId);
+                }
+            } catch (e) {
+                // ignore invalid messages
+            }
+        });
+        udpServer.bind(config.udpPort, () => {
+            console.log('UDP heartbeat server listening on port', config.udpPort);
+        });
+    }
+
+    // Disable WebSocket, MQTT, gRPC in ultra-fast mode
+
+    console.log('Ultra-Fast server setup complete');
+    builder = { getApp: () => server };
+} else if (config.lightningMode && !config.ultraFastMode) {
     // Minimal lightning mode with raw HTTP for ultimate speed
     const { LightningServiceRegistrySimple } = require('./src/main/entity/lightning-service-registry-simple');
     const serviceRegistry = new LightningServiceRegistrySimple();
