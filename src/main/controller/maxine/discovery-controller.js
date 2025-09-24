@@ -21,6 +21,9 @@ const stringify = require('fast-json-stringify');
 const { buildServiceNameCached } = require("../../util/util");
 const semver = require('semver');
 const federationService = require('../../service/federation-service');
+const crypto = require('crypto');
+
+const generateCorrelationId = () => crypto.randomBytes(16).toString('hex');
 
 // Fast LCG PRNG for ultra-fast mode
 let lcgSeed = Date.now();
@@ -280,6 +283,8 @@ const extremeFastDiscovery = (req, res) => {
 
 const normalDiscovery = async (req, res) => {
     const startTime = Date.now();
+    const correlationId = req.headers['x-correlation-id'] || req.headers['x-request-id'] || generateCorrelationId();
+    res.setHeader('x-correlation-id', correlationId);
       // Retrieving the serviceName from query params
         const serviceName = req.query.serviceName;
         const version = req.query.version;
@@ -553,6 +558,8 @@ const normalDiscovery = async (req, res) => {
 
 const lightningDiscovery = async (req, res) => {
         // Lightning mode: ultimate speed, only basic discovery
+        const correlationId = req.headers['x-correlation-id'] || req.headers['x-request-id'] || generateCorrelationId();
+        res.setHeader('x-correlation-id', correlationId);
         const serviceName = req.query.serviceName;
         if (!serviceName) {
             res.status(400).end(missingServiceNameBuffer);
