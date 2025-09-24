@@ -56,6 +56,21 @@
   - Prometheus-compatible metrics are available at `/api/maxine/serviceops/metrics/prometheus` for integration with monitoring systems.
    - Cache statistics are available at `/api/maxine/serviceops/cache/stats` showing cache size, max size, TTL, service key count, and hit/miss ratios.
   - Metrics are collected automatically for all discovery operations.
+
+### OpenTelemetry Metrics
+- Maxine integrates OpenTelemetry for comprehensive observability and monitoring.
+- Automatically collects and exports metrics to Prometheus-compatible endpoints.
+- Available metrics include:
+  - `maxine_service_register_total`: Total number of service registrations
+  - `maxine_service_discover_total`: Total number of service discoveries
+  - `maxine_service_heartbeat_total`: Total number of heartbeats
+  - `maxine_service_deregister_total`: Total number of service deregistrations
+  - `maxine_cache_hit_total`: Total cache hits
+  - `maxine_cache_miss_total`: Total cache misses
+  - `maxine_services_total`: Total number of services
+  - `maxine_nodes_total`: Total number of nodes
+- Metrics are exported to Prometheus at port 9464 by default.
+- Enables integration with monitoring systems like Grafana for dashboards and alerting.
 ### Service Changes Watch API
 - Maxine provides a watch API for real-time monitoring of registry changes.
 - The changes endpoint `/api/maxine/serviceops/changes?since=<timestamp>` returns all registry events (register, deregister, health status changes) that occurred after the specified timestamp.

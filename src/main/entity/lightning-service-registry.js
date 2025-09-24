@@ -38,6 +38,35 @@ class LightningServiceRegistry {
         this._totalActiveConnections = 0;
         this._averageResponseTime = 0;
 
+        // SIMD-inspired fast operations for load balancing
+        this.fastMin = (values) => {
+            if (values.length === 0) return Infinity;
+            if (values.length === 1) return values[0];
+            let min = values[0];
+            // SIMD-inspired: process 4 elements at a time for better CPU utilization
+            const len = values.length;
+            for (let i = 1; i < len; i += 4) {
+                if (i < len) min = Math.min(min, values[i]);
+                if (i + 1 < len) min = Math.min(min, values[i + 1]);
+                if (i + 2 < len) min = Math.min(min, values[i + 2]);
+                if (i + 3 < len) min = Math.min(min, values[i + 3]);
+            }
+            return min;
+        };
+
+        this.fastSum = (values) => {
+            let sum = 0;
+            // SIMD-inspired parallel accumulation
+            const len = values.length;
+            for (let i = 0; i < len; i += 4) {
+                if (i < len) sum += values[i];
+                if (i + 1 < len) sum += values[i + 1];
+                if (i + 2 < len) sum += values[i + 2];
+                if (i + 3 < len) sum += values[i + 3];
+            }
+            return sum;
+        };
+
         // OpenTelemetry metrics
         if (global.meter) {
             this.meter = global.meter;
@@ -102,16 +131,16 @@ class LightningServiceRegistry {
                 if (service.minResponseTimeNode && availableNodes.includes(service.minResponseTimeNode)) {
                     return service.minResponseTimeNode;
                 }
-                let minTime = Infinity;
-                let minNode = null;
+                // SIMD-inspired fast min for response times
+                const times = availableNodes.map(node => this.responseTimes.get(node.nodeName) || 0);
+                const minTime = this.fastMin(times);
+                // Find the node with min time (first occurrence)
                 for (const node of availableNodes) {
-                    const time = this.responseTimes.get(node.nodeName) || 0;
-                    if (time < minTime) {
-                        minTime = time;
-                        minNode = node;
+                    if ((this.responseTimes.get(node.nodeName) || 0) === minTime) {
+                        return node;
                     }
                 }
-                return minNode;
+                return availableNodes[0];
             },
             'random': (service, availableNodes, clientId) => {
                 if (availableNodes.length === 0) return null;
@@ -170,18 +199,20 @@ class LightningServiceRegistry {
                         sampledNodes.push(availableNodes[idx]);
                     }
                 }
-                let bestNode = null;
-                let bestScore = Infinity;
-                for (const node of sampledNodes) {
+                // SIMD-inspired fast min for scores
+                const scores = sampledNodes.map(node => {
                     const time = this.responseTimes.get(node.nodeName) || 0;
                     const conn = this.activeConnections.get(node.nodeName) || 0;
-                    const score = time + conn * 10;
-                    if (score < bestScore) {
-                        bestScore = score;
-                        bestNode = node;
+                    return time + conn * 10;
+                });
+                const minScore = this.fastMin(scores);
+                // Find the node with min score
+                for (let i = 0; i < sampledNodes.length; i++) {
+                    if (scores[i] === minScore) {
+                        return sampledNodes[i];
                     }
                 }
-                return bestNode;
+                return sampledNodes[0];
             },
             'sticky-round-robin': (service, availableNodes, clientId) => {
                 if (availableNodes.length === 0) return null;

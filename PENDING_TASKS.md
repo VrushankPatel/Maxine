@@ -42,6 +42,7 @@
 - [x] Implement Object Pooling: Added object pooling for response objects (register, discover, success, health, metrics) to reduce GC pressure and improve performance under high load.
  - [x] Implement Service Health Prediction: Added /predict-health endpoint using time-series analysis for proactive monitoring and failure prediction.
  - [x] Implement Service Dependency Auto-Detection: Added /record-call endpoint for services to report outbound calls, enabling automatic dependency detection based on traffic patterns with configurable thresholds and cleanup intervals.
+- [x] Implement SIMD Operations: Added SIMD-inspired fast min and sum operations for bulk data processing in load balancing calculations (least-response-time, adaptive strategies) to reduce latency in high-throughput scenarios.
 - [x] Implement Advanced Distributed Caching: Added Redis-based distributed caching layer for service discovery results across multiple Maxine instances to reduce latency and improve scalability. Enable with REDIS_CACHE_ENABLED=true.
 
 ## Next Steps
@@ -498,8 +499,7 @@
  13. Implement Advanced Security Features: Add SPIFFE/SPIRE integration for secure service identity and zero-trust architecture with automatic certificate rotation.
  14. Implement eBPF Integration: Use eBPF for low-overhead tracing and monitoring of service communications, providing kernel-level insights.
  15. Implement Multi-Cluster Federation Enhancements: Advanced federation with automatic conflict resolution, geo-aware load balancing, and cross-datacenter consistency.
-  16. Implement SIMD Operations: Use SIMD instructions for bulk data processing in load balancing calculations to further reduce latency in high-throughput scenarios.
-  17. Implement Adaptive Caching: Use machine learning algorithms to predict and pre-cache frequently accessed services, dynamically adjusting cache TTL based on access patterns.
+ 16. Implement Adaptive Caching: Use machine learning algorithms to predict and pre-cache frequently accessed services, dynamically adjusting cache TTL based on access patterns.
   18. Implement Service Health Prediction Enhancements: Add machine learning models for more accurate failure prediction and automated scaling recommendations.
   19. Implement Chaos Engineering Tools: Built-in chaos testing capabilities for resilience validation with network partition simulation and automated recovery testing.
   20. Implement Service Call Analytics Dashboard: Create a web dashboard to visualize service call patterns, dependency graphs, and traffic flows in real-time.
