@@ -134,6 +134,19 @@ const healthScoreController = (req, res) => {
     res.json(healthScores);
 };
 
+const predictHealthController = (req, res) => {
+    const serviceName = req.query.serviceName;
+    const window = parseInt(req.query.window) || 300000; // 5 minutes default
+
+    if (!serviceName) {
+        res.status(statusAndMsgs.STATUS_GENERIC_ERROR).json({ error: "Missing serviceName parameter" });
+        return;
+    }
+
+    const prediction = serviceRegistry.predictHealth(serviceName, window);
+    res.json(prediction);
+};
+
 const autoscalingController = (req, res) => {
     const { serviceName, action, reason } = req.body;
     // Trigger auto-scaling action, e.g., call webhook or internal logic
@@ -1272,6 +1285,7 @@ module.exports = {
     statsController,
     slaController,
     healthScoreController,
+    predictHealthController,
     autoscalingController,
     chaosController,
     pendingServicesController,

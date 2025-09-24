@@ -2571,6 +2571,58 @@ class ServiceRegistry extends EventEmitter {
             failure: Object.fromEntries(this.chaosFailure)
         };
     }
+
+    // Health prediction using time-series analysis
+    predictHealth(serviceName, window = 300000) { // 5 minutes default
+        const nodes = this.getNodes(serviceName);
+        if (!nodes || Object.keys(nodes).length === 0) {
+            return { serviceName, predictions: {}, predictionWindow: window };
+        }
+
+        const predictions = {};
+        const now = Date.now();
+
+        for (const [nodeId, node] of Object.entries(nodes)) {
+            // Simple time-series analysis using response times
+            const responseTimes = node.responseTimes || [];
+            if (responseTimes.length < 2) {
+                predictions[nodeId] = {
+                    currentScore: node.healthScore || 100,
+                    predictedScore: node.healthScore || 100,
+                    trend: 0,
+                    predictedResponseTime: node.avgResponseTime || 0
+                };
+                continue;
+            }
+
+            // Calculate trend using linear regression
+            const n = responseTimes.length;
+            const sumX = responseTimes.reduce((sum, _, i) => sum + i, 0);
+            const sumY = responseTimes.reduce((sum, time) => sum + time, 0);
+            const sumXY = responseTimes.reduce((sum, time, i) => sum + time * i, 0);
+            const sumXX = responseTimes.reduce((sum, _, i) => sum + i * i, 0);
+
+            const slope = (n * sumXY - sumX * sumY) / (n * sumXX - sumX * sumX);
+            const intercept = (sumY - slope * sumX) / n;
+
+            // Predict next value
+            const nextIndex = n;
+            const predictedResponseTime = slope * nextIndex + intercept;
+
+            // Calculate health score based on response time trends
+            const currentAvg = responseTimes.reduce((sum, time) => sum + time, 0) / n;
+            const healthScore = Math.max(0, Math.min(100, 100 - (predictedResponseTime - currentAvg) / currentAvg * 50));
+
+            predictions[nodeId] = {
+                currentScore: Math.round(node.healthScore || 100),
+                predictedScore: Math.round(healthScore),
+                trend: slope,
+                predictedResponseTime: Math.round(predictedResponseTime)
+            };
+        }
+
+        return { serviceName, predictions, predictionWindow: window };
+    }
 }
 
 const serviceRegistry = new ServiceRegistry();

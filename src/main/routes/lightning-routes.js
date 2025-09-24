@@ -334,6 +334,18 @@ router.post('/restore', rawBodyParser, (req, res, next) => {
         res.end(`{"uptime":${uptime},"requests":${requestCount},"errors":${errorCount},"services":${services},"nodes":${totalNodes},"activeConnections":${totalActiveConnections},"averageResponseTime":${averageResponseTime.toFixed(2)}}`);
     });
 
+    router.get('/predict-health', (req, res) => {
+        const serviceName = req.query.serviceName;
+        const window = parseInt(req.query.window) || 300000; // 5 minutes default
+
+        if (!serviceName) {
+            return res.status(400).json({ error: "Missing serviceName parameter" });
+        }
+
+        const prediction = getServiceRegistry().predictHealth(serviceName, window);
+        res.json(prediction);
+    });
+
     // Middleware to count requests
     router.use((req, res, next) => {
         requestCount++;
