@@ -882,7 +882,7 @@ if (config.ultraFastMode) {
         }
     };
 
-    // Handle service discovery
+    // Handle service discovery - optimized for lightning mode performance
     const handleDiscover = async (req, res, query, body) => {
         try {
             const serviceName = query.serviceName;
@@ -896,7 +896,36 @@ if (config.ultraFastMode) {
             const version = query.version;
             const strategy = query.loadBalancing || 'round-robin';
             const tags = query.tags ? query.tags.split(',') : [];
-            const node = await serviceRegistry.discover(serviceName, { version, loadBalancing: strategy, tags, ip: clientIP });
+
+            // Handle version resolution and traffic distribution (optimized for performance)
+            let fullServiceName = serviceName;
+            if (version) {
+                if (version === 'latest') {
+                    const latest = serviceRegistry.getLatestVersion(serviceName);
+                    if (latest) {
+                        fullServiceName = `${serviceName}:${latest}`;
+                    }
+                } else {
+                    fullServiceName = `${serviceName}:${version}`;
+                }
+            }
+
+            // Check for traffic distribution (canary deployments)
+            const distribution = serviceRegistry.getTrafficDistribution ? serviceRegistry.getTrafficDistribution(serviceName) : {};
+            if (Object.keys(distribution).length > 0) {
+                const rand = fastRandom() * 100;
+                let cumulative = 0;
+                for (const [ver, percent] of Object.entries(distribution)) {
+                    cumulative += percent;
+                    if (rand <= cumulative) {
+                        fullServiceName = `${serviceName}:${ver}`;
+                        break;
+                    }
+                }
+            }
+
+            // Use ultra-fast method for maximum performance in lightning mode
+            const node = serviceRegistry.ultraFastGetRandomNode(fullServiceName, strategy, clientIP, tags);
             if (!node) {
                 // winston.info(`AUDIT: Service discovery failed - serviceName: ${serviceName}, version: ${version}, strategy: ${strategy}, tags: ${tags}, clientIP: ${clientIP}`);
                 res.writeHead(404, { 'Content-Type': 'application/json' });
@@ -919,8 +948,6 @@ if (config.ultraFastMode) {
                 }
             }
 
-            const resolvedVersion = version === 'latest' ? serviceRegistry.getLatestVersion(serviceName) : version;
-            const fullServiceName = resolvedVersion ? `${serviceName}:${resolvedVersion}` : serviceName;
             // winston.info(`AUDIT: Service discovered - serviceName: ${fullServiceName}, strategy: ${strategy}, tags: ${tags}, node: ${node.nodeName}, clientIP: ${clientIP}`);
             res.writeHead(200, { 'Content-Type': 'application/json' });
             let responseObj = responsePool.get('discover');
