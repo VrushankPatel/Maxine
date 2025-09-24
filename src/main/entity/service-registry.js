@@ -567,6 +567,95 @@ class ServiceRegistry extends EventEmitter {
         return startTime ? Date.now() - startTime : null;
     };
 
+    getScalingRecommendations = (serviceName) => {
+        const recommendations = [];
+
+        if (serviceName) {
+            // Single service recommendations
+            const service = this.registry.get(serviceName);
+            if (service) {
+                const rec = this.analyzeServiceScaling(serviceName, service);
+                if (rec) recommendations.push(rec);
+            }
+        } else {
+            // All services recommendations
+            for (const [svcName, service] of this.registry.entries()) {
+                const rec = this.analyzeServiceScaling(svcName, service);
+                if (rec) recommendations.push(rec);
+            }
+        }
+
+        return recommendations;
+    };
+
+    analyzeServiceScaling = (serviceName, service) => {
+        const nodes = service.nodes || new Map();
+        const healthyNodes = Array.from(nodes.values()).filter(node => node.healthy);
+        const totalNodes = nodes.size;
+        const healthyCount = healthyNodes.length;
+
+        // Get metrics for the service
+        const responseTimes = this.responseTimes.get(serviceName) || [];
+        const activeConnections = Array.from(nodes.keys()).reduce((sum, nodeId) => {
+            return sum + (this.activeConnections.get(nodeId) || 0);
+        }, 0);
+
+        const avgResponseTime = responseTimes.length > 0 ?
+            responseTimes.reduce((a, b) => a + b, 0) / responseTimes.length : 0;
+
+        const avgConnectionsPerNode = totalNodes > 0 ? activeConnections / totalNodes : 0;
+
+        // Scaling logic
+        let action = 'none';
+        let reason = '';
+        let confidence = 0;
+
+        // High load indicators
+        if (avgResponseTime > 1000 && healthyCount > 0) { // > 1s response time
+            action = 'scale_up';
+            reason = `High response time (${avgResponseTime.toFixed(0)}ms)`;
+            confidence = Math.min(0.9, avgResponseTime / 2000);
+        } else if (avgConnectionsPerNode > 100) { // High connections per node
+            action = 'scale_up';
+            reason = `High connection load (${avgConnectionsPerNode.toFixed(1)} connections/node)`;
+            confidence = Math.min(0.8, avgConnectionsPerNode / 200);
+        } else if (healthyCount === 0 && totalNodes > 0) { // All nodes unhealthy
+            action = 'scale_up';
+            reason = 'All nodes unhealthy - need more instances';
+            confidence = 0.95;
+        } else if (healthyCount < totalNodes * 0.5) { // Less than 50% healthy
+            action = 'scale_up';
+            reason = `Low healthy ratio (${healthyCount}/${totalNodes})`;
+            confidence = 0.7;
+        }
+
+        // Low load indicators for scale down
+        else if (avgConnectionsPerNode < 10 && totalNodes > 1 && avgResponseTime < 100) {
+            action = 'scale_down';
+            reason = `Low utilization (${avgConnectionsPerNode.toFixed(1)} connections/node)`;
+            confidence = Math.min(0.6, (20 - avgConnectionsPerNode) / 20);
+        }
+
+        if (action !== 'none') {
+            return {
+                serviceName,
+                action,
+                reason,
+                confidence: Math.round(confidence * 100) / 100,
+                metrics: {
+                    totalNodes,
+                    healthyNodes: healthyCount,
+                    avgResponseTime: Math.round(avgResponseTime),
+                    avgConnectionsPerNode: Math.round(avgConnectionsPerNode * 10) / 10
+                },
+                recommendedInstances: action === 'scale_up' ? Math.max(1, Math.ceil(totalNodes * 1.5)) :
+                                      action === 'scale_down' ? Math.max(1, Math.floor(totalNodes * 0.8)) : totalNodes
+            };
+        }
+
+        return null;
+    };
+
     // Service version management
     registerServiceVersion = (serviceName, version) => {
         if (!this.serviceVersions.has(serviceName)) {

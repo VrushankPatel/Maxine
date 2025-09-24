@@ -160,6 +160,17 @@ const autoscalingController = (req, res) => {
     res.json({ message: 'Autoscaling triggered', serviceName, action });
 };
 
+const scalingRecommendationsController = (req, res) => {
+    const serviceName = req.query.serviceName;
+    const recommendations = serviceRegistry.getScalingRecommendations(serviceName);
+
+    res.json({
+        serviceName: serviceName || 'all',
+        recommendations,
+        timestamp: new Date().toISOString()
+    });
+};
+
 const chaosController = (req, res) => {
     const { serviceName, nodeName, action } = req.body;
     // Simulate chaos: mark unhealthy, delay, etc.
@@ -1287,6 +1298,7 @@ module.exports = {
     healthScoreController,
     predictHealthController,
     autoscalingController,
+    scalingRecommendationsController,
     chaosController,
     pendingServicesController,
     approveServiceController,
