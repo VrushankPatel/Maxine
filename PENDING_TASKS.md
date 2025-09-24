@@ -1,6 +1,8 @@
 # Pending Tasks for Maxine Service Registry
 
 ## Recently Implemented Features
+- [x] Implement Service Configuration Validation: Add schema validation for service configurations to prevent misconfigurations and improve reliability
+- [x] Implement Service Call Tracing with Correlation IDs: Add distributed tracing with correlation IDs for end-to-end request tracking across service calls
 - [x] Fix Server Startup Issue: Resolved environment variable loading order issue where LIGHTNING_MODE was set after config initialization, preventing proper mode selection. Moved env var setting before logging initialization.
 - [x] Verify Load Tests: Confirmed load tests pass with p95 response time under 2ms in lightning mode, achieving 41k req/s throughput with 1.66ms p95 latency.
 - [x] Run Full Test Suite: All 24 unit tests pass with 4 pending, ensuring code changes don't break functionality.
@@ -72,7 +74,7 @@
 ## Next Implementation Steps
 
 ### High Priority
-- Implement Advanced Load Balancing Algorithms: Add AI-driven load balancing using reinforcement learning for optimal routing based on real-time metrics and historical data
+- [x] Implement Advanced Load Balancing Algorithms: Add AI-driven load balancing using reinforcement learning for optimal routing based on real-time metrics and historical data
 - Enhance Chaos Engineering Tools: Implement automated chaos experiments with ML-driven fault injection, network partitioning, and intelligent recovery validation
 - Add Service Mesh AI Optimization: Use AI to automatically optimize Istio/Linkerd configurations based on traffic patterns and performance metrics
 - Implement Multi-Cloud Federation: Advanced cross-cloud service discovery with automatic failover, geo-aware routing, and conflict resolution
