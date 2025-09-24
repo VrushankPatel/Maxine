@@ -1,12 +1,17 @@
-// Enable lightning mode for maximum performance if not already set
-if (!process.env.LIGHTNING_MODE) process.env.LIGHTNING_MODE = 'true';
-if (!process.env.ULTRA_FAST_MODE) process.env.ULTRA_FAST_MODE = 'false';
+// Enable ultra-fast mode for maximum performance if not already set
+if (!process.env.ULTRA_FAST_MODE) process.env.ULTRA_FAST_MODE = 'true';
+if (!process.env.LIGHTNING_MODE) process.env.LIGHTNING_MODE = 'false';
 // console.log('Starting Maxine server...'); // Removed for performance
 require('./src/main/util/logging/log-generic-exceptions')();
 
 const config = require('./src/main/config/config');
 // console.log('Config loaded:', { ultraFastMode: config.ultraFastMode, lightningMode: config.lightningMode }); // Removed for performance
 const { trace, metrics } = require('@opentelemetry/api');
+const http = require('http');
+const http2 = require('http2');
+const https = require('https');
+const fs = require('fs');
+const path = require('path');
 
 // Initialize OpenTelemetry tracing and metrics only if not ultra-fast mode and not lightning mode
 let sdk;
@@ -435,7 +440,9 @@ if (config.ultraFastMode) {
         return `corr-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
     };
 
-    const server = http.createServer({ keepAlive: false }, (req, res) => {
+    // Create server with HTTP/2 support if enabled
+    let server;
+    const requestHandler = (req, res) => {
         if (req.headers.upgrade && req.headers.upgrade.toLowerCase() === 'websocket') {
             return;
         }
@@ -473,11 +480,34 @@ if (config.ultraFastMode) {
             res.writeHead(404, { 'Content-Type': 'application/json' });
             res.end(errorNotFound);
         }
-    });
+    };
+
+    if (config.http2Enabled) {
+        // Load SSL certificates for HTTP/2
+        const certsDir = path.join(__dirname, 'src/main/config/certs');
+        const keyPath = path.join(certsDir, 'server.key');
+        const certPath = path.join(certsDir, 'server.crt');
+
+        if (fs.existsSync(keyPath) && fs.existsSync(certPath)) {
+            const options = {
+                key: fs.readFileSync(keyPath),
+                cert: fs.readFileSync(certPath),
+                allowHTTP1: true // Allow HTTP/1.1 fallback
+            };
+            server = http2.createSecureServer(options, requestHandler);
+            console.log('Maxine server started with HTTP/2 support on port', constants.PORT);
+        } else {
+            console.log('HTTP/2 certificates not found, falling back to HTTP/1.1');
+            server = http.createServer({ keepAlive: false }, requestHandler);
+        }
+    } else {
+        server = http.createServer({ keepAlive: false }, requestHandler);
+    }
 
     if (!config.isTestMode) {
         server.listen(constants.PORT, () => {
-            console.log(`Maxine server started in ultra-fast mode on port ${constants.PORT}`);
+            const protocol = config.http2Enabled ? 'HTTP/2' : 'HTTP/1.1';
+            console.log(`Maxine server started in ultra-fast mode with ${protocol} on port ${constants.PORT}`);
         });
     }
 

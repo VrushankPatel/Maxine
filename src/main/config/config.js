@@ -10,7 +10,7 @@ let extremeFastDefault = false; // Extreme fast mode: maximum speed, minimal fea
 // Ultra-fast modes can be controlled via environment variables
 const isTestMode = process.argv.some(arg => arg.includes('mocha'));
 if (isTestMode) {
-    ultraFastDefault = process.env.ULTRA_FAST_MODE === 'true';
+    ultraFastDefault = process.env.ULTRA_FAST_MODE !== 'false'; // Default to true in tests unless explicitly false
     highPerfDefault = false;
     extremeFastDefault = false;
     lightningDefault = process.env.LIGHTNING_MODE === 'true';
@@ -88,7 +88,7 @@ const config = {
           grpcEnabled: process.env.GRPC_ENABLED === 'true' && !isTestMode && !ultraFastDefault,
       grpcPort: process.env.GRPC_PORT ? parseInt(process.env.GRPC_PORT) : 50051,
            tracingEnabled: process.env.TRACING_ENABLED === 'true' && !isTestMode,
-                    http2Enabled: process.env.HTTP2_ENABLED !== 'false' && (ultraFastDefault || highPerfDefault), // Disabled in lightning for simplicity
+                    http2Enabled: process.env.HTTP2_ENABLED !== 'false' && ultraFastDefault && !isTestMode, // Enabled in ultra-fast mode for maximum performance, disabled in tests
          maxInstancesPerService: process.env.MAX_INSTANCES_PER_SERVICE ? parseInt(process.env.MAX_INSTANCES_PER_SERVICE) : 1000,
            consulEnabled: process.env.CONSUL_ENABLED === 'true' && !isTestMode,
           consulHost: process.env.CONSUL_HOST || 'localhost',
