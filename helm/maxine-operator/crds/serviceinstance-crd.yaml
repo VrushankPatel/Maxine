@@ -1,0 +1,50 @@
+apiVersion: apiextensions.k8s.io/v1
+kind: CustomResourceDefinition
+metadata:
+  name: serviceinstances.maxine.io
+spec:
+  group: maxine.io
+  versions:
+  - name: v1
+    served: true
+    storage: true
+    schema:
+      openAPIV3Schema:
+        type: object
+        properties:
+          spec:
+            type: object
+            properties:
+              serviceName:
+                type: string
+              host:
+                type: string
+              port:
+                type: integer
+              metadata:
+                type: object
+                additionalProperties:
+                  type: string
+              tags:
+                type: array
+                items:
+                  type: string
+              weight:
+                type: integer
+                default: 1
+          status:
+            type: object
+            properties:
+              nodeId:
+                type: string
+              registered:
+                type: boolean
+              lastHeartbeat:
+                type: string
+  scope: Namespaced
+  names:
+    plural: serviceinstances
+    singular: serviceinstance
+    kind: ServiceInstance
+    shortNames:
+    - si

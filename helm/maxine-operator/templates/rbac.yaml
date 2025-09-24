@@ -1,0 +1,36 @@
+{{- if .Values.rbac.create }}
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: {{ include "maxine-operator.serviceAccountName" . }}
+  labels:
+    {{- include "maxine-operator.labels" . | nindent 4 }}
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: {{ include "maxine-operator.fullname" . }}
+rules:
+- apiGroups: ["maxine.io"]
+  resources: ["serviceregistries", "serviceinstances", "servicepolicies"]
+  verbs: ["get", "list", "watch", "create", "update", "patch", "delete"]
+- apiGroups: ["apps"]
+  resources: ["deployments"]
+  verbs: ["get", "list", "watch", "create", "update", "patch", "delete"]
+- apiGroups: [""]
+  resources: ["services", "pods", "configmaps", "secrets"]
+  verbs: ["get", "list", "watch", "create", "update", "patch", "delete"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: {{ include "maxine-operator.fullname" . }}
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: {{ include "maxine-operator.fullname" . }}
+subjects:
+- kind: ServiceAccount
+  name: {{ include "maxine-operator.serviceAccountName" . }}
+  namespace: {{ .Release.Namespace }}
+{{- end }}

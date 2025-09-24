@@ -1,0 +1,21 @@
+replicaCount: 1
+
+image:
+  repository: maxine-operator
+  tag: "latest"
+  pullPolicy: IfNotPresent
+
+serviceAccount:
+  create: true
+  name: maxine-operator
+
+rbac:
+  create: true
+
+resources: {}
+
+nodeSelector: {}
+
+tolerations: []
+
+affinity: {}
