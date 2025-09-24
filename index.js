@@ -385,6 +385,8 @@ if (config.ultraFastMode) {
     const { logConfiguration } = require('./src/main/config/logging/logging-config');
     winston.configure(logConfiguration);
     const path = require('path');
+    const fs = require('fs');
+    const https = require('https');
     const GrpcServer = require('./src/main/grpc/grpc-server');
 
     // OAuth2 setup
@@ -2106,35 +2108,44 @@ if (config.ultraFastMode) {
             res.writeHead(500, { 'Content-Type': 'application/json' });
             res.end('{"error": "Internal server error"}');
         }
-    });
+     });
 
-    const server = http.createServer({ keepAlive: false }, (req, res) => {
-          if (req.headers.upgrade && req.headers.upgrade.toLowerCase() === 'websocket') {
-              // Let WebSocket handle upgrade
-              return;
-          }
-          const clientIP = req.connection.remoteAddress || req.socket.remoteAddress || 'unknown';
+     let server;
+     if (config.mtlsEnabled) {
+         const httpsOptions = {
+             cert: fs.readFileSync(config.serverCertPath),
+             key: fs.readFileSync(config.serverKeyPath),
+             ca: [fs.readFileSync(config.caCertPath)],
+             requestCert: true,
+             rejectUnauthorized: true
+         };
+         server = https.createServer(httpsOptions, (req, res) => {
+           if (req.headers.upgrade && req.headers.upgrade.toLowerCase() === 'websocket') {
+               // Let WebSocket handle upgrade
+               return;
+           }
+           const clientIP = req.connection.remoteAddress || req.socket.remoteAddress || 'unknown';
 
-          // Rate limiting disabled in lightning mode for ultimate speed
-          // const now = Date.now();
-          // let rateData = rateLimitMap.get(clientIP);
-          // if (!rateData || now > rateData.resetTime) {
-          //     rateData = { count: 0, resetTime: now + rateLimitWindow };
-          //     rateLimitMap.set(clientIP, rateData);
-          // }
-          // if (rateData.count >= rateLimitMax) {
-          //     res.writeHead(429, { 'Content-Type': 'application/json' });
-          //     res.end('{"error": "Too many requests"}');
-          //     return;
-          // }
-          // rateData.count++;
+           // Rate limiting disabled in lightning mode for ultimate speed
+           // const now = Date.now();
+           // let rateData = rateLimitMap.get(clientIP);
+           // if (!rateData || now > rateData.resetTime) {
+           //     rateData = { count: 0, resetTime: now + rateLimitWindow };
+           //     rateLimitMap.set(clientIP, rateData);
+           // }
+           // if (rateData.count >= rateLimitMax) {
+           //     res.writeHead(429, { 'Content-Type': 'application/json' });
+           //     res.end('{"error": "Too many requests"}');
+           //     return;
+           // }
+           // rateData.count++;
 
-         requestCount++;
+          requestCount++;
 
-          const parsedUrl = url.parse(req.url, true);
-          const pathname = parsedUrl.pathname;
-          const query = parsedUrl.query;
-         const method = req.method;
+           const parsedUrl = url.parse(req.url, true);
+           const pathname = parsedUrl.pathname;
+           const query = parsedUrl.query;
+          const method = req.method;
 
         // Handle proxy routes
         if (pathname.startsWith('/proxy/')) {
@@ -2198,12 +2209,104 @@ if (config.ultraFastMode) {
             res.end(errorNotFound);
         }
     });
+    } else {
+        server = http.createServer({ keepAlive: false }, (req, res) => {
+           if (req.headers.upgrade && req.headers.upgrade.toLowerCase() === 'websocket') {
+               // Let WebSocket handle upgrade
+               return;
+           }
+           const clientIP = req.connection.remoteAddress || req.socket.remoteAddress || 'unknown';
+
+           // Rate limiting disabled in lightning mode for ultimate speed
+           // const now = Date.now();
+           // let rateData = rateLimitMap.get(clientIP);
+           // if (!rateData || now > rateData.resetTime) {
+           //     rateData = { count: 0, resetTime: now + rateLimitWindow };
+           //     rateLimitMap.set(clientIP, rateData);
+           // }
+           // if (rateData.count >= rateLimitMax) {
+           //     res.writeHead(429, { 'Content-Type': 'application/json' });
+           //     res.end('{"error": "Too many requests"}');
+           //     return;
+           // }
+           // rateData.count++;
+
+          requestCount++;
+
+           const parsedUrl = url.parse(req.url, true);
+           const pathname = parsedUrl.pathname;
+           const query = parsedUrl.query;
+          const method = req.method;
+
+        // Handle proxy routes
+        if (pathname.startsWith('/proxy/')) {
+            const parts = pathname.split('/');
+            const clientIP = req.connection.remoteAddress || req.socket.remoteAddress || 'unknown';
+            if (parts.length < 3) {
+                winston.warn(`AUDIT: Invalid proxy request - bad path, clientIP: ${clientIP}`);
+                res.writeHead(400, { 'Content-Type': 'application/json' });
+                res.end('{"error": "Invalid proxy path"}');
+                return;
+            }
+            const serviceName = parts[2];
+            const path = '/' + parts.slice(3).join('/');
+            const node = serviceRegistry.getRandomNode(serviceName);
+            if (!node) {
+                winston.info(`AUDIT: Proxy failed - service not found: ${serviceName}, clientIP: ${clientIP}`);
+                res.writeHead(404, { 'Content-Type': 'application/json' });
+                res.end(serviceUnavailable);
+                return;
+            }
+            const target = `http://${node.address}`;
+              req.url = path + parsedUrl.search;
+              // winston.info(`AUDIT: Proxy request - serviceName: ${serviceName}, target: ${target}, path: ${path}, clientIP: ${clientIP}`);
+              proxy.web(req, res, { target }, (err) => {
+                  if (err) {
+                      // winston.error(`AUDIT: Proxy error - serviceName: ${serviceName}, target: ${target}, error: ${err.message}, clientIP: ${clientIP}`);
+                      // Record circuit breaker failure
+                      serviceRegistry.recordFailure(node.nodeName);
+                      res.writeHead(500, { 'Content-Type': 'application/json' });
+                      res.end('{"error": "Proxy error"}');
+                  } else {
+                      // Record success for circuit breaker
+                      serviceRegistry.recordSuccess(node.nodeName);
+                  }
+              });
+            return;
+        }
+
+        // Use routes map for O(1) lookup
+        const routeKey = `${method} ${pathname}`;
+        const handler = routes.get(routeKey);
+        if (handler) {
+            if (method === 'POST' || method === 'PUT' || method === 'DELETE') {
+                  const chunks = [];
+                  req.on('data', chunk => chunks.push(chunk));
+                  req.on('end', () => {
+                      const body = Buffer.concat(chunks).toString();
+                      try {
+                          const parsedBody = body ? JSON.parse(body) : {};
+                          handler(req, res, parsedUrl.query, parsedBody);
+                      } catch (e) {
+                          res.writeHead(400, { 'Content-Type': 'application/json' });
+                          res.end(errorInvalidJSON);
+                      }
+                  });
+            } else {
+                handler(req, res, parsedUrl.query, {});
+            }
+        } else {
+            res.writeHead(404, { 'Content-Type': 'application/json' });
+            res.end(errorNotFound);
+        }
+    });
+    }
 
     if (!config.isTestMode || process.env.WEBSOCKET_ENABLED === 'true') {
         if (!config.isTestMode) {
             server.listen(constants.PORT, () => {
                 console.log('Maxine lightning-fast server listening on port', constants.PORT);
-                console.log('Lightning mode: minimal features for maximum performance using raw HTTP');
+                console.log(`Lightning mode: minimal features for maximum performance using ${config.mtlsEnabled ? 'HTTPS with mTLS' : 'raw HTTP'}`);
             });
         }
 

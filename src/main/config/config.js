@@ -130,10 +130,14 @@ const config = {
                       jwtExpiresIn: process.env.JWT_EXPIRES_IN || '1h',
                       adminUsername: process.env.ADMIN_USERNAME || 'admin',
                       adminPasswordHash: process.env.ADMIN_PASSWORD_HASH || '$2b$10$example.hash.here', // Use bcrypt to generate
-                      oauth2Enabled: process.env.OAUTH2_ENABLED === 'true',
-                      googleClientId: process.env.GOOGLE_CLIENT_ID,
-                      googleClientSecret: process.env.GOOGLE_CLIENT_SECRET,
-                      sessionSecret: process.env.SESSION_SECRET || 'session-secret-change-in-production'
+                       oauth2Enabled: process.env.OAUTH2_ENABLED === 'true',
+                       googleClientId: process.env.GOOGLE_CLIENT_ID,
+                       googleClientSecret: process.env.GOOGLE_CLIENT_SECRET,
+                       sessionSecret: process.env.SESSION_SECRET || 'session-secret-change-in-production',
+                       mtlsEnabled: process.env.MTLS_ENABLED === 'true',
+                       serverCertPath: process.env.SERVER_CERT_PATH || path.join(__dirname, 'certs', 'server.crt'),
+                       serverKeyPath: process.env.SERVER_KEY_PATH || path.join(__dirname, 'certs', 'server.key'),
+                       caCertPath: process.env.CA_CERT_PATH || path.join(__dirname, 'certs', 'ca.crt')
 }
 
 Object.defineProperty(config, "profile", {
