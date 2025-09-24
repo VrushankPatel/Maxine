@@ -242,16 +242,17 @@ if (config.lightningMode) {
                 return;
             }
             const version = query.version;
-            const fullServiceName = version ? `${serviceName}:${version}` : serviceName;
             const strategy = query.loadBalancing || 'round-robin';
             const tags = query.tags ? query.tags.split(',') : null;
-            const node = serviceRegistry.getRandomNode(fullServiceName, strategy, clientIP, tags);
+            const node = serviceRegistry.getRandomNode(serviceName, strategy, clientIP, tags, version);
             if (!node) {
-                winston.info(`AUDIT: Service discovery failed - serviceName: ${fullServiceName}, strategy: ${strategy}, tags: ${tags}, clientIP: ${clientIP}`);
+                winston.info(`AUDIT: Service discovery failed - serviceName: ${serviceName}, version: ${version}, strategy: ${strategy}, tags: ${tags}, clientIP: ${clientIP}`);
                 res.writeHead(404, { 'Content-Type': 'application/json' });
                 res.end(serviceUnavailable);
                 return;
             }
+            const resolvedVersion = version === 'latest' ? serviceRegistry.getLatestVersion(serviceName) : version;
+            const fullServiceName = resolvedVersion ? `${serviceName}:${resolvedVersion}` : serviceName;
             winston.info(`AUDIT: Service discovered - serviceName: ${fullServiceName}, strategy: ${strategy}, tags: ${tags}, node: ${node.nodeName}, clientIP: ${clientIP}`);
             res.writeHead(200, { 'Content-Type': 'application/json' });
             res.end(stringifyDiscover({ address: node.address, nodeName: node.nodeName, healthy: true }));
@@ -323,6 +324,27 @@ if (config.lightningMode) {
     routes.set('GET /servers', handleServers);
     routes.set('GET /health', handleHealth);
     routes.set('GET /metrics', handleMetrics);
+    routes.set('GET /versions', (req, res, query, body) => {
+        try {
+            const serviceName = query.serviceName;
+            const clientIP = req.connection.remoteAddress || req.socket.remoteAddress || 'unknown';
+            if (!serviceName) {
+                winston.warn(`AUDIT: Invalid versions request - missing serviceName, clientIP: ${clientIP}`);
+                res.writeHead(400, { 'Content-Type': 'application/json' });
+                res.end('{"error": "Missing serviceName"}');
+                return;
+            }
+            const versions = serviceRegistry.getVersions(serviceName);
+            winston.info(`AUDIT: Versions requested - serviceName: ${serviceName}, versions: ${versions.join(', ')}, clientIP: ${clientIP}`);
+            res.writeHead(200, { 'Content-Type': 'application/json' });
+            res.end(JSON.stringify({ serviceName, versions }));
+        } catch (error) {
+            winston.error(`AUDIT: Versions failed - error: ${error.message}, clientIP: ${req.connection.remoteAddress || req.socket.remoteAddress || 'unknown'}`);
+            errorCount++;
+            res.writeHead(500, { 'Content-Type': 'application/json' });
+            res.end('{"error": "Internal server error"}');
+        }
+    });
     // Handle signin for authentication
     routes.set('POST /signin', (req, res, query, body) => {
         try {
@@ -988,9 +1010,9 @@ if (config.lightningMode) {
 
          requestCount++;
 
-         const parsedUrl = new URL(req.url, `http://localhost`);
-         const pathname = parsedUrl.pathname;
-         const query = Object.fromEntries(parsedUrl.searchParams);
+          const parsedUrl = url.parse(req.url, true);
+          const pathname = parsedUrl.pathname;
+          const query = parsedUrl.query;
          const method = req.method;
 
         // Handle proxy routes
@@ -1035,20 +1057,20 @@ if (config.lightningMode) {
         const handler = routes.get(routeKey);
         if (handler) {
             if (method === 'POST' || method === 'PUT' || method === 'DELETE') {
-                 const chunks = [];
-                 req.on('data', chunk => chunks.push(chunk));
-                 req.on('end', () => {
-                     const body = Buffer.concat(chunks).toString();
-                     try {
-                         const parsedBody = body ? JSON.parse(body) : {};
-                         handler(req, res, query, parsedBody);
-                     } catch (e) {
-                         res.writeHead(400, { 'Content-Type': 'application/json' });
-                         res.end(errorInvalidJSON);
-                     }
-                 });
+                  const chunks = [];
+                  req.on('data', chunk => chunks.push(chunk));
+                  req.on('end', () => {
+                      const body = Buffer.concat(chunks).toString();
+                      try {
+                          const parsedBody = body ? JSON.parse(body) : {};
+                          handler(req, res, parsedUrl.query, parsedBody);
+                      } catch (e) {
+                          res.writeHead(400, { 'Content-Type': 'application/json' });
+                          res.end(errorInvalidJSON);
+                      }
+                  });
             } else {
-                handler(req, res, query, {});
+                handler(req, res, parsedUrl.query, {});
             }
         } else {
             res.writeHead(404, { 'Content-Type': 'application/json' });
@@ -1103,7 +1125,7 @@ if (config.lightningMode) {
             wss.clients.forEach(client => {
                 if (client.readyState === WebSocket.OPEN) {
                     const filter = clientFilters.get(client);
-                    if (!filter || matchesFilter(event, data, filter)) {
+                    if (matchesFilter(event, data, filter)) {
                         client.send(message);
                     }
                 }
@@ -1121,6 +1143,7 @@ if (config.lightningMode) {
         global.broadcast = broadcast;
 
         const matchesFilter = (event, data, filter) => {
+            if (!filter) return true;
             if (filter.event && filter.event !== event) return false;
             if (filter.serviceName && data.serviceName && filter.serviceName !== data.serviceName) return false;
             if (filter.nodeId && data.nodeId && filter.nodeId !== data.nodeId) return false;
@@ -1178,6 +1201,7 @@ if (config.lightningMode) {
         global.broadcast = broadcast;
     }
 
+    console.log('Server setup complete');
     builder = { getApp: () => server };
 } else {
     // Full mode
