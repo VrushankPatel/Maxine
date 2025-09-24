@@ -1446,6 +1446,28 @@ if (config.ultraFastMode) {
         }
     });
 
+    routes.set('GET /health-score', (req, res, query, body) => {
+        try {
+            const clientIP = req.connection.remoteAddress || req.socket.remoteAddress || 'unknown';
+            const serviceName = query.serviceName;
+            if (!serviceName) {
+                winston.warn(`AUDIT: Invalid health score request - missing serviceName, clientIP: ${clientIP}`);
+                res.writeHead(400, { 'Content-Type': 'application/json' });
+                res.end('{"error": "Missing serviceName"}');
+                return;
+            }
+            const scores = serviceRegistry.getHealthScores(serviceName);
+            // winston.info(`AUDIT: Health scores requested - serviceName: ${serviceName}, clientIP: ${clientIP}`);
+            res.writeHead(200, { 'Content-Type': 'application/json' });
+            res.end(JSON.stringify({ serviceName, scores }));
+        } catch (error) {
+            // winston.error(`AUDIT: Health scores failed - error: ${error.message}, clientIP: ${req.connection.remoteAddress || req.socket.remoteAddress || 'unknown'}`);
+            errorCount++;
+            res.writeHead(500, { 'Content-Type': 'application/json' });
+            res.end('{"error": "Internal server error"}');
+        }
+    });
+
     routes.set('POST /traffic/set', (req, res, query, body) => {
         try {
             const clientIP = req.connection.remoteAddress || req.socket.remoteAddress || 'unknown';
