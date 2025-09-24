@@ -22,6 +22,8 @@
   - [x] Implement Ultra-Fast Mode: Added extreme performance mode with minimal features, UDP heartbeats, disabled logging/metrics/auth/WebSocket/MQTT/gRPC, pre-allocated buffers for maximum speed.
   - [x] Implement weighted least connections load balancing: Added weighted-least-connections strategy that selects nodes based on connections per weight for better resource utilization.
   - [x] Implement Linkerd Service Mesh Configuration Generation: Added /service-mesh/linkerd-config endpoint to generate Linkerd ServiceProfile configurations for seamless service mesh integration.
+- [x] Add Configurable Cleanup Interval: Made the periodic cleanup interval configurable via CLEANUP_INTERVAL environment variable for fine-tuning performance.
+- [x] Add Cache Hit/Miss Metrics: Implemented metrics for discovery cache performance monitoring, including cacheHits and cacheMisses in /metrics endpoint.
 
 ## Next Steps
 
@@ -33,6 +35,8 @@
   - [x] Integrate with Kubernetes services and endpoints for seamless discovery
   - [x] Provide Helm charts for easy deployment
   - [x] Enable declarative management of Maxine instances in K8s clusters
+- [ ] Implement OpenTelemetry Tracing: Add full OpenTelemetry integration for distributed tracing across registry operations, including Jaeger and Zipkin exporters for observability.
+- [ ] Add Machine Learning-Based Load Balancing: Implement predictive load balancing using historical performance data and simple ML algorithms to optimize service selection.
 - [x] Implement Service Mesh Integration Enhancements: Deep integration with popular service meshes:
   - Istio: Automatic Envoy configuration generation, traffic policies, and service mesh integration
   - Linkerd: Native Linkerd service profile generation and traffic splitting
