@@ -2,25 +2,114 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: {{ include "maxine.fullname" . }}
+  labels:
+    app.kubernetes.io/name: {{ include "maxine.name" . }}
+    app.kubernetes.io/instance: {{ .Release.Name }}
+    app.kubernetes.io/version: {{ .Chart.AppVersion | quote }}
+    app.kubernetes.io/managed-by: {{ .Release.Service }}
 spec:
   replicas: {{ .Values.replicaCount }}
   selector:
     matchLabels:
-      app: {{ include "maxine.name" . }}
+      app.kubernetes.io/name: {{ include "maxine.name" . }}
+      app.kubernetes.io/instance: {{ .Release.Name }}
   template:
     metadata:
       labels:
-        app: {{ include "maxine.name" . }}
+        app.kubernetes.io/name: {{ include "maxine.name" . }}
+        app.kubernetes.io/instance: {{ .Release.Name }}
+        app.kubernetes.io/version: {{ .Chart.AppVersion | quote }}
+        app.kubernetes.io/managed-by: {{ .Release.Service }}
     spec:
+      {{- with .Values.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.podSecurityContext }}
+      securityContext:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
       containers:
       - name: maxine
         image: {{ .Values.image.repository }}:{{ .Values.image.tag }}
+        imagePullPolicy: {{ .Values.image.pullPolicy }}
+        {{- with .Values.securityContext }}
+        securityContext:
+          {{- toYaml . | nindent 12 }}
+        {{- end }}
         ports:
-        - containerPort: 8080
+        - name: http
+          containerPort: 8080
+          protocol: TCP
+        - name: websocket
+          containerPort: 8081
+          protocol: TCP
+        - name: udp-discovery
+          containerPort: 8082
+          protocol: UDP
+        - name: tcp-discovery
+          containerPort: 8083
+          protocol: TCP
+        - name: dns
+          containerPort: 53
+          protocol: UDP
+        - name: metrics
+          containerPort: 9464
+          protocol: TCP
         env:
         {{- range .Values.env }}
         - name: {{ .name }}
           value: {{ .value | quote }}
         {{- end }}
+        {{- if .Values.redis.enabled }}
+        - name: REDIS_HOST
+          value: "{{ include "maxine.fullname" . }}-redis-master"
+        {{- end }}
         resources:
           {{- toYaml .Values.resources | nindent 12 }}
+        {{- if .Values.healthCheck.enabled }}
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: http
+          initialDelaySeconds: {{ .Values.healthCheck.initialDelaySeconds }}
+          periodSeconds: {{ .Values.healthCheck.periodSeconds }}
+          timeoutSeconds: {{ .Values.healthCheck.timeoutSeconds }}
+          failureThreshold: {{ .Values.healthCheck.failureThreshold }}
+          successThreshold: {{ .Values.healthCheck.successThreshold }}
+        readinessProbe:
+          httpGet:
+            path: /health
+            port: http
+          initialDelaySeconds: {{ .Values.healthCheck.initialDelaySeconds }}
+          periodSeconds: {{ .Values.healthCheck.periodSeconds }}
+          timeoutSeconds: {{ .Values.healthCheck.timeoutSeconds }}
+          failureThreshold: {{ .Values.healthCheck.failureThreshold }}
+          successThreshold: {{ .Values.healthCheck.successThreshold }}
+        {{- end }}
+        volumeMounts:
+        {{- if .Values.persistence.enabled }}
+        - name: registry-storage
+          mountPath: /app/registry.json
+          subPath: registry.json
+        - name: logs-storage
+          mountPath: /app/logs
+          subPath: logs
+        {{- end }}
+      {{- if .Values.persistence.enabled }}
+      volumes:
+      - name: registry-storage
+        persistentVolumeClaim:
+          claimName: {{ include "maxine.fullname" . }}-registry
+      - name: logs-storage
+        persistentVolumeClaim:
+          claimName: {{ include "maxine.fullname" . }}-logs
+      {{- end }}
