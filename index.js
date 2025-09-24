@@ -15,10 +15,16 @@ if (!config.ultraFastMode) {
     endpoint: process.env.JAEGER_ENDPOINT || 'http://localhost:14268/api/traces',
   });
 
-  sdk = new NodeSDK({
+   sdk = new NodeSDK({
     serviceName: 'maxine-service-registry',
     traceExporter: jaegerExporter,
   });
+
+  try {
+    sdk.start();
+  } catch (e) {
+    // Ignore if start is deprecated
+  }
 
   try {
     // Try to add metrics if packages are available
