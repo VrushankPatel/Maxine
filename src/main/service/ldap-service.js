@@ -17,7 +17,6 @@ class LdapService {
                 password: config.ldapBindPassword
             };
             this.ad = new ActiveDirectory(adConfig);
-            console.log('LDAP authentication initialized');
         }
     }
 
