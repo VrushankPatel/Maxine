@@ -125,11 +125,15 @@ const config = {
                      federationPeers: process.env.FEDERATION_PEERS ? process.env.FEDERATION_PEERS.split(',') : [],
                      federationTimeout: process.env.FEDERATION_TIMEOUT ? parseInt(process.env.FEDERATION_TIMEOUT) : 5000,
                      federationRetryAttempts: process.env.FEDERATION_RETRY_ATTEMPTS ? parseInt(process.env.FEDERATION_RETRY_ATTEMPTS) : 3,
-                     authEnabled: process.env.AUTH_ENABLED === 'true' && lightningMode, // Auth only in lightning mode for now
-                     jwtSecret: process.env.JWT_SECRET || 'default-secret-change-in-production',
-                     jwtExpiresIn: process.env.JWT_EXPIRES_IN || '1h',
-                     adminUsername: process.env.ADMIN_USERNAME || 'admin',
-                     adminPasswordHash: process.env.ADMIN_PASSWORD_HASH || '$2b$10$example.hash.here' // Use bcrypt to generate
+                      authEnabled: process.env.AUTH_ENABLED === 'true' && lightningMode, // Auth only in lightning mode for now
+                      jwtSecret: process.env.JWT_SECRET || 'default-secret-change-in-production',
+                      jwtExpiresIn: process.env.JWT_EXPIRES_IN || '1h',
+                      adminUsername: process.env.ADMIN_USERNAME || 'admin',
+                      adminPasswordHash: process.env.ADMIN_PASSWORD_HASH || '$2b$10$example.hash.here', // Use bcrypt to generate
+                      oauth2Enabled: process.env.OAUTH2_ENABLED === 'true',
+                      googleClientId: process.env.GOOGLE_CLIENT_ID,
+                      googleClientSecret: process.env.GOOGLE_CLIENT_SECRET,
+                      sessionSecret: process.env.SESSION_SECRET || 'session-secret-change-in-production'
 }
 
 Object.defineProperty(config, "profile", {

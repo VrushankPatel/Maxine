@@ -387,6 +387,27 @@ if (config.ultraFastMode) {
     const path = require('path');
     const GrpcServer = require('./src/main/grpc/grpc-server');
 
+    // OAuth2 setup
+    if (config.oauth2Enabled && config.googleClientId && config.googleClientSecret) {
+        passport.use(new GoogleStrategy({
+            clientID: config.googleClientId,
+            clientSecret: config.googleClientSecret,
+            callbackURL: '/auth/google/callback'
+        }, (accessToken, refreshToken, profile, done) => {
+            // Here, you can save user to database or just return profile
+            return done(null, profile);
+        }));
+
+        passport.serializeUser((user, done) => {
+            done(null, user.id);
+        });
+
+        passport.deserializeUser((id, done) => {
+            // Find user by id
+            done(null, { id });
+        });
+    }
+
     // Precompiled stringify functions for performance
     const registerResponseSchema = {
         type: 'object',
@@ -747,6 +768,54 @@ if (config.ultraFastMode) {
             res.end(errorUnauthorized);
         }
     });
+
+    // OAuth2 routes
+    if (config.oauth2Enabled && config.googleClientId && config.googleClientSecret) {
+        routes.set('GET /auth/google', (req, res, query, body) => {
+            const clientIP = req.connection.remoteAddress || req.socket.remoteAddress || 'unknown';
+            const state = jwt.sign({ ip: clientIP }, config.jwtSecret, { expiresIn: '10m' });
+            const authUrl = `https://accounts.google.com/o/oauth2/v2/auth?response_type=code&client_id=${config.googleClientId}&redirect_uri=${encodeURIComponent('http://localhost:8080/auth/google/callback')}&scope=openid email profile&state=${state}`;
+            res.writeHead(302, { 'Location': authUrl });
+            res.end();
+        });
+
+        routes.set('GET /auth/google/callback', async (req, res, query, body) => {
+            try {
+                const { code, state } = query;
+                if (!code || !state) {
+                    res.writeHead(400, { 'Content-Type': 'text/plain' });
+                    res.end('Missing code or state');
+                    return;
+                }
+                // Verify state
+                try {
+                    jwt.verify(state, config.jwtSecret);
+                } catch (err) {
+                    res.writeHead(400, { 'Content-Type': 'text/plain' });
+                    res.end('Invalid state');
+                    return;
+                }
+                // Exchange code for token
+                const tokenResponse = await axios.post('https://oauth2.googleapis.com/token', {
+                    client_id: config.googleClientId,
+                    client_secret: config.googleClientSecret,
+                    code,
+                    grant_type: 'authorization_code',
+                    redirect_uri: 'http://localhost:8080/auth/google/callback'
+                });
+                const { access_token, id_token } = tokenResponse.data;
+                // Decode id_token for user info
+                const user = jwt.decode(id_token);
+                // Create JWT for user
+                const userToken = jwt.sign({ id: user.sub, email: user.email, name: user.name }, config.jwtSecret, { expiresIn: config.jwtExpiresIn });
+                res.writeHead(200, { 'Content-Type': 'application/json' });
+                res.end(JSON.stringify({ token: userToken, user: { id: user.sub, email: user.email, name: user.name } }));
+            } catch (error) {
+                res.writeHead(500, { 'Content-Type': 'text/plain' });
+                res.end('OAuth error');
+            }
+        });
+    }
 
     // Persistence endpoints
     // Handle registry backup
