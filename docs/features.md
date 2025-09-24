@@ -214,6 +214,7 @@
 ### Service Dependency Graph
 - Maxine provides service dependency graph endpoint.
 - Use `/api/maxine/serviceops/dependency/graph` to get dependencies.
+- Automatic dependency detection through call logging: services can report outbound calls via `/record-call` endpoint, enabling auto-detection of service dependencies based on traffic patterns.
 ### Impact Analysis
 - Maxine provides impact analysis for service failures.
 - Use `/api/maxine/serviceops/impact/analysis` to list dependent services.

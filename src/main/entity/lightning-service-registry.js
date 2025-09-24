@@ -25,6 +25,7 @@ class LightningServiceRegistry {
         this.environmentIndex = new Map(); // environment -> Set<nodeName>
         this.federatedRegistries = new Map(); // federation support
         this.dependencies = new Map(); // service dependencies
+        this.callLogs = new Map(); // serviceName -> Map<calledService, {count, lastSeen}>
         this.heartbeatTimeout = 60000; // 60 seconds
         this.circuitBreakerThreshold = 5;
         this.circuitBreakerTimeout = 60000;
@@ -54,6 +55,11 @@ class LightningServiceRegistry {
         // Health checks enabled if configured
         if (config.healthCheckEnabled) {
             setInterval(() => this.performHealthChecks(), this.healthCheckInterval);
+        }
+
+        // Periodic dependency analysis
+        if (config.dependencyAutoDetectEnabled) {
+            setInterval(() => this.analyzeDependencies(), config.dependencyAnalysisInterval);
         }
 
         // Strategies for load balancing
@@ -935,6 +941,52 @@ class LightningServiceRegistry {
             }
         } catch (err) {
             console.error('Failed to load registry from disk:', err);
+        }
+    }
+
+    // Record a service call for dependency auto-detection
+    recordCall(callerService, calledService) {
+        try {
+            if (!this.callLogs.has(callerService)) {
+                this.callLogs.set(callerService, new Map());
+            }
+            const serviceCalls = this.callLogs.get(callerService);
+            if (!serviceCalls.has(calledService)) {
+                serviceCalls.set(calledService, { count: 0, lastSeen: Date.now() });
+            }
+            const callData = serviceCalls.get(calledService);
+            callData.count++;
+            callData.lastSeen = Date.now();
+        } catch (error) {
+            console.error('Error recording call:', error);
+            throw error;
+        }
+    }
+
+    // Analyze call logs and update dependencies
+    analyzeDependencies() {
+        const now = Date.now();
+        const threshold = config.dependencyCallThreshold;
+        const maxAge = config.dependencyMaxAge;
+
+        for (const [caller, calls] of this.callLogs) {
+            for (const [called, data] of calls) {
+                if (data.count >= threshold && (now - data.lastSeen) < maxAge) {
+                    // Add dependency if not already present
+                    if (!this.dependencies.has(caller)) {
+                        this.dependencies.set(caller, new Set());
+                    }
+                    this.dependencies.get(caller).add(called);
+                } else if (data.count < threshold || (now - data.lastSeen) > maxAge) {
+                    // Remove stale dependency
+                    if (this.dependencies.has(caller)) {
+                        this.dependencies.get(caller).delete(called);
+                        if (this.dependencies.get(caller).size === 0) {
+                            this.dependencies.delete(caller);
+                        }
+                    }
+                }
+            }
         }
     }
 }

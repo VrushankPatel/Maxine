@@ -187,5 +187,22 @@ describe(`${fileName} : Lightning Mode API`, () => {
                 done();
             });
     });
+
+    it('POST /record-call -> 200 & should record service call', (done) => {
+        chai.request(app)
+            .post('/record-call')
+            .set('Content-Type', 'application/json')
+            .send({
+                "callerService": "web-service",
+                "calledService": "api-service"
+            })
+            .end((_, res) => {
+                res.should.have.status(200);
+                res.should.be.json;
+                const body = res.body;
+                body.should.have.own.property("success", true);
+                done();
+            });
+    });
 });
 }
