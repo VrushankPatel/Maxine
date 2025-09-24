@@ -7,16 +7,16 @@
 - [x] Check for memory leaks and optimize memory usage
 - [x] Optimize JSON parsing and response buffers
 
- ## Missing Features Implementation
- - [x] Implement Access Control Lists (ACLs): Fine-grained permissions for service access
- - [x] Implement Service Intentions: Define allowed communication patterns between services
- - [x] Implement Service Blacklists: Prevent registration or discovery of problematic services
- - [x] Implement Persistence: Store registry state across restarts (file-based and Redis)
- - [ ] Implement Federation: Connect multiple Maxine instances across datacenters
- - [ ] Implement Distributed Tracing: Track service calls across the mesh
- - [ ] Implement Authentication/Authorization: Secure access to registry operations
- - [ ] Implement Multi-Datacenter Support: Global service discovery
- - [ ] Implement Service Mesh Integration: Integration with Istio, Linkerd, etc.
+  ## Missing Features Implementation
+  - [x] Implement Access Control Lists (ACLs): Fine-grained permissions for service access
+  - [x] Implement Service Intentions: Define allowed communication patterns between services
+  - [x] Implement Service Blacklists: Prevent registration or discovery of problematic services
+  - [x] Implement Persistence: Store registry state across restarts (file-based and Redis)
+  - [x] Implement Federation: Connect multiple Maxine instances across datacenters
+  - [ ] Implement Distributed Tracing: Track service calls across the mesh
+  - [ ] Implement Authentication/Authorization: Secure access to registry operations
+  - [ ] Implement Multi-Datacenter Support: Global service discovery
+  - [ ] Implement Service Mesh Integration: Integration with Istio, Linkerd, etc.
 
  ## Code Quality and Testing
  - [x] Run unit tests and ensure all pass
@@ -33,11 +33,11 @@
  - [ ] Update Docker and Helm configurations
  - [ ] Update CI/CD pipelines for new features
 
- ## Next Feature Implementation: Federation
- - [ ] Implement federation registry management: Add/remove federated Maxine instances
- - [ ] Implement cross-registry discovery: Query federated registries for services
- - [ ] Add federation configuration options in config.js
- - [ ] Update discovery logic to include federated results
- - [ ] Add federation health checks and metrics
- - [ ] Test federation across multiple instances
- - [ ] Update documentation for federation setup
+  ## Next Feature Implementation: Distributed Tracing
+  - [ ] Implement tracing service: Start, add events, end traces
+  - [ ] Add tracing configuration options in config.js
+  - [ ] Update service operations to include tracing
+  - [ ] Add tracing endpoints for management
+  - [ ] Integrate tracing with discovery and registration
+  - [ ] Test tracing functionality
+  - [ ] Update documentation for tracing

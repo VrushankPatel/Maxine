@@ -20,6 +20,7 @@ const { LRUCache } = require('lru-cache');
 const stringify = require('fast-json-stringify');
 const { buildServiceNameCached } = require("../../util/util");
 const semver = require('semver');
+const federationService = require('../../service/federation-service');
 
 // Fast LCG PRNG for ultra-fast mode
 let lcgSeed = Date.now();
@@ -544,7 +545,7 @@ const normalDiscovery = (req, res) => {
           }
 }
 
-const lightningDiscovery = (req, res) => {
+const lightningDiscovery = async (req, res) => {
         // Lightning mode: ultimate speed, only basic discovery
         const serviceName = req.query.serviceName;
         if (!serviceName) {
@@ -575,7 +576,21 @@ const lightningDiscovery = (req, res) => {
         const strategy = req.query.strategy || 'round-robin';
         const clientId = req.query.clientId;
         const tags = req.query.tags ? req.query.tags.split(',') : [];
-        const serviceNode = serviceRegistry.getRandomNode(fullServiceName, strategy, clientId, tags);
+        let serviceNode = serviceRegistry.getRandomNode(fullServiceName, strategy, clientId, tags);
+        if (!serviceNode && config.federationEnabled) {
+            // Try federation
+            const federatedResults = await federationService.discoverFromFederation(serviceName);
+            if (federatedResults.length > 0) {
+                // Pick the first result, assuming it's a service instance object
+                const federatedService = federatedResults[0];
+                serviceNode = {
+                    address: federatedService.address,
+                    nodeName: federatedService.nodeName || `${serviceName}:${federatedService.address}`,
+                    healthy: true,
+                    metadata: federatedService.metadata || {}
+                };
+            }
+        }
         if (!serviceNode) {
             res.status(404).end(notFoundBuffer);
             return;

@@ -19,15 +19,14 @@ A minimal, high-performance service discovery and registry for microservices.
 - **Lightning Mode**: Dedicated mode for ultimate speed with core features: register, heartbeat, deregister, discover with round-robin/random load balancing, health, metrics
 - **Optimized Parsing**: Fast JSON parsing with error handling
 - **Event-Driven**: Real-time events for service changes and notifications
+- **Federation**: Connect multiple Maxine instances across datacenters for global service discovery
 
 ## Missing Features (Future Enhancements)
 
 While Maxine provides core service registry functionality with lightning-fast performance, the following features are not yet implemented but could be added for a more complete service registry:
 
-- **Federation**: Connect multiple Maxine instances across datacenters
 - **Distributed Tracing**: Track service calls across the mesh
 - **Authentication/Authorization**: Secure access to registry operations
-- **Persistence**: Store registry state across restarts (implemented: file-based and Redis)
 - **Multi-Datacenter Support**: Global service discovery
 - **Service Mesh Integration**: Integration with Istio, Linkerd, etc.
 
@@ -50,6 +49,16 @@ Maxine supports optional persistence to maintain registry state across restarts:
 Enable with `PERSISTENCE_ENABLED=true` and set `PERSISTENCE_TYPE=file` or `PERSISTENCE_TYPE=redis`.
 
 For Redis, configure `REDIS_HOST`, `REDIS_PORT`, `REDIS_PASSWORD`.
+
+## Federation
+
+Maxine supports federation to connect multiple instances across datacenters for global service discovery.
+
+Enable with `FEDERATION_ENABLED=true` and configure peers with `FEDERATION_PEERS=name1:url1,name2:url2`.
+
+Additional options: `FEDERATION_TIMEOUT` (default 5000ms), `FEDERATION_RETRY_ATTEMPTS` (default 3).
+
+Federated registries are queried automatically if a service is not found locally.
 
 ## Modes
 
@@ -174,6 +183,11 @@ Content-Type: application/json
 {
   "name": "remote-registry"
 }
+```
+
+##### Get Federated Registries
+```http
+GET /api/maxine/serviceops/federation
 ```
 
 ##### Start Trace

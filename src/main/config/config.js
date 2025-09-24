@@ -118,7 +118,11 @@ const config = {
                          tcpPort: process.env.TCP_PORT ? parseInt(process.env.TCP_PORT) : 8082,
                            coapEnabled: process.env.COAP_ENABLED === 'true', // Optional for IoT
                        coapPort: process.env.COAP_PORT ? parseInt(process.env.COAP_PORT) : 5683,
-                   datacenter: process.env.DATACENTER || 'default'
+                    datacenter: process.env.DATACENTER || 'default',
+                    federationEnabled: process.env.FEDERATION_ENABLED === 'true' && !isTestMode,
+                    federationPeers: process.env.FEDERATION_PEERS ? process.env.FEDERATION_PEERS.split(',') : [],
+                    federationTimeout: process.env.FEDERATION_TIMEOUT ? parseInt(process.env.FEDERATION_TIMEOUT) : 5000,
+                    federationRetryAttempts: process.env.FEDERATION_RETRY_ATTEMPTS ? parseInt(process.env.FEDERATION_RETRY_ATTEMPTS) : 3
 }
 
 Object.defineProperty(config, "profile", {
