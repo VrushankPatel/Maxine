@@ -42,6 +42,9 @@ class LightningServiceRegistrySimple extends EventEmitter {
         this.dependencies = new Map(); // serviceName -> Set of services it depends on
         this.dependents = new Map(); // serviceName -> Set of services that depend on it
 
+        // Access Control Lists
+        this.acls = new Map(); // serviceName -> { allow: Set, deny: Set }
+
         // Circuit Breaker
         this.circuitFailures = new Map(); // nodeName -> failure count
         this.circuitState = new Map(); // nodeName -> 'closed' | 'open' | 'half-open'
@@ -489,6 +492,10 @@ class LightningServiceRegistrySimple extends EventEmitter {
          for (const [service, deps] of this.dependents) {
              data.dependents[service] = Array.from(deps);
          }
+         data.acls = {};
+         for (const [service, acl] of this.acls) {
+             data.acls[service] = { allow: Array.from(acl.allow), deny: Array.from(acl.deny) };
+         }
          return data;
     }
 
@@ -532,6 +539,10 @@ class LightningServiceRegistrySimple extends EventEmitter {
          this.dependents = new Map();
          for (const [service, deps] of Object.entries(data.dependents || {})) {
              this.dependents.set(service, new Set(deps));
+         }
+         this.acls = new Map();
+         for (const [service, acl] of Object.entries(data.acls || {})) {
+             this.acls.set(service, { allow: new Set(acl.allow || []), deny: new Set(acl.deny || []) });
          }
          this.saveRegistry();
     }
@@ -596,6 +607,10 @@ class LightningServiceRegistrySimple extends EventEmitter {
              data.dependents = {};
              for (const [service, deps] of this.dependents) {
                  data.dependents[service] = Array.from(deps);
+             }
+             data.acls = {};
+             for (const [service, acl] of this.acls) {
+                 data.acls[service] = { allow: Array.from(acl.allow), deny: Array.from(acl.deny) };
              }
 
             if (this.persistenceType === 'file') {
@@ -720,6 +735,10 @@ class LightningServiceRegistrySimple extends EventEmitter {
                  this.dependents = new Map();
                  for (const [service, deps] of Object.entries(data.dependents || {})) {
                      this.dependents.set(service, new Set(deps));
+                 }
+                 this.acls = new Map();
+                 for (const [service, acl] of Object.entries(data.acls || {})) {
+                     this.acls.set(service, { allow: new Set(acl.allow || []), deny: new Set(acl.deny || []) });
                  }
             }
         } catch (err) {
@@ -959,6 +978,26 @@ class LightningServiceRegistrySimple extends EventEmitter {
                 }
             }
             return cycles;
+        }
+
+        // ACL methods
+        setACL(serviceName, allow, deny) {
+            this.acls.set(serviceName, { allow: new Set(allow || []), deny: new Set(deny || []) });
+            this.saveRegistry();
+        }
+
+        getACL(serviceName) {
+            const acl = this.acls.get(serviceName);
+            if (!acl) return { allow: [], deny: [] };
+            return { allow: Array.from(acl.allow), deny: Array.from(acl.deny) };
+        }
+
+        checkPermission(requester, target) {
+            const acl = this.acls.get(target);
+            if (!acl) return true; // no restrictions
+            if (acl.deny.has(requester)) return false;
+            if (acl.allow.size > 0 && !acl.allow.has(requester)) return false;
+            return true;
         }
 }
 
