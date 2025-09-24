@@ -40,7 +40,8 @@
 - [x] Optimize tag filtering with index: Implemented tag index for O(1) tag-based service filtering, improving performance for services with many tags.
 - [x] Add predictive load balancing with trend analysis: Enhanced predictive strategy with slope calculation of response time trends for better node selection.
 - [x] Implement Object Pooling: Added object pooling for response objects (register, discover, success, health, metrics) to reduce GC pressure and improve performance under high load.
-- [x] Implement Service Health Prediction: Added /predict-health endpoint using time-series analysis for proactive monitoring and failure prediction.
+ - [x] Implement Service Health Prediction: Added /predict-health endpoint using time-series analysis for proactive monitoring and failure prediction.
+ - [x] Implement Service Dependency Auto-Detection: Added /record-call endpoint for services to report outbound calls, enabling automatic dependency detection based on traffic patterns with configurable thresholds and cleanup intervals.
 - [x] Implement Advanced Distributed Caching: Added Redis-based distributed caching layer for service discovery results across multiple Maxine instances to reduce latency and improve scalability. Enable with REDIS_CACHE_ENABLED=true.
 
 ## Next Steps
@@ -459,7 +460,7 @@
 
 ### Advanced Features
 - Implement Advanced Distributed Caching: Add Redis-based distributed caching layer for service discovery results across multiple Maxine instances to reduce latency and improve scalability.
-- Implement Service Health Prediction: Use time-series analysis and exponential moving averages to predict service failures and preemptively route traffic away from degrading instances.
+ - [x] Implement Service Health Prediction: Use time-series analysis and exponential moving averages to predict service failures and preemptively route traffic away from degrading instances.
 - Implement Multi-Cluster Auto-Failover: Automatic failover to backup regions during datacenter outages with health monitoring and replication lag detection.
 - Implement Advanced Security: Add SPIFFE/SPIRE integration for secure service identity and zero-trust architecture with automatic certificate rotation.
 
@@ -497,7 +498,13 @@
  13. Implement Advanced Security Features: Add SPIFFE/SPIRE integration for secure service identity and zero-trust architecture with automatic certificate rotation.
  14. Implement eBPF Integration: Use eBPF for low-overhead tracing and monitoring of service communications, providing kernel-level insights.
  15. Implement Multi-Cluster Federation Enhancements: Advanced federation with automatic conflict resolution, geo-aware load balancing, and cross-datacenter consistency.
- 16. Implement SIMD Operations: Use SIMD instructions for bulk data processing in load balancing calculations to further reduce latency in high-throughput scenarios.
- 17. Implement Adaptive Caching: Use machine learning algorithms to predict and pre-cache frequently accessed services, dynamically adjusting cache TTL based on access patterns.
- 18. Implement Service Health Prediction Enhancements: Add machine learning models for more accurate failure prediction and automated scaling recommendations.
- 19. Implement Chaos Engineering Tools: Built-in chaos testing capabilities for resilience validation with network partition simulation and automated recovery testing.
+  16. Implement SIMD Operations: Use SIMD instructions for bulk data processing in load balancing calculations to further reduce latency in high-throughput scenarios.
+  17. Implement Adaptive Caching: Use machine learning algorithms to predict and pre-cache frequently accessed services, dynamically adjusting cache TTL based on access patterns.
+  18. Implement Service Health Prediction Enhancements: Add machine learning models for more accurate failure prediction and automated scaling recommendations.
+  19. Implement Chaos Engineering Tools: Built-in chaos testing capabilities for resilience validation with network partition simulation and automated recovery testing.
+  20. Implement Service Call Analytics Dashboard: Create a web dashboard to visualize service call patterns, dependency graphs, and traffic flows in real-time.
+  21. Implement Advanced Service Mesh Integration: Add support for Istio, Linkerd, and Envoy with automatic policy generation and traffic management.
+  22. Implement Multi-Cluster Federation Enhancements: Advanced cross-datacenter features with conflict resolution, geo-aware load balancing, and global consistency.
+  23. Implement Kubernetes Operator: Create a custom Kubernetes operator for automated Maxine deployment, scaling, and management with CRDs.
+  24. Implement eBPF Integration: Use eBPF for low-overhead tracing and monitoring of service communications at the kernel level.
+  25. Implement AI-Driven Load Balancing: Use reinforcement learning to optimize routing decisions based on real-time metrics and historical data.

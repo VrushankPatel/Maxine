@@ -3,9 +3,9 @@ require('./src/main/util/logging/log-generic-exceptions')();
 process.env.LIGHTNING_MODE = 'true';
 
 const config = require('./src/main/config/config');
-const { trace } = require('@opentelemetry/api');
+const { trace, metrics } = require('@opentelemetry/api');
 
-// Initialize OpenTelemetry tracing only if not ultra-fast mode
+// Initialize OpenTelemetry tracing and metrics only if not ultra-fast mode
 let sdk;
 if (!config.ultraFastMode) {
   const { NodeSDK } = require('@opentelemetry/sdk-node');
@@ -21,7 +21,29 @@ if (!config.ultraFastMode) {
   });
 
   try {
-    console.log('OpenTelemetry tracing initialized');
+    // Try to add metrics if packages are available
+    try {
+      const { PeriodicExportingMetricReader, MeterProvider } = require('@opentelemetry/sdk-metrics');
+      const { PrometheusExporter } = require('@opentelemetry/exporter-prometheus');
+
+      const prometheusExporter = new PrometheusExporter({
+        port: 9464, // Default Prometheus metrics port
+      });
+
+      const metricReader = new PeriodicExportingMetricReader({
+        exporter: prometheusExporter,
+        exportIntervalMillis: 10000, // Export every 10 seconds
+      });
+
+      const meterProvider = new MeterProvider({
+        readers: [metricReader],
+      });
+
+      metrics.setGlobalMeterProvider(meterProvider);
+      console.log('OpenTelemetry tracing and metrics initialized');
+    } catch (metricsError) {
+      console.log('OpenTelemetry tracing initialized (metrics not available)');
+    }
   } catch (error) {
     console.error('Error initializing OpenTelemetry:', error);
   }
@@ -29,6 +51,9 @@ if (!config.ultraFastMode) {
 
 const EventEmitter = require('events');
 global.eventEmitter = new EventEmitter();
+
+// Global meter for OpenTelemetry metrics
+global.meter = metrics.getMeter('maxine-service-registry');
 global.broadcast = (event, data) => {
   if (global.eventEmitter) global.eventEmitter.emit(event, data);
   global.lastEvent = { event, data };
