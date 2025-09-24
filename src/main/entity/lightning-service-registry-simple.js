@@ -102,6 +102,7 @@ class LightningServiceRegistrySimple extends EventEmitter {
         const now = Date.now();
         const timeoutMs = this.heartbeatTimeout;
         const toRemove = [];
+        const affectedServices = new Set();
         for (const [nodeName, lastBeat] of this.lastHeartbeats) {
             if (now - lastBeat > timeoutMs) {
                 toRemove.push(nodeName);
@@ -112,6 +113,7 @@ class LightningServiceRegistrySimple extends EventEmitter {
             this.lastHeartbeats.delete(nodeName);
             const serviceName = this.nodeToService.get(nodeName);
             if (serviceName) {
+                affectedServices.add(serviceName);
                 const service = this.services.get(serviceName);
                 if (service) {
                     service.nodes.delete(nodeName);
@@ -132,6 +134,13 @@ class LightningServiceRegistrySimple extends EventEmitter {
                 this.nodesCount--;
                 if (global.broadcast) global.broadcast('service_unhealthy', { nodeId: nodeName });
             }
+        }
+        // Invalidate cache for affected services
+        for (const serviceName of affectedServices) {
+            this.invalidateDiscoveryCache(serviceName);
+        }
+        if (toRemove.length > 0) {
+            this.saveRegistry();
         }
     }
 
@@ -381,45 +390,6 @@ class LightningServiceRegistrySimple extends EventEmitter {
                   Math.sin(dLon / 2) * Math.sin(dLon / 2);
         const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
         return R * c;
-    }
-
-    cleanup() {
-        const now = Date.now();
-        const toRemove = [];
-        for (const [nodeName, timestamp] of this.lastHeartbeats) {
-            if (now - timestamp > this.heartbeatTimeout) {
-                toRemove.push(nodeName);
-            }
-        }
-        for (const nodeName of toRemove) {
-            this.lastHeartbeats.delete(nodeName);
-            const serviceName = this.nodeToService.get(nodeName);
-            if (serviceName) {
-                const service = this.services.get(serviceName);
-                if (service) {
-                    // Remove from healthyNodesArray
-                    const index = service.healthyNodesArray.findIndex(n => n.nodeName === nodeName);
-                    if (index !== -1) {
-                        service.healthyNodesArray.splice(index, 1);
-                        if (service.roundRobinIndex >= service.healthyNodesArray.length) {
-                            service.roundRobinIndex = 0;
-                        }
-                        this.nodesCount--;
-                    }
-                     service.nodes.delete(nodeName);
-                     if (service.nodes.size === 0) {
-                         this.services.delete(serviceName);
-                         this.servicesCount--;
-                     }
-                 }
-             }
-             this.nodeToService.delete(nodeName);
-             this.invalidateDiscoveryCache(serviceName);
-             if (global.broadcast) global.broadcast('service_unhealthy', { nodeId: nodeName });
-        }
-        if (toRemove.length > 0) {
-            this.saveRegistry();
-        }
     }
 
     getServices() {
@@ -825,43 +795,6 @@ class LightningServiceRegistrySimple extends EventEmitter {
         }
     }
 
-    // Versioning enhancements
-    getLatestVersion(serviceName) {
-        const versions = [];
-        for (const [fullName, service] of this.services) {
-            if (fullName.startsWith(`${serviceName}:`)) {
-                const version = fullName.split(':')[1];
-                versions.push(version);
-            }
-        }
-        if (versions.length === 0) return null;
-        // Assume versions are semver-like, sort and pick latest
-        versions.sort((a, b) => {
-            const aParts = a.split('.').map(Number);
-            const bParts = b.split('.').map(Number);
-            for (let i = 0; i < Math.max(aParts.length, bParts.length); i++) {
-                const aVal = aParts[i] || 0;
-                const bVal = bParts[i] || 0;
-                if (aVal !== bVal) return bVal - aVal;
-            }
-            return 0;
-        });
-        return versions[0];
-    }
-
-    getVersions(serviceName) {
-        const versions = [];
-        for (const [fullName] of this.services) {
-            if (fullName.startsWith(`${serviceName}:`)) {
-                const version = fullName.split(':')[1];
-                versions.push(version);
-            } else if (fullName === serviceName) {
-                versions.push('default');
-            }
-        }
-        return versions;
-    }
-
     // Traffic distribution for canary deployments
     // serviceName -> { version: percentage }
     trafficDistribution = new Map();
@@ -1106,6 +1039,24 @@ class LightningServiceRegistrySimple extends EventEmitter {
 
         getBlacklist() {
             return Array.from(this.blacklistedServices);
+        }
+
+        // Anomaly detection
+        getAnomalies() {
+            const anomalies = [];
+            for (const [serviceName, service] of this.services) {
+                const failureCount = Array.from(this.circuitFailures.values()).reduce((sum, count) => sum + count, 0);
+                if (failureCount > 10) { // threshold
+                    anomalies.push({ serviceName, type: 'high_circuit_failures', value: failureCount });
+                }
+                if (service.healthyNodesArray.length === 0 && service.nodes.size > 0) {
+                    anomalies.push({ serviceName, type: 'no_healthy_nodes' });
+                }
+                if (service.nodes.size === 0) {
+                    anomalies.push({ serviceName, type: 'no_nodes' });
+                }
+            }
+            return anomalies;
         }
 }
 
