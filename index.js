@@ -388,6 +388,9 @@ if (config.ultraFastMode) {
     const fs = require('fs');
     const https = require('https');
     const GrpcServer = require('./src/main/grpc/grpc-server');
+    const passport = require('passport');
+    const GoogleStrategy = require('passport-google-oauth20').Strategy;
+    const SamlStrategy = require('passport-saml').Strategy;
 
     // OAuth2 setup
     if (config.oauth2Enabled && config.googleClientId && config.googleClientSecret) {
@@ -402,6 +405,28 @@ if (config.ultraFastMode) {
 
         passport.serializeUser((user, done) => {
             done(null, user.id);
+        });
+
+        passport.deserializeUser((id, done) => {
+            // Find user by id
+            done(null, { id });
+        });
+    }
+
+    // SAML setup
+    if (config.samlEnabled && config.samlEntryPoint && config.samlIssuer && config.samlCert) {
+        passport.use(new SamlStrategy({
+            entryPoint: config.samlEntryPoint,
+            issuer: config.samlIssuer,
+            cert: config.samlCert,
+            callbackUrl: config.samlCallbackUrl
+        }, (profile, done) => {
+            // Here, you can save user to database or just return profile
+            return done(null, profile);
+        }));
+
+        passport.serializeUser((user, done) => {
+            done(null, user.nameID || user.id);
         });
 
         passport.deserializeUser((id, done) => {
@@ -816,6 +841,32 @@ if (config.ultraFastMode) {
                 res.writeHead(500, { 'Content-Type': 'text/plain' });
                 res.end('OAuth error');
             }
+        });
+    }
+
+    // SAML routes
+    if (config.samlEnabled && config.samlEntryPoint && config.samlIssuer && config.samlCert) {
+        routes.set('GET /auth/saml', (req, res, query, body) => {
+            passport.authenticate('saml')(req, res);
+        });
+
+        routes.set('POST /auth/saml/callback', (req, res, query, body) => {
+            passport.authenticate('saml', (err, user, info) => {
+                if (err) {
+                    res.writeHead(500, { 'Content-Type': 'text/plain' });
+                    res.end('SAML authentication error');
+                    return;
+                }
+                if (!user) {
+                    res.writeHead(401, { 'Content-Type': 'text/plain' });
+                    res.end('SAML authentication failed');
+                    return;
+                }
+                // Create JWT for user
+                const userToken = jwt.sign({ id: user.nameID, email: user.email, name: user.displayName }, config.jwtSecret, { expiresIn: config.jwtExpiresIn });
+                res.writeHead(200, { 'Content-Type': 'application/json' });
+                res.end(JSON.stringify({ token: userToken, user: { id: user.nameID, email: user.email, name: user.displayName } }));
+            })(req, res);
         });
     }
 
