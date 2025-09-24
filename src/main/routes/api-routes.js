@@ -218,7 +218,7 @@ if (!config.ultraFastMode && !isLightningMode) {
                                      .post("discover/batch", config.ultraFastMode ? null : authenticationController, discoveryLimiter, bodyParser.json(), batchDiscoveryController)
                                      .get("discover/info", config.ultraFastMode ? null : authenticationController, discoveryLimiter, discoveryInfoController)
                                     .get("discover/filtered", authenticationController, discoveryLimiter, filteredDiscoveryController)
-                                        .get("discover/dns", authenticationController, discoveryLimiter, dnsController)
+                                        .get("discover/dns", authenticationController, discoveryLimiter, dnsController.dnsController)
                                      .get("discover/database", authenticationController, discoveryLimiter, databaseDiscoveryController)
                                       .get("discover/weighted", authenticationController, discoveryLimiter, discoverWeightedController)
                                       .get("discover/least-connections", authenticationController, discoveryLimiter, discoverLeastConnectionsController)

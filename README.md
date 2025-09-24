@@ -463,6 +463,23 @@ Response:
 }
 ```
 
+##### DNS Service Discovery
+Maxine supports DNS-based service discovery for compatibility with standard DNS clients.
+
+Enable with `DNS_ENABLED=true` (default) and configure `DNS_PORT` (default 53).
+
+Query SRV records for service discovery:
+```
+dig SRV _my-service._tcp.default.default.default @localhost
+```
+
+Or A records for direct IP resolution:
+```
+dig A my-service.default.default.default @localhost
+```
+
+This allows integration with DNS-aware applications and load balancers.
+
  ##### Get Anomalies
  ```http
  GET /anomalies
