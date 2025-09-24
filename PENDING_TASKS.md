@@ -53,7 +53,19 @@
    - [ ] Update CI/CD pipelines to include WebSocket testing and event streaming validation
    - [ ] Add monitoring and alerting for WebSocket connections and event rates
 
-   ## Next Priority Features
+   ## Next Priority Features (Low Priority - Future Enhancements)
+   - Implement Configuration Management: Add dynamic configuration updates for services via API endpoints, support for service-specific configs, and integration with event streaming for config change notifications. This would allow runtime configuration changes without service restarts.
+   - Implement Audit Logging: Comprehensive logging of all registry operations using Winston, including user actions, system events, and security incidents; add log rotation and export capabilities for compliance and debugging.
+   - Implement Advanced Health Checks: Custom health check scripts for services, proactive monitoring with configurable intervals, and health status integration with load balancing decisions for better service reliability.
+   - Implement Service Dependency Mapping: Track and visualize service dependencies, detect circular dependencies, and provide dependency-aware load balancing to prevent cascading failures.
+   - Implement Rate Limiting Enhancements: Per-service rate limiting, burst handling, and integration with circuit breakers for overload protection in high-traffic scenarios.
+   - Implement Metrics Enhancements: Detailed Prometheus metrics for WebSocket connections, event rates, circuit breaker states, and service health statistics for comprehensive monitoring.
+   - Add integration tests for WebSocket event streaming and persistence features to ensure reliability.
+   - Add performance benchmarks for WebSocket connections and event broadcasting to validate scalability.
+   - Code review and refactoring for maintainability, error handling, and code comments to improve code quality.
+   - Update Docker configuration to expose WebSocket port and handle upgrades for containerized deployments.
+   - Update Helm charts for Kubernetes deployment with WebSocket support and MQTT integration.
+   - Update CI/CD pipelines to include WebSocket testing and event streaming validation for automated testing.
 
 
 
