@@ -7,6 +7,7 @@ const { EventEmitter } = require('events');
 const axios = require('axios');
 const geoip = require('geoip-lite');
 const { LRUCache } = require('lru-cache');
+const { trace } = require('@opentelemetry/api');
 
 // Fast LCG PRNG for random load balancing
 let lcgSeed = Date.now();
@@ -30,9 +31,6 @@ class LightningServiceRegistrySimple extends EventEmitter {
         // Cached counts for performance
         this.servicesCount = 0;
         this.nodesCount = 0;
-
-        // Basic tracing
-        this.traces = new Map();
 
         // Configuration management
         this.configurations = new Map(); // serviceName -> Map<key, {value, version, metadata, updatedAt}>
@@ -69,6 +67,9 @@ class LightningServiceRegistrySimple extends EventEmitter {
         // Cache metrics
         this.cacheHits = 0;
         this.cacheMisses = 0;
+
+        // Response time tracking for predictive load balancing
+        this.responseTimes = new Map(); // nodeName -> { count, sum, average }
 
         // Method to invalidate discovery cache for a service
         this.invalidateDiscoveryCache = (serviceName) => {
@@ -145,11 +146,18 @@ class LightningServiceRegistrySimple extends EventEmitter {
     }
 
     register(serviceName, nodeInfo) {
-        if (this.isBlacklisted(serviceName)) {
-            throw new Error(`Service ${serviceName} is blacklisted`);
-        }
-        const nodeName = `${nodeInfo.host}:${nodeInfo.port}`;
-        const weight = nodeInfo.metadata && nodeInfo.metadata.weight ? parseInt(nodeInfo.metadata.weight) : 1;
+        const tracer = trace.getTracer('maxine-registry-simple', '1.0.0');
+        return tracer.startActiveSpan('register', (span) => {
+            span.setAttribute('service.name', serviceName);
+            span.setAttribute('node.host', nodeInfo.host);
+            span.setAttribute('node.port', nodeInfo.port);
+
+            try {
+                if (this.isBlacklisted(serviceName)) {
+                    throw new Error(`Service ${serviceName} is blacklisted`);
+                }
+                const nodeName = `${nodeInfo.host}:${nodeInfo.port}`;
+                const weight = nodeInfo.metadata && nodeInfo.metadata.weight ? parseInt(nodeInfo.metadata.weight) : 1;
         const version = nodeInfo.metadata && nodeInfo.metadata.version ? nodeInfo.metadata.version : null;
         const fullServiceName = version ? `${serviceName}:${version}` : serviceName;
         const node = { ...nodeInfo, nodeName, address: `${nodeInfo.host}:${nodeInfo.port}`, weight, connections: 0 };
@@ -159,23 +167,32 @@ class LightningServiceRegistrySimple extends EventEmitter {
             this.servicesCount++;
         }
         const service = this.services.get(fullServiceName);
-        if (service.nodes.has(nodeName)) {
-            // Already registered, just update heartbeat
-            this.lastHeartbeats.set(nodeName, Date.now());
-            return nodeName;
-        }
+                if (service.nodes.has(nodeName)) {
+                    // Already registered, just update heartbeat
+                    this.lastHeartbeats.set(nodeName, Date.now());
+                    span.end();
+                    return nodeName;
+                }
         service.nodes.set(nodeName, node);
         service.healthyNodesArray.push(node);
         this.nodeToService.set(nodeName, fullServiceName);
         this.lastHeartbeats.set(nodeName, Date.now());
         this.nodesCount++;
 
-        this.saveRegistry();
-        this.invalidateDiscoveryCache(fullServiceName);
-        if (global.broadcast) global.broadcast('service_registered', { serviceName: fullServiceName, nodeId: nodeName });
-        // Replicate to federation peers
-        this.replicateRegistration(fullServiceName, node);
-        return nodeName;
+                this.saveRegistry();
+                this.invalidateDiscoveryCache(fullServiceName);
+                if (global.broadcast) global.broadcast('service_registered', { serviceName: fullServiceName, nodeId: nodeName });
+                // Replicate to federation peers
+                this.replicateRegistration(fullServiceName, node);
+                span.end();
+                return nodeName;
+            } catch (error) {
+                span.recordException(error);
+                span.setStatus({ code: 2, message: error.message });
+                span.end();
+                throw error;
+            }
+        });
     }
 
     deregister(nodeId) {
@@ -228,20 +245,29 @@ class LightningServiceRegistrySimple extends EventEmitter {
     }
 
     getRandomNode(serviceName, strategy = 'round-robin', clientIP = null, tags = null, version = null) {
-        let fullServiceName = serviceName;
-        if (version) {
-            if (version === 'latest') {
-                const latest = this.getLatestVersion(serviceName);
-                if (latest) {
-                    fullServiceName = `${serviceName}:${latest}`;
+        const tracer = trace.getTracer('maxine-registry-simple', '1.0.0');
+        return tracer.startActiveSpan('getRandomNode', (span) => {
+            span.setAttribute('service.name', serviceName);
+            span.setAttribute('strategy', strategy);
+            span.setAttribute('client.ip', clientIP || '');
+            span.setAttribute('tags', tags ? tags.join(',') : '');
+            span.setAttribute('version', version || '');
+
+            try {
+                let fullServiceName = serviceName;
+                if (version) {
+                    if (version === 'latest') {
+                        const latest = this.getLatestVersion(serviceName);
+                        if (latest) {
+                            fullServiceName = `${serviceName}:${latest}`;
+                        }
+                    } else {
+                        fullServiceName = `${serviceName}:${version}`;
+                    }
                 }
-            } else {
-                fullServiceName = `${serviceName}:${version}`;
-            }
-        }
 
         // Check cache for deterministic strategies
-        const cacheableStrategies = ['consistent-hash', 'ip-hash', 'geo-aware'];
+        const cacheableStrategies = ['consistent-hash', 'ip-hash', 'geo-aware', 'least-response-time'];
         if (cacheableStrategies.includes(strategy)) {
             const cacheKey = `${fullServiceName}:${strategy}:${clientIP || 'default'}:${tags ? tags.sort().join(',') : ''}`;
             const cached = this.discoveryCache.get(cacheKey);
@@ -266,7 +292,10 @@ class LightningServiceRegistrySimple extends EventEmitter {
             });
         }
 
-        if (availableNodes.length === 0) return null;
+                if (availableNodes.length === 0) {
+                    span.end();
+                    return null;
+                }
 
         let selectedNode;
         switch (strategy) {
@@ -289,10 +318,13 @@ class LightningServiceRegistrySimple extends EventEmitter {
             case 'ip-hash':
                 selectedNode = this.selectIPHash(availableNodes, clientIP);
                 break;
-            case 'geo-aware':
-                selectedNode = this.selectGeoAware(availableNodes, clientIP);
-                break;
-            default: // round-robin
+             case 'geo-aware':
+                 selectedNode = this.selectGeoAware(availableNodes, clientIP);
+                 break;
+             case 'least-response-time':
+                 selectedNode = this.selectLeastResponseTime(availableNodes);
+                 break;
+             default: // round-robin
                 let index = service.roundRobinIndex || 0;
                 selectedNode = availableNodes[index % availableNodes.length];
                 service.roundRobinIndex = (index + 1) % availableNodes.length;
@@ -301,13 +333,21 @@ class LightningServiceRegistrySimple extends EventEmitter {
             selectedNode.connections++; // Increment for least-connections
         }
 
-        // Cache the result for cacheable strategies
-        if (cacheableStrategies.includes(strategy) && selectedNode) {
-            const cacheKey = `${fullServiceName}:${strategy}:${clientIP || 'default'}:${tags ? tags.sort().join(',') : ''}`;
-            this.discoveryCache.set(cacheKey, selectedNode);
-        }
+                // Cache the result for cacheable strategies
+                if (cacheableStrategies.includes(strategy) && selectedNode) {
+                    const cacheKey = `${fullServiceName}:${strategy}:${clientIP || 'default'}:${tags ? tags.sort().join(',') : ''}`;
+                    this.discoveryCache.set(cacheKey, selectedNode);
+                }
 
-        return selectedNode;
+                span.end();
+                return selectedNode;
+            } catch (error) {
+                span.recordException(error);
+                span.setStatus({ code: 2, message: error.message });
+                span.end();
+                throw error;
+            }
+        });
     }
 
     selectWeightedRandom(nodes) {
@@ -379,6 +419,20 @@ class LightningServiceRegistrySimple extends EventEmitter {
 
         // If no node has location, fall back to random
         return closestNode || nodes[(fastRandom() * nodes.length) | 0];
+    }
+
+    selectLeastResponseTime(nodes) {
+        let bestNode = null;
+        let bestAverage = Infinity;
+        for (const node of nodes) {
+            const rt = this.responseTimes.get(node.nodeName);
+            const average = rt ? rt.average : 0; // If no data, assume 0 (fastest)
+            if (average < bestAverage) {
+                bestAverage = average;
+                bestNode = node;
+            }
+        }
+        return bestNode || nodes[0];
     }
 
     haversineDistance(lat1, lon1, lat2, lon2) {
@@ -525,8 +579,9 @@ class LightningServiceRegistrySimple extends EventEmitter {
             circuitState: {},
             circuitLastFailure: {},
              circuitNextTry: {},
-             configurations: {},
-             trafficDistribution: {}
+              configurations: {},
+              trafficDistribution: {},
+              responseTimes: {}
         };
         for (const [serviceName, service] of this.services) {
             data.services[serviceName] = {
@@ -571,10 +626,14 @@ class LightningServiceRegistrySimple extends EventEmitter {
         }
         data.cacheHits = this.cacheHits;
         data.cacheMisses = this.cacheMisses;
-         data.dependents = {};
-         for (const [service, deps] of this.dependents) {
-             data.dependents[service] = Array.from(deps);
-         }
+          data.dependents = {};
+          for (const [service, deps] of this.dependents) {
+              data.dependents[service] = Array.from(deps);
+          }
+          data.responseTimes = {};
+          for (const [node, rt] of this.responseTimes) {
+              data.responseTimes[node] = rt;
+          }
          data.acls = {};
          for (const [service, acl] of this.acls) {
              data.acls[service] = { allow: Array.from(acl.allow), deny: Array.from(acl.deny) };
@@ -637,9 +696,17 @@ class LightningServiceRegistrySimple extends EventEmitter {
                       this.intentions.set(key, action);
                   }
                    this.blacklistedServices = new Set(data.blacklistedServices || []);
-           this.cacheHits = data.cacheHits || 0;
-           this.cacheMisses = data.cacheMisses || 0;
-           this.saveRegistry();
+                   this.cacheHits = data.cacheHits || 0;
+                   this.cacheMisses = data.cacheMisses || 0;
+                   this.responseTimes = new Map();
+                   for (const [node, rt] of Object.entries(data.responseTimes || {})) {
+                       this.responseTimes.set(node, rt);
+                   }
+                   this.responseTimes = new Map();
+                   for (const [node, rt] of Object.entries(data.responseTimes || {})) {
+                       this.responseTimes.set(node, rt);
+                   }
+            this.saveRegistry();
     }
 
     saveRegistry() {
@@ -1039,6 +1106,17 @@ class LightningServiceRegistrySimple extends EventEmitter {
 
         getBlacklist() {
             return Array.from(this.blacklistedServices);
+        }
+
+        // Response time recording for predictive load balancing
+        recordResponseTime(nodeId, responseTime) {
+            if (!this.responseTimes.has(nodeId)) {
+                this.responseTimes.set(nodeId, { count: 0, sum: 0, average: 0 });
+            }
+            const rt = this.responseTimes.get(nodeId);
+            rt.count++;
+            rt.sum += responseTime;
+            rt.average = rt.sum / rt.count;
         }
 
         // Anomaly detection
