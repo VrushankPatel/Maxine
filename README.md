@@ -207,6 +207,18 @@ GET /trace/:id
 ```
 Returns the trace data for the given id.
 
+##### Generate Envoy Config
+```http
+GET /service-mesh/envoy-config
+```
+Returns Envoy proxy configuration JSON based on registered services, suitable for service mesh integration.
+
+##### Generate Istio Config
+```http
+GET /service-mesh/istio-config
+```
+Returns Istio VirtualService and DestinationRule configurations in JSON format for service mesh deployment.
+
 ##### Sign In (Authentication)
 ```http
 POST /signin
