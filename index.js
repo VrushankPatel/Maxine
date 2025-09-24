@@ -1503,6 +1503,21 @@ if (false) { // config.ultraFastMode
         }
     });
 
+    routes.set('GET /anomalies', (req, res, query, body) => {
+        try {
+            const clientIP = req.connection.remoteAddress || req.socket.remoteAddress || 'unknown';
+            const anomalies = serviceRegistry.getAnomalies();
+            // winston.info(`AUDIT: Anomalies requested - count: ${anomalies.length}, clientIP: ${clientIP}`);
+            res.writeHead(200, { 'Content-Type': 'application/json' });
+            res.end(JSON.stringify({ anomalies }));
+        } catch (error) {
+            // winston.error(`AUDIT: Anomalies failed - error: ${error.message}, clientIP: ${req.connection.remoteAddress || req.socket.remoteAddress || 'unknown'}`);
+            errorCount++;
+            res.writeHead(500, { 'Content-Type': 'application/json' });
+            res.end('{"error": "Internal server error"}');
+        }
+    });
+
     routes.set('POST /traffic/set', (req, res, query, body) => {
         try {
             const clientIP = req.connection.remoteAddress || req.socket.remoteAddress || 'unknown';

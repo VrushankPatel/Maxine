@@ -1531,6 +1531,54 @@ class ServiceRegistry extends EventEmitter {
         return this.healthScore.get(key) || this.calculateHealthScore(serviceName, nodeName);
     }
 
+    getHealthScores = (serviceName) => {
+        const service = this.registry.get(serviceName);
+        if (!service || !service.nodes) return {};
+        const scores = {};
+        for (const nodeName of Object.keys(service.nodes)) {
+            scores[nodeName] = this.getHealthScore(serviceName, nodeName);
+        }
+        return scores;
+    }
+
+    getAnomalies = () => {
+        const anomalies = [];
+        for (const serviceName of this.registry.keys()) {
+            const service = this.registry.get(serviceName);
+            const healthyNodes = this.getHealthyNodes(serviceName);
+            if (healthyNodes.length === 0) {
+                anomalies.push({
+                    serviceName,
+                    type: 'no_healthy_nodes',
+                    value: 0
+                });
+            }
+            if (!service.nodes || Object.keys(service.nodes).length === 0) {
+                anomalies.push({
+                    serviceName,
+                    type: 'no_nodes',
+                    value: 0
+                });
+            }
+            // Check circuit breaker failures
+            let totalFailures = 0;
+            for (const nodeName of Object.keys(service.nodes || {})) {
+                const cb = this.circuitBreaker.get(`${serviceName}:${nodeName}`);
+                if (cb) {
+                    totalFailures += cb.failures;
+                }
+            }
+            if (totalFailures > 10) { // Threshold
+                anomalies.push({
+                    serviceName,
+                    type: 'high_circuit_failures',
+                    value: totalFailures
+                });
+            }
+        }
+        return anomalies;
+    }
+
     // Circuit Breaker methods
     isCircuitOpen = (serviceName, nodeName) => {
         if (!config.circuitBreakerEnabled) return false;
