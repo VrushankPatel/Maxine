@@ -86,6 +86,34 @@ class LightningServiceRegistrySimple extends EventEmitter {
         this.epsilon = 0.1; // Exploration rate
         this.rewardHistory = new Map(); // nodeName -> recent rewards
 
+        // Rate limiting
+        this.rateLimits = new Map(); // For in-memory fallback
+
+        this.checkRateLimit = (key, maxRequests = 1000, windowMs = 15 * 60 * 1000) => {
+            const now = Date.now();
+            const windowKey = `${key}:${Math.floor(now / windowMs)}`;
+
+            // In-memory rate limiting (for distributed, would need Redis with sync interface, but for now use this)
+            if (!this.rateLimits.has(windowKey)) {
+                this.rateLimits.set(windowKey, { count: 1, expires: now + windowMs });
+                return true;
+            }
+
+            const limit = this.rateLimits.get(windowKey);
+            if (now > limit.expires) {
+                limit.count = 1;
+                limit.expires = now + windowMs;
+                return true;
+            }
+
+            if (limit.count >= maxRequests) {
+                return false;
+            }
+
+            limit.count++;
+            return true;
+        };
+
         // Adaptive caching methods
         this.getCache = async (key) => {
             // First check local cache
@@ -256,6 +284,18 @@ class LightningServiceRegistrySimple extends EventEmitter {
         }
         // Update health scores periodically
         this.updateAllHealthScores();
+
+        // Update Prometheus metrics
+        if (global.promMetrics) {
+            let openCount = 0;
+            for (const state of this.circuitState.values()) {
+                if (state === 'open') openCount++;
+            }
+            global.promMetrics.circuitBreakersOpen.set(openCount);
+            global.promMetrics.activeServices.set(this.servicesCount);
+            global.promMetrics.activeNodes.set(this.nodesCount);
+        }
+
         if (toRemove.length > 0) {
             this.saveRegistry();
         }
@@ -263,6 +303,7 @@ class LightningServiceRegistrySimple extends EventEmitter {
 
     register(serviceName, nodeInfo) {
         const tracer = trace.getTracer('maxine-registry-simple', '1.0.0');
+        const startTime = Date.now();
         return tracer.startActiveSpan('register', (span) => {
             span.setAttribute('service.name', serviceName);
             span.setAttribute('node.host', nodeInfo.host);
@@ -310,6 +351,15 @@ class LightningServiceRegistrySimple extends EventEmitter {
                 if (global.broadcast) global.broadcast('service_registered', { serviceName: fullServiceName, nodeId: nodeName });
                 // Replicate to federation peers
                 this.replicateRegistration(fullServiceName, node);
+
+                // Update Prometheus metrics
+                if (global.promMetrics) {
+                    global.promMetrics.serviceRegistrations.inc();
+                    global.promMetrics.activeServices.set(this.servicesCount);
+                    global.promMetrics.activeNodes.set(this.nodesCount);
+                    global.promMetrics.responseTimeHistogram.observe('register', (Date.now() - startTime) / 1000);
+                }
+
                 span.end();
                 return nodeName;
             } catch (error) {
@@ -322,6 +372,7 @@ class LightningServiceRegistrySimple extends EventEmitter {
     }
 
     deregister(nodeId) {
+        const startTime = Date.now();
         const serviceName = this.nodeToService.get(nodeId);
         if (!serviceName) return;
         const service = this.services.get(serviceName);
@@ -344,7 +395,7 @@ class LightningServiceRegistrySimple extends EventEmitter {
             }
         }
         // Update tag index
-        if (service.nodes.has(nodeId)) {
+        if (service && service.nodes.has(nodeId)) {
             const node = service.nodes.get(nodeId);
             if (node.metadata && node.metadata.tags) {
                 for (const tag of node.metadata.tags) {
@@ -365,9 +416,18 @@ class LightningServiceRegistrySimple extends EventEmitter {
         if (global.broadcast) global.broadcast('service_deregistered', { nodeId });
         // Replicate to federation peers
         this.replicateDeregistration(nodeId);
+
+        // Update Prometheus metrics
+        if (global.promMetrics) {
+            global.promMetrics.serviceDeregistrations.inc();
+            global.promMetrics.activeServices.set(this.servicesCount);
+            global.promMetrics.activeNodes.set(this.nodesCount);
+            global.promMetrics.responseTimeHistogram.observe('deregister', (Date.now() - startTime) / 1000);
+        }
     }
 
     heartbeat(nodeId) {
+        const startTime = Date.now();
         if (this.lastHeartbeats.has(nodeId)) {
             this.lastHeartbeats.set(nodeId, Date.now());
             // If not in healthy, add it back
@@ -380,6 +440,13 @@ class LightningServiceRegistrySimple extends EventEmitter {
                 }
             }
             // if (global.broadcast) global.broadcast('service_heartbeat', { nodeId });
+
+            // Update Prometheus metrics
+            if (global.promMetrics) {
+                global.promMetrics.serviceHeartbeats.inc();
+                global.promMetrics.responseTimeHistogram.observe('heartbeat', (Date.now() - startTime) / 1000);
+            }
+
             return true;
         }
         return false;
@@ -387,6 +454,7 @@ class LightningServiceRegistrySimple extends EventEmitter {
 
     async getRandomNode(serviceName, strategy = 'round-robin', clientIP = null, tags = null, version = null) {
         const tracer = trace.getTracer('maxine-registry-simple', '1.0.0');
+        const startTime = Date.now();
         return await tracer.startActiveSpan('getRandomNode', async (span) => {
             span.setAttribute('service.name', serviceName);
             span.setAttribute('strategy', strategy);
@@ -413,7 +481,16 @@ class LightningServiceRegistrySimple extends EventEmitter {
             const cacheKey = `${fullServiceName}:${strategy}:${clientIP || 'default'}:${tags ? tags.sort().join(',') : ''}`;
             const cached = await this.getCache(cacheKey);
             if (cached) {
+                // Cache hit
+                if (global.promMetrics) {
+                    global.promMetrics.cacheHits.inc();
+                }
                 return cached;
+            } else {
+                // Cache miss
+                if (global.promMetrics) {
+                    global.promMetrics.cacheMisses.inc();
+                }
             }
         }
 
@@ -504,6 +581,12 @@ class LightningServiceRegistrySimple extends EventEmitter {
                 if (cacheableStrategies.includes(strategy) && selectedNode) {
                     const cacheKey = `${fullServiceName}:${strategy}:${clientIP || 'default'}:${tags ? tags.sort().join(',') : ''}`;
                     await this.setCache(cacheKey, selectedNode);
+                }
+
+                // Update Prometheus metrics
+                if (global.promMetrics) {
+                    global.promMetrics.serviceDiscoveries.inc({ service_name: fullServiceName, strategy });
+                    global.promMetrics.responseTimeHistogram.observe('discover', (Date.now() - startTime) / 1000);
                 }
 
                 span.end();

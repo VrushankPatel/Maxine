@@ -27,29 +27,103 @@ if (!config.ultraFastMode) {
   }
 
   try {
-    // Try to add metrics if packages are available
-    try {
-      const { PeriodicExportingMetricReader, MeterProvider } = require('@opentelemetry/sdk-metrics');
-      const { PrometheusExporter } = require('@opentelemetry/exporter-prometheus');
+    // Initialize Prometheus metrics using prom-client
+    const promClient = require('prom-client');
+    const register = new promClient.Registry();
 
-      const prometheusExporter = new PrometheusExporter({
-        port: 9464, // Default Prometheus metrics port
-      });
+    // Add default metrics
+    promClient.collectDefaultMetrics({ register });
 
-      const metricReader = new PeriodicExportingMetricReader({
-        exporter: prometheusExporter,
-        exportIntervalMillis: 10000, // Export every 10 seconds
-      });
+    // Custom metrics for Maxine
+    const serviceRegistrations = new promClient.Counter({
+      name: 'maxine_service_registrations_total',
+      help: 'Total number of service registrations',
+      registers: [register]
+    });
 
-      const meterProvider = new MeterProvider({
-        readers: [metricReader],
-      });
+    const serviceDiscoveries = new promClient.Counter({
+      name: 'maxine_service_discoveries_total',
+      help: 'Total number of service discoveries',
+      labelNames: ['service_name', 'strategy'],
+      registers: [register]
+    });
 
-      metrics.setGlobalMeterProvider(meterProvider);
-      console.log('OpenTelemetry tracing and metrics initialized');
-    } catch (metricsError) {
-      console.log('OpenTelemetry tracing initialized (metrics not available)');
-    }
+    const serviceHeartbeats = new promClient.Counter({
+      name: 'maxine_service_heartbeats_total',
+      help: 'Total number of service heartbeats',
+      registers: [register]
+    });
+
+    const serviceDeregistrations = new promClient.Counter({
+      name: 'maxine_service_deregistrations_total',
+      help: 'Total number of service deregistrations',
+      registers: [register]
+    });
+
+    const cacheHits = new promClient.Counter({
+      name: 'maxine_cache_hits_total',
+      help: 'Total number of cache hits',
+      registers: [register]
+    });
+
+    const cacheMisses = new promClient.Counter({
+      name: 'maxine_cache_misses_total',
+      help: 'Total number of cache misses',
+      registers: [register]
+    });
+
+    const activeServices = new promClient.Gauge({
+      name: 'maxine_services_active',
+      help: 'Number of active services',
+      registers: [register]
+    });
+
+    const activeNodes = new promClient.Gauge({
+      name: 'maxine_nodes_active',
+      help: 'Number of active nodes',
+      registers: [register]
+    });
+
+    const circuitBreakersOpen = new promClient.Gauge({
+      name: 'maxine_circuit_breakers_open',
+      help: 'Number of open circuit breakers',
+      registers: [register]
+    });
+
+    const responseTimeHistogram = new promClient.Histogram({
+      name: 'maxine_response_time_seconds',
+      help: 'Response time histogram for service operations',
+      labelNames: ['operation'],
+      buckets: [0.001, 0.005, 0.01, 0.05, 0.1, 0.5, 1, 2.5, 5, 10],
+      registers: [register]
+    });
+
+    // Expose metrics endpoint
+    const express = require('express');
+    const metricsApp = express();
+    metricsApp.get('/metrics', async (req, res) => {
+      res.set('Content-Type', register.contentType);
+      res.end(await register.metrics());
+    });
+    metricsApp.listen(9464, () => {
+      console.log('Prometheus metrics server listening on port 9464');
+    });
+
+    // Store metrics globally for use in registry
+    global.promMetrics = {
+      serviceRegistrations,
+      serviceDiscoveries,
+      serviceHeartbeats,
+      serviceDeregistrations,
+      cacheHits,
+      cacheMisses,
+      activeServices,
+      activeNodes,
+      circuitBreakersOpen,
+      responseTimeHistogram
+    };
+
+    console.log('OpenTelemetry tracing and Prometheus metrics initialized');
   } catch (error) {
     console.error('Error initializing OpenTelemetry:', error);
   }
@@ -185,6 +259,13 @@ if (config.ultraFastMode) {
     // Handle service registration
     const handleRegister = (req, res, query, body) => {
         try {
+            const clientIP = req.connection.remoteAddress || req.socket.remoteAddress || 'unknown';
+            if (!serviceRegistry.checkRateLimit(clientIP)) {
+                res.writeHead(429, { 'Content-Type': 'application/json' });
+                res.end('{"error": "Rate limit exceeded"}');
+                return;
+            }
+
             const { serviceName, host, port, metadata } = body;
 
             if (!serviceName || !host || !port) {
@@ -204,6 +285,13 @@ if (config.ultraFastMode) {
     // Handle service heartbeat - use UDP if enabled
     const handleHeartbeat = (req, res, query, body) => {
         try {
+            const clientIP = req.connection.remoteAddress || req.socket.remoteAddress || 'unknown';
+            if (!serviceRegistry.checkRateLimit(clientIP)) {
+                res.writeHead(429, { 'Content-Type': 'application/json' });
+                res.end('{"error": "Rate limit exceeded"}');
+                return;
+            }
+
             const { nodeId } = body;
             if (!nodeId) {
                 res.writeHead(400, { 'Content-Type': 'application/json' });
@@ -222,6 +310,13 @@ if (config.ultraFastMode) {
     // Handle service deregistration
     const handleDeregister = (req, res, query, body) => {
         try {
+            const clientIP = req.connection.remoteAddress || req.socket.remoteAddress || 'unknown';
+            if (!serviceRegistry.checkRateLimit(clientIP)) {
+                res.writeHead(429, { 'Content-Type': 'application/json' });
+                res.end('{"error": "Rate limit exceeded"}');
+                return;
+            }
+
             const { nodeId } = body;
             if (!nodeId) {
                 res.writeHead(400, { 'Content-Type': 'application/json' });
@@ -239,6 +334,13 @@ if (config.ultraFastMode) {
     // Handle service discovery
     const handleDiscover = async (req, res, query, body) => {
         try {
+            const clientIP = req.connection.remoteAddress || req.socket.remoteAddress || 'unknown';
+            if (!serviceRegistry.checkRateLimit(clientIP)) {
+                res.writeHead(429, { 'Content-Type': 'application/json' });
+                res.end('{"error": "Rate limit exceeded"}');
+                return;
+            }
+
             const serviceName = query.serviceName;
             if (!serviceName) {
                 res.writeHead(400, { 'Content-Type': 'application/json' });

@@ -18,6 +18,7 @@ A minimal, high-performance service discovery and registry for microservices.
  - **Service Dependencies**: Manage service dependencies with cycle detection, graph visualization, and automatic dependency detection through call logging
 - **Metrics**: Basic /metrics endpoint with request counts, errors, uptime, and basic stats including cache performance metrics
 - **OpenTelemetry Metrics**: Comprehensive observability with Prometheus-compatible metrics for service registrations, discoveries, heartbeats, deregistrations, cache hits/misses, and total services/nodes
+- **Advanced Rate Limiting**: Distributed rate limiting with configurable limits per client IP to protect against excessive requests
 - **Audit Logging**: Comprehensive logging of all registry operations using Winston, including user actions, system events, and security incidents with log rotation and export capabilities
 - **Persistence**: Optional persistence to survive restarts with file-based, Redis, memory-mapped (mmap), or shared memory (shm) storage
 - **Minimal Dependencies**: Only essential packages for maximum performance
@@ -306,6 +307,18 @@ Returns status, services count, nodes count.
 GET /metrics
 ```
 Returns uptime, requests, errors, services, nodes, persistenceEnabled, persistenceType, wsConnections, eventsBroadcasted, cacheHits, cacheMisses.
+
+Additionally, comprehensive Prometheus-compatible metrics are exposed on port 9464 at `/metrics`, including:
+- `maxine_service_registrations_total`: Total service registrations
+- `maxine_service_discoveries_total{service_name, strategy}`: Total service discoveries by service and strategy
+- `maxine_service_heartbeats_total`: Total heartbeats
+- `maxine_service_deregistrations_total`: Total deregistrations
+- `maxine_cache_hits_total`: Cache hits
+- `maxine_cache_misses_total`: Cache misses
+- `maxine_services_active`: Active services count
+- `maxine_nodes_active`: Active nodes count
+- `maxine_circuit_breakers_open`: Open circuit breakers count
+- `maxine_response_time_seconds{operation}`: Response time histogram for operations (register, discover, heartbeat, deregister)
 
 ##### Dashboard
 ```http
