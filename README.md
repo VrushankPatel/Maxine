@@ -360,6 +360,32 @@ GET /events?since=<timestamp>&limit=<number>
 ```
 Returns recent events from the event history. Use `since` to get events after a specific timestamp (default 0), and `limit` to limit the number of events returned (default 100).
 
+##### Add Service to Blacklist
+```http
+POST /blacklist/add
+Content-Type: application/json
+
+{
+  "serviceName": "bad-service"
+}
+```
+
+##### Remove Service from Blacklist
+```http
+DELETE /blacklist/remove
+Content-Type: application/json
+
+{
+  "serviceName": "bad-service"
+}
+```
+
+##### Get Blacklist
+```http
+GET /blacklist
+```
+Returns the list of blacklisted services.
+
 ##### GraphQL API
 ```http
 GET /graphql
