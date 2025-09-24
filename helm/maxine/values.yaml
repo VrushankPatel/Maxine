@@ -1,26 +1,157 @@
-replicaCount: 1
+# Number of Maxine replicas
+replicaCount: 3
 
 image:
   repository: maxine
   pullPolicy: IfNotPresent
   tag: "latest"
 
+# Service configuration
 service:
   type: ClusterIP
-  port: 8080
+  ports:
+    - name: http
+      port: 8080
+      targetPort: 8080
+      protocol: TCP
+    - name: websocket
+      port: 8081
+      targetPort: 8081
+      protocol: TCP
+    - name: udp-discovery
+      port: 8082
+      targetPort: 8082
+      protocol: UDP
+    - name: tcp-discovery
+      port: 8083
+      targetPort: 8083
+      protocol: TCP
+    - name: dns
+      port: 53
+      targetPort: 53
+      protocol: UDP
+    - name: metrics
+      port: 9464
+      targetPort: 9464
+      protocol: TCP
 
-resources: {}
+# Resource limits and requests
+resources:
+  limits:
+    cpu: 1000m
+    memory: 512Mi
+  requests:
+    cpu: 500m
+    memory: 256Mi
 
+# Node selector for scheduling
 nodeSelector: {}
 
+# Tolerations for node taints
 tolerations: []
 
-affinity: {}
+# Affinity rules
+affinity:
+  podAntiAffinity:
+    preferredDuringSchedulingIgnoredDuringExecution:
+    - weight: 100
+      podAffinityTerm:
+        labelSelector:
+          matchExpressions:
+          - key: app.kubernetes.io/name
+            operator: In
+            values:
+            - maxine
+        topologyKey: kubernetes.io/hostname
 
+# Environment variables
 env:
-  - name: HIGH_PERFORMANCE_MODE
+  - name: ULTRA_FAST_MODE
     value: "true"
-  - name: CLUSTERING_ENABLED
+  - name: LIGHTNING_MODE
     value: "true"
-  - name: HEALTH_CHECK_ENABLED
+  - name: FEDERATION_ENABLED
     value: "true"
+  - name: REDIS_CACHE_ENABLED
+    value: "true"
+  - name: REDIS_HOST
+    value: "maxine-redis-master"
+  - name: REDIS_PORT
+    value: "6379"
+  - name: DNS_ENABLED
+    value: "true"
+  - name: DNS_PORT
+    value: "53"
+  - name: UDP_DISCOVERY_PORT
+    value: "8082"
+  - name: TCP_DISCOVERY_PORT
+    value: "8083"
+  - name: PROMETHEUS_METRICS_ENABLED
+    value: "true"
+  - name: PROMETHEUS_METRICS_PORT
+    value: "9464"
+
+# Persistence configuration
+persistence:
+  enabled: true
+  accessMode: ReadWriteOnce
+  size: 1Gi
+  storageClass: ""
+
+# Redis subchart configuration
+redis:
+  enabled: true
+  architecture: standalone
+  auth:
+    enabled: false
+  master:
+    persistence:
+      enabled: true
+      size: 1Gi
+
+# Ingress configuration
+ingress:
+  enabled: false
+  className: ""
+  annotations: {}
+  hosts:
+    - host: maxine.local
+      paths:
+        - path: /
+          pathType: Prefix
+  tls: []
+
+# Pod security context
+podSecurityContext:
+  runAsNonRoot: true
+  runAsUser: 1001
+  runAsGroup: 1001
+  fsGroup: 1001
+
+# Container security context
+securityContext:
+  allowPrivilegeEscalation: false
+  readOnlyRootFilesystem: true
+  runAsNonRoot: true
+  runAsUser: 1001
+  runAsGroup: 1001
+  capabilities:
+    drop:
+    - ALL
+
+# Health check configuration
+healthCheck:
+  enabled: true
+  initialDelaySeconds: 30
+  periodSeconds: 10
+  timeoutSeconds: 5
+  failureThreshold: 3
+  successThreshold: 1
+
+# Metrics service monitor for Prometheus
+serviceMonitor:
+  enabled: false
+  namespace: ""
+  interval: 30s
+  scrapeTimeout: 10s
+  labels: {}

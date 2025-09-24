@@ -4,38 +4,139 @@ services:
   maxine1:
     build: .
     ports:
-      - "8080:8080"
+      - "8080:8080"    # HTTP/WebSocket
+      - "8081:8081"    # UDP discovery
+      - "8082:8082"    # TCP discovery
+      - "53:53"        # DNS discovery
+      - "9464:9464"    # Prometheus metrics
     environment:
-      - HIGH_PERFORMANCE_MODE=true
-      - CLUSTERING_ENABLED=true
+      - ULTRA_FAST_MODE=true
+      - LIGHTNING_MODE=true
       - FEDERATION_ENABLED=true
       - FEDERATION_PEERS=http://maxine2:8080,http://maxine3:8080
+      - REDIS_CACHE_ENABLED=true
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+      - DNS_ENABLED=true
+      - DNS_PORT=53
+      - UDP_DISCOVERY_PORT=8081
+      - TCP_DISCOVERY_PORT=8082
     volumes:
       - ./logs:/app/logs
       - ./registry1.json:/app/registry.json
+    depends_on:
+      - redis
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          cpus: '1.0'
+          memory: 512M
+        reservations:
+          cpus: '0.5'
+          memory: 256M
 
   maxine2:
     build: .
     ports:
-      - "8081:8080"
+      - "8083:8080"
+      - "8084:8081"
+      - "8085:8082"
+      - "54:53"
+      - "9465:9464"
     environment:
-      - HIGH_PERFORMANCE_MODE=true
-      - CLUSTERING_ENABLED=true
+      - ULTRA_FAST_MODE=true
+      - LIGHTNING_MODE=true
       - FEDERATION_ENABLED=true
       - FEDERATION_PEERS=http://maxine1:8080,http://maxine3:8080
+      - REDIS_CACHE_ENABLED=true
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+      - DNS_ENABLED=true
+      - DNS_PORT=53
+      - UDP_DISCOVERY_PORT=8081
+      - TCP_DISCOVERY_PORT=8082
     volumes:
       - ./logs:/app/logs
       - ./registry2.json:/app/registry.json
+    depends_on:
+      - redis
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          cpus: '1.0'
+          memory: 512M
+        reservations:
+          cpus: '0.5'
+          memory: 256M
 
   maxine3:
     build: .
     ports:
-      - "8082:8080"
+      - "8086:8080"
+      - "8087:8081"
+      - "8088:8082"
+      - "55:53"
+      - "9466:9464"
     environment:
-      - HIGH_PERFORMANCE_MODE=true
-      - CLUSTERING_ENABLED=true
+      - ULTRA_FAST_MODE=true
+      - LIGHTNING_MODE=true
       - FEDERATION_ENABLED=true
       - FEDERATION_PEERS=http://maxine1:8080,http://maxine2:8080
+      - REDIS_CACHE_ENABLED=true
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+      - DNS_ENABLED=true
+      - DNS_PORT=53
+      - UDP_DISCOVERY_PORT=8081
+      - TCP_DISCOVERY_PORT=8082
     volumes:
       - ./logs:/app/logs
       - ./registry3.json:/app/registry.json
+    depends_on:
+      - redis
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          cpus: '1.0'
+          memory: 512M
+        reservations:
+          cpus: '0.5'
+          memory: 256M
+
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    restart: unless-stopped
+    command: redis-server --appendonly yes
+
+volumes:
+  redis_data:
