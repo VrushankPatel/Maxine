@@ -219,6 +219,12 @@ GET /service-mesh/istio-config
 ```
 Returns Istio VirtualService and DestinationRule configurations in JSON format for service mesh deployment.
 
+##### Proxy to Service
+```http
+GET /proxy/:serviceName/:path
+```
+Proxies requests to a discovered service instance. For example, `/proxy/my-service/health` will proxy to the health endpoint of a random instance of `my-service`.
+
 ##### Sign In (Authentication)
 ```http
 POST /signin

@@ -8,7 +8,7 @@ const apiUrl = host;
 const isLightning = __ENV.ULTRA_FAST_MODE === 'true' || __ENV.LIGHTNING_MODE !== 'false';
 const registerUrl = isLightning ? '/register' : '/api/maxine/serviceops/register';
 const heartbeatUrl = isLightning ? '/heartbeat' : '/api/maxine/serviceops/heartbeat';
-const discoverUrl = isLightning ? '/discover?serviceName=dbservice' : '/api/maxine/serviceops/discover?serviceName=dbservice';
+const discoverUrl = isLightning ? '/discover?serviceName=dbservice&version=1.0' : '/api/maxine/serviceops/discover?serviceName=dbservice&version=1.0';
 const statusCheck = {"is status 200": response => response.status === 200};
 
 const headers = {headers: {'Content-Type': 'application/json'}};

@@ -27,6 +27,8 @@ if (config.lightningMode) {
     const url = require('url');
     const jwt = require('jsonwebtoken');
     const bcrypt = require('bcrypt');
+    const httpProxy = require('http-proxy');
+    const proxy = httpProxy.createProxyServer({});
 
     const stringify = require('fast-json-stringify');
 
@@ -585,6 +587,33 @@ if (config.lightningMode) {
          const pathname = parsedUrl.pathname;
          const query = Object.fromEntries(parsedUrl.searchParams);
          const method = req.method;
+
+        // Handle proxy routes
+        if (pathname.startsWith('/proxy/')) {
+            const parts = pathname.split('/');
+            if (parts.length < 3) {
+                res.writeHead(400, { 'Content-Type': 'application/json' });
+                res.end('{"error": "Invalid proxy path"}');
+                return;
+            }
+            const serviceName = parts[2];
+            const path = '/' + parts.slice(3).join('/');
+            const node = serviceRegistry.getRandomNode(serviceName);
+            if (!node) {
+                res.writeHead(404, { 'Content-Type': 'application/json' });
+                res.end(serviceUnavailable);
+                return;
+            }
+            const target = `http://${node.address}`;
+            req.url = path + parsedUrl.search;
+            proxy.web(req, res, { target }, (err) => {
+                if (err) {
+                    res.writeHead(500, { 'Content-Type': 'application/json' });
+                    res.end('{"error": "Proxy error"}');
+                }
+            });
+            return;
+        }
 
         // Use routes map for O(1) lookup
         const routeKey = `${method} ${pathname}`;
