@@ -526,10 +526,16 @@ const normalDiscovery = async (req, res) => {
                  if (hasMetrics) {
                      metricsService.recordRequest(serviceName, success, latency);
                  }
-                   if (success) {
-                       // Record response time for LRT algorithm
-                       serviceRegistry.recordResponseTime(fullServiceName, serviceNode.nodeName, latency);
-                   }
+                    if (success) {
+                        // Record response time for LRT algorithm
+                        serviceRegistry.recordResponseTime(fullServiceName, serviceNode.nodeName, latency);
+                    }
+
+                    // Update AI-driven learning if AI strategy was used
+                    const aiStrategy = discoveryService.getStrategy('19'); // AI_DRIVEN
+                    if (aiStrategy) {
+                        aiStrategy.updateQValue(serviceNode.nodeName, latency, success, fullServiceName, req.ip);
+                    }
                   serviceRegistry.decrementActiveConnections(fullServiceName, serviceNode.nodeName);
                   if (isCircuitBreakerEnabled && req.serviceNode) {
                       if (success) {

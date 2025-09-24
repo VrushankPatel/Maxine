@@ -43,6 +43,7 @@ class DiscoveryService{
              { key: constants.SSS.GEO, module: "./discovery-services/geo-discovery", className: "GeoDiscovery" },
              { key: constants.SSS.PREDICTIVE, module: "./discovery-services/predictive-discovery", className: "PredictiveDiscovery" },
             { key: constants.SSS.AFFINITY, module: "./discovery-services/affinity-discovery", className: "AffinityDiscovery" },
+            { key: constants.SSS.AI_DRIVEN, module: "./discovery-services/ai-driven-discovery", className: "AiDrivenDiscovery" },
         ];
 
         for (const { key, module, className } of strategies) {
