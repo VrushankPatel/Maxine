@@ -27,13 +27,7 @@ A minimal, high-performance service discovery and registry for microservices.
 - **Configuration Management**: Dynamic configuration updates for services with versioning and event notifications
 - **gRPC Support**: High-performance gRPC API for service operations
 
-## Missing Features (Future Enhancements)
 
-While Maxine provides core service registry functionality with lightning-fast performance, the following features are not yet implemented but could be added for a more complete service registry:
-
-- **Distributed Tracing**: Track service calls across the mesh
-- **Authentication/Authorization**: Secure access to registry operations
-- **Service Mesh Integration**: Integration with Istio, Linkerd, etc.
 
 ## Quick Start
 
@@ -350,6 +344,22 @@ Returns the circuit breaker state for the specified node, including state (close
 GET /events?since=<timestamp>&limit=<number>
 ```
 Returns recent events from the event history. Use `since` to get events after a specific timestamp (default 0), and `limit` to limit the number of events returned (default 100).
+
+##### GraphQL API
+```http
+GET /graphql
+POST /graphql
+```
+Maxine provides a GraphQL API for flexible queries and mutations. The GraphQL playground is available at `/graphql` for testing queries.
+
+**Queries:**
+- `services`: Get all registered services
+- `service(serviceName: String!)`: Get a specific service
+- `discover(serviceName: String!, ip: String, group: String, tags: [String], deployment: String, filter: String)`: Discover a service instance
+
+**Mutations:**
+- `register(serviceName: String!, nodeName: String!, address: String!, metadata: String)`: Register a service
+- `deregister(serviceName: String!, nodeName: String!)`: Deregister a service
 
 ##### Set Service Config
 ```http
