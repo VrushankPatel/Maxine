@@ -237,7 +237,7 @@ if (config.lightningMode) {
     };
 
     // Handle service discovery
-    const handleDiscover = (req, res, query, body) => {
+    const handleDiscover = async (req, res, query, body) => {
         try {
             const serviceName = query.serviceName;
             const clientIP = req.connection.remoteAddress;
@@ -250,7 +250,7 @@ if (config.lightningMode) {
             const version = query.version;
             const strategy = query.loadBalancing || 'round-robin';
             const tags = query.tags ? query.tags.split(',') : [];
-            const node = serviceRegistry.discover(serviceName, { version, loadBalancing: strategy, tags, ip: clientIP });
+            const node = await serviceRegistry.discover(serviceName, { version, loadBalancing: strategy, tags, ip: clientIP });
             if (!node) {
                 winston.info(`AUDIT: Service discovery failed - serviceName: ${serviceName}, version: ${version}, strategy: ${strategy}, tags: ${tags}, clientIP: ${clientIP}`);
                 res.writeHead(404, { 'Content-Type': 'application/json' });

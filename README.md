@@ -21,7 +21,7 @@ A minimal, high-performance service discovery and registry for microservices.
 - **Lightning Mode**: Dedicated mode for ultimate speed with core features: register, heartbeat, deregister, discover with round-robin/random load balancing, health, metrics, basic tracing, audit logging
 - **Optimized Parsing**: Fast JSON parsing with error handling
 - **Event-Driven**: Real-time events for service changes and notifications via WebSocket and MQTT
-- **Federation**: Connect multiple Maxine instances across datacenters for global service discovery
+- **Federation**: Connect multiple Maxine instances across datacenters for global service discovery (available in Lightning Mode)
 - **Multi-Datacenter Support**: Global service discovery with cross-datacenter replication and load balancing
 - **Authentication/Authorization**: Optional JWT-based auth for Lightning Mode to secure sensitive operations
 - **Configuration Management**: Dynamic configuration updates for services with versioning and event notifications
@@ -53,11 +53,11 @@ For Redis, configure `REDIS_HOST`, `REDIS_PORT`, `REDIS_PASSWORD`.
 
 Maxine supports federation to connect multiple instances across datacenters for global service discovery, cross-datacenter replication, and load balancing.
 
-Enable with `FEDERATION_ENABLED=true` and configure peers with `FEDERATION_PEERS=name1:url1,name2:url2`.
+Enable with `FEDERATION_ENABLED=true` and configure peers with `FEDERATION_PEERS=http://peer1:8080,http://peer2:8080`.
 
-Additional options: `FEDERATION_TIMEOUT` (default 5000ms), `FEDERATION_RETRY_ATTEMPTS` (default 3).
+Additional options: `FEDERATION_TIMEOUT` (default 5000ms).
 
-Federated registries are queried automatically if a service is not found locally. Registrations and deregistrations are replicated across datacenters. Load balancing selects from available instances across all connected datacenters.
+In Lightning Mode, federated registries are queried automatically if a service is not found locally. Registrations and deregistrations are replicated across peers.
 
 ## Authentication (Lightning Mode)
 
