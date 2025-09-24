@@ -69,6 +69,7 @@ class LightningServiceRegistrySimple {
         this.nodesCount++;
 
         this.saveRegistry();
+        if (global.broadcast) global.broadcast('service_registered', { serviceName: fullServiceName, nodeId: nodeName });
         return nodeName;
     }
 
@@ -97,6 +98,7 @@ class LightningServiceRegistrySimple {
         this.lastHeartbeats.delete(nodeId);
         this.nodeToService.delete(nodeId);
         this.saveRegistry();
+        if (global.broadcast) global.broadcast('service_deregistered', { nodeId });
     }
 
     heartbeat(nodeId) {
@@ -111,6 +113,7 @@ class LightningServiceRegistrySimple {
                     if (node) service.healthyNodesArray.push(node);
                 }
             }
+            if (global.broadcast) global.broadcast('service_heartbeat', { nodeId });
             return true;
         }
         return false;
@@ -211,6 +214,7 @@ class LightningServiceRegistrySimple {
                 }
             }
             this.nodeToService.delete(nodeName);
+            if (global.broadcast) global.broadcast('service_unhealthy', { nodeId: nodeName });
         }
         if (toRemove.length > 0) {
             this.saveRegistry();
