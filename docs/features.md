@@ -45,6 +45,14 @@
 - Persistence maintains service registrations, heartbeats, and metadata across restarts.
 - Minimal performance impact with asynchronous saves and optimized data structures.
 
+### DNS Service Discovery
+- Maxine supports DNS-based service discovery for compatibility with standard DNS clients and infrastructure.
+- **SRV Records**: Query `_service._tcp.namespace.region.zone` for service location and port information.
+- **A Records**: Query `service.namespace.region.zone` for direct IP resolution.
+- DNS server runs on configurable port (default 53) and integrates with the service registry for real-time updates.
+- Enables integration with DNS-aware load balancers, proxies, and applications without code changes.
+- Supports service versioning and health-based filtering in DNS responses.
+
 ### Metrics
 - Maxine provides comprehensive metrics collection for monitoring performance and usage.
   - In lightning mode, the `/metrics` endpoint provides basic metrics including request counts, errors, uptime, and basic stats.

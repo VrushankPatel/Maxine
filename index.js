@@ -2915,6 +2915,12 @@ if (config.ultraFastMode) {
         });
     }
 
+    // Start DNS server for service discovery
+    if (process.env.DNS_ENABLED !== 'false') {
+        const { startDNSServer } = require('./src/main/controller/maxine/dns-controller');
+        startDNSServer(process.env.DNS_PORT || (process.env.NODE_ENV === 'test' ? 5353 : 53));
+    }
+
         // WebSocket server for real-time event streaming
         let wss = null;
         if (config.websocketEnabled) {
