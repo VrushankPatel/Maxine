@@ -341,10 +341,12 @@ Additionally, comprehensive Prometheus-compatible metrics are exposed on port 94
 - `maxine_service_discoveries_total{service_name, strategy}`: Total service discoveries by service and strategy
 - `maxine_service_heartbeats_total`: Total heartbeats
 - `maxine_service_deregistrations_total`: Total deregistrations
-- `maxine_cache_hits_total`: Cache hits
-- `maxine_cache_misses_total`: Cache misses
-- `maxine_services_active`: Active services count
-- `maxine_nodes_active`: Active nodes count
+ - `maxine_cache_hits_total`: Cache hits
+ - `maxine_cache_misses_total`: Cache misses
+ - `maxine_redis_cache_hit_total`: Redis distributed cache hits
+ - `maxine_redis_cache_miss_total`: Redis distributed cache misses
+ - `maxine_services_active`: Active services count
+ - `maxine_nodes_active`: Active nodes count
 - `maxine_circuit_breakers_open`: Open circuit breakers count
 - `maxine_response_time_seconds{operation}`: Response time histogram for operations (register, discover, heartbeat, deregister)
 
