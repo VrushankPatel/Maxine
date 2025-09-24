@@ -1862,8 +1862,10 @@ if (config.ultraFastMode) {
             const clientIP = req.connection.remoteAddress || req.socket.remoteAddress || 'unknown';
             const graph = serviceRegistry.getDependencyGraph();
             const cycles = serviceRegistry.detectCycles();
+            const callLogs = serviceRegistry.getCallLogs();
             const graphJson = JSON.stringify(graph);
             const cyclesJson = JSON.stringify(cycles);
+            const callLogsJson = JSON.stringify(callLogs);
             const html = `
 <!DOCTYPE html>
 <html>
@@ -1879,8 +1881,9 @@ if (config.ultraFastMode) {
     </style>
 </head>
 <body>
-    <h1>Maxine Service Dependency Graph</h1>
+    <h1>Maxine Service Dependency Graph & Analytics</h1>
     <div id="cycle-alert" class="cycle-alert" style="display: none;">Warning: Circular dependencies detected!</div>
+    <div id="stats"></div>
     <div>
         <button onclick="exportJSON()">Export JSON</button>
         <button onclick="exportSVG()">Export SVG</button>
@@ -1889,10 +1892,15 @@ if (config.ultraFastMode) {
     <script>
         const graphData = ${graphJson};
         const cycles = ${cyclesJson};
+        const callLogs = ${callLogsJson};
 
         if (cycles.length > 0) {
             document.getElementById('cycle-alert').style.display = 'block';
         }
+
+        // Calculate and display stats (will be updated after graph setup)
+        const totalCalls = Object.values(callLogs).reduce((sum, calls) =>
+            sum + Object.values(calls).reduce((s, c) => s + c.count, 0), 0);
 
         // Prepare nodes and links
         const nodes = [];
@@ -1909,7 +1917,8 @@ if (config.ultraFastMode) {
                     nodeMap.set(dep, { id: dep, group: 1 });
                     nodes.push(nodeMap.get(dep));
                 }
-                links.push({ source: service, target: dep });
+                const callCount = callLogs[service] && callLogs[service][dep] ? callLogs[service][dep].count : 0;
+                links.push({ source: service, target: dep, callCount });
             });
         });
 
@@ -1927,7 +1936,11 @@ if (config.ultraFastMode) {
             .selectAll("line")
             .data(links)
             .enter().append("line")
-            .attr("class", "link");
+            .attr("class", "link")
+            .attr("stroke-width", d => Math.max(1, Math.log(d.callCount + 1)));
+
+        link.append("title")
+            .text(d => d.source + ' -> ' + d.target + ': ' + d.callCount + ' calls');
 
         const node = svg.append("g")
             .attr("class", "nodes")
@@ -1967,6 +1980,13 @@ if (config.ultraFastMode) {
                 .attr("x", d => d.x)
                 .attr("y", d => d.y);
         });
+
+        // Update stats
+        const statsDiv = document.getElementById('stats');
+        statsDiv.innerHTML = '<p><strong>Total Services:</strong> ' + nodes.length + '</p>' +
+            '<p><strong>Total Dependencies:</strong> ' + links.length + '</p>' +
+            '<p><strong>Total Service Calls:</strong> ' + totalCalls + '</p>' +
+            '<p><strong>Link thickness represents call volume (log scale)</strong></p>';
 
         function dragstarted(event, d) {
             if (!event.active) simulation.alphaTarget(0.3).restart();

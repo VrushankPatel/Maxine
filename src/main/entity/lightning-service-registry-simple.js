@@ -79,6 +79,13 @@ class LightningServiceRegistrySimple extends EventEmitter {
         this.redisCacheHits = 0;
         this.redisCacheMisses = 0;
 
+        // AI-Driven Load Balancing (Reinforcement Learning)
+        this.qTable = new Map(); // serviceName -> Map<nodeName, qValue>
+        this.alpha = 0.1; // Learning rate
+        this.gamma = 0.9; // Discount factor
+        this.epsilon = 0.1; // Exploration rate
+        this.rewardHistory = new Map(); // nodeName -> recent rewards
+
         // Adaptive caching methods
         this.getCache = async (key) => {
             // First check local cache
@@ -478,10 +485,13 @@ class LightningServiceRegistrySimple extends EventEmitter {
                case 'health-score':
                    selectedNode = this.selectHealthScore(availableNodes);
                    break;
-               case 'predictive':
-                   selectedNode = this.selectPredictive(availableNodes);
-                   break;
-              default: // round-robin
+                case 'predictive':
+                    selectedNode = this.selectPredictive(availableNodes);
+                    break;
+                case 'ai-driven':
+                    selectedNode = this.selectAIDriven(availableNodes, clientIP);
+                    break;
+               default: // round-robin
                 let index = service.roundRobinIndex || 0;
                 selectedNode = availableNodes[index % availableNodes.length];
                 service.roundRobinIndex = (index + 1) % availableNodes.length;
@@ -1346,6 +1356,18 @@ class LightningServiceRegistrySimple extends EventEmitter {
             return graph;
         }
 
+        // Get call logs for analytics
+        getCallLogs() {
+            const logs = {};
+            for (const [caller, calls] of this.callLogs) {
+                logs[caller] = {};
+                for (const [called, data] of calls) {
+                    logs[caller][called] = { count: data.count, lastSeen: data.lastSeen };
+                }
+            }
+            return logs;
+        }
+
         detectCycles() {
             const visited = new Set();
             const recStack = new Set();
@@ -1448,6 +1470,12 @@ class LightningServiceRegistrySimple extends EventEmitter {
 
             // Update health score after recording response time
             this.updateHealthScore(nodeId);
+
+            // Update Q-value for AI-driven load balancing
+            const serviceName = this.nodeToService.get(nodeId);
+            if (serviceName) {
+                this.updateQValue(serviceName, nodeId, responseTime, true);
+            }
         }
 
         // Get response time history for predictive load balancing
@@ -1534,6 +1562,60 @@ class LightningServiceRegistrySimple extends EventEmitter {
                 }
             }
             return bestNode || nodes[(fastRandom() * nodes.length) | 0];
+        }
+
+        // AI-Driven Load Balancing using Q-Learning
+        selectAIDriven(nodes, clientIP) {
+            if (nodes.length === 0) return null;
+            if (nodes.length === 1) return nodes[0];
+
+            const serviceName = nodes[0].serviceName; // Assume all nodes have same serviceName
+            const qValues = this.qTable.get(serviceName) || new Map();
+
+            // Initialize Q-values if not present
+            for (const node of nodes) {
+                if (!qValues.has(node.nodeName)) {
+                    qValues.set(node.nodeName, 0);
+                }
+            }
+            this.qTable.set(serviceName, qValues);
+
+            // Epsilon-greedy selection
+            let selectedNode;
+            if (fastRandom() < this.epsilon) {
+                // Explore: random selection
+                selectedNode = nodes[(fastRandom() * nodes.length) | 0];
+            } else {
+                // Exploit: select node with highest Q-value
+                let maxQ = -Infinity;
+                for (const node of nodes) {
+                    const q = qValues.get(node.nodeName) || 0;
+                    if (q > maxQ) {
+                        maxQ = q;
+                        selectedNode = node;
+                    }
+                }
+            }
+
+            // Store the selection for reward update later
+            // We'll need a way to record response time and update Q-value
+            // For now, return selected node
+            return selectedNode;
+        }
+
+        // Update Q-value for AI-driven load balancing
+        updateQValue(serviceName, nodeName, responseTime, success = true) {
+            const qValues = this.qTable.get(serviceName);
+            if (!qValues) return;
+
+            // Reward: lower response time is better, failure is penalty
+            const reward = success ? Math.max(0, 1000 - responseTime) : -100; // Reward for <1s, penalty for failure
+
+            const currentQ = qValues.get(nodeName) || 0;
+            // Simple Q-update: Q = Q + alpha * (reward - Q)
+            // Since no next state, just immediate reward
+            const newQ = currentQ + this.alpha * (reward - currentQ);
+            qValues.set(nodeName, newQ);
         }
 
         // Get health scores for a service
