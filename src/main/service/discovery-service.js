@@ -147,10 +147,10 @@ class DiscoveryService{
          return node;
      }
 
-         ultraFastGetNode = (serviceName) => {
-             // Use optimized random for stateless, zero-latency discovery in ultra-fast mode
-             return serviceRegistry.ultraFastGetRandomNode(serviceName);
-         }
+          ultraFastGetNode = async (serviceName) => {
+              // Use optimized random for stateless, zero-latency discovery in ultra-fast mode
+              return await serviceRegistry.ultraFastGetRandomNode(serviceName);
+          }
 
         getNodeUncached = async (fullServiceName, ip, group, tags, deployment, filter, clientId) => {
             const strategy = this.getStrategy(config.serverSelectionStrategy);

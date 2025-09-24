@@ -12,11 +12,11 @@ if (config.mqttEnabled) {
         client.subscribe('maxine/discovery/request', { qos: 1 });
     });
 
-    client.on('message', (topic, message) => {
+    client.on('message', async (topic, message) => {
         try {
             if (topic === 'maxine/discovery/request') {
                 const { serviceName } = JSON.parse(message.toString());
-                const node = serviceRegistry.ultraFastGetRandomNode(serviceName);
+                const node = await serviceRegistry.ultraFastGetRandomNode(serviceName);
                 if (node) {
                     client.publish('maxine/discovery/response', JSON.stringify({
                         serviceName,

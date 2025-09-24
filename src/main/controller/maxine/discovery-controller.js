@@ -203,7 +203,7 @@ const buildFullServiceName = (serviceName, namespace = "default", datacenter = "
     return `${namespace}:${serviceName}`;
 };
 
-const ultraFastDiscovery = (req, res) => {
+const ultraFastDiscovery = async (req, res) => {
         // Ultra fast: zero-latency discovery with minimal overhead
         const serviceName = req.query.serviceName;
         if (!serviceName) {
@@ -247,7 +247,7 @@ const ultraFastDiscovery = (req, res) => {
             const responseBuffer = buildMultipleResponseBuffer(nodes.map(n => n.address), nodes.map(n => n.nodeName));
             res.end(responseBuffer);
         } else {
-            const serviceNode = serviceRegistry.ultraFastGetRandomNode(fullServiceName);
+            const serviceNode = await serviceRegistry.ultraFastGetRandomNode(fullServiceName);
             if (!serviceNode) {
                 res.status(404).end(notFoundBuffer);
                 return;
@@ -256,7 +256,7 @@ const ultraFastDiscovery = (req, res) => {
             res.end(responseBuffer);
         }
     };
-const extremeFastDiscovery = (req, res) => {
+const extremeFastDiscovery = async (req, res) => {
         // Extreme fast: ultimate performance with no overhead
         const serviceName = req.query.serviceName;
         if (!serviceName) {
@@ -270,7 +270,7 @@ const extremeFastDiscovery = (req, res) => {
         const version = req.query.version;
         const fullServiceName = buildFullServiceName(serviceName, namespace, datacenter, version);
 
-        const serviceNode = serviceRegistry.ultraFastGetRandomNode(fullServiceName);
+        const serviceNode = await serviceRegistry.ultraFastGetRandomNode(fullServiceName);
         if (!serviceNode) {
             res.status(404).end(notFoundBuffer);
             return;
@@ -591,7 +591,7 @@ const lightningDiscovery = async (req, res) => {
         const strategy = req.query.strategy || 'round-robin';
         const clientId = req.query.clientId;
         const tags = req.query.tags ? req.query.tags.split(',') : [];
-        let serviceNode = serviceRegistry.ultraFastGetRandomNode(fullServiceName, strategy, clientId);
+        let serviceNode = await serviceRegistry.ultraFastGetRandomNode(fullServiceName, strategy, clientId);
         if (!serviceNode && config.federationEnabled) {
             // Try federation
             const federatedResults = await federationService.discoverFromFederation(serviceName);
@@ -626,12 +626,12 @@ const lightningDiscovery = async (req, res) => {
         res.end(buf);
     };
 
-const discoveryController = (req, res) => {
+const discoveryController = async (req, res) => {
     if (isLightningMode) {
-        return lightningDiscovery(req, res);
+        return await lightningDiscovery(req, res);
     }
     if (isExtremeFastMode) {
-        return extremeFastDiscovery(req, res);
+        return await extremeFastDiscovery(req, res);
     }
     if (isUltraFastMode) {
         return ultraFastDiscovery(req, res);

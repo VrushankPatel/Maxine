@@ -382,7 +382,7 @@ if (config.ultraFastMode) {
                 }
             }
 
-            const node = serviceRegistry.ultraFastGetRandomNode(fullServiceName, strategy, clientIP, tags);
+            const node = await serviceRegistry.ultraFastGetRandomNode(fullServiceName, strategy, clientIP, tags);
             if (!node) {
                 res.writeHead(404, { 'Content-Type': 'application/json' });
                 res.end(serviceUnavailable);
@@ -925,7 +925,7 @@ if (config.ultraFastMode) {
             }
 
             // Use ultra-fast method for maximum performance in lightning mode
-            const node = serviceRegistry.ultraFastGetRandomNode(fullServiceName, strategy, clientIP, tags);
+            const node = await serviceRegistry.ultraFastGetRandomNode(fullServiceName, strategy, clientIP, tags);
             if (!node) {
                 // winston.info(`AUDIT: Service discovery failed - serviceName: ${serviceName}, version: ${version}, strategy: ${strategy}, tags: ${tags}, clientIP: ${clientIP}`);
                 res.writeHead(404, { 'Content-Type': 'application/json' });
