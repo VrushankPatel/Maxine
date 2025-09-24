@@ -8,6 +8,7 @@ const axios = require('axios');
 const geoip = require('geoip-lite');
 const { LRUCache } = require('lru-cache');
 const { trace } = require('@opentelemetry/api');
+const DeepLearningLBService = require('../service/deep-learning-lb-service');
 
 // Fast LCG PRNG for random load balancing
 let lcgSeed = Date.now();
@@ -93,6 +94,9 @@ class LightningServiceRegistrySimple extends EventEmitter {
         this.registerLBPlugin = (strategyName, pluginFunction) => {
             this.lbPlugins.set(strategyName, pluginFunction);
         };
+
+        // Deep Learning Load Balancing Service
+        this.deepLearningService = new DeepLearningLBService();
 
         // Cache metrics
         this.cacheHits = 0;
@@ -852,11 +856,20 @@ class LightningServiceRegistrySimple extends EventEmitter {
         return conn1 <= conn2 ? choice1 : choice2;
     }
 
-    selectAdvancedML(nodes, serviceName, clientId) {
-        // Use advanced ML model for prediction
+    async selectAdvancedML(nodes, serviceName, clientId) {
+        // Use deep learning model for prediction
         if (nodes.length === 0) return null;
         if (nodes.length === 1) return nodes[0];
 
+        // Try deep learning prediction first
+        const dlPredictions = await this.deepLearningService.predictNodeScores(serviceName, nodes);
+        if (dlPredictions) {
+            // Sort by deep learning score
+            dlPredictions.sort((a, b) => b.score - a.score);
+            return dlPredictions[0].node;
+        }
+
+        // Fallback to time-series analysis
         const now = Date.now();
 
         // Calculate predicted performance for each node
@@ -967,7 +980,7 @@ class LightningServiceRegistrySimple extends EventEmitter {
         return result;
     }
 
-    ultraFastGetRandomNode(serviceName, strategy = 'round-robin', clientId = null, tags = []) {
+    async ultraFastGetRandomNode(serviceName, strategy = 'round-robin', clientId = null, tags = []) {
         const service = this.services.get(serviceName);
         if (!service || service.healthyNodesArray.length === 0) return null;
 
@@ -1028,7 +1041,7 @@ class LightningServiceRegistrySimple extends EventEmitter {
             return nodes[index];
         } else if (strategy === 'ai-driven' || strategy === 'advanced-ml') {
             // Advanced ML-based selection
-            return this.selectAdvancedML(nodes, serviceName, clientId);
+            return await this.selectAdvancedML(nodes, serviceName, clientId);
         } else if (strategy === 'power-of-two-choices') {
             // Power of two choices: select two random nodes, pick the one with fewer connections
             if (nodes.length < 2) return nodes[0];
@@ -1097,45 +1110,10 @@ class LightningServiceRegistrySimple extends EventEmitter {
 
 
 
-    // Predict node performance using time-series analysis
+    // Predict node performance using advanced time-series analysis
     predictNodePerformance(nodeName, timestamp) {
-        const data = this.timeSeriesData.get(nodeName) || [];
-        if (data.length < 5) {
-            // Not enough data, return defaults
-            return { responseTime: 100, errorRate: 0.01, load: 0.5, confidence: 0.1 };
-        }
-
-        // Simple exponential moving average for prediction
-        const recentData = data.filter(d => timestamp - d.timestamp < this.predictionWindow);
-        if (recentData.length === 0) {
-            return { responseTime: 100, errorRate: 0.01, load: 0.5, confidence: 0.1 };
-        }
-
-        // Calculate trends
-        const responseTimes = recentData.map(d => d.responseTime);
-        const avgResponseTime = responseTimes.reduce((a, b) => a + b, 0) / responseTimes.length;
-
-        const errorRate = recentData.filter(d => !d.success).length / recentData.length;
-
-        // Simple trend analysis (linear regression slope)
-        const timePoints = recentData.map((d, i) => i);
-        const slope = this.calculateSlope(timePoints, responseTimes);
-
-        // Predict next response time based on trend
-        const predictedResponseTime = Math.max(10, avgResponseTime + slope * 5); // Predict 5 steps ahead
-
-        // Estimate load based on recent activity
-        const recentActivity = recentData.filter(d => timestamp - d.timestamp < 60000).length; // Last minute
-        const predictedLoad = Math.min(1, recentActivity / 100); // Normalize to 0-1
-
-        const confidence = Math.min(1, recentData.length / 20); // Confidence based on data points
-
-        return {
-            responseTime: predictedResponseTime,
-            errorRate,
-            load: predictedLoad,
-            confidence
-        };
+        // Delegate to deep learning service for advanced predictions
+        return this.deepLearningService.predictNodePerformance(nodeName, timestamp);
     }
 
     // Calculate slope for linear regression
@@ -1159,17 +1137,27 @@ class LightningServiceRegistrySimple extends EventEmitter {
         }
 
         const data = this.timeSeriesData.get(nodeName);
-        data.push({
+        const entry = {
             timestamp: Date.now(),
             responseTime,
             success,
             load
-        });
+        };
+        data.push(entry);
 
         // Keep only recent data (last 24 hours)
         const cutoff = Date.now() - 24 * 60 * 60 * 1000;
         const filtered = data.filter(d => d.timestamp > cutoff);
         this.timeSeriesData.set(nodeName, filtered.slice(-1000)); // Keep max 1000 entries
+
+        // Update deep learning service
+        this.deepLearningService.setNodeTimeSeriesData(nodeName, filtered);
+
+        // Record for training (service name from nodeToService)
+        const serviceName = this.nodeToService.get(nodeName);
+        if (serviceName) {
+            this.deepLearningService.recordActualPerformance(serviceName, nodeName, responseTime, success, load);
+        }
     }
 
     // Basic tracing methods

@@ -7,7 +7,7 @@ A minimal, high-performance service discovery and registry for microservices.
 - **Lightning Fast**: In-memory storage with O(1) lookups, optimized heartbeat with periodic cleanup, pre-allocated response buffers, fast LCG PRNG for random selection
 - **Simple API**: Register, discover, heartbeat, and deregister services with support for service versioning
 - **Automatic Cleanup**: Removes expired services with efficient periodic cleanup (every 30 seconds)
-- **Load Balancing**: Round-robin, random, weighted-random, least-connections, consistent-hash, ip-hash, geo-aware, predictive, ai-driven, cost-aware selection for advanced load balancing
+- **Load Balancing**: Round-robin, random, weighted-random, least-connections, consistent-hash, ip-hash, geo-aware, predictive, ai-driven, cost-aware, deep-learning selection for advanced load balancing
 - **Health Checks**: /health endpoint returning service and node counts, active health monitoring for real-time status
 - **Advanced Health Checks**: Custom health check endpoints with proactive monitoring, configurable intervals, and health status integration with load balancing decisions
 - **Circuit Breakers**: Automatic failure detection and recovery to protect against cascading failures
@@ -1541,6 +1541,45 @@ serviceRegistry.registerLBPlugin('my-custom-strategy', (nodes, context) => {
 
 // Now you can use 'my-custom-strategy' in discovery requests
 GET /discover?serviceName=my-service&loadBalancing=my-custom-strategy
+```
+
+## Deep Learning Load Balancing
+
+Maxine includes advanced deep learning capabilities for intelligent load balancing. Using TensorFlow.js, it trains neural networks on historical performance data to predict optimal service nodes.
+
+### Features
+
+- **Neural Network Models**: Feedforward neural networks trained on service metrics
+- **Time Series Analysis**: Advanced analysis including autocorrelation, trend detection, and seasonality
+- **Predictive Analytics**: Forecasts response times, error rates, and load patterns
+- **Continuous Learning**: Models update automatically with new performance data
+- **Fallback Strategy**: Falls back to time-series analysis if deep learning model unavailable
+
+### Usage
+
+Use the `advanced-ml` strategy for deep learning-based load balancing:
+
+```javascript
+GET /discover?serviceName=my-service&loadBalancing=advanced-ml
+```
+
+### Model Training
+
+Models are trained automatically on:
+- Response times
+- Success/failure rates
+- Load patterns
+- Historical trends
+
+Training occurs every minute with recent performance data. Models are persisted to disk for continuity across restarts.
+
+### Metrics
+
+Access model performance metrics:
+
+```javascript
+const metrics = serviceRegistry.deepLearningService.getModelMetrics('my-service');
+// Returns: { loss, mse, mae, accuracy, precision, recall, f1, ... }
 ```
 
 ## Client SDKs
