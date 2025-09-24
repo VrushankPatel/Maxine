@@ -252,24 +252,44 @@ class LightningServiceRegistry {
                 return sampledNodes[0];
             },
             'sticky-round-robin': (service, availableNodes, clientId) => {
-                if (availableNodes.length === 0) return null;
-                if (clientId) {
-                    const assigned = this.stickyAssignments.get(clientId);
-                    if (assigned && availableNodes.some(n => n.nodeName === assigned)) {
-                        return availableNodes.find(n => n.nodeName === assigned);
-                    } else {
-                        const index = this.simpleHash(clientId) % availableNodes.length;
-                        const node = availableNodes[index];
-                        this.stickyAssignments.set(clientId, node.nodeName);
-                        return node;
-                    }
-                } else {
-                    let index = service.roundRobinIndex || 0;
-                    const node = availableNodes[index % availableNodes.length];
-                    service.roundRobinIndex = (index + 1) % availableNodes.length;
-                    return node;
-                }
-            }
+                 if (availableNodes.length === 0) return null;
+                 if (clientId) {
+                     const assigned = this.stickyAssignments.get(clientId);
+                     if (assigned && availableNodes.some(n => n.nodeName === assigned)) {
+                         return availableNodes.find(n => n.nodeName === assigned);
+                     } else {
+                         const index = this.simpleHash(clientId) % availableNodes.length;
+                         const node = availableNodes[index];
+                         this.stickyAssignments.set(clientId, node.nodeName);
+                         return node;
+                     }
+                 } else {
+                     let index = service.roundRobinIndex || 0;
+                     const node = availableNodes[index % availableNodes.length];
+                     service.roundRobinIndex = (index + 1) % availableNodes.length;
+                     return node;
+                 }
+             },
+             'cost-aware': (service, availableNodes, clientId) => {
+                 if (availableNodes.length === 0) return null;
+                 // Cost-aware load balancing: prefer on-prem nodes over cloud nodes to reduce costs
+                 // Nodes with metadata.costPriority: 'low' (on-prem), 'medium' (hybrid), 'high' (cloud)
+                 const costPriorities = availableNodes.map(node => {
+                     const priority = node.metadata?.costPriority || 'medium';
+                     const costScore = { 'low': 1, 'medium': 2, 'high': 3 }[priority] || 2;
+                     return { node, costScore };
+                 });
+
+                 // Sort by cost score (lower is better), then by connections for load balancing
+                 costPriorities.sort((a, b) => {
+                     if (a.costScore !== b.costScore) return a.costScore - b.costScore;
+                     const connA = this.activeConnections.get(a.node.nodeName) || 0;
+                     const connB = this.activeConnections.get(b.node.nodeName) || 0;
+                     return connA - connB;
+                 });
+
+                 return costPriorities[0].node;
+             }
         };
     }
 

@@ -569,10 +569,13 @@ class LightningServiceRegistrySimple extends EventEmitter {
                 case 'predictive':
                     selectedNode = this.selectPredictive(availableNodes);
                     break;
-                case 'ai-driven':
-                    selectedNode = this.selectAIDriven(availableNodes, clientIP);
-                    break;
-               default: // round-robin
+                 case 'ai-driven':
+                     selectedNode = this.selectAIDriven(availableNodes, clientIP);
+                     break;
+                 case 'cost-aware':
+                     selectedNode = this.selectCostAware(availableNodes);
+                     break;
+                default: // round-robin
                 let index = service.roundRobinIndex || 0;
                 selectedNode = availableNodes[index % availableNodes.length];
                 service.roundRobinIndex = (index + 1) % availableNodes.length;
@@ -1720,9 +1723,31 @@ class LightningServiceRegistrySimple extends EventEmitter {
             const currentQ = qValues.get(nodeName) || 0;
             // Simple Q-update: Q = Q + alpha * (reward - Q)
             // Since no next state, just immediate reward
-            const newQ = currentQ + this.alpha * (reward - currentQ);
-            qValues.set(nodeName, newQ);
-        }
+             const newQ = currentQ + this.alpha * (reward - currentQ);
+             qValues.set(nodeName, newQ);
+         }
+
+         // Cost-aware load balancing: prefer lower cost nodes (on-prem over cloud)
+         selectCostAware(nodes) {
+             if (nodes.length === 0) return null;
+             if (nodes.length === 1) return nodes[0];
+
+             // Cost-aware selection: prefer nodes with lower cost priority
+             // metadata.costPriority: 'low' (on-prem), 'medium' (hybrid), 'high' (cloud)
+             const costPriorities = nodes.map(node => {
+                 const priority = node.metadata?.costPriority || 'medium';
+                 const costScore = { 'low': 1, 'medium': 2, 'high': 3 }[priority] || 2;
+                 return { node, costScore, connections: node.connections || 0 };
+             });
+
+             // Sort by cost score (lower is better), then by connections (lower is better)
+             costPriorities.sort((a, b) => {
+                 if (a.costScore !== b.costScore) return a.costScore - b.costScore;
+                 return a.connections - b.connections;
+             });
+
+             return costPriorities[0].node;
+         }
 
         // Get health scores for a service
         getHealthScores(serviceName) {

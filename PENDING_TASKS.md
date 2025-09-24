@@ -553,12 +553,13 @@
  16. Implement AI-Driven Load Balancing: Use reinforcement learning to optimize routing decisions based on real-time metrics and historical data.
   18. Implement Service Health Prediction Enhancements: Add machine learning models for more accurate failure prediction and automated scaling recommendations.
   19. Implement Chaos Engineering Tools: Built-in chaos testing capabilities for resilience validation with network partition simulation and automated recovery testing.
-  20. [x] Implement Service Call Analytics Dashboard: Enhanced the existing dependency graph with call analytics: link thickness shows call volume, tooltips show call counts, added service call statistics.
-  21. Implement Advanced Service Mesh Integration: Add support for Istio, Linkerd, and Envoy with automatic policy generation and traffic management.
-  22. Implement Multi-Cluster Federation Enhancements: Advanced cross-datacenter features with conflict resolution, geo-aware load balancing, and global consistency.
-  23. Implement Kubernetes Operator: Create a custom Kubernetes operator for automated Maxine deployment, scaling, and management with CRDs.
-  24. Implement eBPF Integration: Use eBPF for low-overhead tracing and monitoring of service communications at the kernel level.
-   25. Implement AI-Driven Load Balancing: Use reinforcement learning to optimize routing decisions based on real-time metrics and historical data.
+   20. [x] Implement Service Call Analytics Dashboard: Enhanced the existing dependency graph with call analytics: link thickness shows call volume, tooltips show call counts, added service call statistics.
+   21. [x] Implement Cost-Aware Load Balancing: Added cost-aware load balancing strategy that prefers lower-cost infrastructure (on-prem over cloud) to optimize operational costs while maintaining performance.
+   22. Implement Advanced Service Mesh Integration: Add support for Istio, Linkerd, and Envoy with automatic policy generation and traffic management.
+   23. Implement Multi-Cluster Federation Enhancements: Advanced cross-datacenter features with conflict resolution, geo-aware load balancing, and global consistency.
+   24. Implement Kubernetes Operator: Create a custom Kubernetes operator for automated Maxine deployment, scaling, and management with CRDs.
+   25. Implement eBPF Integration: Use eBPF for low-overhead tracing and monitoring of service communications at the kernel level.
+    26. Implement AI-Driven Load Balancing: Use reinforcement learning to optimize routing decisions based on real-time metrics and historical data.
 
 ### Next High Priority Tasks
 - [x] Implement Ruby Client SDK: Created comprehensive Ruby client SDK with support for both Full Mode and Lightning Mode APIs, caching, UDP/TCP discovery, and WebSocket event streaming.
