@@ -42,6 +42,7 @@ if (config.lightningMode) {
     const winston = require('winston');
     const { logConfiguration } = require('./src/main/config/logging/logging-config');
     winston.configure(logConfiguration);
+    const path = require('path');
     const GrpcServer = require('./src/main/grpc/grpc-server');
 
     // Precompiled stringify functions for performance
@@ -168,13 +169,13 @@ if (config.lightningMode) {
             const { serviceName, host, port, metadata } = body;
             const clientIP = req.connection.remoteAddress || req.socket.remoteAddress || 'unknown';
             if (!serviceName || !host || !port) {
-                winston.warn(`AUDIT: Invalid registration attempt - missing fields, clientIP: ${clientIP}`);
+                // winston.warn(`AUDIT: Invalid registration attempt - missing fields, clientIP: ${clientIP}`);
                 res.writeHead(400, { 'Content-Type': 'application/json' });
                 res.end(errorMissingServiceName);
                 return;
             }
             const nodeId = serviceRegistry.register(serviceName, { host, port, metadata });
-            winston.info(`AUDIT: Service registered - serviceName: ${serviceName}, host: ${host}, port: ${port}, nodeId: ${nodeId}, clientIP: ${clientIP}`);
+            // winston.info(`AUDIT: Service registered - serviceName: ${serviceName}, host: ${host}, port: ${port}, nodeId: ${nodeId}, clientIP: ${clientIP}`);
             res.writeHead(200, { 'Content-Type': 'application/json' });
             res.end(stringifyRegister({ nodeId, status: 'registered' }));
         } catch (error) {
@@ -191,7 +192,7 @@ if (config.lightningMode) {
             const { nodeId } = body;
             const clientIP = req.connection.remoteAddress || req.socket.remoteAddress || 'unknown';
             if (!nodeId) {
-                winston.warn(`AUDIT: Invalid heartbeat attempt - missing nodeId, clientIP: ${clientIP}`);
+                // winston.warn(`AUDIT: Invalid heartbeat attempt - missing nodeId, clientIP: ${clientIP}`);
                 res.writeHead(400, { 'Content-Type': 'application/json' });
                 res.end(errorMissingNodeId);
                 return;
@@ -214,13 +215,13 @@ if (config.lightningMode) {
             const { nodeId } = body;
             const clientIP = req.connection.remoteAddress || req.socket.remoteAddress || 'unknown';
             if (!nodeId) {
-                winston.warn(`AUDIT: Invalid deregister attempt - missing nodeId, clientIP: ${clientIP}`);
+                // winston.warn(`AUDIT: Invalid deregister attempt - missing nodeId, clientIP: ${clientIP}`);
                 res.writeHead(400, { 'Content-Type': 'application/json' });
                 res.end(errorMissingNodeId);
                 return;
             }
             serviceRegistry.deregister(nodeId);
-            winston.info(`AUDIT: Service deregistered - nodeId: ${nodeId}, clientIP: ${clientIP}`);
+            // winston.info(`AUDIT: Service deregistered - nodeId: ${nodeId}, clientIP: ${clientIP}`);
             res.writeHead(200, { 'Content-Type': 'application/json' });
             res.end(successTrue);
         } catch (error) {
@@ -237,7 +238,7 @@ if (config.lightningMode) {
             const serviceName = query.serviceName;
             const clientIP = req.connection.remoteAddress;
             if (!serviceName) {
-                winston.warn(`AUDIT: Invalid discover attempt - missing serviceName, clientIP: ${clientIP}`);
+                // winston.warn(`AUDIT: Invalid discover attempt - missing serviceName, clientIP: ${clientIP}`);
                 res.writeHead(400, { 'Content-Type': 'application/json' });
                 res.end(errorMissingServiceName);
                 return;
@@ -254,7 +255,7 @@ if (config.lightningMode) {
             }
             const resolvedVersion = version === 'latest' ? serviceRegistry.getLatestVersion(serviceName) : version;
             const fullServiceName = resolvedVersion ? `${serviceName}:${resolvedVersion}` : serviceName;
-            winston.info(`AUDIT: Service discovered - serviceName: ${fullServiceName}, strategy: ${strategy}, tags: ${tags}, node: ${node.nodeName}, clientIP: ${clientIP}`);
+            // winston.info(`AUDIT: Service discovered - serviceName: ${fullServiceName}, strategy: ${strategy}, tags: ${tags}, node: ${node.nodeName}, clientIP: ${clientIP}`);
             res.writeHead(200, { 'Content-Type': 'application/json' });
             res.end(stringifyDiscover({ address: node.address, nodeName: node.nodeName, healthy: true }));
         } catch (error) {
@@ -270,7 +271,7 @@ if (config.lightningMode) {
         try {
             const clientIP = req.connection.remoteAddress || req.socket.remoteAddress || 'unknown';
             const services = serviceRegistry.getServices();
-            winston.info(`AUDIT: Services list requested - count: ${services.length}, clientIP: ${clientIP}`);
+            // winston.info(`AUDIT: Services list requested - count: ${services.length}, clientIP: ${clientIP}`);
             res.writeHead(200, { 'Content-Type': 'application/json' });
             res.end(stringifyServers({ services }));
         } catch (error) {
@@ -287,7 +288,7 @@ if (config.lightningMode) {
             const clientIP = req.connection.remoteAddress || req.socket.remoteAddress || 'unknown';
             const services = serviceRegistry.servicesCount;
             const nodes = serviceRegistry.nodesCount;
-            winston.info(`AUDIT: Health check requested - services: ${services}, nodes: ${nodes}, clientIP: ${clientIP}`);
+            // winston.info(`AUDIT: Health check requested - services: ${services}, nodes: ${nodes}, clientIP: ${clientIP}`);
             res.writeHead(200, { 'Content-Type': 'application/json' });
             res.end(stringifyHealth({ status: 'ok', services, nodes }));
         } catch (error) {
@@ -307,7 +308,7 @@ if (config.lightningMode) {
             const nodes = serviceRegistry.nodesCount;
             const persistenceEnabled = config.persistenceEnabled;
             const persistenceType = config.persistenceType;
-            winston.info(`AUDIT: Metrics requested - clientIP: ${clientIP}`);
+            // winston.info(`AUDIT: Metrics requested - clientIP: ${clientIP}`);
             res.writeHead(200, { 'Content-Type': 'application/json' });
             res.end(stringifyMetrics({ uptime, requests: requestCount, errors: errorCount, services, nodes, persistenceEnabled, persistenceType }));
         } catch (error) {
@@ -330,13 +331,13 @@ if (config.lightningMode) {
             const serviceName = query.serviceName;
             const clientIP = req.connection.remoteAddress || req.socket.remoteAddress || 'unknown';
             if (!serviceName) {
-                winston.warn(`AUDIT: Invalid versions request - missing serviceName, clientIP: ${clientIP}`);
+                // winston.warn(`AUDIT: Invalid versions request - missing serviceName, clientIP: ${clientIP}`);
                 res.writeHead(400, { 'Content-Type': 'application/json' });
                 res.end('{"error": "Missing serviceName"}');
                 return;
             }
             const versions = serviceRegistry.getVersions(serviceName);
-            winston.info(`AUDIT: Versions requested - serviceName: ${serviceName}, versions: ${versions.join(', ')}, clientIP: ${clientIP}`);
+            // winston.info(`AUDIT: Versions requested - serviceName: ${serviceName}, versions: ${versions.join(', ')}, clientIP: ${clientIP}`);
             res.writeHead(200, { 'Content-Type': 'application/json' });
             res.end(JSON.stringify({ serviceName, versions }));
         } catch (error) {
@@ -352,18 +353,18 @@ if (config.lightningMode) {
             const { username, password } = body;
             const clientIP = req.connection.remoteAddress || req.socket.remoteAddress || 'unknown';
             if (!username || !password) {
-                winston.warn(`AUDIT: Signin failed - missing credentials, clientIP: ${clientIP}`);
+                // winston.warn(`AUDIT: Signin failed - missing credentials, clientIP: ${clientIP}`);
                 res.writeHead(400, { 'Content-Type': 'application/json' });
                 res.end('{"error": "Missing username or password"}');
                 return;
             }
             if (username === config.adminUsername && bcrypt.compareSync(password, config.adminPasswordHash)) {
                 const token = jwt.sign({ username, role: 'admin' }, config.jwtSecret, { expiresIn: config.jwtExpiresIn });
-                winston.info(`AUDIT: Signin successful - username: ${username}, clientIP: ${clientIP}`);
+                // winston.info(`AUDIT: Signin successful - username: ${username}, clientIP: ${clientIP}`);
                 res.writeHead(200, { 'Content-Type': 'application/json' });
                 res.end(JSON.stringify({ token }));
             } else {
-                winston.warn(`AUDIT: Signin failed - invalid credentials, username: ${username}, clientIP: ${clientIP}`);
+                // winston.warn(`AUDIT: Signin failed - invalid credentials, username: ${username}, clientIP: ${clientIP}`);
                 res.writeHead(401, { 'Content-Type': 'application/json' });
                 res.end(errorUnauthorized);
             }
@@ -1192,7 +1193,7 @@ if (config.lightningMode) {
 
     if (!config.isTestMode || process.env.WEBSOCKET_ENABLED === 'true') {
         if (!config.isTestMode) {
-            server.listen(constants.PORT, '0.0.0.0', () => {
+            server.listen(constants.PORT, () => {
                 console.log('Maxine lightning-fast server listening on port', constants.PORT);
                 console.log('Lightning mode: minimal features for maximum performance using raw HTTP');
             });
