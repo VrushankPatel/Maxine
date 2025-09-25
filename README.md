@@ -15,8 +15,8 @@ A minimal, high-performance service discovery and registry for microservices.
 - **API Key Management**: Generate, validate, and revoke API keys with per-key rate limiting for secure service access
 - **Access Control Lists (ACLs)**: Fine-grained permissions for service discovery access
 - **Service Intentions**: Define allowed communication patterns between services
- - **Service Dependencies**: Manage service dependencies with cycle detection, graph visualization, and automatic dependency detection through call logging
- - **Version Compatibility Checking**: Define compatibility rules for service versions to prevent incompatible service interactions
+- **Service Dependencies**: Manage service dependencies with cycle detection, graph visualization, and automatic dependency detection through call logging
+- **Version Compatibility Checking**: Define compatibility rules for service versions to prevent incompatible service interactions
 - **Service Call Analytics**: Real-time dashboard visualizing service communication patterns, call frequencies, and dependency graphs with interactive D3.js charts
 - **Advanced Service Validation**: Comprehensive schema validation for service registrations including metadata fields (tags, healthCheck, version, weight)
 - **Chaos Engineering Tools**: Built-in chaos testing with latency injection, failure simulation, and automated experiments for resilience validation
@@ -37,14 +37,12 @@ A minimal, high-performance service discovery and registry for microservices.
 - **Service Mesh Integration**: Automatic Envoy, Istio, and Linkerd configuration generation for seamless service mesh deployment
 - **Open Service Broker API Integration**: Compatible with enterprise service catalogs for seamless integration with Kubernetes Service Catalog and other OSB implementations
 
-
-
 ## Performance
 
 Maxine delivers exceptional performance for service discovery operations:
 
-- **Ultra-Fast Mode**: Average 1.23ms, P95 3.09ms for discovery requests
-- **Throughput**: 37,691+ requests per second under load (50 concurrent users, 5000 iterations)
+- **Ultra-Fast Mode**: Average 0.85ms, P95 1.68ms for discovery requests
+- **Throughput**: 54,459+ requests per second under load (50 concurrent users, 5000 iterations)
 - **Lightning Mode**: Average 4.91ms, P95 6.49ms for discovery requests (100 concurrent users, 1000 iterations)
 - **Throughput**: 20,136+ requests per second under load (100 concurrent users, 1000 iterations)
 - **Optimizations**: HTTP/1.1 for ultra-fast mode (disabled HTTP/2 for lower latency), disabled OpenTelemetry tracing and Prometheus metrics in Lightning Mode, ultra-fast mode with minimal features for maximum speed, fast LCG PRNG, pre-allocated buffers, object pooling, adaptive caching, binary search for weighted random selection, SIMD-inspired fast operations for bulk calculations, removed console.log from production code (24% throughput improvement), optimized discovery to use ultraFastGetRandomNodeSync directly, disabled expensive operations in lightning mode, synchronous load balancing for ultra-fast mode, updated GC flags for Node.js 22 compatibility
@@ -54,6 +52,7 @@ Maxine delivers exceptional performance for service discovery operations:
 Maxine implements comprehensive security measures for production deployments:
 
 ### Security Features
+
 - **Input Validation**: All API endpoints use Joi schema validation with sanitization
 - **Rate Limiting**: Distributed Redis-backed rate limiting to prevent abuse
 - **Authentication**: JWT-based authentication with role-based access control (RBAC)
@@ -63,6 +62,7 @@ Maxine implements comprehensive security measures for production deployments:
 - **Dependency Security**: All dependencies are regularly audited and updated
 
 ### Security Best Practices
+
 - Enable authentication in production: `AUTH_ENABLED=true`
 - Use HTTPS/TLS for all communications
 - Configure rate limiting based on your traffic patterns
@@ -71,6 +71,7 @@ Maxine implements comprehensive security measures for production deployments:
 - Enable audit logging for compliance requirements
 
 ### Security Scanning
+
 ```bash
 # Run security audit
 npm audit
@@ -102,6 +103,7 @@ Maxine runs in **Ultra-Fast Mode** by default for maximum performance with core 
 ## Development
 
 ### Code Quality
+
 Maxine uses modern development tools for code quality and security:
 
 ```bash
@@ -122,6 +124,7 @@ npm run load-test
 ```
 
 ### Development Tools
+
 - **ESLint**: Code linting with security rules
 - **Prettier**: Code formatting
 - **Joi**: Input validation and sanitization
@@ -178,6 +181,7 @@ GET /api/maxine/serviceops/federation/status
 ```
 
 Returns comprehensive failover status including:
+
 - Current primary registry
 - Health status of all federated registries
 - Replication lag metrics
@@ -194,6 +198,7 @@ Returns comprehensive failover status including:
 Maxine supports optional JWT-based authentication in Lightning Mode to secure sensitive operations like backup/restore and tracing.
 
 Enable with `AUTH_ENABLED=true` and configure:
+
 - `JWT_SECRET`: Secret key for JWT signing
 - `JWT_EXPIRES_IN`: Token expiration (default 1h)
 - `ADMIN_USERNAME`: Admin username (default admin)
@@ -206,6 +211,7 @@ Sign in via POST /signin to get a token, then include in requests as `Authorizat
 Maxine supports OAuth2 authentication with Google for external user management.
 
 Enable with `OAUTH2_ENABLED=true` and configure:
+
 - `GOOGLE_CLIENT_ID`: Google OAuth2 client ID
 - `GOOGLE_CLIENT_SECRET`: Google OAuth2 client secret
 
@@ -231,6 +237,7 @@ Maxine supports Role-Based Access Control with fine-grained permissions for diff
 #### Demo Users
 
 For testing, Maxine includes demo users with different roles:
+
 - admin/admin (admin role)
 - operator/operator (operator role)
 - viewer/viewer (viewer role)
@@ -278,6 +285,7 @@ API keys are automatically rate limited based on their configured limits.
 Maxine supports LDAP/Active Directory authentication for enterprise environments.
 
 Enable with `LDAP_ENABLED=true` and configure:
+
 - `LDAP_URL`: LDAP server URL (e.g., `ldap://localhost:389`)
 - `LDAP_BASE_DN`: Base DN for searches (e.g., `dc=example,dc=com`)
 - `LDAP_BIND_USER`: Bind user DN for authentication
@@ -290,6 +298,7 @@ When LDAP is enabled, the `/signin` endpoint will first attempt LDAP authenticat
 Maxine supports SAML 2.0 authentication for enterprise single sign-on integration.
 
 Enable with `SAML_ENABLED=true` and configure:
+
 - `SAML_ENTRY_POINT`: SAML identity provider entry point URL
 - `SAML_ISSUER`: SAML service provider issuer
 - `SAML_CERT`: SAML identity provider certificate (public key)
@@ -302,11 +311,13 @@ Redirect users to GET `/auth/saml` to start SAML authentication flow, then handl
 Maxine supports Mutual TLS for encrypted and authenticated service-to-service communication in Lightning Mode.
 
 Enable with `MTLS_ENABLED=true` and provide certificate paths:
+
 - `SERVER_CERT_PATH`: Path to server certificate (default: src/main/config/certs/server.crt)
 - `SERVER_KEY_PATH`: Path to server private key (default: src/main/config/certs/server.key)
 - `CA_CERT_PATH`: Path to CA certificate for client verification (default: src/main/config/certs/ca.crt)
 
 To generate self-signed certificates for testing, run:
+
 ```bash
 node src/main/config/certs/generate-certs.js
 ```
@@ -314,6 +325,7 @@ node src/main/config/certs/generate-certs.js
 This creates CA, server, and client certificates. Use client.crt and client.key for client authentication.
 
 Example curl with client cert:
+
 ```bash
 curl --cert src/main/config/certs/client.crt --key src/main/config/certs/client.key --cacert src/main/config/certs/ca.crt https://localhost:8080/health
 ```
@@ -323,6 +335,7 @@ curl --cert src/main/config/certs/client.crt --key src/main/config/certs/client.
 Maxine supports optional MQTT integration for publishing real-time events to MQTT brokers.
 
 Enable with `MQTT_ENABLED=true` and configure:
+
 - `MQTT_BROKER`: MQTT broker URL (default mqtt://localhost:1883)
 - `MQTT_TOPIC`: Base topic for events (default maxine/registry/events)
 
@@ -337,6 +350,7 @@ Maxine supports OpenTelemetry tracing for distributed observability. Traces are 
 Configure Jaeger exporter with `JAEGER_ENDPOINT` environment variable (default: `http://localhost:14268/api/traces`).
 
 Tracing is enabled by default and provides detailed spans for:
+
 - Service registration/deregistration
 - Service discovery with load balancing
 - API request handling
@@ -357,6 +371,7 @@ To run in full mode: `LIGHTNING_MODE=false npm start`
 #### HTTP API
 
 ##### Register a Service
+
 ```http
 POST /register
 Content-Type: application/json
@@ -372,6 +387,7 @@ Content-Type: application/json
 Note: `version` in metadata enables service versioning. `weight` in metadata is used for `weighted-random` load balancing (default 1). `tags` in metadata is an array of strings for service tagging and filtering. `healthCheck` in metadata configures proactive health monitoring with `url` (default "/health"), `interval` (default 30000ms), and `timeout` (default 5000ms).
 
 Response:
+
 ```json
 {
   "nodeId": "my-service:localhost:3000"
@@ -379,6 +395,7 @@ Response:
 ```
 
 ##### Discover a Service
+
 ```http
 GET /discover?serviceName=my-service&loadBalancing=round-robin&version=1.0&tags=web,api
 ```
@@ -388,6 +405,7 @@ Load balancing options: `round-robin` (default), `random`, `weighted-random`, `l
 Response: Returns a service instance or 404 if not found.
 
 ##### Heartbeat
+
 ```http
 POST /heartbeat
 Content-Type: application/json
@@ -398,6 +416,7 @@ Content-Type: application/json
 ```
 
 ##### Deregister a Service
+
 ```http
 DELETE /deregister
 Content-Type: application/json
@@ -408,41 +427,50 @@ Content-Type: application/json
 ```
 
 ##### List All Services
+
 ```http
 GET /servers
 ```
 
 ##### Health Check
+
 ```http
 GET /health
 ```
+
 Returns status, services count, nodes count.
 
 ##### Metrics
+
 ```http
 GET /metrics
 ```
+
 Returns uptime, requests, errors, services, nodes, persistenceEnabled, persistenceType, wsConnections, eventsBroadcasted, cacheHits, cacheMisses.
 
 Additionally, comprehensive Prometheus-compatible metrics are exposed on port 9464 at `/metrics`, including:
+
 - `maxine_service_registrations_total`: Total service registrations
 - `maxine_service_discoveries_total{service_name, strategy}`: Total service discoveries by service and strategy
 - `maxine_service_heartbeats_total`: Total heartbeats
 - `maxine_service_deregistrations_total`: Total deregistrations
- - `maxine_cache_hits_total`: Cache hits
- - `maxine_cache_misses_total`: Cache misses
- - `maxine_redis_cache_hit_total`: Redis distributed cache hits
- - `maxine_redis_cache_miss_total`: Redis distributed cache misses
- - `maxine_services_active`: Active services count
- - `maxine_nodes_active`: Active nodes count
+- `maxine_cache_hits_total`: Cache hits
+- `maxine_cache_misses_total`: Cache misses
+- `maxine_redis_cache_hit_total`: Redis distributed cache hits
+- `maxine_redis_cache_miss_total`: Redis distributed cache misses
+- `maxine_services_active`: Active services count
+- `maxine_nodes_active`: Active nodes count
 - `maxine_circuit_breakers_open`: Open circuit breakers count
 - `maxine_response_time_seconds{operation}`: Response time histogram for operations (register, discover, heartbeat, deregister)
 
 ##### Dashboard
+
 ```http
 GET /dashboard
 ```
+
 Returns an advanced HTML dashboard with real-time metrics, charts, service topology, and event streaming for comprehensive monitoring. Features include:
+
 - Real-time stats updates via WebSocket
 - Interactive charts for node health and cache performance
 - Service and node status visualization
@@ -450,10 +478,13 @@ Returns an advanced HTML dashboard with real-time metrics, charts, service topol
 - Connection status indicators
 
 ##### Dependency Graph
+
 ```http
 GET /dependency-graph
 ```
+
 Returns an interactive HTML page visualizing the service dependency graph using D3.js. Features include:
+
 - Force-directed graph layout
 - Click on nodes to view dependency impact (dependencies and dependents)
 - Cycle detection alerts
@@ -461,27 +492,34 @@ Returns an interactive HTML page visualizing the service dependency graph using 
 - Real-time updates (planned)
 
 ##### Heap Dump
+
 ```http
 GET /heapdump
 ```
+
 Creates a heap snapshot file for memory profiling (requires heapdump module).
 
 ##### Backup Registry
+
 ```http
 GET /backup
 ```
+
 Returns the current registry state as JSON (requires persistence enabled).
 
 ##### Restore Registry
+
 ```http
 POST /restore
 Content-Type: application/json
 
 { ... registry data ... }
 ```
+
 Restores registry from backup data (requires persistence enabled).
 
 ##### Start Trace
+
 ```http
 POST /trace/start
 Content-Type: application/json
@@ -493,6 +531,7 @@ Content-Type: application/json
 ```
 
 ##### Add Trace Event
+
 ```http
 POST /trace/event
 Content-Type: application/json
@@ -504,6 +543,7 @@ Content-Type: application/json
 ```
 
 ##### End Trace
+
 ```http
 POST /trace/end
 Content-Type: application/json
@@ -514,13 +554,16 @@ Content-Type: application/json
 ```
 
 ##### Get Trace
+
 ```http
 GET /trace/:id
 ```
+
 Returns the trace data for the given id, including start time, duration, events, and status.
 
 **OpenTelemetry Integration:**
 Maxine includes comprehensive OpenTelemetry tracing for all registry operations:
+
 - Service registration/deregistration
 - Service discovery with load balancing
 - Heartbeat operations
@@ -530,11 +573,13 @@ Maxine includes comprehensive OpenTelemetry tracing for all registry operations:
 Traces are automatically exported to Jaeger or Zipkin when configured. Set `JAEGER_ENDPOINT` or `ZIPKIN_ENDPOINT` environment variables to enable trace export.
 
 ##### Get Service Versions
+
 ```http
 GET /versions?serviceName=my-service
 ```
 
 Response:
+
 ```json
 {
   "serviceName": "my-service",
@@ -543,100 +588,111 @@ Response:
 ```
 
 ##### DNS Service Discovery
+
 Maxine supports DNS-based service discovery for compatibility with standard DNS clients.
 
 Enable with `DNS_ENABLED=true` (default) and configure `DNS_PORT` (default 53).
 
 Query SRV records for service discovery:
+
 ```
 dig SRV _my-service._tcp.default.default.default @localhost
 ```
 
 Or A records for direct IP resolution:
+
 ```
 dig A my-service.default.default.default @localhost
 ```
 
 This allows integration with DNS-aware applications and load balancers.
 
- ##### Get Anomalies
- ```http
- GET /anomalies
- ```
+##### Get Anomalies
 
- Returns detected anomalies in the service registry using statistical analysis and machine learning algorithms. Anomalies are prioritized by severity.
+```http
+GET /anomalies
+```
 
- **Anomaly Types:**
- - `high_circuit_failures`: Excessive circuit breaker failures
- - `no_healthy_nodes`: Service has nodes but none are healthy
- - `no_nodes`: Service has no registered nodes
- - `high_response_time`: Response time exceeds 3 standard deviations from mean
- - `response_time_trend`: Significant increase in response times over time
- - `stale_heartbeat`: Node hasn't sent heartbeat within expected interval
- - `high_error_rate`: Error rate exceeds 10%
+Returns detected anomalies in the service registry using statistical analysis and machine learning algorithms. Anomalies are prioritized by severity.
 
- Response:
- ```json
- {
-   "anomalies": [
-     {
-       "serviceName": "my-service",
-       "type": "high_response_time",
-       "value": 2500,
-       "threshold": 1500,
-       "severity": "medium"
-     },
-     {
-       "serviceName": "bad-service",
-       "type": "no_healthy_nodes",
-       "severity": "critical"
-     }
-   ]
- }
- ```
+**Anomaly Types:**
 
- ##### Get Health Scores
- ```http
- GET /health-score?serviceName=my-service
- ```
+- `high_circuit_failures`: Excessive circuit breaker failures
+- `no_healthy_nodes`: Service has nodes but none are healthy
+- `no_nodes`: Service has no registered nodes
+- `high_response_time`: Response time exceeds 3 standard deviations from mean
+- `response_time_trend`: Significant increase in response times over time
+- `stale_heartbeat`: Node hasn't sent heartbeat within expected interval
+- `high_error_rate`: Error rate exceeds 10%
 
- Returns health scores (0-100, higher better) for all healthy nodes in the service, based on response times, failure rates, and circuit breaker state.
+Response:
 
- Response:
- ```json
- {
-   "serviceName": "my-service",
-   "scores": {
-     "my-service:localhost:3000": 85,
-     "my-service:localhost:3001": 92
-   }
- }
- ```
+```json
+{
+  "anomalies": [
+    {
+      "serviceName": "my-service",
+      "type": "high_response_time",
+      "value": 2500,
+      "threshold": 1500,
+      "severity": "medium"
+    },
+    {
+      "serviceName": "bad-service",
+      "type": "no_healthy_nodes",
+      "severity": "critical"
+    }
+  ]
+}
+```
 
- ##### Predict Service Health
- ```http
- GET /predict-health?serviceName=my-service&window=300000
- ```
+##### Get Health Scores
 
- Returns health predictions for service nodes using time-series analysis. The `window` parameter specifies the prediction time window in milliseconds (default: 300000ms / 5 minutes).
+```http
+GET /health-score?serviceName=my-service
+```
 
- Response:
- ```json
- {
-   "serviceName": "my-service",
-   "predictions": {
-     "my-service:localhost:3000": {
-       "currentScore": 85,
-       "predictedScore": 78,
-       "trend": 2.5,
-       "predictedResponseTime": 180
-     }
-   },
-   "predictionWindow": 300000
- }
- ```
+Returns health scores (0-100, higher better) for all healthy nodes in the service, based on response times, failure rates, and circuit breaker state.
+
+Response:
+
+```json
+{
+  "serviceName": "my-service",
+  "scores": {
+    "my-service:localhost:3000": 85,
+    "my-service:localhost:3001": 92
+  }
+}
+```
+
+##### Predict Service Health
+
+```http
+GET /predict-health?serviceName=my-service&window=300000
+```
+
+Returns health predictions for service nodes using time-series analysis. The `window` parameter specifies the prediction time window in milliseconds (default: 300000ms / 5 minutes).
+
+Response:
+
+```json
+{
+  "serviceName": "my-service",
+  "predictions": {
+    "my-service:localhost:3000": {
+      "currentScore": 85,
+      "predictedScore": 78,
+      "trend": 2.5,
+      "predictedResponseTime": 180
+    }
+  },
+  "predictionWindow": 300000
+}
+```
 
 ##### Set Traffic Distribution (Canary Deployments)
+
 ```http
 POST /traffic/set
 Content-Type: application/json
@@ -648,6 +704,7 @@ Content-Type: application/json
 ```
 
 ##### Promote Version (Blue-Green Deployment)
+
 ```http
 POST /version/promote
 Content-Type: application/json
@@ -659,6 +716,7 @@ Content-Type: application/json
 ```
 
 ##### Retire Version
+
 ```http
 POST /version/retire
 Content-Type: application/json
@@ -670,6 +728,7 @@ Content-Type: application/json
 ```
 
 ##### Shift Traffic Gradually
+
 ```http
 POST /traffic/shift
 Content-Type: application/json
@@ -683,6 +742,7 @@ Content-Type: application/json
 ```
 
 ##### Set Service Config
+
 ```http
 POST /api/maxine/serviceops/config/set
 Content-Type: application/json
@@ -698,22 +758,27 @@ Content-Type: application/json
 ```
 
 ##### Get Service Config
+
 ```http
 GET /api/maxine/serviceops/config/get?serviceName=my-service&key=timeout&namespace=default&region=us-east&zone=zone1
 ```
 
 ##### Get All Service Configs
+
 ```http
 GET /api/maxine/serviceops/config/all?serviceName=my-service&namespace=default&region=us-east&zone=zone1
 ```
 
 ##### Watch Service Config Changes
+
 ```http
 GET /api/maxine/serviceops/config/watch?serviceName=my-service&namespace=default&region=us-east&zone=zone1
 ```
+
 Returns Server-Sent Events for real-time config changes.
 
 ##### Delete Service Config
+
 ```http
 DELETE /api/maxine/serviceops/config/delete
 Content-Type: application/json
@@ -728,16 +793,21 @@ Content-Type: application/json
 ```
 
 ##### Generate Envoy Config
+
 ```http
 GET /api/maxine/serviceops/envoy/config
 ```
+
 Returns Envoy proxy configuration JSON based on registered services, suitable for service mesh integration. Includes enhanced observability with access logging, custom headers, and circuit breaker metrics.
 
 ##### Service Mesh Metrics
+
 ```http
 GET /api/maxine/serviceops/service-mesh/metrics
 ```
+
 Returns comprehensive service mesh observability metrics including:
+
 - Configuration generations (Envoy, Istio, Linkerd)
 - Circuit breaker statistics
 - Retry attempt counts
@@ -745,15 +815,19 @@ Returns comprehensive service mesh observability metrics including:
 - Active service and node counts
 
 ##### Generate Istio Config
+
 ```http
 GET /service-mesh/istio-config
 ```
+
 Returns Istio VirtualService and DestinationRule configurations in JSON format for service mesh deployment.
 
 ##### Generate Linkerd Config
+
 ```http
 GET /service-mesh/linkerd-config
 ```
+
 Returns Linkerd ServiceProfile configurations in JSON format for service mesh deployment, including retry budgets and route conditions.
 
 ### Open Service Broker API
@@ -761,6 +835,7 @@ Returns Linkerd ServiceProfile configurations in JSON format for service mesh de
 Maxine supports the Open Service Broker API for integration with enterprise service catalogs.
 
 ##### Get Catalog
+
 ```http
 GET /v2/catalog
 ```
@@ -768,6 +843,7 @@ GET /v2/catalog
 Returns the service catalog in OSB format, listing all registered services and their versions as plans.
 
 Response:
+
 ```json
 {
   "services": [
@@ -789,18 +865,23 @@ Response:
 ```
 
 ##### Get Circuit Breaker State
+
 ```http
 GET /circuit-breaker/:nodeId
 ```
+
 Returns the circuit breaker state for the specified node, including state (closed/open/half-open), failure count, last failure timestamp, and next retry timestamp.
 
 ##### Get Event History
+
 ```http
 GET /events?since=<timestamp>&limit=<number>
 ```
+
 Returns recent events from the event history. Use `since` to get events after a specific timestamp (default 0), and `limit` to limit the number of events returned (default 100).
 
 ##### Add Service to Blacklist
+
 ```http
 POST /blacklist/add
 Content-Type: application/json
@@ -811,6 +892,7 @@ Content-Type: application/json
 ```
 
 ##### Remove Service from Blacklist
+
 ```http
 DELETE /blacklist/remove
 Content-Type: application/json
@@ -821,29 +903,36 @@ Content-Type: application/json
 ```
 
 ##### Get Blacklist
+
 ```http
 GET /blacklist
 ```
+
 Returns the list of blacklisted services.
 
 ##### GraphQL API
+
 ```http
 GET /graphql
 POST /graphql
 ```
+
 Maxine provides a GraphQL API for flexible queries and mutations. The GraphQL playground is available at `/graphql` for testing queries.
 
 **Queries:**
+
 - `services`: Get all registered services
 - `service(serviceName: String!)`: Get a specific service
 - `discover(serviceName: String!, ip: String, group: String, tags: [String], deployment: String, filter: String)`: Discover a service instance
 - `healthScores(serviceName: String!)`: Get health scores for all nodes in a service
 
 **Mutations:**
+
 - `register(serviceName: String!, nodeName: String!, address: String!, metadata: String)`: Register a service
 - `deregister(serviceName: String!, nodeName: String!)`: Deregister a service
 
 ##### Set Service Config
+
 ```http
 POST /config/set
 Content-Type: application/json
@@ -857,45 +946,53 @@ Content-Type: application/json
 ```
 
 ##### Get Service Config
+
 ```http
 GET /config/get?serviceName=my-service&key=timeout
 ```
 
 ##### Get All Service Configs
+
 ```http
 GET /config/all?serviceName=my-service
 ```
 
 ##### Delete Service Config
+
 ```http
 DELETE /config/delete?serviceName=my-service&key=timeout
 ```
 
- ##### Record Response Time
- ```http
- POST /record-response-time
- Content-Type: application/json
+##### Record Response Time
 
- {
-   "nodeId": "my-service:localhost:3000",
-   "responseTime": 150
- }
- ```
- Records the response time for a node to enable predictive load balancing based on historical performance data.
+```http
+POST /record-response-time
+Content-Type: application/json
 
- ##### Record Service Call
- ```http
- POST /record-call
- Content-Type: application/json
+{
+  "nodeId": "my-service:localhost:3000",
+  "responseTime": 150
+}
+```
 
- {
-   "callerService": "web-service",
-   "calledService": "api-service"
- }
- ```
- Records a service call for automatic dependency detection. Services can report their outbound calls to enable auto-detection of service dependencies.
+Records the response time for a node to enable predictive load balancing based on historical performance data.
+
+##### Record Service Call
+
+```http
+POST /record-call
+Content-Type: application/json
+
+{
+  "callerService": "web-service",
+  "calledService": "api-service"
+}
+```
+
+Records a service call for automatic dependency detection. Services can report their outbound calls to enable auto-detection of service dependencies.
 
 ##### Add Service Dependency
+
 ```http
 POST /api/maxine/serviceops/dependency/add
 Content-Type: application/json
@@ -907,6 +1004,7 @@ Content-Type: application/json
 ```
 
 ##### Remove Service Dependency
+
 ```http
 POST /api/maxine/serviceops/dependency/remove
 Content-Type: application/json
@@ -918,11 +1016,13 @@ Content-Type: application/json
 ```
 
 ##### Get Service Dependencies
+
 ```http
 GET /api/maxine/serviceops/dependency/get?serviceName=my-service
 ```
 
 Response:
+
 ```json
 {
   "serviceName": "my-service",
@@ -931,11 +1031,13 @@ Response:
 ```
 
 ##### Get Service Dependents
+
 ```http
 GET /api/maxine/serviceops/dependency/dependents?serviceName=my-service
 ```
 
 Response:
+
 ```json
 {
   "serviceName": "my-service",
@@ -944,11 +1046,13 @@ Response:
 ```
 
 ##### Get Dependency Graph
+
 ```http
 GET /api/maxine/serviceops/dependency/graph
 ```
 
 Response:
+
 ```json
 {
   "my-service": ["dependent-service"],
@@ -957,81 +1061,91 @@ Response:
 ```
 
 ##### Detect Circular Dependencies
+
 ```http
 GET /api/maxine/serviceops/dependency/cycles
 ```
 
 Response:
+
 ```json
 {
   "cycles": [["service-a", "service-b", "service-a"]]
 }
 ```
 
- ##### Analyze Dependencies
- ```http
- POST /api/maxine/serviceops/dependency/analyze
- ```
+##### Analyze Dependencies
 
- Triggers automatic dependency analysis based on recorded service calls. Dependencies are inferred from call logs where services have called each other above the configured threshold within the time window.
+```http
+POST /api/maxine/serviceops/dependency/analyze
+```
 
- Response:
- ```json
- {
-   "success": true,
-   "message": "Dependency analysis completed"
- }
- ```
+Triggers automatic dependency analysis based on recorded service calls. Dependencies are inferred from call logs where services have called each other above the configured threshold within the time window.
 
- ##### Set Compatibility Rule
- ```http
- POST /api/maxine/serviceops/compatibility/set
- Content-Type: application/json
+Response:
 
- {
-   "serviceName": "my-service",
-   "version": "1.0",
-   "compatibleVersions": ["1.0", "1.1", "^1.0.0"]
- }
- ```
+```json
+{
+  "success": true,
+  "message": "Dependency analysis completed"
+}
+```
 
- ##### Get Compatibility Rules
- ```http
- GET /api/maxine/serviceops/compatibility/get?serviceName=my-service&version=1.0
- ```
+##### Set Compatibility Rule
 
- Response:
- ```json
- {
-   "serviceName": "my-service",
-   "version": "1.0",
-   "rules": ["1.0", "1.1", "^1.0.0"]
- }
- ```
+```http
+POST /api/maxine/serviceops/compatibility/set
+Content-Type: application/json
 
- ##### Check Compatibility
- ```http
- POST /api/maxine/serviceops/compatibility/check
- Content-Type: application/json
+{
+  "serviceName": "my-service",
+  "version": "1.0",
+  "compatibleVersions": ["1.0", "1.1", "^1.0.0"]
+}
+```
 
- {
-   "serviceName": "my-service",
-   "version": "1.0",
-   "requiredVersion": "1.1"
- }
- ```
+##### Get Compatibility Rules
 
- Response:
- ```json
- {
-   "serviceName": "my-service",
-   "version": "1.0",
-   "requiredVersion": "1.1",
-   "compatible": true
- }
- ```
+```http
+GET /api/maxine/serviceops/compatibility/get?serviceName=my-service&version=1.0
+```
+
+Response:
+
+```json
+{
+  "serviceName": "my-service",
+  "version": "1.0",
+  "rules": ["1.0", "1.1", "^1.0.0"]
+}
+```
+
+##### Check Compatibility
+
+```http
+POST /api/maxine/serviceops/compatibility/check
+Content-Type: application/json
+
+{
+  "serviceName": "my-service",
+  "version": "1.0",
+  "requiredVersion": "1.1"
+}
+```
+
+Response:
+
+```json
+{
+  "serviceName": "my-service",
+  "version": "1.0",
+  "requiredVersion": "1.1",
+  "compatible": true
+}
+```
 
 ##### Set ACL
+
 ```http
 POST /api/maxine/serviceops/acl/set
 Content-Type: application/json
@@ -1044,11 +1158,13 @@ Content-Type: application/json
 ```
 
 ##### Get ACL
+
 ```http
 GET /api/maxine/serviceops/acl/:serviceName
 ```
 
 Response:
+
 ```json
 {
   "allow": ["service-a", "service-b"],
@@ -1057,6 +1173,7 @@ Response:
 ```
 
 ##### Set Intention
+
 ```http
 POST /api/maxine/serviceops/intention/set
 Content-Type: application/json
@@ -1069,11 +1186,13 @@ Content-Type: application/json
 ```
 
 ##### Get Intention
+
 ```http
 GET /api/maxine/serviceops/intention/:source/:destination
 ```
 
 Response:
+
 ```json
 {
   "source": "service-a",
@@ -1083,6 +1202,7 @@ Response:
 ```
 
 ##### Add Service Dependency
+
 ```http
 POST /api/maxine/serviceops/dependency/add
 Content-Type: application/json
@@ -1094,6 +1214,7 @@ Content-Type: application/json
 ```
 
 ##### Remove Service Dependency
+
 ```http
 POST /api/maxine/serviceops/dependency/remove
 Content-Type: application/json
@@ -1105,32 +1226,39 @@ Content-Type: application/json
 ```
 
 ##### Get Service Dependencies
+
 ```http
 GET /api/maxine/serviceops/dependency/get?serviceName=my-service
 ```
 
 ##### Get Service Dependents
+
 ```http
 GET /api/maxine/serviceops/dependency/dependents?serviceName=my-service
 ```
 
 ##### Get Dependency Graph
+
 ```http
 GET /api/maxine/serviceops/dependency/graph
 ```
 
 ##### Detect Circular Dependencies
+
 ```http
 GET /api/maxine/serviceops/dependency/cycles
 ```
 
 ##### Proxy to Service
+
 ```http
 GET /proxy/:serviceName/:path
 ```
+
 Proxies requests to a discovered service instance. For example, `/proxy/my-service/health` will proxy to the health endpoint of a random instance of `my-service`.
 
 ##### Sign In (Authentication)
+
 ```http
 POST /signin
 Content-Type: application/json
@@ -1142,18 +1270,21 @@ Content-Type: application/json
 ```
 
 Response:
+
 ```json
 {
   "token": "jwt-token-here"
 }
 ```
 
-Use the token in Authorization header: `Bearer <token>` for protected endpoints like /backup, /restore, /trace/*.
+Use the token in Authorization header: `Bearer <token>` for protected endpoints like /backup, /restore, /trace/\*.
 
 ##### OAuth2 Authentication
+
 Maxine supports OAuth2 with Google for external authentication.
 
 Enable with `OAUTH2_ENABLED=true` and configure:
+
 - `GOOGLE_CLIENT_ID`: Google OAuth2 client ID
 - `GOOGLE_CLIENT_SECRET`: Google OAuth2 client secret
 - `GOOGLE_CALLBACK_URL`: Callback URL (default: http://localhost:8080/auth/google/callback)
@@ -1163,9 +1294,11 @@ Start OAuth flow: `GET /auth/google`
 Callback: `GET /auth/google/callback` returns JWT token.
 
 ##### Chaos Engineering
+
 Maxine includes chaos engineering tools for resilience testing.
 
 ###### Inject Latency
+
 ```http
 POST /api/maxine/chaos/inject-latency
 Content-Type: application/json
@@ -1177,6 +1310,7 @@ Content-Type: application/json
 ```
 
 ###### Inject Failure
+
 ```http
 POST /api/maxine/chaos/inject-failure
 Content-Type: application/json
@@ -1188,6 +1322,7 @@ Content-Type: application/json
 ```
 
 ###### Reset Chaos
+
 ```http
 POST /api/maxine/chaos/reset
 Content-Type: application/json
@@ -1198,11 +1333,13 @@ Content-Type: application/json
 ```
 
 ###### Get Chaos Status
+
 ```http
 GET /api/maxine/chaos/status
 ```
 
 ##### Get Scaling Recommendations
+
 ```http
 GET /api/maxine/serviceops/scaling/recommendations?serviceName=my-service
 ```
@@ -1210,6 +1347,7 @@ GET /api/maxine/serviceops/scaling/recommendations?serviceName=my-service
 Returns intelligent scaling recommendations based on service metrics analysis. Analyzes response times, connection counts, and node health to suggest scale up/down actions.
 
 Response:
+
 ```json
 {
   "serviceName": "my-service",
@@ -1233,6 +1371,7 @@ Response:
 ```
 
 ##### Refresh Token
+
 ```http
 POST /refresh-token
 Content-Type: application/json
@@ -1243,6 +1382,7 @@ Content-Type: application/json
 ```
 
 Response:
+
 ```json
 {
   "token": "new-jwt-token"
@@ -1256,6 +1396,7 @@ Maxine supports gRPC for high-performance service registration and discovery.
 Default gRPC port: 50051
 
 Available methods:
+
 - Register: Register a service instance
 - Discover: Discover a service instance with load balancing
 - Heartbeat: Send heartbeat for a service instance
@@ -1271,6 +1412,7 @@ Client SDKs can be generated from `api-specs/maxine.proto`.
 Maxine supports real-time event streaming via WebSocket for monitoring service changes.
 
 ##### Connect to WebSocket
+
 ```
 ws://localhost:8080
 ```
@@ -1303,6 +1445,7 @@ Clients can subscribe to specific events by sending a JSON message:
 ```
 
 Supported filter criteria:
+
 - `event`: Filter by event type (e.g., "service_registered", "circuit_open")
 - `serviceName`: Filter by service name
 - `nodeId`: Filter by node ID
@@ -1332,6 +1475,7 @@ If no filter is set, all events are received.
 The server broadcasts the following events as JSON messages:
 
 - `service_registered`: When a new service instance is registered
+
   ```json
   {
     "event": "service_registered",
@@ -1344,6 +1488,7 @@ The server broadcasts the following events as JSON messages:
   ```
 
 - `service_deregistered`: When a service instance is deregistered
+
   ```json
   {
     "event": "service_deregistered",
@@ -1355,6 +1500,7 @@ The server broadcasts the following events as JSON messages:
   ```
 
 - `service_heartbeat`: When a service instance sends a heartbeat
+
   ```json
   {
     "event": "service_heartbeat",
@@ -1366,6 +1512,7 @@ The server broadcasts the following events as JSON messages:
   ```
 
 - `service_unhealthy`: When a service instance is removed due to expired heartbeat
+
   ```json
   {
     "event": "service_unhealthy",
@@ -1377,6 +1524,7 @@ The server broadcasts the following events as JSON messages:
   ```
 
 - `config_changed`: When a service configuration is updated
+
   ```json
   {
     "event": "config_changed",
@@ -1407,18 +1555,16 @@ The server broadcasts the following events as JSON messages:
   }
   ```
 
-
-
-
-
 ### Full Mode API
 
 Full Mode provides additional endpoints for advanced features like federation, tracing, ACLs, intentions, and service blacklists. These are available under `/api/maxine/serviceops/`.
 
 ##### Chaos Engineering
+
 Maxine includes chaos engineering tools for resilience testing.
 
 ###### Inject Latency
+
 ```http
 POST /api/maxine/chaos/inject-latency
 Content-Type: application/json
@@ -1430,6 +1576,7 @@ Content-Type: application/json
 ```
 
 ###### Inject Failure
+
 ```http
 POST /api/maxine/chaos/inject-failure
 Content-Type: application/json
@@ -1441,6 +1588,7 @@ Content-Type: application/json
 ```
 
 ###### Reset Chaos
+
 ```http
 POST /api/maxine/chaos/reset
 Content-Type: application/json
@@ -1451,11 +1599,13 @@ Content-Type: application/json
 ```
 
 ###### Get Chaos Status
+
 ```http
 GET /api/maxine/chaos/status
 ```
 
 ##### Add Federated Registry
+
 ```http
 POST /api/maxine/serviceops/federation/add
 Content-Type: application/json
@@ -1467,6 +1617,7 @@ Content-Type: application/json
 ```
 
 ##### Remove Federated Registry
+
 ```http
 POST /api/maxine/serviceops/federation/remove
 Content-Type: application/json
@@ -1477,11 +1628,13 @@ Content-Type: application/json
 ```
 
 ##### Get Federated Registries
+
 ```http
 GET /api/maxine/serviceops/federation
 ```
 
 ##### Start Trace
+
 ```http
 POST /api/maxine/serviceops/trace/start
 Content-Type: application/json
@@ -1493,6 +1646,7 @@ Content-Type: application/json
 ```
 
 ##### Add Trace Event
+
 ```http
 POST /api/maxine/serviceops/trace/event
 Content-Type: application/json
@@ -1504,6 +1658,7 @@ Content-Type: application/json
 ```
 
 ##### End Trace
+
 ```http
 POST /api/maxine/serviceops/trace/end
 Content-Type: application/json
@@ -1514,11 +1669,13 @@ Content-Type: application/json
 ```
 
 ##### Get Trace
+
 ```http
 GET /api/maxine/serviceops/trace/:id
 ```
 
 ##### Set ACL
+
 ```http
 POST /api/maxine/serviceops/acl/set
 Content-Type: application/json
@@ -1531,11 +1688,13 @@ Content-Type: application/json
 ```
 
 ##### Get ACL
+
 ```http
 GET /api/maxine/serviceops/acl/:serviceName
 ```
 
 ##### Set Intention
+
 ```http
 POST /api/maxine/serviceops/intention/set
 Content-Type: application/json
@@ -1548,11 +1707,13 @@ Content-Type: application/json
 ```
 
 ##### Get Intention
+
 ```http
 GET /api/maxine/serviceops/intention/:source/:destination
 ```
 
 ##### Add Service to Blacklist
+
 ```http
 POST /api/maxine/serviceops/blacklist/service/add
 Content-Type: application/json
@@ -1563,6 +1724,7 @@ Content-Type: application/json
 ```
 
 ##### Remove Service from Blacklist
+
 ```http
 POST /api/maxine/serviceops/blacklist/service/remove
 Content-Type: application/json
@@ -1573,6 +1735,7 @@ Content-Type: application/json
 ```
 
 ##### Check if Service is Blacklisted
+
 ```http
 GET /api/maxine/serviceops/blacklist/service/:serviceName
 ```
@@ -1632,6 +1795,7 @@ GET /discover?serviceName=my-service&loadBalancing=advanced-ml
 ### Model Training
 
 Models are trained automatically on:
+
 - Response times
 - Success/failure rates
 - Load patterns
@@ -1681,9 +1845,7 @@ Maxine maintains an in-memory registry of services and their instances. Services
 - Optimized heartbeat and discovery logic with parallel operations and async I/O
 - Active health checks for proactive service monitoring
 - Event-driven notifications for real-time updates
-  - Load test results: 5,000 requests with 50 concurrent users in ~0.37s, average response time 3.53ms, 95th percentile 6.22ms, 100% success rate, 13k req/s
-          - Load test target: 95th percentile < 10ms for 50 concurrent users (achieved)
-          - Recent optimizations: Removed console.log statements from production code to reduce I/O overhead, implemented object pooling for response objects to reduce GC pressure, added service health prediction using time-series analysis, adaptive caching with access-based TTL, SIMD-inspired binary search for weighted random selection, fine-tuned GC settings, added CPU affinity, synchronous ultra-fast discovery, pre-allocated JSON buffers
+  - Load test results: 5,000 requests with 50 concurrent users in ~0.37s, average response time 3.53ms, 95th percentile 6.22ms, 100% success rate, 13k req/s - Load test target: 95th percentile < 10ms for 50 concurrent users (achieved) - Recent optimizations: Removed console.log statements from production code to reduce I/O overhead, implemented object pooling for response objects to reduce GC pressure, added service health prediction using time-series analysis, adaptive caching with access-based TTL, SIMD-inspired binary search for weighted random selection, fine-tuned GC settings, added CPU affinity, synchronous ultra-fast discovery, pre-allocated JSON buffers
 
 ## License
 
