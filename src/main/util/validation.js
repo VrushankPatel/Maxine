@@ -10,40 +10,28 @@ const serviceRegistrationSchema = Joi.object({
     .pattern(/^[a-zA-Z0-9_-]+$/)
     .required()
     .messages({
-      'string.pattern.base': 'serviceName must contain only alphanumeric characters, hyphens, and underscores',
-      'any.required': 'serviceName is required'
+      'string.pattern.base':
+        'serviceName must contain only alphanumeric characters, hyphens, and underscores',
+      'any.required': 'serviceName is required',
     }),
 
-  host: Joi.string()
-    .min(1)
-    .max(255)
-    .optional(),
+  host: Joi.string().min(1).max(255).optional(),
 
-  hostName: Joi.string()
-    .min(1)
-    .max(255)
-    .optional(),
+  hostName: Joi.string().min(1).max(255).optional(),
 
   nodeName: Joi.string()
     .min(1)
     .max(255)
     .pattern(/^[a-zA-Z0-9_-]+$/)
-    .required()
+    .optional()
     .messages({
-      'string.pattern.base': 'nodeName must contain only alphanumeric characters, hyphens, and underscores',
-      'any.required': 'nodeName is required'
+      'string.pattern.base':
+        'nodeName must contain only alphanumeric characters, hyphens, and underscores',
     }),
 
-  port: Joi.number()
-    .integer()
-    .min(1)
-    .max(65535)
-    .optional(),
+  port: Joi.number().integer().min(1).max(65535).optional(),
 
-  version: Joi.string()
-    .min(1)
-    .max(50)
-    .optional(),
+  version: Joi.string().min(1).max(50).optional(),
 
   namespace: Joi.string()
     .min(1)
@@ -51,7 +39,8 @@ const serviceRegistrationSchema = Joi.object({
     .pattern(/^[a-zA-Z0-9_-]+$/)
     .optional()
     .messages({
-      'string.pattern.base': 'namespace must contain only alphanumeric characters, hyphens, and underscores'
+      'string.pattern.base':
+        'namespace must contain only alphanumeric characters, hyphens, and underscores',
     }),
 
   region: Joi.string()
@@ -60,7 +49,8 @@ const serviceRegistrationSchema = Joi.object({
     .pattern(/^[a-zA-Z0-9_-]+$/)
     .optional()
     .messages({
-      'string.pattern.base': 'region must contain only alphanumeric characters, hyphens, and underscores'
+      'string.pattern.base':
+        'region must contain only alphanumeric characters, hyphens, and underscores',
     }),
 
   zone: Joi.string()
@@ -69,7 +59,8 @@ const serviceRegistrationSchema = Joi.object({
     .pattern(/^[a-zA-Z0-9_-]+$/)
     .optional()
     .messages({
-      'string.pattern.base': 'zone must contain only alphanumeric characters, hyphens, and underscores'
+      'string.pattern.base':
+        'zone must contain only alphanumeric characters, hyphens, and underscores',
     }),
 
   datacenter: Joi.string()
@@ -78,7 +69,8 @@ const serviceRegistrationSchema = Joi.object({
     .pattern(/^[a-zA-Z0-9_-]+$/)
     .optional()
     .messages({
-      'string.pattern.base': 'datacenter must contain only alphanumeric characters, hyphens, and underscores'
+      'string.pattern.base':
+        'datacenter must contain only alphanumeric characters, hyphens, and underscores',
     }),
 
   tenantId: Joi.string()
@@ -87,101 +79,59 @@ const serviceRegistrationSchema = Joi.object({
     .pattern(/^[a-zA-Z0-9_-]+$/)
     .optional()
     .messages({
-      'string.pattern.base': 'tenantId must contain only alphanumeric characters, hyphens, and underscores'
+      'string.pattern.base':
+        'tenantId must contain only alphanumeric characters, hyphens, and underscores',
     }),
 
-  timeOut: Joi.number()
-    .integer()
-    .min(1000)
-    .max(300000)
-    .optional(),
+  timeOut: Joi.number().integer().min(1000).max(300000).optional(),
 
-  weight: Joi.number()
-    .integer()
-    .min(1)
-    .max(10)
-    .optional(),
+  weight: Joi.number().integer().min(1).max(10).optional(),
 
-  ssl: Joi.boolean()
-    .optional(),
+  ssl: Joi.boolean().optional(),
 
-  path: Joi.string()
-    .max(500)
-    .optional(),
+  path: Joi.string().max(500).optional(),
 
   metadata: Joi.object({
     version: Joi.string()
       .pattern(/^\d+\.\d+\.\d+(-[\w\.\-]+)?(\+[\w\.\-]+)?$/)
       .optional()
       .messages({
-        'string.pattern.base': 'metadata.version must be a valid semver string'
+        'string.pattern.base': 'metadata.version must be a valid semver string',
       }),
 
-    weight: Joi.number()
-      .integer()
-      .min(1)
-      .max(10)
-      .optional(),
+    weight: Joi.number().integer().min(1).max(10).optional(),
 
-    tags: Joi.array()
-      .items(Joi.string().min(1).max(50))
-      .max(20)
-      .optional(),
+    tags: Joi.array().items(Joi.string().min(1).max(50)).max(20).optional(),
 
     healthCheck: Joi.object({
-      url: Joi.string()
-        .uri()
-        .required(),
-      interval: Joi.number()
-        .integer()
-        .min(1000)
-        .max(300000)
-        .optional(),
-      timeout: Joi.number()
-        .integer()
-        .min(100)
-        .max(30000)
-        .optional()
+      url: Joi.string().uri().required(),
+      interval: Joi.number().integer().min(1000).max(300000).optional(),
+      timeout: Joi.number().integer().min(100).max(30000).optional(),
     }).optional(),
 
-    description: Joi.string()
-      .max(500)
-      .optional(),
+    description: Joi.string().max(500).optional(),
 
-    environment: Joi.string()
-      .valid('development', 'staging', 'production', 'test')
-      .optional(),
+    environment: Joi.string().valid('development', 'staging', 'production', 'test').optional(),
 
-    owner: Joi.string()
-      .min(1)
-      .max(100)
-      .optional(),
+    owner: Joi.string().min(1).max(100).optional(),
 
-    team: Joi.string()
-      .min(1)
-      .max(100)
-      .optional()
+    team: Joi.string().min(1).max(100).optional(),
   }).optional(),
 
-  aliases: Joi.array()
-    .items(Joi.string().min(1).max(255))
-    .max(10)
-    .optional(),
+  aliases: Joi.array().items(Joi.string().min(1).max(255)).max(10).optional(),
 
-  apiSpec: Joi.object()
-    .optional()
-}).or('host', 'hostName').messages({
-  'object.missing': 'Either host or hostName must be provided'
-});
+  apiSpec: Joi.object().optional(),
+})
+  .or('host', 'hostName')
+  .messages({
+    'object.missing': 'Either host or hostName must be provided',
+  });
 
 /**
  * Service discovery validation schema
  */
 const serviceDiscoverySchema = Joi.object({
-  serviceName: Joi.string()
-    .min(1)
-    .max(255)
-    .required(),
+  serviceName: Joi.string().min(1).max(255).required(),
 
   loadBalancing: Joi.string()
     .valid(
@@ -203,72 +153,42 @@ const serviceDiscoverySchema = Joi.object({
     )
     .optional(),
 
-  version: Joi.string()
-    .min(1)
-    .max(50)
-    .optional(),
+  version: Joi.string().min(1).max(50).optional(),
 
   tags: Joi.alternatives()
-    .try(
-      Joi.string().min(1).max(100),
-      Joi.array().items(Joi.string().min(1).max(100)).max(10)
-    )
+    .try(Joi.string().min(1).max(100), Joi.array().items(Joi.string().min(1).max(100)).max(10))
     .optional(),
 
-  namespace: Joi.string()
-    .min(1)
-    .max(100)
-    .optional(),
+  namespace: Joi.string().min(1).max(100).optional(),
 
-  region: Joi.string()
-    .min(1)
-    .max(100)
-    .optional(),
+  region: Joi.string().min(1).max(100).optional(),
 
-  zone: Joi.string()
-    .min(1)
-    .max(100)
-    .optional()
+  zone: Joi.string().min(1).max(100).optional(),
 });
 
 /**
  * Heartbeat validation schema
  */
 const heartbeatSchema = Joi.object({
-  nodeId: Joi.string()
-    .min(1)
-    .max(500)
-    .required()
+  nodeId: Joi.string().min(1).max(500).required(),
 });
 
 /**
  * Deregister validation schema
  */
 const deregisterSchema = Joi.object({
-  nodeId: Joi.string()
-    .min(1)
-    .max(500)
-    .required()
+  nodeId: Joi.string().min(1).max(500).required(),
 });
 
 /**
  * API key generation validation schema
  */
 const apiKeyGenerationSchema = Joi.object({
-  serviceName: Joi.string()
-    .min(1)
-    .max(255)
-    .required(),
+  serviceName: Joi.string().min(1).max(255).required(),
 
-  rateLimit: Joi.number()
-    .integer()
-    .min(1)
-    .max(10000)
-    .optional(),
+  rateLimit: Joi.number().integer().min(1).max(10000).optional(),
 
-  description: Joi.string()
-    .max(500)
-    .optional()
+  description: Joi.string().max(500).optional(),
 });
 
 /**
@@ -279,19 +199,19 @@ const validate = (schema) => {
     const { error, value } = schema.validate(req.body || req.query || req.params, {
       abortEarly: false,
       stripUnknown: true,
-      convert: true
+      convert: true,
     });
 
     if (error) {
-      const errors = error.details.map(detail => ({
+      const errors = error.details.map((detail) => ({
         field: detail.path.join('.'),
         message: detail.message,
-        value: detail.context.value
+        value: detail.context.value,
       }));
 
       return res.status(400).json({
         error: 'Validation failed',
-        details: errors
+        details: errors,
       });
     }
 
@@ -342,5 +262,5 @@ module.exports = {
   apiKeyGenerationSchema,
   validate,
   sanitizeString,
-  validateApiKeyRateLimit
+  validateApiKeyRateLimit,
 };

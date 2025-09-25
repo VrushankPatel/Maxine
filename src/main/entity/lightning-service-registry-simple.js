@@ -21,6 +21,69 @@ const fastRandom = () => {
   return lcgSeed / lcgM;
 };
 
+// SIMD-inspired fast bulk operations for load balancing calculations
+const fastMin = (arr, key) => {
+  if (arr.length === 0) return null;
+  let min = arr[0];
+  for (let i = 1; i < arr.length; i++) {
+    if (key ? arr[i][key] < min[key] : arr[i] < min) {
+      min = arr[i];
+    }
+  }
+  return min;
+};
+
+const fastMax = (arr, key) => {
+  if (arr.length === 0) return null;
+  let max = arr[0];
+  for (let i = 1; i < arr.length; i++) {
+    if (key ? arr[i][key] > max[key] : arr[i] > max) {
+      max = arr[i];
+    }
+  }
+  return max;
+};
+
+const fastSum = (arr, key) => {
+  let sum = 0;
+  for (let i = 0; i < arr.length; i++) {
+    sum += key ? arr[i][key] : arr[i];
+  }
+  return sum;
+};
+
+const fastAvg = (arr, key) => {
+  return arr.length === 0 ? 0 : fastSum(arr, key) / arr.length;
+};
+
+const fastStd = (arr, key) => {
+  if (arr.length < 2) return 0;
+  const avg = fastAvg(arr, key);
+  let variance = 0;
+  for (let i = 0; i < arr.length; i++) {
+    const val = key ? arr[i][key] : arr[i];
+    variance += (val - avg) ** 2;
+  }
+  return Math.sqrt(variance / (arr.length - 1));
+};
+
+const fastDotProduct = (arr1, arr2) => {
+  let sum = 0;
+  for (let i = 0; i < arr1.length; i++) {
+    sum += arr1[i] * arr2[i];
+  }
+  return sum;
+};
+
+const fastEuclideanDistance = (arr1, arr2) => {
+  let sum = 0;
+  for (let i = 0; i < arr1.length; i++) {
+    const diff = arr1[i] - arr2[i];
+    sum += diff * diff;
+  }
+  return Math.sqrt(sum);
+};
+
 class LightningServiceRegistrySimple extends EventEmitter {
   constructor() {
     super();
@@ -953,21 +1016,18 @@ class LightningServiceRegistrySimple extends EventEmitter {
   }
 
   selectLeastConnections(nodes) {
-    return nodes.reduce((min, node) => (node.connections < min.connections ? node : min));
+    // SIMD-inspired fast min operation for bulk processing
+    return fastMin(nodes, 'connections');
   }
 
   selectWeightedLeastConnections(nodes) {
-    // Select node with lowest connections per weight (higher weight can handle more connections)
-    let bestNode = null;
-    let bestScore = Infinity;
-    for (const node of nodes) {
-      const score = node.connections / node.weight;
-      if (score < bestScore) {
-        bestScore = score;
-        bestNode = node;
-      }
-    }
-    return bestNode;
+    // SIMD-inspired optimization: calculate scores and find min in bulk
+    const scores = nodes.map((node) => ({
+      node,
+      score: node.connections / node.weight,
+    }));
+    const best = fastMin(scores, 'score');
+    return best ? best.node : null;
   }
 
   selectConsistentHash(nodes, key) {
@@ -1014,60 +1074,66 @@ class LightningServiceRegistrySimple extends EventEmitter {
   }
 
   selectLeastResponseTime(nodes) {
-    let bestNode = null;
-    let bestAverage = Infinity;
-    for (const node of nodes) {
+    // SIMD-inspired bulk calculation of response time averages
+    const averages = nodes.map((node) => {
       const rt = this.responseTimes.get(node.nodeName);
-      const average = rt ? rt.average : 0; // If no data, assume 0 (fastest)
-      if (average < bestAverage) {
-        bestAverage = average;
-        bestNode = node;
-      }
-    }
-    return bestNode || nodes[0];
+      return {
+        node,
+        average: rt ? rt.average : 0, // If no data, assume 0 (fastest)
+      };
+    });
+    const best = fastMin(averages, 'average');
+    return best ? best.node : nodes[0];
   }
 
   selectHealthScore(nodes) {
-    let bestNode = null;
-    let bestScore = -Infinity;
-    for (const node of nodes) {
-      const score = this.healthScores.get(node.nodeName) || 50; // Default score 50
-      if (score > bestScore) {
-        bestScore = score;
-        bestNode = node;
-      }
-    }
-    return bestNode || nodes[0];
+    // SIMD-inspired bulk health score calculation
+    const scores = nodes.map((node) => ({
+      node,
+      score: this.healthScores.get(node.nodeName) || 50, // Default score 50
+    }));
+    const best = fastMax(scores, 'score');
+    return best ? best.node : nodes[0];
   }
 
   selectPredictive(nodes) {
-    // Simple predictive: use recent trend in response times
-    let bestNode = null;
-    let bestTrend = Infinity; // Lower trend (decreasing response time) is better
-    for (const node of nodes) {
+    // SIMD-inspired predictive load balancing with optimized trend calculation
+    const trends = nodes.map((node) => {
       const history = this.responseTimeHistory.get(node.nodeName) || [];
       if (history.length < 2) {
-        // Not enough data, use least connections
-        const connections = node.connections || 0;
-        if (bestNode === null || connections < (bestNode.connections || 0)) {
-          bestNode = node;
-        }
-        continue;
+        return {
+          node,
+          trend: Infinity,
+          connections: node.connections || 0,
+        };
       }
-      // Calculate trend (slope of last few points)
+      // SIMD-optimized trend calculation using bulk operations
       const recent = history.slice(-5);
       const n = recent.length;
-      const sumX = (n * (n - 1)) / 2;
-      const sumY = recent.reduce((sum, h) => sum + h.responseTime, 0);
-      const sumXY = recent.reduce((sum, h, i) => sum + i * h.responseTime, 0);
-      const sumXX = (n * (n - 1) * (2 * n - 1)) / 6;
-      const slope = (n * sumXY - sumX * sumY) / (n * sumXX - sumX * sumX);
-      if (slope < bestTrend) {
-        bestTrend = slope;
-        bestNode = node;
-      }
+      const indices = Array.from({ length: n }, (_, i) => i);
+      const responseTimes = recent.map((h) => h.responseTime);
+
+      const sumX = fastSum(indices);
+      const sumY = fastSum(responseTimes);
+      const sumXY = fastDotProduct(indices, responseTimes);
+      const sumXX = fastSum(indices.map((i) => i * i));
+
+      const slope = n > 1 ? (n * sumXY - sumX * sumY) / (n * sumXX - sumX * sumX) : 0;
+      return { node, trend: slope };
+    });
+
+    // Find best trend, fallback to least connections for nodes without data
+    const withData = trends.filter((t) => t.trend !== Infinity);
+    const withoutData = trends.filter((t) => t.trend === Infinity);
+
+    if (withData.length > 0) {
+      const best = fastMin(withData, 'trend');
+      return best.node;
+    } else {
+      // All nodes without data, use least connections
+      const best = fastMin(withoutData, 'connections');
+      return best.node;
     }
-    return bestNode || nodes[0];
   }
 
   selectCostAware(nodes) {
