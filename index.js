@@ -176,6 +176,7 @@ if (config.ultraFastMode) {
     const { LightningServiceRegistrySimple } = require('./src/main/entity/lightning-service-registry-simple');
     const serviceRegistry = new LightningServiceRegistrySimple();
     global.serviceRegistry = serviceRegistry;
+    console.log('Service registry created');
 
     // Raw HTTP server for maximum performance, but stripped down
     const http = require('http');
@@ -456,6 +457,7 @@ if (config.ultraFastMode) {
     // Create server with HTTP/2 support if enabled
     let server;
     const requestHandler = (req, res) => {
+        try {
         if (req.headers.upgrade && req.headers.upgrade.toLowerCase() === 'websocket') {
             return;
         }
@@ -493,6 +495,11 @@ if (config.ultraFastMode) {
             res.writeHead(404, { 'Content-Type': 'application/json' });
             res.end(errorNotFound);
         }
+        } catch (e) {
+            console.error('Request handler error:', e);
+            res.writeHead(500, { 'Content-Type': 'application/json' });
+            res.end('{"error": "Internal server error"}');
+        }
     };
 
     if (config.http2Enabled) {
@@ -515,9 +522,11 @@ if (config.ultraFastMode) {
         }
     } else {
         server = http.createServer({ keepAlive: false }, requestHandler);
+        console.log('HTTP/1.1 server created, server:', !!server, 'listen method:', typeof server.listen);
     }
 
     if (!config.isTestMode) {
+        console.log('About to call server.listen on port', constants.PORT);
         server.listen(constants.PORT, () => {
             const protocol = config.http2Enabled ? 'HTTP/2' : 'HTTP/1.1';
             console.log(`Maxine server started in ultra-fast mode with ${protocol} on port ${constants.PORT}`);
@@ -525,7 +534,10 @@ if (config.ultraFastMode) {
             console.error('Server listen error:', err);
         });
         // Keep the process alive
+        console.log('Setting keep alive interval');
         setInterval(() => {}, 1000);
+        // Prevent exit
+        process.stdin.resume();
     }
 
     // UDP server for ultra-fast heartbeats
@@ -550,7 +562,7 @@ if (config.ultraFastMode) {
 
     // Ultra-Fast server setup complete
     builder = { getApp: () => server };
-    module.exports = builder.getApp();
+    // module.exports = builder.getApp(); // Commented out to prevent exit
 } else if (config.lightningMode && !config.ultraFastMode) {
     // Minimal lightning mode with raw HTTP for ultimate speed
     const { LightningServiceRegistrySimple } = require('./src/main/entity/lightning-service-registry-simple');

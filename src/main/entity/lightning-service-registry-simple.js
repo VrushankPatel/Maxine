@@ -690,6 +690,94 @@ class LightningServiceRegistrySimple extends EventEmitter {
         });
     }
 
+    // Ultra-fast sync version for lightning mode
+    ultraFastGetRandomNodeSync(serviceName, strategy = 'round-robin', clientIP = null, tags = null) {
+        const service = this.services.get(serviceName);
+        if (!service || service.healthyNodesArray.length === 0) return null;
+
+        let availableNodes = service.healthyNodesArray.filter(node => !this.isCircuitOpen(node.nodeName));
+
+        // Filter by tags if provided
+        if (tags && tags.length > 0) {
+            let intersection = null;
+            for (const tag of tags) {
+                const nodesForTag = this.tagIndex.get(tag);
+                if (!nodesForTag) {
+                    intersection = new Set();
+                    break;
+                }
+                if (intersection === null) {
+                    intersection = new Set(nodesForTag);
+                } else {
+                    for (const node of Array.from(intersection)) {
+                        if (!nodesForTag.has(node)) {
+                            intersection.delete(node);
+                        }
+                    }
+                }
+            }
+            if (intersection) {
+                availableNodes = availableNodes.filter(node => intersection.has(node.nodeName));
+            } else {
+                availableNodes = [];
+            }
+        }
+
+        if (availableNodes.length === 0) return null;
+
+        let selectedNode;
+        switch (strategy) {
+            case 'random':
+                const randomIndex = (fastRandom() * availableNodes.length) | 0;
+                selectedNode = availableNodes[randomIndex];
+                break;
+            case 'weighted-random':
+                selectedNode = this.selectWeightedRandom(availableNodes);
+                break;
+            case 'least-connections':
+                selectedNode = this.selectLeastConnections(availableNodes);
+                break;
+            case 'weighted-least-connections':
+                selectedNode = this.selectWeightedLeastConnections(availableNodes);
+                break;
+            case 'consistent-hash':
+                selectedNode = this.selectConsistentHash(availableNodes, clientIP || 'default');
+                break;
+            case 'ip-hash':
+                selectedNode = this.selectIPHash(availableNodes, clientIP);
+                break;
+            case 'geo-aware':
+                selectedNode = this.selectGeoAware(availableNodes, clientIP);
+                break;
+            case 'least-response-time':
+                selectedNode = this.selectLeastResponseTime(availableNodes);
+                break;
+            case 'health-score':
+                selectedNode = this.selectHealthScore(availableNodes);
+                break;
+            case 'predictive':
+                selectedNode = this.selectPredictive(availableNodes);
+                break;
+            case 'ai-driven':
+                selectedNode = this.selectAIDriven(availableNodes, clientIP);
+                break;
+            case 'cost-aware':
+                selectedNode = this.selectCostAware(availableNodes);
+                break;
+            case 'power-of-two-choices':
+                selectedNode = this.selectPowerOfTwoChoices(availableNodes);
+                break;
+            default: // round-robin
+                let index = service.roundRobinIndex || 0;
+                selectedNode = availableNodes[index % availableNodes.length];
+                service.roundRobinIndex = (index + 1) % availableNodes.length;
+        }
+        if (selectedNode) {
+            selectedNode.connections++;
+        }
+        return selectedNode;
+    }
+
     selectWeightedRandom(nodes) {
         // SIMD-like optimization: pre-compute cumulative weights for binary search
         const cumulative = [];
