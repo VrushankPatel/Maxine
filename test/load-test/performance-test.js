@@ -2,8 +2,8 @@ const axios = require('axios');
 const { performance } = require('perf_hooks');
 
 const BASE_URL = `http://localhost:${process.env.PORT || 8080}`;
-const CONCURRENT_USERS = 100;
-const ITERATIONS_PER_USER = 1000;
+const CONCURRENT_USERS = 50;
+const ITERATIONS_PER_USER = 5000;
 const TOTAL_REQUESTS = CONCURRENT_USERS * ITERATIONS_PER_USER;
 
 async function registerService() {

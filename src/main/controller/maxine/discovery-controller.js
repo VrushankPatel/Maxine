@@ -220,24 +220,24 @@ const ultraFastDiscovery = async (req, res) => {
         const count = req.query.count ? parseInt(req.query.count) : 1;
 
         if (count > 1) {
-            const serviceData = serviceRegistry.ultraFastHealthyNodes.get(fullServiceName);
-            if (!serviceData || serviceData.array.length === 0) {
+            const service = serviceRegistry.services.get(fullServiceName);
+            if (!service || service.healthyNodesArray.length === 0) {
                 res.status(404).end(notFoundBuffer);
                 return;
             }
             // For multiple nodes, return up to count random nodes - optimized selection
-            const numToReturn = Math.min(count, serviceData.array.length);
+            const numToReturn = Math.min(count, service.healthyNodesArray.length);
             const nodes = [];
-            const len = serviceData.array.length;
+            const len = service.healthyNodesArray.length;
             for (let i = 0; i < numToReturn && nodes.length < len; i++) {
                 let randomIndex = (fastRandom() * len) | 0;
                 let attempts = 0;
-                while (nodes.some(n => n === serviceData.array[randomIndex]) && attempts < len) {
+                while (nodes.some(n => n === service.healthyNodesArray[randomIndex]) && attempts < len) {
                     randomIndex = (fastRandom() * len) | 0;
                     attempts++;
                 }
                 if (attempts < len) {
-                    nodes.push(serviceData.array[randomIndex]);
+                    nodes.push(service.healthyNodesArray[randomIndex]);
                 }
             }
             if (nodes.length === 0) {
@@ -247,7 +247,7 @@ const ultraFastDiscovery = async (req, res) => {
             const responseBuffer = buildMultipleResponseBuffer(nodes.map(n => n.address), nodes.map(n => n.nodeName));
             res.end(responseBuffer);
         } else {
-            const serviceNode = await serviceRegistry.ultraFastGetRandomNode(fullServiceName);
+            const serviceNode = serviceRegistry.ultraFastGetRandomNodeSync(fullServiceName);
             if (!serviceNode) {
                 res.status(404).end(notFoundBuffer);
                 return;
@@ -270,7 +270,7 @@ const extremeFastDiscovery = async (req, res) => {
         const version = req.query.version;
         const fullServiceName = buildFullServiceName(serviceName, namespace, datacenter, version);
 
-        const serviceNode = await serviceRegistry.ultraFastGetRandomNode(fullServiceName);
+        const serviceNode = serviceRegistry.ultraFastGetRandomNodeSync(fullServiceName);
         if (!serviceNode) {
             res.status(404).end(notFoundBuffer);
             return;
