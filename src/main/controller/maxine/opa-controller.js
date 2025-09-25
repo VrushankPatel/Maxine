@@ -1,19 +1,19 @@
-const { serviceRegistry } = require("../../entity/service-registry");
-const config = require("../../config/config");
+const { serviceRegistry } = require('../../entity/service-registry');
+const config = require('../../config/config');
 
 const opaPolicyController = (req, res) => {
-    const services = serviceRegistry.getRegServers();
-    const policies = [];
+  const services = serviceRegistry.getRegServers();
+  const policies = [];
 
-    for (const [serviceName, serviceData] of Object.entries(services)) {
-        const nodes = serviceData.nodes || {};
+  for (const [serviceName, serviceData] of Object.entries(services)) {
+    const nodes = serviceData.nodes || {};
 
-        // Generate OPA policy for service access control
-        const policy = {
-            id: `maxine-${serviceName}-policy`,
-            name: `Maxine ${serviceName} Access Policy`,
-            description: `Policy for controlling access to ${serviceName} service`,
-            rego: `
+    // Generate OPA policy for service access control
+    const policy = {
+      id: `maxine-${serviceName}-policy`,
+      name: `Maxine ${serviceName} Access Policy`,
+      description: `Policy for controlling access to ${serviceName} service`,
+      rego: `
 package maxine.${serviceName}
 
 default allow = false
@@ -72,23 +72,23 @@ allow {
     input.user.roles[_] = "monitor"
 }
 `,
-            data: {
-                serviceName: serviceName,
-                nodes: Object.keys(nodes).length,
-                healthyNodes: Object.values(nodes).filter(node => node.healthy !== false).length
-            }
-        };
+      data: {
+        serviceName: serviceName,
+        nodes: Object.keys(nodes).length,
+        healthyNodes: Object.values(nodes).filter((node) => node.healthy !== false).length,
+      },
+    };
 
-        policies.push(policy);
-    }
+    policies.push(policy);
+  }
 
-    res.json({
-        policies: policies,
-        globalPolicy: {
-            id: "maxine-global-policy",
-            name: "Maxine Global Access Policy",
-            description: "Global policy for Maxine service registry",
-            rego: `
+  res.json({
+    policies: policies,
+    globalPolicy: {
+      id: 'maxine-global-policy',
+      name: 'Maxine Global Access Policy',
+      description: 'Global policy for Maxine service registry',
+      rego: `
 package maxine.global
 
 default allow = false
@@ -125,9 +125,9 @@ allow {
     input.path = ["api", "maxine", "serviceops", "metrics"]
     input.user.roles[_] = "monitor"
 }
-`
-        }
-    });
+`,
+    },
+  });
 };
 
 module.exports = opaPolicyController;

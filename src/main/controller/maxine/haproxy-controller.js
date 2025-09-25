@@ -1,9 +1,9 @@
-const { serviceRegistry } = require("../../entity/service-registry");
-const config = require("../../config/config");
+const { serviceRegistry } = require('../../entity/service-registry');
+const config = require('../../config/config');
 
 const haproxyConfigController = (req, res) => {
-    const services = serviceRegistry.getRegServers();
-    let haproxyConfig = `global
+  const services = serviceRegistry.getRegServers();
+  let haproxyConfig = `global
     log /dev/log local0
     log /dev/log local1 notice
     chroot /var/lib/haproxy
@@ -31,28 +31,30 @@ backend default_backend
 
 `;
 
-    for (const [serviceName, serviceData] of Object.entries(services)) {
-        const nodes = serviceData.nodes || {};
-        const servers = [];
+  for (const [serviceName, serviceData] of Object.entries(services)) {
+    const nodes = serviceData.nodes || {};
+    const servers = [];
 
-        for (const [nodeName, node] of Object.entries(nodes)) {
-            if (node.healthy !== false) {
-                const url = new URL(node.address);
-                servers.push(`    server ${nodeName} ${url.hostname}:${url.port || (url.protocol === 'https:' ? 443 : 80)} check`);
-            }
-        }
+    for (const [nodeName, node] of Object.entries(nodes)) {
+      if (node.healthy !== false) {
+        const url = new URL(node.address);
+        servers.push(
+          `    server ${nodeName} ${url.hostname}:${url.port || (url.protocol === 'https:' ? 443 : 80)} check`
+        );
+      }
+    }
 
-        if (servers.length > 0) {
-            haproxyConfig += `
+    if (servers.length > 0) {
+      haproxyConfig += `
 backend ${serviceName}_backend
 ${servers.join('\n')}
 
 `;
-        }
     }
+  }
 
-    res.setHeader('Content-Type', 'text/plain');
-    res.send(haproxyConfig);
-}
+  res.setHeader('Content-Type', 'text/plain');
+  res.send(haproxyConfig);
+};
 
-module.exports = haproxyConfigController
+module.exports = haproxyConfigController;

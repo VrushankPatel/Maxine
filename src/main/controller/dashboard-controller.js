@@ -2,29 +2,31 @@ const { serviceRegistry } = require('../entity/service-registry');
 const config = require('../config/config');
 
 const dashboardController = (req, res) => {
-    const services = serviceRegistry.getRegServers();
-    const serviceCount = Object.keys(services).length;
-    let totalNodes = 0;
-    let healthyNodes = 0;
-    let unhealthyNodes = 0;
-    for (const serviceName in services) {
-        const nodes = services[serviceName].nodes;
-        totalNodes += Object.keys(nodes).length;
-        for (const nodeName in nodes) {
-            if (nodes[nodeName].healthy) healthyNodes++;
-            else unhealthyNodes++;
-        }
+  const services = serviceRegistry.getRegServers();
+  const serviceCount = Object.keys(services).length;
+  let totalNodes = 0;
+  let healthyNodes = 0;
+  let unhealthyNodes = 0;
+  for (const serviceName in services) {
+    const nodes = services[serviceName].nodes;
+    totalNodes += Object.keys(nodes).length;
+    for (const nodeName in nodes) {
+      if (nodes[nodeName].healthy) healthyNodes++;
+      else unhealthyNodes++;
     }
-    const cacheStats = serviceRegistry.discoveryService ? {
+  }
+  const cacheStats = serviceRegistry.discoveryService
+    ? {
         cacheHits: serviceRegistry.discoveryService.cacheHits || 0,
         cacheMisses: serviceRegistry.discoveryService.cacheMisses || 0,
-        cacheSize: serviceRegistry.discoveryService.cache.size || 0
-    } : { cacheHits: 0, cacheMisses: 0, cacheSize: 0 };
+        cacheSize: serviceRegistry.discoveryService.cache.size || 0,
+      }
+    : { cacheHits: 0, cacheMisses: 0, cacheSize: 0 };
 
-    // Get recent events for display
-    const recentEvents = serviceRegistry.getRecentEvents ? serviceRegistry.getRecentEvents(10) : [];
+  // Get recent events for display
+  const recentEvents = serviceRegistry.getRecentEvents ? serviceRegistry.getRecentEvents(10) : [];
 
-    const html = `
+  const html = `
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -105,42 +107,52 @@ const dashboardController = (req, res) => {
     <div class="services">
         <h2>Services & Nodes</h2>
         <div id="servicesList">
-            ${Object.entries(services).map(([serviceName, service]) => `
+            ${Object.entries(services)
+              .map(
+                ([serviceName, service]) => `
                 <div class="service">
                     <h3>${serviceName}</h3>
                     <div>Nodes:</div>
-                     ${Object.entries(service.nodes).map(([nodeName, node]) => {
+                     ${Object.entries(service.nodes)
+                       .map(([nodeName, node]) => {
                          let status = 'unhealthy';
                          let statusText = 'Unhealthy';
                          if (node.healthy) {
-                             if (serviceRegistry.isInMaintenance(serviceName, nodeName)) {
-                                 status = 'maintenance';
-                                 statusText = 'Maintenance';
-                             } else if (serviceRegistry.isInDraining(serviceName, nodeName)) {
-                                 status = 'draining';
-                                 statusText = 'Draining';
-                             } else {
-                                 status = 'healthy';
-                                 statusText = 'Healthy';
-                             }
+                           if (serviceRegistry.isInMaintenance(serviceName, nodeName)) {
+                             status = 'maintenance';
+                             statusText = 'Maintenance';
+                           } else if (serviceRegistry.isInDraining(serviceName, nodeName)) {
+                             status = 'draining';
+                             statusText = 'Draining';
+                           } else {
+                             status = 'healthy';
+                             statusText = 'Healthy';
+                           }
                          }
                          return `<div class="node ${status}">
                              ${nodeName}: ${node.address} (${statusText})
                          </div>`;
-                     }).join('')}
+                       })
+                       .join('')}
                 </div>
-            `).join('')}
+            `
+              )
+              .join('')}
         </div>
     </div>
 
     <div class="events">
         <h2>Recent Events</h2>
         <div id="eventsList">
-            ${recentEvents.map(event => `
+            ${recentEvents
+              .map(
+                (event) => `
                 <div class="event">
                     <strong>${event.event}</strong> - ${event.data ? JSON.stringify(event.data) : ''} <small>(${new Date(event.timestamp).toLocaleString()})</small>
                 </div>
-            `).join('')}
+            `
+              )
+              .join('')}
         </div>
     </div>
 
@@ -318,7 +330,7 @@ const dashboardController = (req, res) => {
 </body>
 </html>
     `;
-    res.send(html);
+  res.send(html);
 };
 
 module.exports = dashboardController;

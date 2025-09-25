@@ -1,9 +1,9 @@
-const { serviceRegistry } = require("../../entity/service-registry");
-const config = require("../../config/config");
+const { serviceRegistry } = require('../../entity/service-registry');
+const config = require('../../config/config');
 
 const nginxConfigController = (req, res) => {
-    const services = serviceRegistry.getRegServers();
-    let nginxConfig = `events {
+  const services = serviceRegistry.getRegServers();
+  let nginxConfig = `events {
     worker_connections 1024;
 }
 
@@ -27,19 +27,21 @@ http {
 
 `;
 
-    for (const [serviceName, serviceData] of Object.entries(services)) {
-        const nodes = serviceData.nodes || {};
-        const servers = [];
+  for (const [serviceName, serviceData] of Object.entries(services)) {
+    const nodes = serviceData.nodes || {};
+    const servers = [];
 
-        for (const [nodeName, node] of Object.entries(nodes)) {
-            if (node.healthy !== false) {
-                const url = new URL(node.address);
-                servers.push(`        server ${url.hostname}:${url.port || (url.protocol === 'https:' ? 443 : 80)};`);
-            }
-        }
+    for (const [nodeName, node] of Object.entries(nodes)) {
+      if (node.healthy !== false) {
+        const url = new URL(node.address);
+        servers.push(
+          `        server ${url.hostname}:${url.port || (url.protocol === 'https:' ? 443 : 80)};`
+        );
+      }
+    }
 
-        if (servers.length > 0) {
-            nginxConfig += `
+    if (servers.length > 0) {
+      nginxConfig += `
     upstream ${serviceName}_backend {
 ${servers.join('\n')}
     }
@@ -58,14 +60,14 @@ ${servers.join('\n')}
     }
 
 `;
-        }
     }
+  }
 
-    nginxConfig += `}
+  nginxConfig += `}
 `;
 
-    res.setHeader('Content-Type', 'text/plain');
-    res.send(nginxConfig);
-}
+  res.setHeader('Content-Type', 'text/plain');
+  res.send(nginxConfig);
+};
 
-module.exports = nginxConfigController
+module.exports = nginxConfigController;

@@ -6,18 +6,18 @@ const { constants } = require('../../../main/util/constants/constants');
 var chai = require('chai');
 var should = chai.should();
 
-const fileName = require('path').basename(__filename).replace(".js","");
+const fileName = require('path').basename(__filename).replace('.js', '');
 const serviceSampleRH = {
-    "hostName": "xx.xxx.xx.xx",
-    "nodeName": "node-x-10",
-    "port": "8082",
-    "serviceName": "dbservice-rh",
-    "version": "1.0",
-    "ssl": true,
-    "timeOut": 5,
-    "weight": 10,
-    "address": "https://xx.xxx.xx.xx:8082",
-    "metadata": {}
+  hostName: 'xx.xxx.xx.xx',
+  nodeName: 'node-x-10',
+  port: '8082',
+  serviceName: 'dbservice-rh',
+  version: '1.0',
+  ssl: true,
+  timeOut: 5,
+  weight: 10,
+  address: 'https://xx.xxx.xx.xx:8082',
+  metadata: {},
 };
 
 // Clear registry for clean test
@@ -26,7 +26,7 @@ const fs = require('fs');
 const path = require('path');
 const registryPath = path.join(__dirname, '../../../registry.json');
 if (fs.existsSync(registryPath)) {
-    fs.unlinkSync(registryPath);
+  fs.unlinkSync(registryPath);
 }
 serviceRegistry.registry = new Map();
 serviceRegistry.hashRegistry = new Map();
@@ -49,31 +49,29 @@ serviceRegistry.serviceDependencies = new Map();
 registryService.registerService(serviceSampleRH);
 
 if (config.lightningMode) {
-    describe.skip(`${fileName} : API /api/maxine/discover with config with Rendezvous Hashing`, () => {});
+  describe.skip(`${fileName} : API /api/maxine/discover with config with Rendezvous Hashing`, () => {});
 } else {
-
-// We'll check if we're getting same server for multiple endpoint hits.
-describe(`${fileName} : API /api/maxine/discover with config with Rendezvous Hashing`, () => {
-
+  // We'll check if we're getting same server for multiple endpoint hits.
+  describe(`${fileName} : API /api/maxine/discover with config with Rendezvous Hashing`, () => {
     it(`RH discover with NonAPI`, async () => {
-        // Making sure that server selection strategy is RH
-        config.serverSelectionStrategy = constants.SSS.RH;
-        // Register service for test
-        registryService.registerService(serviceSampleRH);
-        discoveryService.clearCache();
-        discoveryService.serviceKeys = new Map();
+      // Making sure that server selection strategy is RH
+      config.serverSelectionStrategy = constants.SSS.RH;
+      // Register service for test
+      registryService.registerService(serviceSampleRH);
+      discoveryService.clearCache();
+      discoveryService.serviceKeys = new Map();
 
-        const fullServiceName = `default:${serviceSampleRH.serviceName}:1.0`;
-        const ip = "127.0.0.1";
+      const fullServiceName = `default:${serviceSampleRH.serviceName}:1.0`;
+      const ip = '127.0.0.1';
 
-        const response1 = await discoveryService.getNode(fullServiceName, ip);
+      const response1 = await discoveryService.getNode(fullServiceName, ip);
 
-        const response2 = await discoveryService.getNode(fullServiceName, ip);
+      const response2 = await discoveryService.getNode(fullServiceName, ip);
 
-        // Because of rendezvous hashing, we should expect both the responses same because the ip we're passing is the same.
-        response1.should.be.a('object');
-        response2.should.be.a('object');
-        response1.should.be.eql(response2);
+      // Because of rendezvous hashing, we should expect both the responses same because the ip we're passing is the same.
+      response1.should.be.a('object');
+      response2.should.be.a('object');
+      response1.should.be.eql(response2);
     });
-});
+  });
 }

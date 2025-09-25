@@ -1,72 +1,72 @@
-const { serviceRegistry } = require("../../entity/service-registry");
+const { serviceRegistry } = require('../../entity/service-registry');
 
 // Service Call Analytics Dashboard
 const getServiceCallAnalytics = (req, res) => {
-    try {
-        const { serviceName, timeRange = 3600000 } = req.query; // Default 1 hour
-        const now = Date.now();
-        const cutoff = now - parseInt(timeRange);
+  try {
+    const { serviceName, timeRange = 3600000 } = req.query; // Default 1 hour
+    const now = Date.now();
+    const cutoff = now - parseInt(timeRange);
 
-        const callLogs = serviceRegistry.getCallLogs ? serviceRegistry.getCallLogs() : {};
-        const analytics = {};
+    const callLogs = serviceRegistry.getCallLogs ? serviceRegistry.getCallLogs() : {};
+    const analytics = {};
 
-        // Process call logs
-        for (const [caller, calls] of Object.entries(callLogs)) {
-            if (serviceName && caller !== serviceName) continue;
+    // Process call logs
+    for (const [caller, calls] of Object.entries(callLogs)) {
+      if (serviceName && caller !== serviceName) continue;
 
-            analytics[caller] = {
-                totalCalls: 0,
-                uniqueServices: new Set(),
-                callFrequency: {},
-                recentCalls: [],
-                topCalledServices: []
-            };
+      analytics[caller] = {
+        totalCalls: 0,
+        uniqueServices: new Set(),
+        callFrequency: {},
+        recentCalls: [],
+        topCalledServices: [],
+      };
 
-            for (const [called, data] of calls) {
-                if (data.lastSeen >= cutoff) {
-                    analytics[caller].totalCalls += data.count;
-                    analytics[caller].uniqueServices.add(called);
+      for (const [called, data] of calls) {
+        if (data.lastSeen >= cutoff) {
+          analytics[caller].totalCalls += data.count;
+          analytics[caller].uniqueServices.add(called);
 
-                    // Call frequency (calls per minute)
-                    const minutesAgo = Math.floor((now - data.lastSeen) / 60000);
-                    if (!analytics[caller].callFrequency[minutesAgo]) {
-                        analytics[caller].callFrequency[minutesAgo] = 0;
-                    }
-                    analytics[caller].callFrequency[minutesAgo] += data.count;
+          // Call frequency (calls per minute)
+          const minutesAgo = Math.floor((now - data.lastSeen) / 60000);
+          if (!analytics[caller].callFrequency[minutesAgo]) {
+            analytics[caller].callFrequency[minutesAgo] = 0;
+          }
+          analytics[caller].callFrequency[minutesAgo] += data.count;
 
-                    analytics[caller].recentCalls.push({
-                        calledService: called,
-                        count: data.count,
-                        lastSeen: data.lastSeen
-                    });
-                }
-            }
-
-            // Sort top called services
-            analytics[caller].topCalledServices = analytics[caller].recentCalls
-                .sort((a, b) => b.count - a.count)
-                .slice(0, 10);
-
-            analytics[caller].uniqueServices = Array.from(analytics[caller].uniqueServices);
+          analytics[caller].recentCalls.push({
+            calledService: called,
+            count: data.count,
+            lastSeen: data.lastSeen,
+          });
         }
+      }
 
-        // Generate HTML dashboard
-        const html = generateAnalyticsDashboardHTML(analytics, serviceName, timeRange);
+      // Sort top called services
+      analytics[caller].topCalledServices = analytics[caller].recentCalls
+        .sort((a, b) => b.count - a.count)
+        .slice(0, 10);
 
-        res.setHeader('Content-Type', 'text/html');
-        res.send(html);
-    } catch (error) {
-        console.error('Error generating service call analytics:', error);
-        res.status(500).json({ error: 'Internal server error' });
+      analytics[caller].uniqueServices = Array.from(analytics[caller].uniqueServices);
     }
+
+    // Generate HTML dashboard
+    const html = generateAnalyticsDashboardHTML(analytics, serviceName, timeRange);
+
+    res.setHeader('Content-Type', 'text/html');
+    res.send(html);
+  } catch (error) {
+    console.error('Error generating service call analytics:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
 };
 
 const generateAnalyticsDashboardHTML = (analytics, serviceName, timeRange) => {
-    const services = Object.keys(analytics);
-    const totalCalls = services.reduce((sum, svc) => sum + analytics[svc].totalCalls, 0);
-    const totalServices = services.length;
+  const services = Object.keys(analytics);
+  const totalCalls = services.reduce((sum, svc) => sum + analytics[svc].totalCalls, 0);
+  const totalServices = services.length;
 
-    return `
+  return `
 <!DOCTYPE html>
 <html>
 <head>
@@ -114,7 +114,9 @@ const generateAnalyticsDashboardHTML = (analytics, serviceName, timeRange) => {
 
     <div class="top-services">
         <h2>Service Details</h2>
-        ${services.map(service => `
+        ${services
+          .map(
+            (service) => `
             <div class="service-card">
                 <h3>${service}</h3>
                 <div style="display: flex; gap: 20px; margin: 10px 0;">
@@ -124,13 +126,20 @@ const generateAnalyticsDashboardHTML = (analytics, serviceName, timeRange) => {
                 <div style="margin: 10px 0;">
                     <strong>Top Called Services:</strong>
                     <ul>
-                        ${analytics[service].topCalledServices.slice(0, 5).map(call => `
+                        ${analytics[service].topCalledServices
+                          .slice(0, 5)
+                          .map(
+                            (call) => `
                             <li>${call.calledService}: ${call.count} calls</li>
-                        `).join('')}
+                        `
+                          )
+                          .join('')}
                     </ul>
                 </div>
             </div>
-        `).join('')}
+        `
+          )
+          .join('')}
     </div>
 
     <script>
@@ -251,5 +260,5 @@ const generateAnalyticsDashboardHTML = (analytics, serviceName, timeRange) => {
 };
 
 module.exports = {
-    getServiceCallAnalytics
+  getServiceCallAnalytics,
 };
