@@ -7,7 +7,7 @@ A minimal, high-performance service discovery and registry for microservices.
 - **Lightning Fast**: In-memory storage with O(1) lookups, optimized heartbeat with periodic cleanup, pre-allocated response buffers, fast LCG PRNG for random selection
 - **Simple API**: Register, discover, heartbeat, and deregister services with support for service versioning
 - **Automatic Cleanup**: Removes expired services with efficient periodic cleanup (every 30 seconds)
-- **Load Balancing**: Round-robin, random, weighted-random, least-connections, consistent-hash, ip-hash, geo-aware, predictive, ai-driven, cost-aware, deep-learning selection for advanced load balancing
+- **Load Balancing**: Round-robin, random, weighted-random, least-connections, consistent-hash, ip-hash, geo-aware, predictive, ai-driven, advanced-ml (synchronous deep learning), cost-aware, power-of-two-choices selection for advanced load balancing
 - **Health Checks**: /health endpoint returning service and node counts, active health monitoring for real-time status
 - **Advanced Health Checks**: Custom health check endpoints with proactive monitoring, configurable intervals, and health status integration with load balancing decisions
 - **Circuit Breakers**: Automatic failure detection and recovery to protect against cascading failures
@@ -41,8 +41,8 @@ A minimal, high-performance service discovery and registry for microservices.
 
 Maxine delivers exceptional performance for service discovery operations:
 
-- **Ultra-Fast Mode**: Average 1.08ms, P95 2.05ms for discovery requests (with QUIC/HTTP3 support)
-- **Throughput**: 41,229+ requests per second under load (50 concurrent users, 5000 iterations)
+- **Ultra-Fast Mode**: Average 1.9ms, P95 3.54ms for discovery requests (with advanced optimizations and AI-driven load balancing)
+- **Throughput**: 24,721+ requests per second under load (50 concurrent users, 5000 iterations)
 - **Lightning Mode**: Average 4.91ms, P95 6.49ms for discovery requests (100 concurrent users, 1000 iterations)
 - **Throughput**: 20,136+ requests per second under load (100 concurrent users, 1000 iterations)
 - **Optimizations**: QUIC/HTTP3 support for ultra-low latency, HTTP/1.1 for ultra-fast mode (disabled HTTP/2 for lower latency), disabled OpenTelemetry tracing and Prometheus metrics in Lightning Mode, ultra-fast mode with minimal features for maximum speed, fast LCG PRNG, pre-allocated buffers, object pooling, adaptive caching, binary search for weighted random selection, SIMD-inspired fast bulk operations (fastMin, fastMax, fastSum, etc.) for load balancing calculations, removed console.log from production code (24% throughput improvement), optimized discovery to use ultraFastGetRandomNodeSync directly, disabled expensive operations in lightning mode, synchronous load balancing for ultra-fast mode, updated GC flags for Node.js 22 compatibility
@@ -91,6 +91,54 @@ npm start
 ```
 
 Maxine runs in **Ultra-Fast Mode** by default for maximum performance with core features only. For more features, set `ULTRA_FAST_MODE=false` and `LIGHTNING_MODE=true`.
+
+## Kubernetes Integration
+
+Maxine provides comprehensive Kubernetes integration through a custom operator for declarative service registry management:
+
+### Custom Resource Definitions (CRDs)
+
+- **ServiceRegistry**: Declarative Maxine instance management with auto-scaling, persistence, and multi-cloud support
+- **ServiceInstance**: Automatic service registration and health monitoring for Kubernetes services
+- **ServicePolicy**: Advanced load balancing, circuit breakers, and AI optimization policies
+- **ServiceMeshOperator**: Automated Istio, Linkerd, and Envoy configuration generation
+- **TrafficPolicy**: Fine-grained traffic management with fault injection and canary deployments
+- **ServiceEndpoint**: Direct endpoint management with health checks and metadata
+
+### Installation
+
+```bash
+# Install CRDs
+kubectl apply -f helm/maxine-operator/crds/
+
+# Install operator
+helm install maxine-operator helm/maxine-operator/
+
+# Create a service registry
+kubectl apply -f - <<EOF
+apiVersion: maxine.io/v1
+kind: ServiceRegistry
+metadata:
+  name: my-registry
+spec:
+  replicas: 3
+  mode: lightning
+  config:
+    port: 8080
+    persistenceEnabled: true
+    aiOptimizationEnabled: true
+    multiCloudEnabled: true
+EOF
+```
+
+### Features
+
+- **Auto-scaling**: Kubernetes HPA integration with custom metrics
+- **Service Discovery**: Automatic registration of Kubernetes services
+- **AI Optimization**: ML-driven load balancing and traffic optimization
+- **Multi-cloud**: Cross-cloud service discovery and failover
+- **Service Mesh**: Automated Istio/Linkerd configuration
+- **Chaos Engineering**: Built-in fault injection and resilience testing
 
 ## Documentation
 
