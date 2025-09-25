@@ -1217,13 +1217,20 @@ class LightningServiceRegistrySimple extends EventEmitter {
 
   selectAdvancedML(nodes, clientIP) {
     // Use deep learning model for intelligent load balancing
-    // Falls back to predictive if deep learning model unavailable
+    // Uses synchronous inference for ultra-fast mode
     try {
       const serviceName = this.nodeToService.get(nodes[0]?.nodeName);
       if (!serviceName) return nodes[0];
 
-      // For now, use predictive as advanced ML requires async operations
-      // TODO: Implement synchronous deep learning inference
+      // Use synchronous deep learning prediction for ultra-fast mode
+      const dlPredictions = this.deepLearningService.predictNodeScoresSync(serviceName, nodes);
+      if (dlPredictions) {
+        // Sort by deep learning score (highest first)
+        dlPredictions.sort((a, b) => b.score - a.score);
+        return dlPredictions[0].node;
+      }
+
+      // Fallback to predictive time-series analysis
       return this.selectPredictive(nodes);
     } catch (error) {
       // Final fallback to least connections
@@ -2969,6 +2976,64 @@ class LightningServiceRegistrySimple extends EventEmitter {
         break; // Only update one client per response
       }
     }
+  }
+
+  // Health prediction using time-series analysis
+  predictHealth(serviceName, window = 300000) {
+    // 5 minutes default
+    const service = this.services.get(serviceName);
+    if (!service || service.healthyNodesArray.length === 0) {
+      return { serviceName, predictions: {}, predictionWindow: window };
+    }
+
+    const predictions = {};
+    const now = Date.now();
+
+    for (const node of service.healthyNodesArray) {
+      const nodeName = node.nodeName;
+      // Use response time history for prediction
+      const responseTimes = this.responseTimeHistory.get(nodeName) || [];
+      if (responseTimes.length < 2) {
+        const currentScore = this.healthScores.get(nodeName) || 100;
+        predictions[nodeName] = {
+          currentScore: Math.round(currentScore),
+          predictedScore: Math.round(currentScore),
+          trend: 0,
+          predictedResponseTime: this.responseTimes.get(nodeName)?.average || 0,
+        };
+        continue;
+      }
+
+      // Calculate trend using linear regression
+      const n = responseTimes.length;
+      const sumX = responseTimes.reduce((sum, _, i) => sum + i, 0);
+      const sumY = responseTimes.reduce((sum, time) => sum + time.responseTime, 0);
+      const sumXY = responseTimes.reduce((sum, time, i) => sum + time.responseTime * i, 0);
+      const sumXX = responseTimes.reduce((sum, _, i) => sum + i * i, 0);
+
+      const slope = (n * sumXY - sumX * sumY) / (n * sumXX - sumX * sumX);
+      const intercept = (sumY - slope * sumX) / n;
+
+      // Predict next value
+      const nextIndex = n;
+      const predictedResponseTime = slope * nextIndex + intercept;
+
+      // Calculate health score based on response time trends
+      const currentAvg = responseTimes.reduce((sum, time) => sum + time.responseTime, 0) / n;
+      const healthScore = Math.max(
+        0,
+        Math.min(100, 100 - ((predictedResponseTime - currentAvg) / currentAvg) * 50)
+      );
+
+      predictions[nodeName] = {
+        currentScore: Math.round(this.healthScores.get(nodeName) || 100),
+        predictedScore: Math.round(healthScore),
+        trend: slope,
+        predictedResponseTime: Math.round(predictedResponseTime),
+      };
+    }
+
+    return { serviceName, predictions, predictionWindow: window };
   }
 }
 
