@@ -250,6 +250,12 @@ const {
   getChaosStatus,
 } = require('../controller/maxine/chaos-controller');
 const {
+  setCompatibilityRule,
+  getCompatibilityRule,
+  getAllCompatibilityRules,
+  checkCompatibility,
+} = require('../controller/maxine/compatibility-controller');
+const {
   optimizeIstioConfig,
   optimizeLinkerdConfig,
   getOptimizationAnalytics,
@@ -799,6 +805,23 @@ if (!config.ultraFastMode && !isLightningMode) {
       res.json({ success: true, message: 'Dependency analysis completed' });
     })
     .post(
+      'compatibility/set',
+      authenticationController,
+      requireRole('admin'),
+      limiter,
+      bodyParser.json(),
+      setCompatibilityRule
+    )
+    .get('compatibility/get', authenticationController, limiter, getCompatibilityRule)
+    .get('compatibility/all', authenticationController, limiter, getAllCompatibilityRules)
+    .post(
+      'compatibility/check',
+      authenticationController,
+      limiter,
+      bodyParser.json(),
+      checkCompatibility
+    )
+    .post(
       'api-spec/set',
       authenticationController,
       requireRole('admin'),
@@ -1034,15 +1057,13 @@ maxineApiRoutes = maxineApiRoutes
   .from('actuator')
   .get('health', (req, res) => res.status(200).json({ status: 'UP' }))
   .get('info', (req, res) =>
-    res
-      .status(200)
-      .json({
-        build: {
-          name: 'maxine-discovery',
-          description:
-            'Maxine is a service discovery and a registry server for all the running nodes with gargantua client dependency.',
-        },
-      })
+    res.status(200).json({
+      build: {
+        name: 'maxine-discovery',
+        description:
+          'Maxine is a service discovery and a registry server for all the running nodes with gargantua client dependency.',
+      },
+    })
   )
   .get('metrics', (req, res) =>
     res.status(200).json({ mem: process.memoryUsage(), uptime: process.uptime() })
