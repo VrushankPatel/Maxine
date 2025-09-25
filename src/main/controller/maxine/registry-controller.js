@@ -491,7 +491,7 @@ const filteredDiscoveryController = (req, res) => {
 
     const fullServiceName = `${namespace}:${serviceName}`;
     const nodes = serviceRegistry.getNodes(fullServiceName);
-    const healthyNodeNames = serviceRegistry.getHealthyNodes(fullServiceName, undefined, tags);
+    const healthyNodeNames = serviceRegistry.getHealthyNodes(fullServiceName, undefined, tags, undefined, undefined, null);
     if (healthyNodeNames.length === 0) {
         const latency = Date.now() - startTime;
         metricsService.recordRequest(serviceName, false, latency);
@@ -851,7 +851,7 @@ const listServicesByGroupController = (req, res) => {
     const services = [];
     for (const [serviceName, service] of serviceRegistry.registry) {
         if (namespace && !serviceName.startsWith(`${namespace}:`)) continue;
-        const healthyNodes = serviceRegistry.getHealthyNodes(serviceName, group);
+        const healthyNodes = serviceRegistry.getHealthyNodes(serviceName, group, undefined, undefined, undefined, null);
         if (healthyNodes.length > 0) {
             services.push({
                 serviceName,

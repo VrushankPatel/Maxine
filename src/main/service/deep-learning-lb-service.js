@@ -328,13 +328,7 @@ class DeepLearningLBService {
                 epochs: this.epochs,
                 batchSize: this.batchSize,
                 validationSplit: 0.2,
-                callbacks: {
-                    onEpochEnd: (epoch, logs) => {
-                        if (epoch % 10 === 0) {
-                            console.log(`Epoch ${epoch}: loss = ${logs.loss.toFixed(4)}, val_loss = ${logs.val_loss.toFixed(4)}`);
-                        }
-                    }
-                }
+                callbacks: {}
             });
 
             // Store model and stats

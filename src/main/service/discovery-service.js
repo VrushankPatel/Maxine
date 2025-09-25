@@ -76,7 +76,7 @@ class DiscoveryService{
      * @param {string} deployment
      * @returns {object}
      */
-              getNode = async (fullServiceName, ip, group, tags, deployment, filter, clientId) => {
+              getNode = async (fullServiceName, ip, group, tags, deployment, filter, clientId, advancedFilters) => {
                     if (config.ultraFastMode || config.extremeFastMode) {
                         // Ultra/extreme fast modes: direct lookup with zero overhead
                         return this.ultraFastGetNode(fullServiceName);
@@ -135,7 +135,7 @@ class DiscoveryService{
          }
          this.cacheMisses++;
 
-          const node = await this.getNodeUncached(fullServiceName, ip, group, tags, deployment, filter, clientId);
+          const node = await this.getNodeUncached(fullServiceName, ip, group, tags, deployment, filter, clientId, advancedFilters);
          if (node) {
              this.cache.set(cacheKey, node);
              // Track keys per service
@@ -152,18 +152,18 @@ class DiscoveryService{
               return await serviceRegistry.ultraFastGetRandomNode(serviceName);
           }
 
-        getNodeUncached = async (fullServiceName, ip, group, tags, deployment, filter, clientId) => {
+        getNodeUncached = async (fullServiceName, ip, group, tags, deployment, filter, clientId, advancedFilters) => {
             const strategy = this.getStrategy(config.serverSelectionStrategy);
            let node;
-           if (config.serverSelectionStrategy === constants.SSS.CH) {
-               node = strategy.getNode(fullServiceName, ip, group, tags, deployment, filter);
-           } else if (config.serverSelectionStrategy === constants.SSS.RH || config.serverSelectionStrategy === constants.SSS.STICKY) {
-               node = strategy.getNode(fullServiceName, ip, group, tags, deployment, filter);
-           } else if (config.serverSelectionStrategy === constants.SSS.AFFINITY) {
-               node = strategy.getNode(fullServiceName, clientId, group, tags, deployment, filter);
-           } else {
-               node = strategy.getNode(fullServiceName, group, tags, deployment, filter);
-           }
+            if (config.serverSelectionStrategy === constants.SSS.CH) {
+                node = strategy.getNode(fullServiceName, ip, group, tags, deployment, filter, advancedFilters);
+            } else if (config.serverSelectionStrategy === constants.SSS.RH || config.serverSelectionStrategy === constants.SSS.STICKY) {
+                node = strategy.getNode(fullServiceName, ip, group, tags, deployment, filter, advancedFilters);
+            } else if (config.serverSelectionStrategy === constants.SSS.AFFINITY) {
+                node = strategy.getNode(fullServiceName, clientId, group, tags, deployment, filter, advancedFilters);
+            } else {
+                node = strategy.getNode(fullServiceName, group, tags, deployment, filter, advancedFilters);
+            }
 
            // If no local node found and federation is enabled, try federated discovery
            if (!node && config.federationEnabled) {

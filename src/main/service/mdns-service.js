@@ -38,7 +38,7 @@ class MDNSService {
     advertiseService(serviceName) {
         if (this.advertisedServices.has(serviceName)) return;
 
-        const nodes = serviceRegistry.getHealthyNodes(serviceName);
+        const nodes = serviceRegistry.getHealthyNodes(serviceName, undefined, undefined, undefined, undefined, null);
         if (nodes.length === 0) return;
 
         // Advertise the service with the first healthy node's address

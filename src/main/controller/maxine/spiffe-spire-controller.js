@@ -17,7 +17,6 @@ class SpiffeSpireController {
 
     async initialize() {
         if (this.mtlsEnabled) {
-            console.log('Initializing SPIFFE/SPIRE integration...');
             await this.connectToSpireServer();
             await this.setupWorkloadIdentities();
             await this.startCertificateRotation();
@@ -29,7 +28,6 @@ class SpiffeSpireController {
             // In real implementation, this would connect to SPIRE server
             // For simulation, we'll maintain local state
             this.connected = true;
-            console.log('Connected to SPIRE server');
         } catch (error) {
             console.error('Failed to connect to SPIRE server:', error);
             this.connected = false;
@@ -77,8 +75,6 @@ class SpiffeSpireController {
             workload.expiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000); // 24 hours
 
             this.certificates.set(nodeId, workload);
-
-            console.log(`Certificate issued for workload: ${workload.spiffeId}`);
         } catch (error) {
             console.error(`Failed to request certificate for ${nodeId}:`, error);
         }
@@ -122,11 +118,8 @@ class SpiffeSpireController {
     }
 
     async rotateCertificates() {
-        console.log('Starting certificate rotation...');
-
         for (const [nodeId, workload] of this.workloadIdentities) {
             if (workload.expiresAt && workload.expiresAt < new Date(Date.now() + 60 * 60 * 1000)) { // Expires within 1 hour
-                console.log(`Rotating certificate for ${nodeId}`);
                 await this.requestCertificate(nodeId);
             }
         }

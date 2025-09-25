@@ -23,8 +23,8 @@ class WeightedRandomDiscovery {
       * @param {array} tags
       * @returns {object}
       */
-    getNode = (fullServiceName, group, tags, deployment, filter) => {
-        const healthy = serviceRegistry.getHealthyNodes(fullServiceName, group, tags, deployment, filter);
+    getNode = (fullServiceName, group, tags, deployment, filter, advancedFilters) => {
+        const healthy = serviceRegistry.getHealthyNodes(fullServiceName, group, tags, deployment, filter, advancedFilters);
         if (healthy.length === 0) return null;
 
         // Build weighted list if not cached or changed
