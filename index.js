@@ -191,7 +191,7 @@ if (config.ultraFastMode) {
   const _WebSocket = require('ws');
   const _mqtt = require('mqtt');
 
-  const _stringify = require('fast-json-stringify');
+  const __stringify = require('fast-json-_stringify');
   const _winston = require('winston');
   const {
     logConfiguration: _logConfiguration,
@@ -201,7 +201,7 @@ if (config.ultraFastMode) {
   const path = require('path');
   const _GrpcServer = require('./src/main/grpc/grpc-server');
 
-  // Precompiled stringify functions for performance
+  // Precompiled _stringify functions for performance
   const registerResponseSchema = {
     type: 'object',
     properties: {
@@ -209,7 +209,7 @@ if (config.ultraFastMode) {
       status: { type: 'string' },
     },
   };
-  const stringifyRegister = stringify(registerResponseSchema);
+  const _stringifyRegister = _stringify(registerResponseSchema);
 
   const discoverResponseSchema = {
     type: 'object',
@@ -219,7 +219,7 @@ if (config.ultraFastMode) {
       healthy: { type: 'boolean' },
     },
   };
-  const stringifyDiscover = stringify(discoverResponseSchema);
+  const _stringifyDiscover = _stringify(discoverResponseSchema);
 
   const successResponseSchema = {
     type: 'object',
@@ -227,7 +227,7 @@ if (config.ultraFastMode) {
       success: { type: 'boolean' },
     },
   };
-  const stringifySuccess = stringify(successResponseSchema);
+  const _stringifySuccess = _stringify(successResponseSchema);
 
   const serversResponseSchema = {
     type: 'object',
@@ -235,7 +235,7 @@ if (config.ultraFastMode) {
       services: { type: 'array', items: { type: 'string' } },
     },
   };
-  const stringifyServers = stringify(serversResponseSchema);
+  const _stringifyServers = _stringify(serversResponseSchema);
 
   const healthResponseSchema = {
     type: 'object',
@@ -245,11 +245,11 @@ if (config.ultraFastMode) {
       nodes: { type: 'number' },
     },
   };
-  const stringifyHealth = stringify(healthResponseSchema);
+  const _stringifyHealth = _stringify(healthResponseSchema);
 
   // Disable metrics in ultra-fast mode
   // const metricsResponseSchema = { ... };
-  // const stringifyMetrics = stringify(metricsResponseSchema);
+  // const _stringifyMetrics = _stringify(metricsResponseSchema);
 
   // Pre-allocated error buffers
   const errorMissingServiceName = Buffer.from('{"error": "Missing serviceName"}');
@@ -289,7 +289,7 @@ if (config.ultraFastMode) {
       }
       const nodeId = serviceRegistry.register(serviceName, { host, port, metadata });
       res.writeHead(200, { 'Content-Type': 'application/json' });
-      res.end(stringifyRegister({ nodeId, status: 'registered' }));
+      res.end(_stringifyRegister({ nodeId, status: 'registered' }));
     } catch (error) {
       res.writeHead(500, { 'Content-Type': 'application/json' });
       res.end('{"error": "Internal server error"}');
@@ -314,7 +314,7 @@ if (config.ultraFastMode) {
       }
       const success = serviceRegistry.heartbeat(nodeId);
       res.writeHead(200, { 'Content-Type': 'application/json' });
-      res.end(stringifySuccess({ success }));
+      res.end(_stringifySuccess({ success }));
     } catch (error) {
       res.writeHead(500, { 'Content-Type': 'application/json' });
       res.end('{"error": "Internal server error"}');
@@ -435,7 +435,7 @@ if (config.ultraFastMode) {
     try {
       const services = serviceRegistry.getServices();
       res.writeHead(200, { 'Content-Type': 'application/json' });
-      res.end(stringifyServers({ services }));
+      res.end(_stringifyServers({ services }));
     } catch (error) {
       res.writeHead(500, { 'Content-Type': 'application/json' });
       res.end('{"error": "Internal server error"}');
@@ -448,7 +448,7 @@ if (config.ultraFastMode) {
       const services = serviceRegistry.servicesCount;
       const nodes = serviceRegistry.nodesCount;
       res.writeHead(200, { 'Content-Type': 'application/json' });
-      res.end(stringifyHealth({ status: 'ok', services, nodes }));
+      res.end(_stringifyHealth({ status: 'ok', services, nodes }));
     } catch (error) {
       res.writeHead(500, { 'Content-Type': 'application/json' });
       res.end('{"error": "Internal server error"}');
@@ -606,7 +606,7 @@ if (config.ultraFastMode) {
   const WebSocket = require('ws');
   const mqtt = require('mqtt');
 
-  const stringify = require('fast-json-stringify');
+  const _stringify = require('fast-json-stringify');
   const winston = require('winston');
   const { logConfiguration } = require('./src/main/config/logging/logging-config');
   winston.configure(logConfiguration);
@@ -671,7 +671,7 @@ if (config.ultraFastMode) {
     });
   }
 
-  // Precompiled stringify functions for performance
+  // Precompiled _stringify functions for performance
   const registerResponseSchema = {
     type: 'object',
     properties: {
@@ -679,7 +679,7 @@ if (config.ultraFastMode) {
       status: { type: 'string' },
     },
   };
-  const stringifyRegister = stringify(registerResponseSchema);
+  const _stringifyRegister = _stringify(registerResponseSchema);
 
   const discoverResponseSchema = {
     type: 'object',
@@ -689,7 +689,7 @@ if (config.ultraFastMode) {
       healthy: { type: 'boolean' },
     },
   };
-  const stringifyDiscover = stringify(discoverResponseSchema);
+  const _stringifyDiscover = _stringify(discoverResponseSchema);
 
   const successResponseSchema = {
     type: 'object',
@@ -697,7 +697,7 @@ if (config.ultraFastMode) {
       success: { type: 'boolean' },
     },
   };
-  const stringifySuccess = stringify(successResponseSchema);
+  const _stringifySuccess = _stringify(successResponseSchema);
 
   const serversResponseSchema = {
     type: 'object',
@@ -705,7 +705,7 @@ if (config.ultraFastMode) {
       services: { type: 'array', items: { type: 'string' } },
     },
   };
-  const stringifyServers = stringify(serversResponseSchema);
+  const _stringifyServers = _stringify(serversResponseSchema);
 
   const healthResponseSchema = {
     type: 'object',
@@ -715,7 +715,7 @@ if (config.ultraFastMode) {
       nodes: { type: 'number' },
     },
   };
-  const stringifyHealth = stringify(healthResponseSchema);
+  const _stringifyHealth = _stringify(healthResponseSchema);
 
   const metricsResponseSchema = {
     type: 'object',
@@ -735,7 +735,7 @@ if (config.ultraFastMode) {
       redisCacheMisses: { type: 'number' },
     },
   };
-  const stringifyMetrics = stringify(metricsResponseSchema);
+  const _stringifyMetrics = _stringify(metricsResponseSchema);
 
   // Pre-allocated error buffers
   const errorMissingServiceName = Buffer.from('{"error": "Missing serviceName"}');
@@ -915,7 +915,7 @@ if (config.ultraFastMode) {
       const validationErrors = validateServiceConfig(serviceName, host, port, metadata);
       if (validationErrors.length > 0) {
         res.writeHead(400, { 'Content-Type': 'application/json' });
-        res.end(JSON.stringify({ error: 'Validation failed', details: validationErrors }));
+        res.end(JSON._stringify({ error: 'Validation failed', details: validationErrors }));
         return;
       }
 
@@ -927,7 +927,7 @@ if (config.ultraFastMode) {
         responseObj = { nodeId: '', status: 'registered' };
       }
       responseObj.nodeId = nodeId;
-      res.end(stringifyRegister(responseObj));
+      res.end(_stringifyRegister(responseObj));
       responsePool.put('register', responseObj);
     } catch (error) {
       // winston.error(`AUDIT: Registration failed - error: ${error.message}, clientIP: ${req.connection.remoteAddress || req.socket.remoteAddress || 'unknown'}`);
@@ -956,7 +956,7 @@ if (config.ultraFastMode) {
         responseObj = { success: true };
       }
       responseObj.success = success;
-      res.end(stringifySuccess(responseObj));
+      res.end(_stringifySuccess(responseObj));
       responsePool.put('success', responseObj);
     } catch (error) {
       // winston.error(`AUDIT: Heartbeat failed - error: ${error.message}, clientIP: ${req.connection.remoteAddress || req.socket.remoteAddress || 'unknown'}`);
@@ -1070,7 +1070,7 @@ if (config.ultraFastMode) {
       }
       responseObj.address = node.address;
       responseObj.nodeName = node.nodeName;
-      res.end(stringifyDiscover(responseObj));
+      res.end(_stringifyDiscover(responseObj));
       responsePool.put('discover', responseObj);
     } catch (error) {
       // winston.error(`AUDIT: Discovery failed - error: ${error.message}, clientIP: ${req.connection.remoteAddress || req.socket.remoteAddress || 'unknown'}`);
@@ -1087,7 +1087,7 @@ if (config.ultraFastMode) {
       const services = serviceRegistry.getServices();
       // winston.info(`AUDIT: Services list requested - count: ${services.length}, clientIP: ${clientIP}`);
       res.writeHead(200, { 'Content-Type': 'application/json' });
-      res.end(stringifyServers({ services }));
+      res.end(_stringifyServers({ services }));
     } catch (error) {
       // winston.error(`AUDIT: Services list failed - error: ${error.message}, clientIP: ${req.connection.remoteAddress || req.socket.remoteAddress || 'unknown'}`);
       errorCount++;
@@ -1110,7 +1110,7 @@ if (config.ultraFastMode) {
       }
       responseObj.services = services;
       responseObj.nodes = nodes;
-      res.end(stringifyHealth(responseObj));
+      res.end(_stringifyHealth(responseObj));
       responsePool.put('health', responseObj);
     } catch (error) {
       // winston.error(`AUDIT: Health check failed - error: ${error.message}, clientIP: ${req.connection.remoteAddress || req.socket.remoteAddress || 'unknown'}`);
@@ -1164,7 +1164,7 @@ if (config.ultraFastMode) {
       responseObj.redisCacheMisses = serviceRegistry.redisCacheMisses;
       responseObj.redisCacheHits = serviceRegistry.redisCacheHits;
       responseObj.redisCacheMisses = serviceRegistry.redisCacheMisses;
-      res.end(stringifyMetrics(responseObj));
+      res.end(_stringifyMetrics(responseObj));
       responsePool.put('metrics', responseObj);
     } catch (error) {
       // winston.error(`AUDIT: Metrics failed - error: ${error.message}, clientIP: ${req.connection.remoteAddress || req.socket.remoteAddress || 'unknown'}`);
@@ -1194,7 +1194,7 @@ if (config.ultraFastMode) {
       const versions = serviceRegistry.getVersions(serviceName);
       // winston.info(`AUDIT: Versions requested - serviceName: ${serviceName}, versions: ${versions.join(', ')}, clientIP: ${clientIP}`);
       res.writeHead(200, { 'Content-Type': 'application/json' });
-      res.end(JSON.stringify({ serviceName, versions }));
+      res.end(JSON._stringify({ serviceName, versions }));
     } catch (error) {
       winston.error(
         `AUDIT: Versions failed - error: ${error.message}, clientIP: ${req.connection.remoteAddress || req.socket.remoteAddress || 'unknown'}`
@@ -1224,7 +1224,7 @@ if (config.ultraFastMode) {
         });
         // winston.info(`AUDIT: Signin successful - username: ${username}, clientIP: ${clientIP}`);
         res.writeHead(200, { 'Content-Type': 'application/json' });
-        res.end(JSON.stringify({ token }));
+        res.end(JSON._stringify({ token }));
       } else {
         // winston.warn(`AUDIT: Signin failed - invalid credentials, username: ${username}, clientIP: ${clientIP}`);
         res.writeHead(401, { 'Content-Type': 'application/json' });
@@ -1257,7 +1257,7 @@ if (config.ultraFastMode) {
       );
       // winston.info(`AUDIT: Token refreshed - username: ${decoded.username}, clientIP: ${clientIP}`);
       res.writeHead(200, { 'Content-Type': 'application/json' });
-      res.end(JSON.stringify({ token: newToken }));
+      res.end(JSON._stringify({ token: newToken }));
     } catch (error) {
       // winston.error(`AUDIT: Token refresh failed - error: ${error.message}, clientIP: ${req.connection.remoteAddress || req.socket.remoteAddress || 'unknown'}`);
       errorCount++;
@@ -1311,7 +1311,7 @@ if (config.ultraFastMode) {
         );
         res.writeHead(200, { 'Content-Type': 'application/json' });
         res.end(
-          JSON.stringify({
+          JSON._stringify({
             token: userToken,
             user: { id: user.sub, email: user.email, name: user.name },
           })
@@ -1349,7 +1349,7 @@ if (config.ultraFastMode) {
         );
         res.writeHead(200, { 'Content-Type': 'application/json' });
         res.end(
-          JSON.stringify({
+          JSON._stringify({
             token: userToken,
             user: { id: user.nameID, email: user.email, name: user.displayName },
           })
@@ -1390,7 +1390,7 @@ if (config.ultraFastMode) {
       const data = serviceRegistry.getRegistryData();
       // winston.info(`AUDIT: Registry backup performed - clientIP: ${clientIP}`);
       res.writeHead(200, { 'Content-Type': 'application/json' });
-      res.end(JSON.stringify(data));
+      res.end(JSON._stringify(data));
     } catch (error) {
       // winston.error(`AUDIT: Backup failed - error: ${error.message}, clientIP: ${req.connection.remoteAddress || req.socket.remoteAddress || 'unknown'}`);
       errorCount++;
@@ -1573,7 +1573,7 @@ if (config.ultraFastMode) {
     const trace = serviceRegistry.getTrace(id);
     // winston.info(`AUDIT: Trace retrieved - id: ${id}, clientIP: ${clientIP}`);
     res.writeHead(200, { 'Content-Type': 'application/json' });
-    res.end(JSON.stringify(trace));
+    res.end(JSON._stringify(trace));
   });
 
   // Configuration management endpoints
@@ -1611,7 +1611,7 @@ if (config.ultraFastMode) {
       const configResult = serviceRegistry.setConfig(serviceName, key, value, metadata);
       // winston.info(`AUDIT: Config set - serviceName: ${serviceName}, key: ${key}, clientIP: ${clientIP}`);
       res.writeHead(200, { 'Content-Type': 'application/json' });
-      res.end(JSON.stringify(configResult));
+      res.end(JSON._stringify(configResult));
     } catch (error) {
       // winston.error(`AUDIT: Config set failed - error: ${error.message}, clientIP: ${req.connection.remoteAddress || req.socket.remoteAddress || 'unknown'}`);
       errorCount++;
@@ -1643,7 +1643,7 @@ if (config.ultraFastMode) {
       }
       // winston.info(`AUDIT: Config get - serviceName: ${serviceName}, key: ${key}, clientIP: ${clientIP}`);
       res.writeHead(200, { 'Content-Type': 'application/json' });
-      res.end(JSON.stringify(configValue));
+      res.end(JSON._stringify(configValue));
     } catch (error) {
       // winston.error(`AUDIT: Config get failed - error: ${error.message}, clientIP: ${req.connection.remoteAddress || req.socket.remoteAddress || 'unknown'}`);
       errorCount++;
@@ -1666,7 +1666,7 @@ if (config.ultraFastMode) {
       const configs = serviceRegistry.getAllConfigs(serviceName);
       // winston.info(`AUDIT: Config all - serviceName: ${serviceName}, count: ${Object.keys(configs).length}, clientIP: ${clientIP}`);
       res.writeHead(200, { 'Content-Type': 'application/json' });
-      res.end(JSON.stringify(configs));
+      res.end(JSON._stringify(configs));
     } catch (error) {
       // winston.error(`AUDIT: Config all failed - error: ${error.message}, clientIP: ${req.connection.remoteAddress || req.socket.remoteAddress || 'unknown'}`);
       errorCount++;
@@ -1816,7 +1816,7 @@ if (config.ultraFastMode) {
       };
       // winston.info(`AUDIT: Envoy config requested - services: ${services.size}, clientIP: ${clientIP}`);
       res.writeHead(200, { 'Content-Type': 'application/json' });
-      res.end(JSON.stringify(envoyConfig, null, 2));
+      res.end(JSON._stringify(envoyConfig, null, 2));
     } catch (error) {
       // winston.error(`AUDIT: Envoy config failed - error: ${error.message}, clientIP: ${req.connection.remoteAddress || req.socket.remoteAddress || 'unknown'}`);
       errorCount++;
@@ -1925,7 +1925,7 @@ if (config.ultraFastMode) {
       }
       // winston.info(`AUDIT: AI-optimized Istio config requested - services: ${services.size}, clientIP: ${clientIP}`);
       res.writeHead(200, { 'Content-Type': 'application/json' });
-      res.end(JSON.stringify(configs, null, 2));
+      res.end(JSON._stringify(configs, null, 2));
     } catch (error) {
       // winston.error(`AUDIT: Istio config failed - error: ${error.message}, clientIP: ${req.connection.remoteAddress || req.socket.remoteAddress || 'unknown'}`);
       errorCount++;
@@ -1982,7 +1982,7 @@ if (config.ultraFastMode) {
       }
       // winston.info(`AUDIT: AI-optimized Linkerd config requested - services: ${services.size}, clientIP: ${clientIP}`);
       res.writeHead(200, { 'Content-Type': 'application/json' });
-      res.end(JSON.stringify(configs, null, 2));
+      res.end(JSON._stringify(configs, null, 2));
     } catch (error) {
       // winston.error(`AUDIT: Linkerd config failed - error: ${error.message}, clientIP: ${req.connection.remoteAddress || req.socket.remoteAddress || 'unknown'}`);
       errorCount++;
@@ -2061,7 +2061,7 @@ if (config.ultraFastMode) {
         status[serviceName] = state;
       }
       res.writeHead(200, { 'Content-Type': 'application/json' });
-      res.end(JSON.stringify({ chaosState: status }));
+      res.end(JSON._stringify({ chaosState: status }));
     } catch (error) {
       res.writeHead(500, { 'Content-Type': 'application/json' });
       res.end('{"error": "Internal server error"}');
@@ -2084,7 +2084,7 @@ if (config.ultraFastMode) {
       const versions = serviceRegistry.getVersions(serviceName);
       // winston.info(`AUDIT: Versions requested - serviceName: ${serviceName}, versions: ${versions.join(',')}, clientIP: ${clientIP}`);
       res.writeHead(200, { 'Content-Type': 'application/json' });
-      res.end(JSON.stringify({ serviceName, versions }));
+      res.end(JSON._stringify({ serviceName, versions }));
     } catch (error) {
       // winston.error(`AUDIT: Versions failed - error: ${error.message}, clientIP: ${req.connection.remoteAddress || req.socket.remoteAddress || 'unknown'}`);
       errorCount++;
@@ -2116,7 +2116,7 @@ if (config.ultraFastMode) {
       };
       // winston.info(`AUDIT: OSB catalog requested - services: ${catalog.services.length}, clientIP: ${clientIP}`);
       res.writeHead(200, { 'Content-Type': 'application/json' });
-      res.end(JSON.stringify(catalog));
+      res.end(JSON._stringify(catalog));
     } catch (error) {
       // winston.error(`AUDIT: OSB catalog failed - error: ${error.message}, clientIP: ${req.connection.remoteAddress || req.socket.remoteAddress || 'unknown'}`);
       errorCount++;
@@ -2131,7 +2131,7 @@ if (config.ultraFastMode) {
       const anomalies = serviceRegistry.getAnomalies();
       // winston.info(`AUDIT: Anomalies requested - count: ${anomalies.length}, clientIP: ${clientIP}`);
       res.writeHead(200, { 'Content-Type': 'application/json' });
-      res.end(JSON.stringify({ anomalies }));
+      res.end(JSON._stringify({ anomalies }));
     } catch (error) {
       // winston.error(`AUDIT: Anomalies failed - error: ${error.message}, clientIP: ${req.connection.remoteAddress || req.socket.remoteAddress || 'unknown'}`);
       errorCount++;
@@ -2155,7 +2155,7 @@ if (config.ultraFastMode) {
       const scores = serviceRegistry.getHealthScores(serviceName);
       // winston.info(`AUDIT: Health scores requested - serviceName: ${serviceName}, clientIP: ${clientIP}`);
       res.writeHead(200, { 'Content-Type': 'application/json' });
-      res.end(JSON.stringify({ serviceName, scores }));
+      res.end(JSON._stringify({ serviceName, scores }));
     } catch (error) {
       // winston.error(`AUDIT: Health scores failed - error: ${error.message}, clientIP: ${req.connection.remoteAddress || req.socket.remoteAddress || 'unknown'}`);
       errorCount++;
@@ -2180,7 +2180,7 @@ if (config.ultraFastMode) {
       const predictions = serviceRegistry.predictServiceHealth(serviceName, window);
       // winston.info(`AUDIT: Health prediction requested - serviceName: ${serviceName}, window: ${window}, clientIP: ${clientIP}`);
       res.writeHead(200, { 'Content-Type': 'application/json' });
-      res.end(JSON.stringify({ serviceName, predictions, predictionWindow: window }));
+      res.end(JSON._stringify({ serviceName, predictions, predictionWindow: window }));
     } catch (error) {
       // winston.error(`AUDIT: Health prediction failed - error: ${error.message}, clientIP: ${req.connection.remoteAddress || req.socket.remoteAddress || 'unknown'}`);
       errorCount++;
@@ -2195,7 +2195,7 @@ if (config.ultraFastMode) {
       const anomalies = serviceRegistry.getAnomalies();
       // winston.info(`AUDIT: Anomalies requested - count: ${anomalies.length}, clientIP: ${clientIP}`);
       res.writeHead(200, { 'Content-Type': 'application/json' });
-      res.end(JSON.stringify({ anomalies }));
+      res.end(JSON._stringify({ anomalies }));
     } catch (error) {
       // winston.error(`AUDIT: Anomalies failed - error: ${error.message}, clientIP: ${req.connection.remoteAddress || req.socket.remoteAddress || 'unknown'}`);
       errorCount++;
@@ -2217,7 +2217,7 @@ if (config.ultraFastMode) {
         return;
       }
       serviceRegistry.setTrafficDistribution(serviceName, distribution);
-      // winston.info(`AUDIT: Traffic set - serviceName: ${serviceName}, distribution: ${JSON.stringify(distribution)}, clientIP: ${clientIP}`);
+      // winston.info(`AUDIT: Traffic set - serviceName: ${serviceName}, distribution: ${JSON._stringify(distribution)}, clientIP: ${clientIP}`);
       res.writeHead(200, { 'Content-Type': 'application/json' });
       res.end(successTrue);
     } catch (error) {
@@ -2305,9 +2305,9 @@ if (config.ultraFastMode) {
       const clientIP = req.connection.remoteAddress || req.socket.remoteAddress || 'unknown';
       const nodeId = req.url.split('/').pop();
       const state = serviceRegistry.getCircuitState(nodeId);
-      // winston.info(`AUDIT: Circuit breaker state requested - nodeId: ${nodeId}, state: ${JSON.stringify(state)}, clientIP: ${clientIP}`);
+      // winston.info(`AUDIT: Circuit breaker state requested - nodeId: ${nodeId}, state: ${JSON._stringify(state)}, clientIP: ${clientIP}`);
       res.writeHead(200, { 'Content-Type': 'application/json' });
-      res.end(JSON.stringify(state));
+      res.end(JSON._stringify(state));
     } catch (error) {
       // winston.error(`AUDIT: Circuit breaker state failed - error: ${error.message}, clientIP: ${req.connection.remoteAddress || req.socket.remoteAddress || 'unknown'}`);
       errorCount++;
@@ -2326,7 +2326,7 @@ if (config.ultraFastMode) {
       const filtered = eventHistory.filter((e) => e.timestamp > since).slice(-limit);
       // winston.info(`AUDIT: Event history requested - since: ${since}, limit: ${limit}, returned: ${filtered.length}, clientIP: ${clientIP}`);
       res.writeHead(200, { 'Content-Type': 'application/json' });
-      res.end(JSON.stringify(filtered));
+      res.end(JSON._stringify(filtered));
     } catch (error) {
       // winston.error(`AUDIT: Event history failed - error: ${error.message}, clientIP: ${req.connection.remoteAddress || req.socket.remoteAddress || 'unknown'}`);
       errorCount++;
@@ -2388,7 +2388,7 @@ if (config.ultraFastMode) {
       const blacklist = serviceRegistry.getBlacklist();
       // winston.info(`AUDIT: Blacklist requested - count: ${blacklist.length}, clientIP: ${clientIP}`);
       res.writeHead(200, { 'Content-Type': 'application/json' });
-      res.end(JSON.stringify({ blacklist }));
+      res.end(JSON._stringify({ blacklist }));
     } catch (error) {
       // winston.error(`AUDIT: Blacklist get failed - error: ${error.message}, clientIP: ${req.connection.remoteAddress || req.socket.remoteAddress || 'unknown'}`);
       errorCount++;
@@ -2577,7 +2577,7 @@ if (config.ultraFastMode) {
     </div>
 
     <script>
-        const analytics = ${JSON.stringify(analytics)};
+        const analytics = ${JSON._stringify(analytics)};
 
         // Create service call graph
         function createCallGraph() {
@@ -2709,9 +2709,9 @@ if (config.ultraFastMode) {
       const graph = serviceRegistry.getDependencyGraph();
       const cycles = serviceRegistry.detectCycles();
       const callLogs = serviceRegistry.getCallLogs();
-      const graphJson = JSON.stringify(graph);
-      const cyclesJson = JSON.stringify(cycles);
-      const callLogsJson = JSON.stringify(callLogs);
+      const graphJson = JSON._stringify(graph);
+      const cyclesJson = JSON._stringify(cycles);
+      const callLogsJson = JSON._stringify(callLogs);
       const html = `
 <!DOCTYPE html>
 <html>
@@ -2867,7 +2867,7 @@ if (config.ultraFastMode) {
         }
 
         function exportJSON() {
-            const dataStr = JSON.stringify(graphData, null, 2);
+            const dataStr = JSON._stringify(graphData, null, 2);
             const dataUri = 'data:application/json;charset=utf-8,'+ encodeURIComponent(dataStr);
             const exportFileDefaultName = 'dependency-graph.json';
             const linkElement = document.createElement('a');
@@ -2938,7 +2938,7 @@ if (config.ultraFastMode) {
       const uptime = process.uptime();
       // winston.info(`AUDIT: Actuator metrics requested - clientIP: ${clientIP}`);
       res.writeHead(200, { 'Content-Type': 'application/json' });
-      res.end(JSON.stringify({ mem, uptime }));
+      res.end(JSON._stringify({ mem, uptime }));
     } catch (error) {
       // winston.error(`AUDIT: Actuator metrics failed - error: ${error.message}, clientIP: ${req.connection.remoteAddress || req.socket.remoteAddress || 'unknown'}`);
       errorCount++;
@@ -2971,7 +2971,7 @@ if (config.ultraFastMode) {
       // winston.info(`AUDIT: Config get requested - clientIP: ${clientIP}`);
       res.writeHead(200, { 'Content-Type': 'application/json' });
       res.end(
-        JSON.stringify({
+        JSON._stringify({
           logAsync: config.logAsync,
           heartBeatTimeout: config.heartBeatTimeout,
           highPerformanceMode: false,
@@ -3002,7 +3002,7 @@ if (config.ultraFastMode) {
       }
       // winston.info(`AUDIT: Config updated - key: ${key}, value: ${value}, clientIP: ${clientIP}`);
       res.writeHead(200, { 'Content-Type': 'application/json' });
-      res.end(JSON.stringify({ [key]: 'Success' }));
+      res.end(JSON._stringify({ [key]: 'Success' }));
     } catch (error) {
       // winston.error(`AUDIT: Config update failed - error: ${error.message}, clientIP: ${req.connection.remoteAddress || req.socket.remoteAddress || 'unknown'}`);
       errorCount++;
@@ -3075,7 +3075,7 @@ if (config.ultraFastMode) {
       const dependencies = serviceRegistry.getDependencies(serviceName);
       // winston.info(`AUDIT: Dependencies retrieved - serviceName: ${serviceName}, count: ${dependencies.length}, clientIP: ${clientIP}`);
       res.writeHead(200, { 'Content-Type': 'application/json' });
-      res.end(JSON.stringify({ serviceName, dependencies }));
+      res.end(JSON._stringify({ serviceName, dependencies }));
     } catch (error) {
       // winston.error(`AUDIT: Dependency get failed - error: ${error.message}, clientIP: ${req.connection.remoteAddress || req.socket.remoteAddress || 'unknown'}`);
       errorCount++;
@@ -3097,7 +3097,7 @@ if (config.ultraFastMode) {
       const dependents = serviceRegistry.getDependents(serviceName);
       // winston.info(`AUDIT: Dependents retrieved - serviceName: ${serviceName}, count: ${dependents.length}, clientIP: ${clientIP}`);
       res.writeHead(200, { 'Content-Type': 'application/json' });
-      res.end(JSON.stringify({ serviceName, dependents }));
+      res.end(JSON._stringify({ serviceName, dependents }));
     } catch (error) {
       // winston.error(`AUDIT: Dependents get failed - error: ${error.message}, clientIP: ${req.connection.remoteAddress || req.socket.remoteAddress || 'unknown'}`);
       errorCount++;
@@ -3112,7 +3112,7 @@ if (config.ultraFastMode) {
       const graph = serviceRegistry.getDependencyGraph();
       // winston.info(`AUDIT: Dependency graph retrieved - services: ${Object.keys(graph).length}, clientIP: ${clientIP}`);
       res.writeHead(200, { 'Content-Type': 'application/json' });
-      res.end(JSON.stringify(graph));
+      res.end(JSON._stringify(graph));
     } catch (error) {
       // winston.error(`AUDIT: Dependency graph failed - error: ${error.message}, clientIP: ${req.connection.remoteAddress || req.socket.remoteAddress || 'unknown'}`);
       errorCount++;
@@ -3127,7 +3127,7 @@ if (config.ultraFastMode) {
       const cycles = serviceRegistry.detectCycles();
       // winston.info(`AUDIT: Cycles detected - count: ${cycles.length}, clientIP: ${clientIP}`);
       res.writeHead(200, { 'Content-Type': 'application/json' });
-      res.end(JSON.stringify({ cycles }));
+      res.end(JSON._stringify({ cycles }));
     } catch (error) {
       // winston.error(`AUDIT: Cycles detection failed - error: ${error.message}, clientIP: ${req.connection.remoteAddress || req.socket.remoteAddress || 'unknown'}`);
       errorCount++;
@@ -3166,7 +3166,7 @@ if (config.ultraFastMode) {
       const acl = serviceRegistry.getACL(serviceName);
       // winston.info(`AUDIT: ACL retrieved - serviceName: ${serviceName}, clientIP: ${clientIP}`);
       res.writeHead(200, { 'Content-Type': 'application/json' });
-      res.end(JSON.stringify(acl));
+      res.end(JSON._stringify(acl));
     } catch (error) {
       // winston.error(`AUDIT: ACL get failed - error: ${error.message}, clientIP: ${req.connection.remoteAddress || req.socket.remoteAddress || 'unknown'}`);
       errorCount++;
@@ -3209,7 +3209,7 @@ if (config.ultraFastMode) {
         const action = serviceRegistry.getIntention(source, destination);
         // winston.info(`AUDIT: Intention retrieved - source: ${source}, destination: ${destination}, action: ${action}, clientIP: ${clientIP}`);
         res.writeHead(200, { 'Content-Type': 'application/json' });
-        res.end(JSON.stringify({ source, destination, action }));
+        res.end(JSON._stringify({ source, destination, action }));
       } catch (error) {
         // winston.error(`AUDIT: Intention get failed - error: ${error.message}, clientIP: ${req.connection.remoteAddress || req.socket.remoteAddress || 'unknown'}`);
         errorCount++;
@@ -3233,7 +3233,7 @@ if (config.ultraFastMode) {
         return;
       }
       serviceRegistry.setCompatibilityRule(serviceName, version, compatibleVersions);
-      // winston.info(`AUDIT: Compatibility rule set - serviceName: ${serviceName}, version: ${version}, compatibleVersions: ${JSON.stringify(compatibleVersions)}, clientIP: ${clientIP}`);
+      // winston.info(`AUDIT: Compatibility rule set - serviceName: ${serviceName}, version: ${version}, compatibleVersions: ${JSON._stringify(compatibleVersions)}, clientIP: ${clientIP}`);
       res.writeHead(200, { 'Content-Type': 'application/json' });
       res.end(successTrue);
     } catch (error) {
@@ -3265,7 +3265,7 @@ if (config.ultraFastMode) {
       }
       // winston.info(`AUDIT: Compatibility rules retrieved - serviceName: ${serviceName}, version: ${version}, clientIP: ${clientIP}`);
       res.writeHead(200, { 'Content-Type': 'application/json' });
-      res.end(JSON.stringify({ serviceName, version, rules }));
+      res.end(JSON._stringify({ serviceName, version, rules }));
     } catch (error) {
       // winston.error(`AUDIT: Compatibility get failed - error: ${error.message}, clientIP: ${req.connection.remoteAddress || req.socket.remoteAddress || 'unknown'}`);
       errorCount++;
@@ -3289,7 +3289,7 @@ if (config.ultraFastMode) {
       const compatible = serviceRegistry.checkCompatibility(serviceName, version, requiredVersion);
       // winston.info(`AUDIT: Compatibility checked - serviceName: ${serviceName}, version: ${version}, requiredVersion: ${requiredVersion}, compatible: ${compatible}, clientIP: ${clientIP}`);
       res.writeHead(200, { 'Content-Type': 'application/json' });
-      res.end(JSON.stringify({ serviceName, version, requiredVersion, compatible }));
+      res.end(JSON._stringify({ serviceName, version, requiredVersion, compatible }));
     } catch (error) {
       // winston.error(`AUDIT: Compatibility check failed - error: ${error.message}, clientIP: ${req.connection.remoteAddress || req.socket.remoteAddress || 'unknown'}`);
       errorCount++;
@@ -3532,7 +3532,7 @@ if (config.ultraFastMode) {
   const saveEventHistory = () => {
     if (config.persistenceEnabled && config.persistenceType === 'file') {
       try {
-        fs.writeFileSync(eventHistoryFile, JSON.stringify(eventHistory, null, 2));
+        fs.writeFileSync(eventHistoryFile, JSON._stringify(eventHistory, null, 2));
       } catch (err) {
         console.error('Failed to save event history:', err);
       }
@@ -3564,7 +3564,7 @@ if (config.ultraFastMode) {
   const broadcast = (event, data) => {
     eventBroadcastCount++;
     const messageObj = { event, data, timestamp: Date.now() };
-    const message = JSON.stringify(messageObj);
+    const message = JSON._stringify(messageObj);
     // Store in history
     eventHistory.push(messageObj);
     if (eventHistory.length > maxHistory) {
@@ -3637,14 +3637,14 @@ if (config.ultraFastMode) {
               try {
                 const decoded = jwt.verify(data.auth, config.jwtSecret);
                 clientAuth.set(ws, decoded);
-                ws.send(JSON.stringify({ type: 'authenticated', user: decoded }));
+                ws.send(JSON._stringify({ type: 'authenticated', user: decoded }));
               } catch (err) {
-                ws.send(JSON.stringify({ type: 'auth_failed' }));
+                ws.send(JSON._stringify({ type: 'auth_failed' }));
                 ws.close();
               }
             }
           } else if (!clientAuth.get(ws)) {
-            ws.send(JSON.stringify({ type: 'auth_required' }));
+            ws.send(JSON._stringify({ type: 'auth_required' }));
             ws.close();
             return;
           }
@@ -3652,18 +3652,18 @@ if (config.ultraFastMode) {
             // Role check: only admin can subscribe to admin events
             const user = clientAuth.get(ws);
             if (data.subscribe.event === 'admin_event' && (!user || user.role !== 'admin')) {
-              ws.send(JSON.stringify({ type: 'error', message: 'Insufficient permissions' }));
+              ws.send(JSON._stringify({ type: 'error', message: 'Insufficient permissions' }));
               return;
             }
             clientFilters.set(ws, data.subscribe);
-            ws.send(JSON.stringify({ type: 'subscribed', filter: data.subscribe }));
+            ws.send(JSON._stringify({ type: 'subscribed', filter: data.subscribe }));
           } else if (data.unsubscribe) {
             clientFilters.set(ws, null);
-            ws.send(JSON.stringify({ type: 'unsubscribed' }));
+            ws.send(JSON._stringify({ type: 'unsubscribed' }));
           } else if (data.refresh_token) {
             const user = clientAuth.get(ws);
             if (!user) {
-              ws.send(JSON.stringify({ type: 'error', message: 'Not authenticated' }));
+              ws.send(JSON._stringify({ type: 'error', message: 'Not authenticated' }));
               return;
             }
             try {
@@ -3672,9 +3672,9 @@ if (config.ultraFastMode) {
                 config.jwtSecret,
                 { expiresIn: config.jwtExpiresIn }
               );
-              ws.send(JSON.stringify({ type: 'token_refreshed', token: newToken }));
+              ws.send(JSON._stringify({ type: 'token_refreshed', token: newToken }));
             } catch (err) {
-              ws.send(JSON.stringify({ type: 'error', message: 'Token refresh failed' }));
+              ws.send(JSON._stringify({ type: 'error', message: 'Token refresh failed' }));
             }
           }
         } catch (e) {
@@ -3752,7 +3752,7 @@ if (config.ultraFastMode) {
       const saveEventHistory = () => {
         if (config.persistenceEnabled && config.persistenceType === 'file') {
           try {
-            fs.writeFileSync(eventHistoryFile, JSON.stringify(eventHistory, null, 2));
+            fs.writeFileSync(eventHistoryFile, JSON._stringify(eventHistory, null, 2));
           } catch (err) {
             console.error('Failed to save event history:', err);
           }
@@ -3808,14 +3808,14 @@ if (config.ultraFastMode) {
       //                 try {
       //                     const decoded = jwt.verify(data.auth, config.jwtSecret);
       //                     clientAuth.set(ws, decoded);
-      //                     ws.send(JSON.stringify({ type: 'authenticated', user: decoded }));
+      //                     ws.send(JSON._stringify({ type: 'authenticated', user: decoded }));
       //                 } catch (err) {
-      //                     ws.send(JSON.stringify({ type: 'auth_failed' }));
+      //                     ws.send(JSON._stringify({ type: 'auth_failed' }));
       //                     ws.close();
       //                 }
       //             }
       //         } else if (!clientAuth.get(ws)) {
-      //             ws.send(JSON.stringify({ type: 'auth_required' }));
+      //             ws.send(JSON._stringify({ type: 'auth_required' }));
       //             ws.close();
       //             return;
       //         }
@@ -3823,26 +3823,26 @@ if (config.ultraFastMode) {
       //             // Role check: only admin can subscribe to admin events
       //             const user = clientAuth.get(ws);
       //             if (data.subscribe.event && data.subscribe.event.startsWith('admin_') && (!user || user.role !== 'admin')) {
-      //                 ws.send(JSON.stringify({ type: 'error', message: 'Insufficient permissions' }));
+      //                 ws.send(JSON._stringify({ type: 'error', message: 'Insufficient permissions' }));
       //                 return;
       //             }
       //             clientFilters.set(ws, data.subscribe);
-      //             ws.send(JSON.stringify({ type: 'subscribed', filter: data.subscribe }));
+      //             ws.send(JSON._stringify({ type: 'subscribed', filter: data.subscribe }));
       //         }
       //         if (data.unsubscribe) {
       //             clientFilters.set(ws, null);
-      //             ws.send(JSON.stringify({ type: 'unsubscribed' }));
+      //             ws.send(JSON._stringify({ type: 'unsubscribed' }));
       //         }
       //         if (data.refresh_token) {
       //             const user = clientAuth.get(ws);
       //             if (config.authEnabled && user) {
       //                 // Generate new token
       //                 const newToken = jwt.sign({ username: user.username, role: user.role }, config.jwtSecret, { expiresIn: config.jwtExpiresIn });
-      //                 ws.send(JSON.stringify({ type: 'token_refreshed', token: newToken }));
+      //                 ws.send(JSON._stringify({ type: 'token_refreshed', token: newToken }));
       //             }
       //         }
       //     } catch (e) {
-      //         ws.send(JSON.stringify({ type: 'error', message: 'Invalid message format' }));
+      //         ws.send(JSON._stringify({ type: 'error', message: 'Invalid message format' }));
       //     }
       // });
 
