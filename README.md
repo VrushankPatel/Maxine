@@ -41,8 +41,8 @@ A minimal, high-performance service discovery and registry for microservices.
 
 Maxine delivers exceptional performance for service discovery operations:
 
-- **Ultra-Fast Mode**: Average 1.9ms, P95 3.54ms for discovery requests (with advanced optimizations and AI-driven load balancing)
-- **Throughput**: 24,721+ requests per second under load (50 concurrent users, 5000 iterations)
+- **Ultra-Fast Mode**: Average 1.37ms, P95 3.36ms for discovery requests (with advanced optimizations and AI-driven load balancing)
+- **Throughput**: 33,854+ requests per second under load (50 concurrent users, 5000 iterations)
 - **Lightning Mode**: Average 4.91ms, P95 6.49ms for discovery requests (100 concurrent users, 1000 iterations)
 - **Throughput**: 20,136+ requests per second under load (100 concurrent users, 1000 iterations)
 - **Optimizations**: QUIC/HTTP3 support for ultra-low latency, HTTP/1.1 for ultra-fast mode (disabled HTTP/2 for lower latency), disabled OpenTelemetry tracing and Prometheus metrics in Lightning Mode, ultra-fast mode with minimal features for maximum speed, fast LCG PRNG, pre-allocated buffers, object pooling, adaptive caching, binary search for weighted random selection, SIMD-inspired fast bulk operations (fastMin, fastMax, fastSum, etc.) for load balancing calculations, removed console.log from production code (24% throughput improvement), optimized discovery to use ultraFastGetRandomNodeSync directly, disabled expensive operations in lightning mode, synchronous load balancing for ultra-fast mode, updated GC flags for Node.js 22 compatibility
