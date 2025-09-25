@@ -255,14 +255,27 @@ router.get('/discover', (req, res) => {
   const version = req.query.version;
   const environment = req.query.environment;
   const advancedFilters = parseAdvancedFilters(req);
-  const serviceNode = getServiceRegistry().getRandomNode(
-    fullServiceName,
-    strategy,
-    clientId,
-    tags,
-    version,
-    advancedFilters
-  );
+
+  let serviceNode;
+  if (config.ultraFastMode) {
+    // Use ultra-fast sync method for maximum performance
+    serviceNode = getServiceRegistry().ultraFastGetRandomNodeSync(
+      fullServiceName,
+      strategy,
+      clientId,
+      tags
+    );
+  } else {
+    serviceNode = getServiceRegistry().getRandomNode(
+      fullServiceName,
+      strategy,
+      clientId,
+      tags,
+      version,
+      advancedFilters
+    );
+  }
+
   if (!serviceNode) {
     return res.status(404).end(notFoundBuffer);
   }
@@ -390,6 +403,71 @@ router.post(
   }
 );
 router.get('/servers', lightningServerListController);
+
+// Get all instances of a specific service
+router.get('/services/:serviceName', (req, res) => {
+  const serviceName = req.params.serviceName;
+  if (!serviceName) {
+    return res.status(400).end(missingServiceNameBuffer);
+  }
+
+  const service = getServiceRegistry().services.get(serviceName);
+  if (!service) {
+    return res.status(404).end(notFoundBuffer);
+  }
+
+  const instances = Array.from(service.healthyNodes.values()).map(node => ({
+    nodeId: node.nodeId,
+    address: node.address,
+    nodeName: node.nodeName,
+    metadata: node.metadata,
+    lastHeartbeat: node.lastHeartbeat,
+    healthy: true
+  }));
+
+  res.json({ serviceName, instances });
+});
+
+// Get health status of a specific node
+router.get('/health/:nodeId', (req, res) => {
+  const nodeId = req.params.nodeId;
+  if (!nodeId) {
+    return res.status(400).json({ error: 'nodeId parameter required' });
+  }
+
+  // Find the node across all services
+  let foundNode = null;
+  let serviceName = null;
+
+  for (const [svcName, service] of getServiceRegistry().services) {
+    const node = service.healthyNodes.get(nodeId);
+    if (node) {
+      foundNode = node;
+      serviceName = svcName;
+      break;
+    }
+  }
+
+  if (!foundNode) {
+    return res.status(404).json({ error: 'Node not found' });
+  }
+
+  const now = Date.now();
+  const timeSinceLastHeartbeat = now - foundNode.lastHeartbeat;
+  const isHealthy = timeSinceLastHeartbeat < (config.heartBeatTimeout * 1000);
+
+  res.json({
+    nodeId,
+    serviceName,
+    address: foundNode.address,
+    nodeName: foundNode.nodeName,
+    metadata: foundNode.metadata,
+    lastHeartbeat: foundNode.lastHeartbeat,
+    timeSinceLastHeartbeat,
+    healthy: isHealthy,
+    responseTime: getServiceRegistry().responseTimes.get(nodeId) || 0
+  });
+});
 router.get('/health', (req, res) => {
   const services = getServiceRegistry().services.size;
   const totalNodes = Array.from(getServiceRegistry().services.values()).reduce(

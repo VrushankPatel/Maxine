@@ -197,6 +197,7 @@ if (config.ultraFastMode) {
   const _proxy = _httpProxy.createProxyServer({});
   const _WebSocket = require('ws');
   const _mqtt = require('mqtt');
+  const fs = require('fs');
 
   const __stringify = require('fast-json-stringify');
   const _winston = require('winston');
@@ -531,7 +532,7 @@ if (config.ultraFastMode) {
         cert: fs.readFileSync(certPath),
         allowHTTP1: true, // Allow HTTP/1.1 fallback
       };
-      server = http2.createSecureServer(options, requestHandler);
+      server = _http2.createSecureServer(options, requestHandler);
       // console.log('Maxine server started with HTTP/2 support on port', constants.PORT); // Removed for performance
     } else {
       // console.log('HTTP/2 certificates not found, falling back to HTTP/1.1'); // Removed for performance

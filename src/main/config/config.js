@@ -156,7 +156,7 @@ const config = {
   grpcEnabled: process.env.GRPC_ENABLED === 'true' && !isTestMode && !ultraFastDefault,
   grpcPort: process.env.GRPC_PORT ? parseInt(process.env.GRPC_PORT) : 50051,
   tracingEnabled: process.env.TRACING_ENABLED === 'true' && !isTestMode,
-  http2Enabled: process.env.HTTP2_ENABLED === 'true' && !ultraFastDefault && !isTestMode, // Disabled in ultra-fast mode for maximum performance, enabled only when explicitly requested
+  http2Enabled: process.env.HTTP2_ENABLED === 'true' && !isTestMode, // Can be enabled in ultra-fast mode if explicitly requested for potential performance benefits
   maxInstancesPerService: process.env.MAX_INSTANCES_PER_SERVICE
     ? parseInt(process.env.MAX_INSTANCES_PER_SERVICE)
     : 1000,
