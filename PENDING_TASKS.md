@@ -704,6 +704,8 @@ Maxine is now a lightning-fast, production-ready service registry with exception
 
 - [x] Implement Cost-Aware Load Balancing: Added cost-aware load balancing strategy that prefers lower-cost infrastructure (on-prem over cloud) to optimize operational costs while maintaining performance.
 - [x] Performance Optimizations: Removed OpenTelemetry tracing, disabled Prometheus metrics, and commented out federation replication in lightning registry; updated load test to use IPv6; achieved 3.01ms avg, 5.46ms p95 response times with 15k req/s throughput.
+- [x] Add Service Instance Management Endpoints: Implemented /services/:serviceName to get all instances of a service and /health/:nodeId to get detailed health status of specific nodes
+- [x] Optimize Discovery Performance: Modified lightning routes to use ultraFastGetRandomNodeSync in ultra-fast mode for reduced latency
 
 ## Post-Optimization Next Steps
 
@@ -749,6 +751,16 @@ Maxine is now a lightning-fast, production-ready service registry with exception
 - [x] Add Service Mesh AI Optimization: Use AI to automatically optimize service mesh configurations based on traffic patterns and performance metrics
 - [x] Implement Multi-Cloud Federation: Advanced cross-cloud service discovery with automatic failover, geo-aware routing, and conflict resolution
 - [x] Add eBPF Integration: Kernel-level tracing and monitoring for ultra-low overhead observability of service communications
+- [ ] Implement QUIC/HTTP3 Support: Add QUIC protocol support for even lower latency than HTTP/2
+  - Integrate QUIC transport layer for ultra-fast mode
+  - Implement 0-RTT connection establishment for instant requests
+  - Add UDP-based transport for minimal latency
+  - Maintain backward compatibility with HTTP/2 and HTTP/1.1
+- [ ] Implement WebAssembly Service Registry: Compile Maxine to WebAssembly for edge computing deployments
+  - Create WebAssembly-compatible version of the service registry
+  - Enable deployment in browser environments and edge devices
+  - Maintain API compatibility with existing clients
+  - Add WebAssembly-specific performance optimizations
 
 ### Medium Priority
 
