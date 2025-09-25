@@ -280,7 +280,7 @@ if (config.ultraFastMode) {
         return;
       }
 
-      const { serviceName, host, port, metadata } = body;
+      const { serviceName, host, port, metadata } = _body;
 
       if (!serviceName || !host || !port) {
         res.writeHead(400, { 'Content-Type': 'application/json' });
@@ -306,7 +306,7 @@ if (config.ultraFastMode) {
         return;
       }
 
-      const { nodeId } = body;
+      const { nodeId } = _body;
       if (!nodeId) {
         res.writeHead(400, { 'Content-Type': 'application/json' });
         res.end(errorMissingNodeId);
@@ -331,7 +331,7 @@ if (config.ultraFastMode) {
         return;
       }
 
-      const { nodeId } = body;
+      const { nodeId } = _body;
       if (!nodeId) {
         res.writeHead(400, { 'Content-Type': 'application/json' });
         res.end(errorMissingNodeId);
@@ -346,7 +346,7 @@ if (config.ultraFastMode) {
     }
   };
   // Handle service discovery - ultra-fast mode uses optimized method
-  const handleDiscover = async (req, res, _query, _body) => {
+  const handleDiscover = (req, res, _query, _body) => {
     try {
       const _clientIP = req.connection.remoteAddress || req.socket.remoteAddress || 'unknown';
       if (!serviceRegistry.checkRateLimit(_clientIP)) {
@@ -355,15 +355,15 @@ if (config.ultraFastMode) {
         return;
       }
 
-      const serviceName = query.serviceName;
+      const serviceName = _query.serviceName;
       if (!serviceName) {
         res.writeHead(400, { 'Content-Type': 'application/json' });
         res.end(errorMissingServiceName);
         return;
       }
-      const version = query.version;
-      const strategy = query.loadBalancing || 'round-robin';
-      const tags = query.tags ? query.tags.split(',') : [];
+      const version = _query.version;
+      const strategy = _query.loadBalancing || 'round-robin';
+      const tags = _query.tags ? _query.tags.split(',') : [];
 
       // Use ultra-fast method for maximum performance
       let fullServiceName = serviceName;
@@ -405,26 +405,18 @@ if (config.ultraFastMode) {
         res.end(serviceUnavailable);
         return;
       }
-      // Ultra-fast JSON response using pre-allocated buffer
-      const addr = node.address;
-      const nodeName = node.nodeName;
-      const addrLen = addr.length;
-      const nodeLen = nodeName.length;
-      const totalLen = 40 + addrLen + nodeLen;
-      const buf = Buffer.allocUnsafe(totalLen);
-      let offset = 0;
-      buf.write('{"address":"', offset);
-      offset += 11;
-      buf.write(addr, offset);
-      offset += addrLen;
-      buf.write('","nodeName":"', offset);
-      offset += 13;
-      buf.write(nodeName, offset);
-      offset += nodeLen;
-      buf.write('","healthy":true}', offset);
+      if (typeof node !== 'object' || !node.address || !node.nodeName) {
+        res.writeHead(500, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ error: 'Invalid node', node: node }));
+        return;
+      }
+      // Use precompiled stringify for performance
       res.writeHead(200, { 'Content-Type': 'application/json' });
-      res.end(buf);
+      res.end(
+        __stringifyDiscover({ address: node.address, nodeName: node.nodeName, healthy: true })
+      );
     } catch (_error) {
+      console.error('Discover error:', _error);
       res.writeHead(500, { 'Content-Type': 'application/json' });
       res.end('{"error": "Internal server error"}');
     }
@@ -512,9 +504,11 @@ if (config.ultraFastMode) {
         res.end(errorNotFound);
       }
     } catch (_e) {
-      console.error('Request handler error:', e);
+      console.error('Request handler error:', _e);
       res.writeHead(500, { 'Content-Type': 'application/json' });
-      res.end('{"error": "Internal server error"}');
+      res.end(
+        JSON.stringify({ error: 'Internal server error', details: _e.message, stack: _e.stack })
+      );
     }
   };
 
@@ -1382,7 +1376,9 @@ if (config.ultraFastMode) {
         }
       }
       if (!config.persistenceEnabled) {
-        winston.warn(`AUDIT: Backup attempted but persistence not enabled - _clientIP: ${_clientIP}`);
+        winston.warn(
+          `AUDIT: Backup attempted but persistence not enabled - _clientIP: ${_clientIP}`
+        );
         res.writeHead(400, { 'Content-Type': 'application/json' });
         res.end('{"error": "Persistence not enabled"}');
         return;
@@ -1466,7 +1462,9 @@ if (config.ultraFastMode) {
       }
       const { operation, id } = body;
       if (!id || !operation) {
-        winston.warn(`AUDIT: Invalid trace start - missing id or operation, _clientIP: ${_clientIP}`);
+        winston.warn(
+          `AUDIT: Invalid trace start - missing id or operation, _clientIP: ${_clientIP}`
+        );
         res.writeHead(400, { 'Content-Type': 'application/json' });
         res.end('{"error": "Missing id or operation"}');
         return;
@@ -3067,7 +3065,9 @@ if (config.ultraFastMode) {
       const _clientIP = req.connection.remoteAddress || req.socket.remoteAddress || 'unknown';
       const serviceName = query.serviceName;
       if (!serviceName) {
-        winston.warn(`AUDIT: Invalid dependency get - missing serviceName, _clientIP: ${_clientIP}`);
+        winston.warn(
+          `AUDIT: Invalid dependency get - missing serviceName, _clientIP: ${_clientIP}`
+        );
         res.writeHead(400, { 'Content-Type': 'application/json' });
         res.end('{"error": "Missing serviceName"}');
         return;
@@ -3089,7 +3089,9 @@ if (config.ultraFastMode) {
       const _clientIP = req.connection.remoteAddress || req.socket.remoteAddress || 'unknown';
       const serviceName = query.serviceName;
       if (!serviceName) {
-        winston.warn(`AUDIT: Invalid dependents get - missing serviceName, _clientIP: ${_clientIP}`);
+        winston.warn(
+          `AUDIT: Invalid dependents get - missing serviceName, _clientIP: ${_clientIP}`
+        );
         res.writeHead(400, { 'Content-Type': 'application/json' });
         res.end('{"error": "Missing serviceName"}');
         return;

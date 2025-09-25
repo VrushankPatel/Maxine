@@ -900,41 +900,6 @@ class LightningServiceRegistrySimple extends EventEmitter {
       }
     }
 
-    // Apply advanced filters (simplified for ultra-fast mode)
-    if (advancedFilters && advancedFilters.length > 0) {
-      availableNodes = availableNodes.filter((node) => {
-        for (const filter of advancedFilters) {
-          const value = this.getNodeValue(node, filter.key);
-          if (value === undefined) return false;
-
-          switch (filter.op) {
-            case 'eq':
-              if (value !== filter.value) return false;
-              break;
-            case 'ne':
-              if (value === filter.value) return false;
-              break;
-            case 'regex':
-              if (!filter.value.test(value)) return false;
-              break;
-            case 'lt':
-              if (!(value < filter.value)) return false;
-              break;
-            case 'gt':
-              if (!(value > filter.value)) return false;
-              break;
-            case 'lte':
-              if (!(value <= filter.value)) return false;
-              break;
-            case 'gte':
-              if (!(value >= filter.value)) return false;
-              break;
-          }
-        }
-        return true;
-      });
-    }
-
     if (availableNodes.length === 0) return null;
 
     let selectedNode;
@@ -944,40 +909,66 @@ class LightningServiceRegistrySimple extends EventEmitter {
         selectedNode = availableNodes[randomIndex];
         break;
       case 'weighted-random':
-        selectedNode = this.selectWeightedRandom(availableNodes);
+        // Simple weighted random for ultra-fast mode
+        let totalWeight = 0;
+        for (const node of availableNodes) {
+          totalWeight += node.weight || 1;
+        }
+        let rand = fastRandom() * totalWeight;
+        for (const node of availableNodes) {
+          rand -= node.weight || 1;
+          if (rand <= 0) {
+            selectedNode = node;
+            break;
+          }
+        }
+        if (!selectedNode) selectedNode = availableNodes[0];
         break;
       case 'least-connections':
-        selectedNode = this.selectLeastConnections(availableNodes);
+        // Simple least connections for ultra-fast mode
+        selectedNode = availableNodes[0];
+        let minConn = selectedNode.connections || 0;
+        for (let i = 1; i < availableNodes.length; i++) {
+          const conn = availableNodes[i].connections || 0;
+          if (conn < minConn) {
+            minConn = conn;
+            selectedNode = availableNodes[i];
+          }
+        }
         break;
       case 'weighted-least-connections':
-        selectedNode = this.selectWeightedLeastConnections(availableNodes);
+        // Simple weighted least connections for ultra-fast mode
+        selectedNode = availableNodes[0];
+        let minWeightedConn = (selectedNode.connections || 0) / (selectedNode.weight || 1);
+        for (let i = 1; i < availableNodes.length; i++) {
+          const node = availableNodes[i];
+          const weightedConn = (node.connections || 0) / (node.weight || 1);
+          if (weightedConn < minWeightedConn) {
+            minWeightedConn = weightedConn;
+            selectedNode = node;
+          }
+        }
         break;
       case 'consistent-hash':
-        selectedNode = this.selectConsistentHash(availableNodes, clientIP || 'default');
-        break;
-      case 'ip-hash':
-        selectedNode = this.selectIPHash(availableNodes, clientIP);
-        break;
-      case 'geo-aware':
-        selectedNode = this.selectGeoAware(availableNodes, clientIP);
-        break;
-      case 'least-response-time':
-        selectedNode = this.selectLeastResponseTime(availableNodes);
-        break;
-      case 'health-score':
-        selectedNode = this.selectHealthScore(availableNodes);
-        break;
-      case 'predictive':
-        selectedNode = this.selectPredictive(availableNodes);
-        break;
-      case 'ai-driven':
-        selectedNode = this.selectAIDriven(availableNodes, clientIP);
-        break;
-      case 'cost-aware':
-        selectedNode = this.selectCostAware(availableNodes);
+        // Simple consistent hash for ultra-fast mode
+        let hash = 0;
+        const str = clientIP || 'default';
+        for (let i = 0; i < str.length; i++) {
+          hash = ((hash << 5) - hash + str.charCodeAt(i)) & 0xffffffff;
+        }
+        selectedNode = availableNodes[Math.abs(hash) % availableNodes.length];
         break;
       case 'power-of-two-choices':
-        selectedNode = this.selectPowerOfTwoChoices(availableNodes);
+        // Power of two choices for ultra-fast mode
+        if (availableNodes.length < 2) {
+          selectedNode = availableNodes[0];
+        } else {
+          const choice1 = availableNodes[(fastRandom() * availableNodes.length) | 0];
+          const choice2 = availableNodes[(fastRandom() * availableNodes.length) | 0];
+          const conn1 = choice1.connections || 0;
+          const conn2 = choice2.connections || 0;
+          selectedNode = conn1 <= conn2 ? choice1 : choice2;
+        }
         break;
       default: // round-robin
         const index = service.roundRobinIndex || 0;
@@ -1237,6 +1228,20 @@ class LightningServiceRegistrySimple extends EventEmitter {
     return false;
   }
 
+  isCircuitOpen(nodeName) {
+    const state = this.circuitState.get(nodeName);
+    if (state === 'open') {
+      const nextTry = this.circuitNextTry.get(nodeName);
+      if (nextTry && Date.now() > nextTry) {
+        // Try half-open
+        this.circuitState.set(nodeName, 'half-open');
+        return false;
+      }
+      return true;
+    }
+    return false;
+  }
+
   getServices() {
     return Array.from(this.services.keys());
   }
@@ -1285,48 +1290,6 @@ class LightningServiceRegistrySimple extends EventEmitter {
       result.set(serviceName, Array.from(service.nodes.values()));
     }
     return result;
-  }
-
-  // Synchronous version for ultra-fast mode
-  ultraFastGetRandomNodeSync(serviceName, strategy = 'round-robin', clientId = null, tags = []) {
-    const service = this.services.get(serviceName);
-    if (!service || service.healthyNodesArray.length === 0) return null;
-
-    let nodes = service.healthyNodesArray;
-
-    // Filter by tags if specified
-    if (tags && tags.length > 0) {
-      nodes = nodes.filter((node) => {
-        const nodeTags = node.metadata && node.metadata.tags;
-        if (!nodeTags || !Array.isArray(nodeTags)) return false;
-        return tags.every((tag) => nodeTags.includes(tag));
-      });
-      if (nodes.length === 0) return null;
-    }
-
-    // Ultra-fast mode: only basic strategies for maximum speed
-    if (strategy === 'random') {
-      const randomIndex = (fastRandom() * nodes.length) | 0;
-      return nodes[randomIndex];
-    } else if (strategy === 'consistent-hash' && clientId) {
-      const hash = this.simpleHash(clientId);
-      const index = hash % nodes.length;
-      return nodes[index];
-    } else if (strategy === 'power-of-two-choices') {
-      // Power of two choices: select two random nodes, pick the one with fewer connections
-      if (nodes.length < 2) return nodes[0];
-      const choice1 = nodes[(fastRandom() * nodes.length) | 0];
-      const choice2 = nodes[(fastRandom() * nodes.length) | 0];
-      const conn1 = choice1.connections || 0;
-      const conn2 = choice2.connections || 0;
-      return conn1 <= conn2 ? choice1 : choice2;
-    } else {
-      // round-robin (default)
-      const index = service.roundRobinIndex || 0;
-      const node = nodes[index];
-      service.roundRobinIndex = (index + 1) % nodes.length;
-      return node;
-    }
   }
 
   async ultraFastGetRandomNode(serviceName, strategy = 'round-robin', clientId = null, tags = []) {
