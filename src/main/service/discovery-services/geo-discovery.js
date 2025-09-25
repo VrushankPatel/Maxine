@@ -11,7 +11,7 @@ class GeoDiscovery {
      * @returns {object}
      */
     getNode = (fullServiceName, ip, group, tags, deployment, filter) => {
-        const healthyNodes = serviceRegistry.getHealthyNodes(fullServiceName, group, tags, deployment, filter);
+        const healthyNodes = serviceRegistry.getHealthyNodes(fullServiceName, group, tags, deployment, filter, advancedFilters);
         if (healthyNodes.length === 0) return null;
 
         // If IP is provided, try to find the closest node geographically

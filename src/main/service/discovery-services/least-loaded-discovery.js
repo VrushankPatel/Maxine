@@ -13,12 +13,12 @@ class LeastLoadedDiscovery{
       * @param {array} tags
       * @returns {object}
       */
-    getNode = (fullServiceName, group, tags, deployment, filter) => {
+    getNode = (fullServiceName, group, tags, deployment, filter, advancedFilters) => {
         const cached = this.cache.get(fullServiceName);
         if (cached && (Date.now() - cached.timestamp) < this.cacheTTL) {
             return cached.node;
         }
-        const healthyNodes = serviceRegistry.getHealthyNodes(fullServiceName, group, tags, deployment, filter);
+        const healthyNodes = serviceRegistry.getHealthyNodes(fullServiceName, group, tags, deployment, filter, advancedFilters);
         if (healthyNodes.length === 0) return null;
 
         let minConnections = Infinity;

@@ -36,6 +36,50 @@ const fastRandom = () => {
     return lcgSeed / lcgM;
 };
 
+// Parse advanced filter query parameters
+const parseAdvancedFilters = (req) => {
+    const filters = req.query.filter;
+    if (!filters) return null;
+
+    const parsedFilters = [];
+    const filterArray = Array.isArray(filters) ? filters : [filters];
+
+    for (const filter of filterArray) {
+        // Support multiple operators: =, !=, ~, <, >, <=, >=
+        const eqMatch = filter.match(/^([^=!~<>]+)=(.+)$/);
+        const neMatch = filter.match(/^([^=!~<>]+)!=(.+)$/);
+        const regexMatch = filter.match(/^([^=!~<>]+)~(.+)$/);
+        const ltMatch = filter.match(/^([^=!~<>]+)<(.+)$/);
+        const gtMatch = filter.match(/^([^=!~<>]+)>(.+)$/);
+        const lteMatch = filter.match(/^([^=!~<>]+)<=(.+)$/);
+        const gteMatch = filter.match(/^([^=!~<>]+)>=(.+)$/);
+
+        if (eqMatch) {
+            parsedFilters.push({ key: eqMatch[1], op: 'eq', value: eqMatch[2] });
+        } else if (neMatch) {
+            parsedFilters.push({ key: neMatch[1], op: 'ne', value: neMatch[2] });
+        } else if (regexMatch) {
+            parsedFilters.push({ key: regexMatch[1], op: 'regex', value: new RegExp(regexMatch[2]) });
+        } else if (lteMatch) {
+            parsedFilters.push({ key: lteMatch[1], op: 'lte', value: parseFloat(lteMatch[2]) });
+        } else if (gteMatch) {
+            parsedFilters.push({ key: gteMatch[1], op: 'gte', value: parseFloat(gteMatch[2]) });
+        } else if (ltMatch) {
+            parsedFilters.push({ key: ltMatch[1], op: 'lt', value: parseFloat(ltMatch[2]) });
+        } else if (gtMatch) {
+            parsedFilters.push({ key: gtMatch[1], op: 'gt', value: parseFloat(gtMatch[2]) });
+        } else {
+            // Default to equality if no operator
+            const parts = filter.split('=');
+            if (parts.length === 2) {
+                parsedFilters.push({ key: parts[0], op: 'eq', value: parts[1] });
+            }
+        }
+    }
+
+    return parsedFilters.length > 0 ? parsedFilters : null;
+};
+
 // Per-service rate limiter
 const perServiceLimiter = rateLimit ? rateLimit({
     windowMs: config.rateLimitWindowMs,
@@ -294,6 +338,7 @@ const normalDiscovery = async (req, res) => {
         const count = parseInt(req.query.count) || 1;
         const clientId = req.query.clientId;
         const sourceService = req.query.sourceService;
+        const advancedFilters = parseAdvancedFilters(req);
      const reqId = req.ip || 'unknown';
      let ip;
      if (!isUltraFastMode) {
@@ -365,7 +410,7 @@ const normalDiscovery = async (req, res) => {
 
      let serviceNodes;
      if (count > 1) {
-         serviceNodes = serviceRegistry.getHealthyNodes(fullServiceName, null, null, null, null, null).slice(0, count);
+          serviceNodes = serviceRegistry.getHealthyNodes(fullServiceName, null, null, null, null, advancedFilters).slice(0, count);
          if (serviceNodes.length === 0) {
              if (hasMetrics && !isHighPerformanceMode && !isUltraFastMode) {
                  const latency = Date.now() - startTime;
@@ -378,7 +423,7 @@ const normalDiscovery = async (req, res) => {
              return;
          }
      } else {
-          const serviceNode = await discoveryService.getNode(fullServiceName, ip, null, null, null, null, clientId);
+           const serviceNode = await discoveryService.getNode(fullServiceName, ip, null, null, null, null, clientId, advancedFilters);
          serviceNodes = serviceNode ? [serviceNode] : [];
          if (serviceNodes.length === 0) {
              if (hasMetrics && !isHighPerformanceMode && !isUltraFastMode) {

@@ -19,7 +19,7 @@ class AdaptiveDiscovery {
         if (cached && (Date.now() - cached.timestamp) < this.cacheTTL) {
             return cached.node;
         }
-        const healthyNodes = serviceRegistry.getHealthyNodes(fullServiceName, group, tags, deployment, filter);
+        const healthyNodes = serviceRegistry.getHealthyNodes(fullServiceName, group, tags, deployment, filter, advancedFilters);
         if (healthyNodes.length === 0) return null;
 
         let bestNode = null;

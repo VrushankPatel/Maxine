@@ -19,8 +19,8 @@ class RandomDiscovery{
       * @param {array} tags
       * @returns {object}
       */
-    getNode = (fullServiceName, group, tags, deployment, filter) => {
-        const healthyNodes = serviceRegistry.getHealthyNodes(fullServiceName, group, tags, deployment, filter);
+    getNode = (fullServiceName, group, tags, deployment, filter, advancedFilters) => {
+        const healthyNodes = serviceRegistry.getHealthyNodes(fullServiceName, group, tags, deployment, filter, advancedFilters);
         if (healthyNodes.length === 0) return null;
         const randomIndex = (fastRandom() * healthyNodes.length) | 0;
         return healthyNodes[randomIndex];

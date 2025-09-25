@@ -6,6 +6,50 @@ const discoveryController = require('../controller/maxine/discovery-controller')
 const fastJson = require('fast-json-stringify');
 const heapdump = require('heapdump');
 
+// Parse advanced filter query parameters
+const parseAdvancedFilters = (req) => {
+    const filters = req.query.filter;
+    if (!filters) return null;
+
+    const parsedFilters = [];
+    const filterArray = Array.isArray(filters) ? filters : [filters];
+
+    for (const filter of filterArray) {
+        // Support multiple operators: =, !=, ~, <, >, <=, >=
+        const eqMatch = filter.match(/^([^=!~<>]+)=(.+)$/);
+        const neMatch = filter.match(/^([^=!~<>]+)!=(.+)$/);
+        const regexMatch = filter.match(/^([^=!~<>]+)~(.+)$/);
+        const ltMatch = filter.match(/^([^=!~<>]+)<(.+)$/);
+        const gtMatch = filter.match(/^([^=!~<>]+)>(.+)$/);
+        const lteMatch = filter.match(/^([^=!~<>]+)<=(.+)$/);
+        const gteMatch = filter.match(/^([^=!~<>]+)>=(.+)$/);
+
+        if (eqMatch) {
+            parsedFilters.push({ key: eqMatch[1], op: 'eq', value: eqMatch[2] });
+        } else if (neMatch) {
+            parsedFilters.push({ key: neMatch[1], op: 'ne', value: neMatch[2] });
+        } else if (regexMatch) {
+            parsedFilters.push({ key: regexMatch[1], op: 'regex', value: new RegExp(regexMatch[2]) });
+        } else if (lteMatch) {
+            parsedFilters.push({ key: lteMatch[1], op: 'lte', value: parseFloat(lteMatch[2]) });
+        } else if (gteMatch) {
+            parsedFilters.push({ key: gteMatch[1], op: 'gte', value: parseFloat(gteMatch[2]) });
+        } else if (ltMatch) {
+            parsedFilters.push({ key: ltMatch[1], op: 'lt', value: parseFloat(ltMatch[2]) });
+        } else if (gtMatch) {
+            parsedFilters.push({ key: gtMatch[1], op: 'gt', value: parseFloat(gtMatch[2]) });
+        } else {
+            // Default to equality if no operator
+            const parts = filter.split('=');
+            if (parts.length === 2) {
+                parsedFilters.push({ key: parts[0], op: 'eq', value: parts[1] });
+            }
+        }
+    }
+
+    return parsedFilters.length > 0 ? parsedFilters : null;
+};
+
 // Fast JSON schemas for optimized responses
 const registerSchema = {
     type: 'object',
@@ -179,7 +223,8 @@ router.get('/discover', (req, res) => {
     const tags = req.query.tags ? req.query.tags.split(',') : [];
     const version = req.query.version;
     const environment = req.query.environment;
-    const serviceNode = getServiceRegistry().getRandomNode(fullServiceName, strategy, clientId, tags, version, environment);
+    const advancedFilters = parseAdvancedFilters(req);
+    const serviceNode = getServiceRegistry().getRandomNode(fullServiceName, strategy, clientId, tags, version, advancedFilters);
     if (!serviceNode) {
         return res.status(404).end(notFoundBuffer);
     }

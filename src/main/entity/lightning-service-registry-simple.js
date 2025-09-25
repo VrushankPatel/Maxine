@@ -256,6 +256,29 @@ class LightningServiceRegistrySimple extends EventEmitter {
             }
         };
 
+        // Helper method to get node value for advanced filtering
+        this.getNodeValue = (node, key) => {
+            // Handle metadata keys
+            if (key.startsWith('metadata.')) {
+                const metaKey = key.substring(9); // Remove 'metadata.' prefix
+                return node.metadata ? node.metadata[metaKey] : undefined;
+            }
+
+            // Handle performance metrics
+            switch (key) {
+                case 'response_time':
+                    return this.responseTimes.get(node.nodeName)?.average || 0;
+                case 'health_score':
+                    return this.healthScores.get(node.nodeName) || 0;
+                case 'connections':
+                    return node.connections || 0;
+                case 'weight':
+                    return node.weight || 1;
+                default:
+                    return node[key];
+            }
+        };
+
         // Persistence
         this.persistenceEnabled = config.persistenceEnabled;
         this.persistenceType = config.persistenceType;
@@ -531,7 +554,7 @@ class LightningServiceRegistrySimple extends EventEmitter {
         return false;
     }
 
-    async getRandomNode(serviceName, strategy = 'round-robin', clientIP = null, tags = null, version = null) {
+    async getRandomNode(serviceName, strategy = 'round-robin', clientIP = null, tags = null, version = null, advancedFilters = null) {
         const tracer = trace.getTracer('maxine-registry-simple', '1.0.0');
         const startTime = Date.now();
         return await tracer.startActiveSpan('getRandomNode', async (span) => {
@@ -551,6 +574,18 @@ class LightningServiceRegistrySimple extends EventEmitter {
                         }
                     } else {
                         fullServiceName = `${serviceName}:${version}`;
+                    }
+                }
+
+                // If no version specified, find the first matching service (could be base name or with version)
+                if (!version) {
+                    for (const [key, svc] of this.services) {
+                        if (key === serviceName || key.startsWith(serviceName + ':')) {
+                            if (svc.healthyNodesArray.length > 0) {
+                                fullServiceName = key;
+                                break;
+                            }
+                        }
                     }
                 }
 
@@ -604,6 +639,41 @@ class LightningServiceRegistrySimple extends EventEmitter {
             } else {
                 availableNodes = [];
             }
+        }
+
+        // Apply advanced filters
+        if (advancedFilters && advancedFilters.length > 0) {
+            availableNodes = availableNodes.filter(node => {
+                for (const filter of advancedFilters) {
+                    const value = this.getNodeValue(node, filter.key);
+                    if (value === undefined) return false;
+
+                    switch (filter.op) {
+                        case 'eq':
+                            if (value !== filter.value) return false;
+                            break;
+                        case 'ne':
+                            if (value === filter.value) return false;
+                            break;
+                        case 'regex':
+                            if (!filter.value.test(value)) return false;
+                            break;
+                        case 'lt':
+                            if (!(value < filter.value)) return false;
+                            break;
+                        case 'gt':
+                            if (!(value > filter.value)) return false;
+                            break;
+                        case 'lte':
+                            if (!(value <= filter.value)) return false;
+                            break;
+                        case 'gte':
+                            if (!(value >= filter.value)) return false;
+                            break;
+                    }
+                }
+                return true;
+            });
         }
 
                 if (availableNodes.length === 0) {
@@ -721,6 +791,41 @@ class LightningServiceRegistrySimple extends EventEmitter {
             } else {
                 availableNodes = [];
             }
+        }
+
+        // Apply advanced filters (simplified for ultra-fast mode)
+        if (advancedFilters && advancedFilters.length > 0) {
+            availableNodes = availableNodes.filter(node => {
+                for (const filter of advancedFilters) {
+                    const value = this.getNodeValue(node, filter.key);
+                    if (value === undefined) return false;
+
+                    switch (filter.op) {
+                        case 'eq':
+                            if (value !== filter.value) return false;
+                            break;
+                        case 'ne':
+                            if (value === filter.value) return false;
+                            break;
+                        case 'regex':
+                            if (!filter.value.test(value)) return false;
+                            break;
+                        case 'lt':
+                            if (!(value < filter.value)) return false;
+                            break;
+                        case 'gt':
+                            if (!(value > filter.value)) return false;
+                            break;
+                        case 'lte':
+                            if (!(value <= filter.value)) return false;
+                            break;
+                        case 'gte':
+                            if (!(value >= filter.value)) return false;
+                            break;
+                    }
+                }
+                return true;
+            });
         }
 
         if (availableNodes.length === 0) return null;

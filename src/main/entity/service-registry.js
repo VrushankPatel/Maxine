@@ -1306,7 +1306,7 @@ class ServiceRegistry extends EventEmitter {
 
     };
 
-    getHealthyNodes = (serviceName, group, tags, deployment, filter) => {
+    getHealthyNodes = (serviceName, group, tags, deployment, filter, advancedFilters) => {
         // Check if service is blacklisted
         if (this.blacklists.has(serviceName)) return [];
 
@@ -1316,7 +1316,7 @@ class ServiceRegistry extends EventEmitter {
         }
 
         // Fast path: no filters, return pre-computed array
-        if (!group && (!tags || tags.length === 0) && !deployment && !filter) {
+        if (!group && (!tags || tags.length === 0) && !deployment && !filter && !advancedFilters) {
             return this.availableNodesArray.get(serviceName) || [];
         }
 
@@ -1324,7 +1324,8 @@ class ServiceRegistry extends EventEmitter {
         const tagKey = tags && tags.length > 0 ? `:${tags.sort().join(',')}` : '';
         const deploymentKey = deployment ? `:${deployment}` : '';
         const filterKey = filter ? `:${JSON.stringify(filter)}` : '';
-        const cacheKey = `${serviceName}${groupKey}${tagKey}${deploymentKey}${filterKey}`;
+        const advancedFilterKey = advancedFilters ? `:${JSON.stringify(advancedFilters)}` : '';
+        const cacheKey = `${serviceName}${groupKey}${tagKey}${deploymentKey}${filterKey}${advancedFilterKey}`;
         if (!this.sortedHealthyCache.has(cacheKey)) {
             let candidates;
             if (group) {
@@ -1376,6 +1377,40 @@ class ServiceRegistry extends EventEmitter {
                     return true;
                 });
             }
+            // Apply advanced filters
+            if (advancedFilters) {
+                filtered = filtered.filter(node => {
+                    for (const f of advancedFilters) {
+                        const value = this.getNodeValue(node, f.key);
+                        if (value === undefined) return false;
+
+                        switch (f.op) {
+                            case 'eq':
+                                if (value != f.value) return false; // Loose equality
+                                break;
+                            case 'ne':
+                                if (value == f.value) return false; // Loose inequality
+                                break;
+                            case 'regex':
+                                if (!f.value.test(String(value))) return false;
+                                break;
+                            case 'lt':
+                                if (!(parseFloat(value) < f.value)) return false;
+                                break;
+                            case 'gt':
+                                if (!(parseFloat(value) > f.value)) return false;
+                                break;
+                            case 'lte':
+                                if (!(parseFloat(value) <= f.value)) return false;
+                                break;
+                            case 'gte':
+                                if (!(parseFloat(value) >= f.value)) return false;
+                                break;
+                        }
+                    }
+                    return true;
+                });
+            }
             // Filter out nodes with open circuit breakers
             if (config.circuitBreakerEnabled) {
                 filtered = filtered.filter(node => !this.isCircuitOpen(serviceName, node.nodeName));
@@ -1394,6 +1429,42 @@ class ServiceRegistry extends EventEmitter {
            const serviceData = this.ultraFastHealthyNodes.get(serviceName);
            return serviceData ? serviceData.array : [];
        }
+
+    // Helper method to get node value for advanced filtering
+    getNodeValue = (node, key) => {
+        // Handle metadata keys
+        if (key.startsWith('metadata.')) {
+            const metaKey = key.substring(9); // Remove 'metadata.' prefix
+            return node.metadata[metaKey];
+        }
+
+        // Handle special keys
+        switch (key) {
+            case 'response_time':
+                // Get average response time for this node
+                const rtKey = `${node.serviceName}:${node.nodeName}`;
+                const responseTimes = this.responseTimeHistory.get(rtKey);
+                if (responseTimes && responseTimes.length > 0) {
+                    return responseTimes.reduce((a, b) => a + b, 0) / responseTimes.length;
+                }
+                return undefined;
+            case 'health_score':
+                // Calculate health score based on various metrics
+                let score = 100;
+                // Reduce score based on circuit breaker failures
+                const failures = this.circuitBreakerFailures.get(`${node.serviceName}:${node.nodeName}`) || 0;
+                score -= Math.min(failures * 10, 50);
+                // Reduce score based on response time
+                const avgRT = this.getNodeValue(node, 'response_time');
+                if (avgRT > 1000) score -= 20;
+                else if (avgRT > 500) score -= 10;
+                return Math.max(0, score);
+            case 'connections':
+                return this.activeConnections.get(`${node.serviceName}:${node.nodeName}`) || 0;
+            default:
+                return node[key] || node.metadata[key];
+        }
+    }
 
 
 
@@ -1744,7 +1815,7 @@ class ServiceRegistry extends EventEmitter {
         const anomalies = [];
         for (const serviceName of this.registry.keys()) {
             const service = this.registry.get(serviceName);
-            const healthyNodes = this.getHealthyNodes(serviceName);
+            const healthyNodes = this.getHealthyNodes(serviceName, undefined, undefined, undefined, undefined, null);
             if (healthyNodes.length === 0) {
                 anomalies.push({
                     serviceName,

@@ -33,8 +33,8 @@ class AiDrivenDiscovery {
      * @param {string} clientId - Client identifier for personalized learning
      * @returns {object}
      */
-    getNode = (fullServiceName, group, tags, deployment, filter, clientId) => {
-        const healthyNodes = serviceRegistry.getHealthyNodes(fullServiceName, group, tags, deployment, filter);
+    getNode = (fullServiceName, group, tags, deployment, filter, clientId, advancedFilters) => {
+        const healthyNodes = serviceRegistry.getHealthyNodes(fullServiceName, group, tags, deployment, filter, advancedFilters);
         if (healthyNodes.length === 0) return null;
 
         const cacheKey = `${fullServiceName}:${clientId || 'default'}:${group || ''}:${tags ? tags.sort().join(',') : ''}`;

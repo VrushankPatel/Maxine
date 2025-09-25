@@ -32,7 +32,6 @@ class TiKVStorage {
             // For simulation, we'll use a Map
             this.client = new Map();
             this.connected = true;
-            console.log('TiKV storage connected');
         } catch (error) {
             console.error('TiKV connection failed:', error);
             throw error;
@@ -92,7 +91,6 @@ class FoundationDBStorage {
             // For simulation, we'll use a Map with subspace simulation
             this.db = new Map();
             this.connected = true;
-            console.log('FoundationDB storage connected');
         } catch (error) {
             console.error('FoundationDB connection failed:', error);
             throw error;
@@ -169,7 +167,6 @@ class PostgreSQLStorage {
             `);
 
             this.connected = true;
-            console.log('PostgreSQL storage connected');
         } catch (error) {
             console.error('PostgreSQL connection failed:', error);
             throw error;
@@ -247,7 +244,6 @@ class MySQLStorage {
             `);
 
             this.connected = true;
-            console.log('MySQL storage connected');
         } catch (error) {
             console.error('MySQL connection failed:', error);
             throw error;

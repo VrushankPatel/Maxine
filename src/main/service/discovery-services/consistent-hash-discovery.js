@@ -9,7 +9,7 @@ class ConsistentHashDiscovery{
       * @param {array} tags
       * @returns {object}
       */
-    getNode = (fullServiceName, ip, group, tags, deployment, filter) => {
+    getNode = (fullServiceName, ip, group, tags, deployment, filter, advancedFilters) => {
         const hashRing = serviceRegistry.hashRegistry.get(fullServiceName);
         if (!hashRing || hashRing.servers.length === 0) return null;
         const nodeName = hashRing.get(ip);
@@ -24,6 +24,37 @@ class ConsistentHashDiscovery{
             if (filter) {
                 for (const [key, value] of Object.entries(filter)) {
                     if (node.metadata[key] !== value) return null;
+                }
+            }
+            // Apply advanced filters
+            if (advancedFilters) {
+                for (const f of advancedFilters) {
+                    const value = serviceRegistry.getNodeValue(node, f.key);
+                    if (value === undefined) return null;
+
+                    switch (f.op) {
+                        case 'eq':
+                            if (value != f.value) return null;
+                            break;
+                        case 'ne':
+                            if (value == f.value) return null;
+                            break;
+                        case 'regex':
+                            if (!f.value.test(String(value))) return null;
+                            break;
+                        case 'lt':
+                            if (!(parseFloat(value) < f.value)) return null;
+                            break;
+                        case 'gt':
+                            if (!(parseFloat(value) > f.value)) return null;
+                            break;
+                        case 'lte':
+                            if (!(parseFloat(value) <= f.value)) return null;
+                            break;
+                        case 'gte':
+                            if (!(parseFloat(value) >= f.value)) return null;
+                            break;
+                    }
                 }
             }
             return node;

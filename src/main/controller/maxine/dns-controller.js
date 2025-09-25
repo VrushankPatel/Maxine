@@ -43,7 +43,6 @@ const dnsController = (req, res) => {
 // DNS Server implementation
 const startDNSServer = (port = 53) => {
     if (dnsServer) {
-        console.log('DNS server already running');
         return;
     }
 
@@ -107,9 +106,7 @@ const startDNSServer = (port = 53) => {
         send(response);
     });
 
-    dnsServer.listen(port, () => {
-        console.log(`DNS server listening on port ${port}`);
-    });
+    dnsServer.listen(port);
 
     dnsServer.on('error', (err) => {
         console.error('DNS server error:', err);
@@ -120,7 +117,6 @@ const stopDNSServer = () => {
     if (dnsServer) {
         dnsServer.close();
         dnsServer = null;
-        console.log('DNS server stopped');
     }
 };
 
