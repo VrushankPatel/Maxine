@@ -1,4 +1,4 @@
-let { clearRecents, getRecents } = require('../../config/logging/logging-config');
+const { clearRecents, getRecents } = require('../../config/logging/logging-config');
 const LogFilesService = require('../../service/logfiles-service');
 
 const logFilesService = new LogFilesService();

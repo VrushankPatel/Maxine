@@ -26,7 +26,7 @@ class StickyDiscovery {
 
     const tagKey = tags && tags.length > 0 ? `:${tags.sort().join(',')}` : '';
     const clientKey = `${fullServiceName}:${ip}${tagKey}`;
-    let assignedNode = this.clientNodeMap.get(clientKey);
+    const assignedNode = this.clientNodeMap.get(clientKey);
 
     if (assignedNode && healthyNodes.some((node) => node.nodeName === assignedNode.nodeName)) {
       return assignedNode;

@@ -1,9 +1,9 @@
-var chai = require('chai');
-var chaiHttp = require('chai-http');
+const chai = require('chai');
+const chaiHttp = require('chai-http');
 const app = require('../../../index');
 const { constants } = require('../../main/util/constants/constants');
 const config = require('../../main/config/config');
-var should = chai.should();
+const should = chai.should();
 chai.use(require('chai-json'));
 chai.use(chaiHttp);
 const jwt = require('jsonwebtoken');

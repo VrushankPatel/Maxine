@@ -58,8 +58,8 @@ class RendezvousHashDiscovery {
       filter,
       advancedFilters
     );
-    for (let node of healthyNodes) {
-      let nodeRank = this.rank(node.nodeName, ip);
+    for (const node of healthyNodes) {
+      const nodeRank = this.rank(node.nodeName, ip);
       if (nodeRank > targetNodeRank) {
         targetNode = node;
         targetNodeRank = nodeRank;

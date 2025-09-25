@@ -167,7 +167,7 @@ const typeDefs = `
 const resolvers = {
   Query: {
     services: (_, { filter, sort }) => {
-      let services = [];
+      const services = [];
       const registryData = registry.getAllServices
         ? registry.getAllServices()
         : serviceRegistry.registry;

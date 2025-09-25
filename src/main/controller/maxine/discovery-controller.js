@@ -225,9 +225,9 @@ const buildResponseBuffer = (address, nodeName) => {
 
 const buildMultipleResponseBuffer = (addresses, nodeNames) => {
   // Calculate total length first
-  let totalAddrLen = addresses.reduce((sum, a) => sum + a.length + 2, 0) - 1; // quotes and comma
-  let totalNodeLen = nodeNames.reduce((sum, n) => sum + n.length + 2, 0) - 1;
-  let totalLen = 35 + totalAddrLen + totalNodeLen + addresses.length * 6; // {"addresses":[...],"nodeNames":[...],"healthy":[true,...]}
+  const totalAddrLen = addresses.reduce((sum, a) => sum + a.length + 2, 0) - 1; // quotes and comma
+  const totalNodeLen = nodeNames.reduce((sum, n) => sum + n.length + 2, 0) - 1;
+  const totalLen = 35 + totalAddrLen + totalNodeLen + addresses.length * 6; // {"addresses":[...],"nodeNames":[...],"healthy":[true,...]}
 
   const buf = Buffer.allocUnsafe(totalLen);
   let offset = 0;
@@ -423,7 +423,7 @@ const normalDiscovery = async (req, res) => {
       if (!selectedVersion) {
         const baseServiceName = `${datacenter}:${namespace}:${serviceName}`;
         const splitKey = baseServiceName;
-        let splitResult = trafficSplitCache.get(splitKey);
+        const splitResult = trafficSplitCache.get(splitKey);
         if (splitResult === undefined) {
           const split = serviceRegistry.getTrafficSplit(baseServiceName);
           if (split) {

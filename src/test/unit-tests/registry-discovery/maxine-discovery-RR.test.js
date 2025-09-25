@@ -1,11 +1,11 @@
-var chai = require('chai');
-var chaiHttp = require('chai-http');
+const chai = require('chai');
+const chaiHttp = require('chai-http');
 const app = require('../../../../index');
 const config = require('../../../main/config/config');
 const { discoveryService } = require('../../../main/service/discovery-service');
 const { registryService } = require('../../../main/service/registry-service');
 const { constants } = require('../../../main/util/constants/constants');
-var should = chai.should();
+const should = chai.should();
 chai.use(require('chai-json'));
 chai.use(chaiHttp);
 

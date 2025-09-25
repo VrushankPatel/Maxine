@@ -2,7 +2,7 @@ const { serviceRegistry } = require('../../entity/service-registry');
 const config = require('../../config/config');
 
 // Service mesh observability metrics
-let serviceMeshMetrics = {
+const serviceMeshMetrics = {
   envoyConfigsGenerated: 0,
   istioConfigsGenerated: 0,
   linkerdConfigsGenerated: 0,

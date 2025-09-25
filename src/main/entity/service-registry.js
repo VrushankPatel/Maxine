@@ -249,7 +249,7 @@ class ServiceRegistry extends EventEmitter {
         return nodes[index];
       } else {
         // Round robin for load balancing (default) - optimized
-        let index = service.roundRobinIndex || 0;
+        const index = service.roundRobinIndex || 0;
         const node = nodes[index];
         service.roundRobinIndex = (index + 1) % nodes.length;
         return node;
@@ -308,7 +308,7 @@ class ServiceRegistry extends EventEmitter {
     const activeNodes = bgConfig.activeColor === 'blue' ? bgConfig.blueNodes : bgConfig.greenNodes;
     if (!activeNodes || activeNodes.length === 0) return null;
     // Round-robin for blue-green
-    let index = this.roundRobinIndex.get(`${serviceName}-bluegreen`) || 0;
+    const index = this.roundRobinIndex.get(`${serviceName}-bluegreen`) || 0;
     const nodeName = activeNodes[index % activeNodes.length];
     this.roundRobinIndex.set(`${serviceName}-bluegreen`, index + 1);
     // Find the node in registry
@@ -326,7 +326,7 @@ class ServiceRegistry extends EventEmitter {
     );
     if (canaryNodes.length === 0) return null;
     // Simple round-robin for canary
-    let index = this.roundRobinIndex.get(`${serviceName}-canary`) || 0;
+    const index = this.roundRobinIndex.get(`${serviceName}-canary`) || 0;
     const node = canaryNodes[index % canaryNodes.length];
     this.roundRobinIndex.set(`${serviceName}-canary`, index + 1);
     return node;
@@ -1656,10 +1656,10 @@ class ServiceRegistry extends EventEmitter {
       this.availableNodes.set(serviceName, new Map());
       this.availableNodesArray.set(serviceName, []);
     }
-    let arr = this.healthyNodes.get(serviceName);
-    let set = this.healthyNodeSets.get(serviceName);
-    let map = this.healthyNodesMap.get(serviceName);
-    let avail = this.availableNodes.get(serviceName);
+    const arr = this.healthyNodes.get(serviceName);
+    const set = this.healthyNodeSets.get(serviceName);
+    const map = this.healthyNodesMap.get(serviceName);
+    const avail = this.availableNodes.get(serviceName);
     if (!set.has(nodeName)) {
       set.add(nodeName);
       map.set(nodeName, node);
@@ -2820,7 +2820,7 @@ class ServiceRegistry extends EventEmitter {
 
   async getFederatedNode(serviceName, strategy, clientId) {
     // Try local first
-    let node = this.getRandomNode(serviceName, strategy, clientId);
+    const node = this.getRandomNode(serviceName, strategy, clientId);
     if (node) return node;
     // Query federated
     const axios = require('axios');

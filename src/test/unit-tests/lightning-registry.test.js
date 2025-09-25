@@ -1,7 +1,7 @@
 process.env.LIGHTNING_MODE = 'true';
-var chai = require('chai');
-var chaiHttp = require('chai-http');
-var should = chai.should();
+const chai = require('chai');
+const chaiHttp = require('chai-http');
+const should = chai.should();
 chai.use(require('chai-json'));
 chai.use(chaiHttp);
 const app = require('../../../index');
