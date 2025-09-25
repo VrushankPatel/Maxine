@@ -43,11 +43,11 @@ A minimal, high-performance service discovery and registry for microservices.
 
 Maxine delivers exceptional performance for service discovery operations:
 
-- **Ultra-Fast Mode**: Average 3.53ms, P95 6.22ms for discovery requests
-- **Throughput**: 13,634+ requests per second under load (50 concurrent users, 5000 iterations)
-- **Lightning Mode**: Average 3.53ms, P95 6.22ms for discovery requests (50 concurrent users, 5000 iterations)
-- **Throughput**: 13,634+ requests per second under load (50 concurrent users, 5000 iterations)
-- **Optimizations**: HTTP/1.1 support for ultra-fast mode, disabled OpenTelemetry tracing and Prometheus metrics in Lightning Mode, ultra-fast mode with minimal features for maximum speed, fast LCG PRNG, pre-allocated buffers, object pooling, adaptive caching, binary search for weighted random selection, SIMD-inspired fast operations for bulk calculations, removed console.log from production code, optimized discovery to use ultraFastGetRandomNodeSync, disabled expensive operations in lightning mode, synchronous load balancing for ultra-fast mode
+- **Ultra-Fast Mode**: Average 1.62ms, P95 3.12ms for discovery requests
+- **Throughput**: 23,424+ requests per second under load (50 concurrent users, 5000 iterations)
+- **Lightning Mode**: Average 1.62ms, P95 3.12ms for discovery requests (50 concurrent users, 5000 iterations)
+- **Throughput**: 23,424+ requests per second under load (50 concurrent users, 5000 iterations)
+- **Optimizations**: HTTP/2 support for ultra-fast mode, disabled OpenTelemetry tracing and Prometheus metrics in Lightning Mode, ultra-fast mode with minimal features for maximum speed, fast LCG PRNG, pre-allocated buffers, object pooling, adaptive caching, binary search for weighted random selection, SIMD-inspired fast operations for bulk calculations, removed console.log from production code, optimized discovery to use ultraFastGetRandomNodeSync, disabled expensive operations in lightning mode, synchronous load balancing for ultra-fast mode, updated GC flags for Node.js 22 compatibility
 
 ## Quick Start
 
