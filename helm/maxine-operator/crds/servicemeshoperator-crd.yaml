@@ -1,0 +1,119 @@
+apiVersion: apiextensions.k8s.io/v1
+kind: CustomResourceDefinition
+metadata:
+  name: servicemeshoperators.maxine.io
+spec:
+  group: maxine.io
+  versions:
+    - name: v1
+      served: true
+      storage: true
+      schema:
+        openAPIV3Schema:
+          type: object
+          properties:
+            spec:
+              type: object
+              properties:
+                meshType:
+                  type: string
+                  enum: ['istio', 'linkerd', 'envoy', 'consul']
+                  default: 'istio'
+                namespace:
+                  type: string
+                  default: 'default'
+                serviceSelector:
+                  type: object
+                  additionalProperties:
+                    type: string
+                policies:
+                  type: object
+                  properties:
+                    loadBalancing:
+                      type: string
+                      enum:
+                        [
+                          'round-robin',
+                          'least-request',
+                          'consistent-hash',
+                          'random',
+                          'weighted-random',
+                          'least-connections',
+                          'health-score',
+                          'predictive',
+                          'ai-driven',
+                          'advanced-ml',
+                          'cost-aware',
+                          'power-of-two-choices',
+                        ]
+                      default: 'round-robin'
+                    circuitBreaker:
+                      type: object
+                      properties:
+                        enabled:
+                          type: boolean
+                          default: true
+                        maxRequests:
+                          type: integer
+                          default: 100
+                        timeout:
+                          type: string
+                          default: '30s'
+                        failureThreshold:
+                          type: integer
+                          default: 5
+                    retry:
+                      type: object
+                      properties:
+                        attempts:
+                          type: integer
+                          default: 3
+                        timeout:
+                          type: string
+                          default: '2s'
+                    trafficSplitting:
+                      type: object
+                      additionalProperties:
+                        type: number
+                    aiOptimization:
+                      type: object
+                      properties:
+                        enabled:
+                          type: boolean
+                          default: false
+                        modelType:
+                          type: string
+                          enum: ['predictive', 'reinforcement', 'deep-learning']
+                          default: 'predictive'
+            status:
+              type: object
+              properties:
+                phase:
+                  type: string
+                  enum: ['Pending', 'Configuring', 'Running', 'Failed']
+                conditions:
+                  type: array
+                  items:
+                    type: object
+                    properties:
+                      type:
+                        type: string
+                      status:
+                        type: string
+                      lastTransitionTime:
+                        type: string
+                      reason:
+                        type: string
+                      message:
+                        type: string
+                lastUpdated:
+                  type: string
+                configuredServices:
+                  type: integer
+  scope: Namespaced
+  names:
+    plural: servicemeshoperators
+    singular: servicemeshoperator
+    kind: ServiceMeshOperator
+    shortNames:
+      - smo

@@ -666,6 +666,62 @@ class DeepLearningLBService {
   }
 
   /**
+   * Synchronous prediction for ultra-fast mode using statistical models
+   */
+  predictNodeScoresSync(serviceName, nodes) {
+    const modelData = this.models.get(serviceName);
+    if (!modelData) {
+      return null; // No model available, fallback to statistical prediction
+    }
+
+    try {
+      const predictions = [];
+
+      for (const node of nodes) {
+        // Use time-series analysis for synchronous prediction
+        const timeSeriesData = this.nodeTimeSeriesData.get(node.nodeName) || [];
+        const features = this.extractFeatures(node.nodeName, timeSeriesData);
+
+        if (!features) {
+          predictions.push({ node, score: 0.5 }); // Default score
+          continue;
+        }
+
+        // For synchronous mode, use a simplified scoring based on recent performance
+        // Instead of full neural network inference, use statistical scoring
+        const recentData = timeSeriesData.slice(-10); // Last 10 data points
+        if (recentData.length === 0) {
+          predictions.push({ node, score: 0.5 });
+          continue;
+        }
+
+        // Calculate score based on response time trend and success rate
+        const responseTimes = recentData.map((d) => d.responseTime);
+        const successRates = recentData.map((d) => (d.success ? 1 : 0));
+
+        const avgResponseTime = this.mean(responseTimes);
+        const avgSuccessRate = this.mean(successRates);
+
+        // Normalize response time (lower is better, max 1000ms = score 0, min 0ms = score 1)
+        const responseScore = Math.max(0, 1 - avgResponseTime / 1000);
+
+        // Success rate score (higher is better)
+        const successScore = avgSuccessRate;
+
+        // Combine scores with weights
+        const combinedScore = responseScore * 0.6 + successScore * 0.4;
+
+        predictions.push({ node, score: combinedScore });
+      }
+
+      return predictions;
+    } catch (error) {
+      console.error('Error in synchronous prediction:', error);
+      return null;
+    }
+  }
+
+  /**
    * Get load balancing accuracy metrics
    */
   getLoadBalancingMetrics(serviceName) {

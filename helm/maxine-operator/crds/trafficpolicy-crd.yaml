@@ -1,0 +1,104 @@
+apiVersion: apiextensions.k8s.io/v1
+kind: CustomResourceDefinition
+metadata:
+  name: trafficpolicies.maxine.io
+spec:
+  group: maxine.io
+  versions:
+    - name: v1
+      served: true
+      storage: true
+      schema:
+        openAPIV3Schema:
+          type: object
+          properties:
+            spec:
+              type: object
+              properties:
+                serviceName:
+                  type: string
+                rules:
+                  type: array
+                  items:
+                    type: object
+                    properties:
+                      name:
+                        type: string
+                      match:
+                        type: object
+                        properties:
+                          headers:
+                            type: object
+                            additionalProperties:
+                              type: string
+                          method:
+                            type: string
+                            enum: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'HEAD', 'OPTIONS']
+                          path:
+                            type: string
+                      route:
+                        type: object
+                        properties:
+                          weight:
+                            type: integer
+                            minimum: 0
+                            maximum: 100
+                          timeout:
+                            type: string
+                          retries:
+                            type: integer
+                          loadBalancer:
+                            type: string
+                            enum:
+                              [
+                                'round-robin',
+                                'least-request',
+                                'consistent-hash',
+                                'random',
+                                'weighted-random',
+                                'least-connections',
+                                'health-score',
+                                'predictive',
+                                'ai-driven',
+                                'advanced-ml',
+                                'cost-aware',
+                                'power-of-two-choices',
+                              ]
+                      faultInjection:
+                        type: object
+                        properties:
+                          delay:
+                            type: string
+                          abort:
+                            type: object
+                            properties:
+                              httpStatus:
+                                type: integer
+                              percentage:
+                                type: number
+                      mirror:
+                        type: object
+                        properties:
+                          host:
+                            type: string
+                          port:
+                            type: integer
+                          percentage:
+                            type: number
+            status:
+              type: object
+              properties:
+                phase:
+                  type: string
+                  enum: ['Pending', 'Applying', 'Applied', 'Failed']
+                appliedAt:
+                  type: string
+                lastError:
+                  type: string
+  scope: Namespaced
+  names:
+    plural: trafficpolicies
+    singular: trafficpolicy
+    kind: TrafficPolicy
+    shortNames:
+      - tp

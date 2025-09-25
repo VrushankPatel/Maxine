@@ -5,60 +5,105 @@ metadata:
 spec:
   group: maxine.io
   versions:
-  - name: v1
-    served: true
-    storage: true
-    schema:
-      openAPIV3Schema:
-        type: object
-        properties:
-          spec:
-            type: object
-            properties:
-              serviceName:
-                type: string
-              loadBalancing:
-                type: string
-                enum: ["round-robin", "consistent-hash", "least-connections", "random"]
-                default: "round-robin"
-              trafficDistribution:
-                type: object
-                additionalProperties:
-                  type: number
-              circuitBreaker:
-                type: object
-                properties:
-                  enabled:
-                    type: boolean
-                    default: false
-                  failureThreshold:
-                    type: integer
-                    default: 5
-                  timeout:
-                    type: integer
-                    default: 60000
-              acl:
-                type: object
-                properties:
-                  allow:
-                    type: array
-                    items:
-                      type: string
-                  deny:
-                    type: array
-                    items:
-                      type: string
-          status:
-            type: object
-            properties:
-              applied:
-                type: boolean
-              lastUpdated:
-                type: string
+    - name: v1
+      served: true
+      storage: true
+      schema:
+        openAPIV3Schema:
+          type: object
+          properties:
+            spec:
+              type: object
+              properties:
+                serviceName:
+                  type: string
+                loadBalancing:
+                  type: string
+                  enum:
+                    [
+                      'round-robin',
+                      'consistent-hash',
+                      'least-connections',
+                      'random',
+                      'weighted-random',
+                      'least-request',
+                      'health-score',
+                      'predictive',
+                      'ai-driven',
+                      'advanced-ml',
+                      'cost-aware',
+                      'power-of-two-choices',
+                      'geo-aware',
+                    ]
+                  default: 'round-robin'
+                trafficDistribution:
+                  type: object
+                  additionalProperties:
+                    type: number
+               circuitBreaker:
+                 type: object
+                 properties:
+                   enabled:
+                     type: boolean
+                     default: false
+                   failureThreshold:
+                     type: integer
+                     default: 5
+                   timeout:
+                     type: integer
+                     default: 60000
+                   maxRequests:
+                     type: integer
+                     default: 100
+               aiOptimization:
+                 type: object
+                 properties:
+                   enabled:
+                     type: boolean
+                     default: false
+                   modelType:
+                     type: string
+                     enum: ["predictive", "reinforcement", "deep-learning"]
+                     default: "predictive"
+                   trainingInterval:
+                     type: string
+                     default: "1h"
+               multiCloud:
+                 type: object
+                 properties:
+                   enabled:
+                     type: boolean
+                     default: false
+                   preferredProviders:
+                     type: array
+                     items:
+                       type: string
+                       enum: ["aws", "gcp", "azure", "on-prem"]
+                   costOptimization:
+                     type: boolean
+                     default: false
+                acl:
+                  type: object
+                  properties:
+                    allow:
+                      type: array
+                      items:
+                        type: string
+                    deny:
+                      type: array
+                      items:
+                        type: string
+            status:
+              type: object
+              properties:
+                applied:
+                  type: boolean
+                lastUpdated:
+                  type: string
   scope: Namespaced
   names:
     plural: servicepolicies
     singular: servicepolicy
     kind: ServicePolicy
     shortNames:
-    - sp
+      - sp

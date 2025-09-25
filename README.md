@@ -480,6 +480,32 @@ Content-Type: application/json
 GET /servers
 ```
 
+##### Get Service Instances
+
+```http
+GET /services/:serviceName
+```
+
+Returns all healthy instances of the specified service with their metadata and health status.
+
+Response:
+
+```json
+{
+  "serviceName": "my-service",
+  "instances": [
+    {
+      "nodeId": "my-service:localhost:3000",
+      "address": "localhost:3000",
+      "nodeName": "my-service:localhost:3000",
+      "metadata": { "version": "1.0", "weight": 1 },
+      "lastHeartbeat": 1640995200000,
+      "healthy": true
+    }
+  ]
+}
+```
+
 ##### Health Check
 
 ```http
@@ -487,6 +513,30 @@ GET /health
 ```
 
 Returns status, services count, nodes count.
+
+##### Node Health Check
+
+```http
+GET /health/:nodeId
+```
+
+Returns detailed health status for a specific service instance.
+
+Response:
+
+```json
+{
+  "nodeId": "my-service:localhost:3000",
+  "serviceName": "my-service",
+  "address": "localhost:3000",
+  "nodeName": "my-service:localhost:3000",
+  "metadata": { "version": "1.0" },
+  "lastHeartbeat": 1640995200000,
+  "timeSinceLastHeartbeat": 5000,
+  "healthy": true,
+  "responseTime": 150
+}
+```
 
 ##### Metrics
 

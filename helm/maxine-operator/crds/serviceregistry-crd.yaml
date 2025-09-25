@@ -5,51 +5,90 @@ metadata:
 spec:
   group: maxine.io
   versions:
-  - name: v1
-    served: true
-    storage: true
-    schema:
-      openAPIV3Schema:
-        type: object
-        properties:
-          spec:
-            type: object
-            properties:
-              replicas:
-                type: integer
-                default: 1
-              mode:
-                type: string
-                enum: ["ultra-fast", "lightning", "full"]
-                default: "lightning"
-              config:
-                type: object
-                properties:
-                  port:
-                    type: integer
-                    default: 8080
-                  persistenceEnabled:
-                    type: boolean
-                    default: false
-                  authEnabled:
-                    type: boolean
-                    default: false
-          status:
-            type: object
-            properties:
-              phase:
-                type: string
-                enum: ["Pending", "Running", "Failed"]
-              nodes:
-                type: integer
-              services:
-                type: integer
-              lastUpdated:
-                type: string
+    - name: v1
+      served: true
+      storage: true
+      schema:
+        openAPIV3Schema:
+          type: object
+          properties:
+            spec:
+              type: object
+              properties:
+                replicas:
+                  type: integer
+                  default: 1
+                mode:
+                  type: string
+                  enum: ['ultra-fast', 'lightning', 'full']
+                  default: 'lightning'
+                config:
+                  type: object
+                  properties:
+                    port:
+                      type: integer
+                      default: 8080
+                    persistenceEnabled:
+                      type: boolean
+                      default: false
+                    persistenceType:
+                      type: string
+                      enum:
+                        [
+                          'memory',
+                          'redis',
+                          'postgresql',
+                          'mysql',
+                          'mmap',
+                          'shm',
+                          'tikv',
+                          'foundationdb',
+                        ]
+                      default: 'memory'
+                    authEnabled:
+                      type: boolean
+                      default: false
+                    rateLimitEnabled:
+                      type: boolean
+                      default: false
+                    ultraFastMode:
+                      type: boolean
+                      default: false
+                    aiOptimizationEnabled:
+                      type: boolean
+                      default: false
+                    multiCloudEnabled:
+                      type: boolean
+                      default: false
+                    federationEnabled:
+                      type: boolean
+                      default: false
+                    serviceMeshIntegration:
+                      type: string
+                      enum: ['istio', 'linkerd', 'envoy', 'consul', 'none']
+                      default: 'none'
+                    monitoringEnabled:
+                      type: boolean
+                      default: true
+                    chaosEngineeringEnabled:
+                      type: boolean
+                      default: false
+            status:
+              type: object
+              properties:
+                phase:
+                  type: string
+                  enum: ['Pending', 'Running', 'Failed']
+                nodes:
+                  type: integer
+                services:
+                  type: integer
+                lastUpdated:
+                  type: string
   scope: Namespaced
   names:
     plural: serviceregistries
     singular: serviceregistry
     kind: ServiceRegistry
     shortNames:
-    - sr
+      - sr
