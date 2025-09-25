@@ -3,14 +3,14 @@ import { check } from 'k6';
 import { textSummary } from 'https://jslib.k6.io/k6-summary/0.0.1/index.js';
 import { htmlReport } from "https://raw.githubusercontent.com/benc-uk/k6-reporter/main/dist/bundle.js";
 
-const host = "http://127.0.0.1:8080";
+const host = "https://127.0.0.1:8080";
 const apiUrl = host;
 const registerUrl = '/register';
 const heartbeatUrl = '/heartbeat';
 const discoverUrl = '/discover?serviceName=dbservice&version=1.0';
 const statusCheck = {"is status 200": response => response.status === 200};
 
-const headers = {headers: {'Content-Type': 'application/json'}};
+const headers = {headers: {'Content-Type': 'application/json'}, insecureSkipTLSVerify: true};
 
 const serviceObj = JSON.stringify({
     "serviceName": "dbservice",
@@ -59,6 +59,7 @@ export let options = {
     vus: 50,
     iterations: 5000,
     duration: '30s',
+    insecureSkipTLSVerify: true,
     thresholds: {
         http_req_failed: ['rate<0.02'],
         http_req_duration: ['p(95)<100'], // Stricter for ultra-fast
