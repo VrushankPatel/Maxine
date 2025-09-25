@@ -525,35 +525,35 @@ if (config.ultraFastMode) {
         allowHTTP1: true, // Allow HTTP/1.1 fallback
       };
       server = http2.createSecureServer(options, requestHandler);
-      console.log('Maxine server started with HTTP/2 support on port', constants.PORT);
+      // console.log('Maxine server started with HTTP/2 support on port', constants.PORT); // Removed for performance
     } else {
-      console.log('HTTP/2 certificates not found, falling back to HTTP/1.1');
+      // console.log('HTTP/2 certificates not found, falling back to HTTP/1.1'); // Removed for performance
       server = http.createServer({ keepAlive: false }, requestHandler);
     }
   } else {
     server = http.createServer({ keepAlive: false }, requestHandler);
-    console.log(
-      'HTTP/1.1 server created, server:',
-      !!server,
-      'listen method:',
-      typeof server.listen
-    );
+    // console.log( // Removed for performance
+    //   'HTTP/1.1 server created, server:',
+    //   !!server,
+    //   'listen method:',
+    //   typeof server.listen
+    // );
   }
 
   if (!config.isTestMode) {
-    console.log('About to call server.listen on port', constants.PORT);
+    // console.log('About to call server.listen on port', constants.PORT); // Removed for performance
     server
       .listen(constants.PORT, () => {
-        const protocol = config.http2Enabled ? 'HTTP/2' : 'HTTP/1.1';
-        console.log(
-          `Maxine server started in ultra-fast mode with ${protocol} on port ${constants.PORT}`
-        );
+        // const protocol = config.http2Enabled ? 'HTTP/2' : 'HTTP/1.1'; // Removed for performance
+        // console.log( // Removed for performance
+        //   `Maxine server started in ultra-fast mode with ${protocol} on port ${constants.PORT}`
+        // );
       })
       .on('error', (err) => {
         console.error('Server listen error:', err);
       });
     // Keep the process alive
-    console.log('Setting keep alive interval');
+    // console.log('Setting keep alive interval'); // Removed for performance
     setInterval(() => {}, 1000);
     // Prevent exit
     process.stdin.resume();
@@ -3498,7 +3498,7 @@ if (config.ultraFastMode) {
 
   if (!config.isTestMode || process.env.WEBSOCKET_ENABLED === 'true') {
     server.listen(constants.PORT, () => {
-      console.log(`Maxine server started in lightning mode on port ${constants.PORT}`);
+      // console.log(`Maxine server started in lightning mode on port ${constants.PORT}`); // Removed for performance
     });
   }
 
