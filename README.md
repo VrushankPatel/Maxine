@@ -49,6 +49,39 @@ Maxine delivers exceptional performance for service discovery operations:
 - **Throughput**: 20,136+ requests per second under load (100 concurrent users, 1000 iterations)
 - **Optimizations**: HTTP/1.1 for ultra-fast mode (disabled HTTP/2 for lower latency), disabled OpenTelemetry tracing and Prometheus metrics in Lightning Mode, ultra-fast mode with minimal features for maximum speed, fast LCG PRNG, pre-allocated buffers, object pooling, adaptive caching, binary search for weighted random selection, SIMD-inspired fast operations for bulk calculations, removed console.log from production code (24% throughput improvement), optimized discovery to use ultraFastGetRandomNodeSync directly, disabled expensive operations in lightning mode, synchronous load balancing for ultra-fast mode, updated GC flags for Node.js 22 compatibility
 
+## Security
+
+Maxine implements comprehensive security measures for production deployments:
+
+### Security Features
+- **Input Validation**: All API endpoints use Joi schema validation with sanitization
+- **Rate Limiting**: Distributed Redis-backed rate limiting to prevent abuse
+- **Authentication**: JWT-based authentication with role-based access control (RBAC)
+- **API Keys**: Secure API key management with configurable rate limits per key
+- **Mutual TLS**: mTLS support for encrypted service-to-service communication
+- **Audit Logging**: Comprehensive logging of all security events and operations
+- **Dependency Security**: All dependencies are regularly audited and updated
+
+### Security Best Practices
+- Enable authentication in production: `AUTH_ENABLED=true`
+- Use HTTPS/TLS for all communications
+- Configure rate limiting based on your traffic patterns
+- Regularly update dependencies and monitor for security advisories
+- Use API keys for service-to-service authentication
+- Enable audit logging for compliance requirements
+
+### Security Scanning
+```bash
+# Run security audit
+npm audit
+
+# Check for outdated dependencies
+npm outdated
+
+# Use ESLint for code quality
+npm run lint
+```
+
 ## Quick Start
 
 ```bash
@@ -65,6 +98,35 @@ Maxine runs in **Ultra-Fast Mode** by default for maximum performance with core 
 - [Monitoring and Alerting Guide](docs/monitoring-alerting-guide.md) - Production monitoring setup
 - [Client SDKs](docs/client-sdks.md) - SDK documentation for multiple languages
 - [Event Streaming](docs/event-streaming-tutorial.md) - Event-driven architectures
+
+## Development
+
+### Code Quality
+Maxine uses modern development tools for code quality and security:
+
+```bash
+# Run linting
+npm run lint
+
+# Auto-fix linting issues
+npm run lint:fix
+
+# Format code
+npm run format
+
+# Run tests
+npm test
+
+# Run load tests
+npm run load-test
+```
+
+### Development Tools
+- **ESLint**: Code linting with security rules
+- **Prettier**: Code formatting
+- **Joi**: Input validation and sanitization
+- **Mocha**: Testing framework
+- **Istanbul/NYC**: Code coverage
 
 ## Persistence
 

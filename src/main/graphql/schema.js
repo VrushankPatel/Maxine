@@ -11,22 +11,54 @@ const pubsub = new PubSub();
 // Listen to global events and publish to GraphQL subscriptions
 if (global.eventEmitter) {
   global.eventEmitter.on('service_registered', (data) => {
-    pubsub.publish('SERVICE_EVENT', { serviceEvents: { event: 'register', serviceName: data.serviceName, nodeName: data.nodeName, data: JSON.stringify(data) } });
+    pubsub.publish('SERVICE_EVENT', {
+      serviceEvents: {
+        event: 'register',
+        serviceName: data.serviceName,
+        nodeName: data.nodeName,
+        data: JSON.stringify(data),
+      },
+    });
   });
   global.eventEmitter.on('service_deregistered', (data) => {
-    pubsub.publish('SERVICE_EVENT', { serviceEvents: { event: 'deregister', serviceName: data.serviceName, nodeName: data.nodeName, data: JSON.stringify(data) } });
+    pubsub.publish('SERVICE_EVENT', {
+      serviceEvents: {
+        event: 'deregister',
+        serviceName: data.serviceName,
+        nodeName: data.nodeName,
+        data: JSON.stringify(data),
+      },
+    });
   });
   global.eventEmitter.on('service_unhealthy', (data) => {
-    pubsub.publish('SERVICE_EVENT', { serviceEvents: { event: 'unhealthy', serviceName: data.serviceName, nodeName: data.nodeId, data: JSON.stringify(data) } });
+    pubsub.publish('SERVICE_EVENT', {
+      serviceEvents: {
+        event: 'unhealthy',
+        serviceName: data.serviceName,
+        nodeName: data.nodeId,
+        data: JSON.stringify(data),
+      },
+    });
   });
   global.eventEmitter.on('circuit_open', (data) => {
-    pubsub.publish('CIRCUIT_BREAKER_EVENT', { circuitBreakerEvents: { event: 'open', nodeId: data.nodeId, data: JSON.stringify(data) } });
+    pubsub.publish('CIRCUIT_BREAKER_EVENT', {
+      circuitBreakerEvents: { event: 'open', nodeId: data.nodeId, data: JSON.stringify(data) },
+    });
   });
   global.eventEmitter.on('circuit_closed', (data) => {
-    pubsub.publish('CIRCUIT_BREAKER_EVENT', { circuitBreakerEvents: { event: 'closed', nodeId: data.nodeId, data: JSON.stringify(data) } });
+    pubsub.publish('CIRCUIT_BREAKER_EVENT', {
+      circuitBreakerEvents: { event: 'closed', nodeId: data.nodeId, data: JSON.stringify(data) },
+    });
   });
   global.eventEmitter.on('config_changed', (data) => {
-    pubsub.publish('CONFIG_EVENT', { configEvents: { event: 'changed', serviceName: data.serviceName, key: data.key, data: JSON.stringify(data) } });
+    pubsub.publish('CONFIG_EVENT', {
+      configEvents: {
+        event: 'changed',
+        serviceName: data.serviceName,
+        key: data.key,
+        data: JSON.stringify(data),
+      },
+    });
   });
   // Add more events as needed
 }
@@ -136,19 +168,34 @@ const resolvers = {
   Query: {
     services: (_, { filter, sort }) => {
       let services = [];
-      const registryData = registry.getAllServices ? registry.getAllServices() : serviceRegistry.registry;
+      const registryData = registry.getAllServices
+        ? registry.getAllServices()
+        : serviceRegistry.registry;
       for (const [serviceName, service] of registryData) {
-        const nodes = service.nodes ? Array.from(service.nodes.values()) : Object.values(service.nodes || {});
+        const nodes = service.nodes
+          ? Array.from(service.nodes.values())
+          : Object.values(service.nodes || {});
         const serviceObj = {
           serviceName,
-          nodes: nodes.map(n => ({ ...n, healthy: true, weight: n.weight || 1, connections: n.connections || 0 })),
-          versions: registry.getVersions ? registry.getVersions(serviceName) : []
+          nodes: nodes.map((n) => ({
+            ...n,
+            healthy: true,
+            weight: n.weight || 1,
+            connections: n.connections || 0,
+          })),
+          versions: registry.getVersions ? registry.getVersions(serviceName) : [],
         };
         if (filter) {
           if (filter.serviceName && !serviceName.includes(filter.serviceName)) continue;
-          if (filter.hasNodes !== undefined && (serviceObj.nodes.length > 0) !== filter.hasNodes) continue;
+          if (filter.hasNodes !== undefined && serviceObj.nodes.length > 0 !== filter.hasNodes)
+            continue;
           if (filter.tags && filter.tags.length > 0) {
-            const hasTags = serviceObj.nodes.some(n => n.metadata && n.metadata.tags && filter.tags.some(t => n.metadata.tags.includes(t)));
+            const hasTags = serviceObj.nodes.some(
+              (n) =>
+                n.metadata &&
+                n.metadata.tags &&
+                filter.tags.some((t) => n.metadata.tags.includes(t))
+            );
             if (!hasTags) continue;
           }
         }
@@ -173,20 +220,41 @@ const resolvers = {
       return services;
     },
     service: ({ serviceName }) => {
-      const service = registry.getAllServices ? registry.getAllServices().get(serviceName) : serviceRegistry.registry.get(serviceName);
+      const service = registry.getAllServices
+        ? registry.getAllServices().get(serviceName)
+        : serviceRegistry.registry.get(serviceName);
       if (!service) return null;
-      const nodes = service.nodes ? Array.from(service.nodes.values()) : Object.values(service.nodes || {});
+      const nodes = service.nodes
+        ? Array.from(service.nodes.values())
+        : Object.values(service.nodes || {});
       return {
         serviceName,
-        nodes: nodes.map(n => ({ ...n, healthy: true, weight: n.weight || 1, connections: n.connections || 0 })),
-        versions: registry.getVersions ? registry.getVersions(serviceName) : []
+        nodes: nodes.map((n) => ({
+          ...n,
+          healthy: true,
+          weight: n.weight || 1,
+          connections: n.connections || 0,
+        })),
+        versions: registry.getVersions ? registry.getVersions(serviceName) : [],
       };
     },
     discover: async ({ serviceName, ip, group, tags, deployment, filter, loadBalancing }) => {
-      const options = { version: filter ? JSON.parse(filter).version : undefined, loadBalancing: loadBalancing || 'round-robin', tags, ip };
+      const options = {
+        version: filter ? JSON.parse(filter).version : undefined,
+        loadBalancing: loadBalancing || 'round-robin',
+        tags,
+        ip,
+      };
       const node = await registry.discover(serviceName, options);
       if (!node) return null;
-      return { nodeName: node.nodeName, address: node.address, metadata: JSON.stringify(node.metadata || {}), healthy: true, weight: node.weight || 1, connections: node.connections || 0 };
+      return {
+        nodeName: node.nodeName,
+        address: node.address,
+        metadata: JSON.stringify(node.metadata || {}),
+        healthy: true,
+        weight: node.weight || 1,
+        connections: node.connections || 0,
+      };
     },
     healthScores: ({ serviceName }) => {
       const scores = registry.getHealthScores ? registry.getHealthScores(serviceName) : {};
@@ -196,7 +264,9 @@ const resolvers = {
       return registry.getAnomalies ? registry.getAnomalies() : [];
     },
     predictHealth: ({ serviceName, window }) => {
-      const predictions = registry.predictServiceHealth ? registry.predictServiceHealth(serviceName, window) : {};
+      const predictions = registry.predictServiceHealth
+        ? registry.predictServiceHealth(serviceName, window)
+        : {};
       return Object.entries(predictions).map(([nodeId, pred]) => ({ nodeId, ...pred }));
     },
     dependencyGraph: () => {
@@ -205,28 +275,57 @@ const resolvers = {
     },
     versions: ({ serviceName }) => {
       return registry.getVersions ? registry.getVersions(serviceName) : [];
-    }
+    },
   },
   Mutation: {
     register: ({ serviceName, nodeName, address, metadata }) => {
       const metadataObj = metadata ? JSON.parse(metadata) : {};
       if (registry.register) {
-        registry.register(serviceName, { host: address.split(':')[0], port: parseInt(address.split(':')[1]), metadata: metadataObj });
-        pubsub.publish('SERVICE_EVENT', { serviceEvents: { event: 'register', serviceName, nodeName, data: JSON.stringify({ address, metadata: metadataObj }) } });
+        registry.register(serviceName, {
+          host: address.split(':')[0],
+          port: parseInt(address.split(':')[1]),
+          metadata: metadataObj,
+        });
+        pubsub.publish('SERVICE_EVENT', {
+          serviceEvents: {
+            event: 'register',
+            serviceName,
+            nodeName,
+            data: JSON.stringify({ address, metadata: metadataObj }),
+          },
+        });
         return 'Service registered';
       } else {
-        serviceRegistry.registry.get(serviceName) || serviceRegistry.registry.set(serviceName, { nodes: {}, createdAt: Date.now() });
-        serviceRegistry.registry.get(serviceName).nodes[nodeName] = { address, metadata: metadataObj, healthy: true, registeredAt: Date.now() };
+        serviceRegistry.registry.get(serviceName) ||
+          serviceRegistry.registry.set(serviceName, { nodes: {}, createdAt: Date.now() });
+        serviceRegistry.registry.get(serviceName).nodes[nodeName] = {
+          address,
+          metadata: metadataObj,
+          healthy: true,
+          registeredAt: Date.now(),
+        };
         serviceRegistry.addToHealthyNodes(serviceName, nodeName);
-        serviceRegistry.addChange('register', serviceName, nodeName, { address, metadata: metadataObj });
-        pubsub.publish('SERVICE_EVENT', { serviceEvents: { event: 'register', serviceName, nodeName, data: JSON.stringify({ address, metadata: metadataObj }) } });
+        serviceRegistry.addChange('register', serviceName, nodeName, {
+          address,
+          metadata: metadataObj,
+        });
+        pubsub.publish('SERVICE_EVENT', {
+          serviceEvents: {
+            event: 'register',
+            serviceName,
+            nodeName,
+            data: JSON.stringify({ address, metadata: metadataObj }),
+          },
+        });
         return 'Service registered';
       }
     },
     deregister: ({ serviceName, nodeName }) => {
       if (registry.deregister) {
         registry.deregister(nodeName);
-        pubsub.publish('SERVICE_EVENT', { serviceEvents: { event: 'deregister', serviceName, nodeName, data: '{}' } });
+        pubsub.publish('SERVICE_EVENT', {
+          serviceEvents: { event: 'deregister', serviceName, nodeName, data: '{}' },
+        });
         return 'Service deregistered';
       } else {
         serviceRegistry.removeFromHealthyNodes(serviceName, nodeName);
@@ -237,7 +336,9 @@ const resolvers = {
             serviceRegistry.registry.delete(serviceName);
           }
           serviceRegistry.addChange('deregister', serviceName, nodeName, {});
-          pubsub.publish('SERVICE_EVENT', { serviceEvents: { event: 'deregister', serviceName, nodeName, data: '{}' } });
+          pubsub.publish('SERVICE_EVENT', {
+            serviceEvents: { event: 'deregister', serviceName, nodeName, data: '{}' },
+          });
         }
         return 'Service deregistered';
       }
@@ -263,29 +364,33 @@ const resolvers = {
         return 'Dependency removed';
       }
       return 'Not supported';
-    }
+    },
   },
   Subscription: {
     serviceEvents: {
       subscribe: withFilter(
         () => pubsub.asyncIterator(['SERVICE_EVENT']),
         (payload, variables) => {
-          return !variables.serviceName || payload.serviceEvents.serviceName === variables.serviceName;
+          return (
+            !variables.serviceName || payload.serviceEvents.serviceName === variables.serviceName
+          );
         }
-      )
+      ),
     },
     circuitBreakerEvents: {
-      subscribe: () => pubsub.asyncIterator(['CIRCUIT_BREAKER_EVENT'])
+      subscribe: () => pubsub.asyncIterator(['CIRCUIT_BREAKER_EVENT']),
     },
     configEvents: {
       subscribe: withFilter(
         () => pubsub.asyncIterator(['CONFIG_EVENT']),
         (payload, variables) => {
-          return !variables.serviceName || payload.configEvents.serviceName === variables.serviceName;
+          return (
+            !variables.serviceName || payload.configEvents.serviceName === variables.serviceName
+          );
         }
-      )
-    }
-  }
+      ),
+    },
+  },
 };
 
 const schema = makeExecutableSchema({ typeDefs, resolvers });

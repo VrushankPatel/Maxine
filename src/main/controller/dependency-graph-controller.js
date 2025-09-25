@@ -1,21 +1,21 @@
 const { serviceRegistry } = require('../entity/service-registry');
 
 const dependencyGraphController = (req, res) => {
-    const graph = {};
-    for (const [service, deps] of serviceRegistry.serviceDependencies) {
-        graph[service] = Array.from(deps);
-    }
+  const graph = {};
+  for (const [service, deps] of serviceRegistry.serviceDependencies) {
+    graph[service] = Array.from(deps);
+  }
 
-    // Create reverse graph for dependents
-    const dependents = {};
-    for (const [service, deps] of serviceRegistry.serviceDependencies) {
-        for (const dep of deps) {
-            if (!dependents[dep]) dependents[dep] = new Set();
-            dependents[dep].add(service);
-        }
+  // Create reverse graph for dependents
+  const dependents = {};
+  for (const [service, deps] of serviceRegistry.serviceDependencies) {
+    for (const dep of deps) {
+      if (!dependents[dep]) dependents[dep] = new Set();
+      dependents[dep].add(service);
     }
+  }
 
-    const html = `
+  const html = `
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -314,8 +314,8 @@ const dependencyGraphController = (req, res) => {
 </body>
 </html>`;
 
-    res.setHeader('Content-Type', 'text/html');
-    res.send(html);
+  res.setHeader('Content-Type', 'text/html');
+  res.send(html);
 };
 
 module.exports = dependencyGraphController;

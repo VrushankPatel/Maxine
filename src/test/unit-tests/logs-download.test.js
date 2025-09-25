@@ -7,22 +7,23 @@ var should = chai.should();
 chai.use(require('chai-json'));
 chai.use(chaiHttp);
 
-const fileName = require('path').basename(__filename).replace(".js","");
+const fileName = require('path').basename(__filename).replace('.js', '');
 const accessToken = generateAccessToken(testUser);
 
 describe(`${fileName} : API /api/logs`, () => {
-    let logFiles = [];
+  let logFiles = [];
 
-    it('GET /download -> 200 && it should return all the log files available in logs dir in JSON format', (done) => {
-        chai.request(app)
-            .get(ENDPOINTS.logs.download)
-            .set("Authorization", `Bearer ${accessToken}`)
-            .end((_, res) => {
-                res.should.have.status(200);
-                res.should.be.json;
-                res.body.should.be.a('object');
-                logFiles = res.body;
-                done();
-            });
-    });
+  it('GET /download -> 200 && it should return all the log files available in logs dir in JSON format', (done) => {
+    chai
+      .request(app)
+      .get(ENDPOINTS.logs.download)
+      .set('Authorization', `Bearer ${accessToken}`)
+      .end((_, res) => {
+        res.should.have.status(200);
+        res.should.be.json;
+        res.body.should.be.a('object');
+        logFiles = res.body;
+        done();
+      });
+  });
 });

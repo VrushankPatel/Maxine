@@ -1,23 +1,27 @@
-const { constants } = require("../util/constants/constants");
+const { constants } = require('../util/constants/constants');
 
 class User {
-    userName;
-    password;
-    role;
+  userName;
+  password;
+  role;
 
-    static createUserFromObj(obj){
-        return new User(obj.userName, obj.password, obj.role);
-    }
+  static createUserFromObj(obj) {
+    return new User(obj.userName, obj.password, obj.role);
+  }
 
-    constructor(userName, password, role = 'user'){
-        this.userName = userName;
-        this.password = password;
-        this.role = role;
-    }
+  constructor(userName, password, role = 'user') {
+    this.userName = userName;
+    this.password = password;
+    this.role = role;
+  }
 }
 
-const admin = new User(constants.DEFAULT_ADMIN_USERNAME_PWD, constants.DEFAULT_ADMIN_USERNAME_PWD, 'admin')
+const admin = new User(
+  constants.DEFAULT_ADMIN_USERNAME_PWD,
+  constants.DEFAULT_ADMIN_USERNAME_PWD,
+  'admin'
+);
 module.exports = {
-    User,
-    admin: admin
-}
+  User,
+  admin: admin,
+};

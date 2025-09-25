@@ -9,17 +9,17 @@ var should = chai.should();
 chai.use(require('chai-json'));
 chai.use(chaiHttp);
 
-const fileName = require('path').basename(__filename).replace(".js","");
+const fileName = require('path').basename(__filename).replace('.js', '');
 const serviceSampleRR = {
-    "hostName": "xx.xxx.xx.xx",
-    "nodeName": "node-x-10",
-    "port": "8082",
-    "serviceName": "dbservice-rr",
-    "version": "1.0",
-    "ssl": true,
-    "timeOut": 5,
-    "weight": 10,
-    "metadata": {}
+  hostName: 'xx.xxx.xx.xx',
+  nodeName: 'node-x-10',
+  port: '8082',
+  serviceName: 'dbservice-rr',
+  version: '1.0',
+  ssl: true,
+  timeOut: 5,
+  weight: 10,
+  metadata: {},
 };
 
 // Clear registry for clean test
@@ -28,7 +28,7 @@ const fs = require('fs');
 const path = require('path');
 const registryPath = path.join(__dirname, '../../../registry.json');
 if (fs.existsSync(registryPath)) {
-    fs.unlinkSync(registryPath);
+  fs.unlinkSync(registryPath);
 }
 serviceRegistry.registry = new Map();
 serviceRegistry.healthyNodes = new Map();
@@ -57,23 +57,23 @@ serviceRegistry.trafficSplit = new Map();
 serviceRegistry.healthHistory = new Map();
 
 if (config.lightningMode) {
-    describe.skip(`${fileName} : NON API discover with config with Round Robin`, () => {});
+  describe.skip(`${fileName} : NON API discover with config with Round Robin`, () => {});
 } else {
-describe(`${fileName} : NON API discover with config with Round Robin`, () => {
+  describe(`${fileName} : NON API discover with config with Round Robin`, () => {
     it(`RR discover with NonAPI`, async () => {
-        // Making sure that server selection strategy is RR
-        config.serverSelectionStrategy = constants.SSS.RR;
-        // Register service for test
-        registryService.registerService(serviceSampleRR);
-        // Reset cache for test
-        const fullServiceName = `default:${serviceSampleRR.serviceName}:1.0`;
-        discoveryService.clearCache();
-        const response1 = await discoveryService.getNode(fullServiceName, serviceSampleRR.hostName);
-        response1.should.be.a('object');
-        // by default, Round robin will return node with name like nodename + '-0', we'll test it.
-        response1.should.have.own.property("nodeName", `${serviceSampleRR.nodeName}-0`);
-        response1.should.have.own.property("parentNode", serviceSampleRR.nodeName);
-        response1.should.have.own.property("address");
+      // Making sure that server selection strategy is RR
+      config.serverSelectionStrategy = constants.SSS.RR;
+      // Register service for test
+      registryService.registerService(serviceSampleRR);
+      // Reset cache for test
+      const fullServiceName = `default:${serviceSampleRR.serviceName}:1.0`;
+      discoveryService.clearCache();
+      const response1 = await discoveryService.getNode(fullServiceName, serviceSampleRR.hostName);
+      response1.should.be.a('object');
+      // by default, Round robin will return node with name like nodename + '-0', we'll test it.
+      response1.should.have.own.property('nodeName', `${serviceSampleRR.nodeName}-0`);
+      response1.should.have.own.property('parentNode', serviceSampleRR.nodeName);
+      response1.should.have.own.property('address');
     });
-});
+  });
 }
