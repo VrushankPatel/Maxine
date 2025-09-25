@@ -121,7 +121,7 @@ const config = {
     lightningDefault, // Enabled in lightning mode for all features
   highPerformanceMode: highPerfDefault && !ultraFastDefault,
   noLogging: ultraFastDefault || extremeFastDefault || lightningDefault,
-  persistenceEnabled: process.env.PERSISTENCE_ENABLED === 'true', // Optional persistence
+  persistenceEnabled: process.env.PERSISTENCE_ENABLED === 'true' && !ultraFastDefault, // Disabled in ultra-fast mode for performance
   persistenceType: process.env.PERSISTENCE_TYPE || 'file', // file, redis, mmap, shm, postgres, mysql, mongo, cassandra
   rateLimitMax: process.env.RATE_LIMIT_MAX
     ? parseInt(process.env.RATE_LIMIT_MAX)
