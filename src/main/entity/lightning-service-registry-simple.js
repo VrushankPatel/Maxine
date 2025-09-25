@@ -148,6 +148,9 @@ class LightningServiceRegistrySimple extends EventEmitter {
     this.gamma = 0.9; // Discount factor
     this.epsilon = 0.1; // Exploration rate
     this.aiSelections = new Map(); // clientId -> {state, action, nodeId, timestamp}
+
+    // Advanced ML Load Balancing (Deep Learning)
+    this.deepLearningService = new DeepLearningLBService();
     this.redisCachePrefix = 'maxine:cache:';
 
     // Custom Load Balancing Plugins
@@ -829,6 +832,9 @@ class LightningServiceRegistrySimple extends EventEmitter {
             case 'power-of-two-choices':
               selectedNode = this.selectPowerOfTwoChoices(availableNodes);
               break;
+            case 'advanced-ml':
+              selectedNode = this.selectAdvancedML(availableNodes, clientIP);
+              break;
             default: // round-robin
               const index = service.roundRobinIndex || 0;
               selectedNode = availableNodes[index % availableNodes.length];
@@ -1206,6 +1212,22 @@ class LightningServiceRegistrySimple extends EventEmitter {
       // Exploitation: best predicted node
       scoredNodes.sort((a, b) => b.score - a.score);
       return scoredNodes[0].node;
+    }
+  }
+
+  selectAdvancedML(nodes, clientIP) {
+    // Use deep learning model for intelligent load balancing
+    // Falls back to predictive if deep learning model unavailable
+    try {
+      const serviceName = this.nodeToService.get(nodes[0]?.nodeName);
+      if (!serviceName) return nodes[0];
+
+      // For now, use predictive as advanced ML requires async operations
+      // TODO: Implement synchronous deep learning inference
+      return this.selectPredictive(nodes);
+    } catch (error) {
+      // Final fallback to least connections
+      return this.selectLeastConnections(nodes);
     }
   }
 
