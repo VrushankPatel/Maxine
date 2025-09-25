@@ -7,11 +7,11 @@ require('./src/main/util/logging/log-generic-exceptions')();
 const config = require('./src/main/config/config');
 // console.log('Config loaded:', { ultraFastMode: config.ultraFastMode, lightningMode: config.lightningMode }); // Removed for performance
 const { trace: _trace, metrics } = require('@opentelemetry/api');
-const http = require('http');
-const http2 = require('http2');
-const https = require('https');
-const fs = require('fs');
-const path = require('path');
+const _http = require('http');
+const _http2 = require('http2');
+const _https = require('https');
+const _fs = require('fs');
+const _path = require('path');
 
 // Initialize OpenTelemetry tracing and metrics only if not ultra-fast mode and not lightning mode
 let sdk;
@@ -115,7 +115,7 @@ if (!config.ultraFastMode && !config.lightningMode) {
       res.end(await register.metrics());
     });
     metricsApp.listen(9464, () => {
-      console.log('Prometheus metrics server listening on port 9464');
+      // console.log('Prometheus metrics server listening on port 9464'); // Removed for performance
     });
 
     // Store metrics globally for use in registry
@@ -132,9 +132,9 @@ if (!config.ultraFastMode && !config.lightningMode) {
       responseTimeHistogram,
     };
 
-    console.log('OpenTelemetry tracing and Prometheus metrics initialized');
+    // console.log('OpenTelemetry tracing and Prometheus metrics initialized'); // Removed for performance
   } catch (_error) {
-    console.error('Error initializing OpenTelemetry:', error);
+    // console.error('Error initializing OpenTelemetry:', _error); // Removed for performance
   }
 }
 
@@ -178,7 +178,7 @@ if (config.ultraFastMode) {
   } = require('./src/main/entity/lightning-service-registry-simple');
   const serviceRegistry = new LightningServiceRegistrySimple();
   global.serviceRegistry = serviceRegistry;
-  console.log('Service registry created');
+  // console.log('Service registry created'); // Removed for performance
 
   // Raw HTTP server for maximum performance, but stripped down
   const http = require('http');
@@ -902,7 +902,7 @@ if (config.ultraFastMode) {
   // Handle service registration
   const handleRegister = (req, res, _query, _body) => {
     try {
-      const { serviceName, host, port, metadata } = body;
+      const { serviceName, host, port, metadata } = _body;
       const _clientIP = req.connection.remoteAddress || req.socket.remoteAddress || 'unknown';
 
       // Validate configuration
@@ -934,7 +934,7 @@ if (config.ultraFastMode) {
   // Handle service heartbeat
   const handleHeartbeat = (req, res, _query, _body) => {
     try {
-      const { nodeId } = body;
+      const { nodeId } = _body;
       const _clientIP = req.connection.remoteAddress || req.socket.remoteAddress || 'unknown';
       if (!nodeId) {
         // winston.warn(`AUDIT: Invalid heartbeat attempt - missing nodeId, _clientIP: ${_clientIP}`);
@@ -963,7 +963,7 @@ if (config.ultraFastMode) {
   // Handle service deregistration
   const handleDeregister = (req, res, _query, _body) => {
     try {
-      const { nodeId } = body;
+      const { nodeId } = _body;
       const _clientIP = req.connection.remoteAddress || req.socket.remoteAddress || 'unknown';
       if (!nodeId) {
         // winston.warn(`AUDIT: Invalid deregister attempt - missing nodeId, _clientIP: ${_clientIP}`);
@@ -986,7 +986,7 @@ if (config.ultraFastMode) {
   // Handle service discovery - optimized for lightning mode performance
   const handleDiscover = async (req, res, _query, _body) => {
     try {
-      const serviceName = query.serviceName;
+      const serviceName = _query.serviceName;
       const _clientIP = req.connection.remoteAddress;
       if (!serviceName) {
         // winston.warn(`AUDIT: Invalid discover attempt - missing serviceName, _clientIP: ${_clientIP}`);
@@ -994,9 +994,9 @@ if (config.ultraFastMode) {
         res.end(errorMissingServiceName);
         return;
       }
-      const version = query.version;
-      const strategy = query.loadBalancing || 'round-robin';
-      const tags = query.tags ? query.tags.split(',') : [];
+      const version = _query.version;
+      const strategy = _query.loadBalancing || 'round-robin';
+      const tags = _query.tags ? _query.tags.split(',') : [];
 
       // Handle version resolution and traffic distribution (optimized for performance)
       let fullServiceName = serviceName;
@@ -1177,7 +1177,7 @@ if (config.ultraFastMode) {
   routes.set('GET /metrics', handleMetrics);
   routes.set('GET /versions', (req, res, _query, _body) => {
     try {
-      const serviceName = query.serviceName;
+      const serviceName = _query.serviceName;
       const _clientIP = req.connection.remoteAddress || req.socket.remoteAddress || 'unknown';
       if (!serviceName) {
         // winston.warn(`AUDIT: Invalid versions request - missing serviceName, _clientIP: ${_clientIP}`);
@@ -1622,8 +1622,8 @@ if (config.ultraFastMode) {
   routes.set('GET /config/get', (req, res, _query, _body) => {
     try {
       const _clientIP = req.connection.remoteAddress || req.socket.remoteAddress || 'unknown';
-      const serviceName = query.serviceName;
-      const key = query.key;
+      const serviceName = _query.serviceName;
+      const key = _query.key;
       if (!serviceName || !key) {
         winston.warn(
           `AUDIT: Invalid config get - missing serviceName or key, _clientIP: ${_clientIP}`
@@ -1654,7 +1654,7 @@ if (config.ultraFastMode) {
   routes.set('GET /config/all', (req, res, _query, _body) => {
     try {
       const _clientIP = req.connection.remoteAddress || req.socket.remoteAddress || 'unknown';
-      const serviceName = query.serviceName;
+      const serviceName = _query.serviceName;
       if (!serviceName) {
         winston.warn(`AUDIT: Invalid config all - missing serviceName, _clientIP: ${_clientIP}`);
         res.writeHead(400, { 'Content-Type': 'application/json' });
@@ -1695,8 +1695,8 @@ if (config.ultraFastMode) {
           return;
         }
       }
-      const serviceName = query.serviceName;
-      const key = query.key;
+      const serviceName = _query.serviceName;
+      const key = _query.key;
       if (!serviceName || !key) {
         winston.warn(
           `AUDIT: Invalid config delete - missing serviceName or key, _clientIP: ${_clientIP}`
@@ -2070,7 +2070,7 @@ if (config.ultraFastMode) {
   routes.set('GET /versions', (req, res, _query, _body) => {
     try {
       const _clientIP = req.connection.remoteAddress || req.socket.remoteAddress || 'unknown';
-      const serviceName = query.serviceName;
+      const serviceName = _query.serviceName;
       if (!serviceName) {
         winston.warn(
           `AUDIT: Invalid versions request - missing serviceName, _clientIP: ${_clientIP}`
@@ -2141,7 +2141,7 @@ if (config.ultraFastMode) {
   routes.set('GET /health-score', (req, res, _query, _body) => {
     try {
       const _clientIP = req.connection.remoteAddress || req.socket.remoteAddress || 'unknown';
-      const serviceName = query.serviceName;
+      const serviceName = _query.serviceName;
       if (!serviceName) {
         winston.warn(
           `AUDIT: Invalid health score request - missing serviceName, _clientIP: ${_clientIP}`
@@ -2165,8 +2165,8 @@ if (config.ultraFastMode) {
   routes.set('GET /predict-health', (req, res, _query, _body) => {
     try {
       const _clientIP = req.connection.remoteAddress || req.socket.remoteAddress || 'unknown';
-      const serviceName = query.serviceName;
-      const window = query.window ? parseInt(query.window) : 300000; // 5 minutes default
+      const serviceName = _query.serviceName;
+      const window = _query.window ? parseInt(_query.window) : 300000; // 5 minutes default
       if (!serviceName) {
         winston.warn(
           `AUDIT: Invalid predict health request - missing serviceName, _clientIP: ${_clientIP}`
@@ -2319,8 +2319,8 @@ if (config.ultraFastMode) {
   routes.set('GET /events', (req, res, _query, _body) => {
     try {
       const _clientIP = req.connection.remoteAddress || req.socket.remoteAddress || 'unknown';
-      const since = query.since ? parseInt(query.since) : 0;
-      const limit = query.limit ? parseInt(query.limit) : 100;
+      const since = _query.since ? parseInt(_query.since) : 0;
+      const limit = _query.limit ? parseInt(_query.limit) : 100;
       const filtered = eventHistory.filter((e) => e.timestamp > since).slice(-limit);
       // winston._info(`AUDIT: Event history requested - since: ${since}, limit: ${limit}, returned: ${filtered.length}, _clientIP: ${_clientIP}`);
       res.writeHead(200, { 'Content-Type': 'application/json' });
@@ -3063,7 +3063,7 @@ if (config.ultraFastMode) {
   routes.set('GET /api/maxine/serviceops/dependency/get', (req, res, _query, _body) => {
     try {
       const _clientIP = req.connection.remoteAddress || req.socket.remoteAddress || 'unknown';
-      const serviceName = query.serviceName;
+      const serviceName = _query.serviceName;
       if (!serviceName) {
         winston.warn(
           `AUDIT: Invalid dependency get - missing serviceName, _clientIP: ${_clientIP}`
@@ -3087,7 +3087,7 @@ if (config.ultraFastMode) {
   routes.set('GET /api/maxine/serviceops/dependency/dependents', (req, res, _query, _body) => {
     try {
       const _clientIP = req.connection.remoteAddress || req.socket.remoteAddress || 'unknown';
-      const serviceName = query.serviceName;
+      const serviceName = _query.serviceName;
       if (!serviceName) {
         winston.warn(
           `AUDIT: Invalid dependents get - missing serviceName, _clientIP: ${_clientIP}`
@@ -3249,8 +3249,8 @@ if (config.ultraFastMode) {
   routes.set('GET /api/maxine/serviceops/compatibility/get', (req, res, _query, _body) => {
     try {
       const _clientIP = req.connection.remoteAddress || req.socket.remoteAddress || 'unknown';
-      const serviceName = query.serviceName;
-      const version = query.version;
+      const serviceName = _query.serviceName;
+      const version = _query.version;
       if (!serviceName) {
         winston.warn(
           `AUDIT: Invalid compatibility get - missing serviceName, _clientIP: ${_clientIP}`
