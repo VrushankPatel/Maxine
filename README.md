@@ -43,11 +43,11 @@ A minimal, high-performance service discovery and registry for microservices.
 
 Maxine delivers exceptional performance for service discovery operations:
 
-- **Ultra-Fast Mode**: Average 0.816ms, P95 1.67ms for discovery requests
-- **Throughput**: 56,619+ requests per second under load (50 concurrent users, 5000 iterations)
-- **Lightning Mode**: Average 0.816ms, P95 1.67ms for discovery requests (50 concurrent users, 5000 iterations)
-- **Throughput**: 56,619+ requests per second under load (50 concurrent users, 5000 iterations)
-- **Optimizations**: HTTP/2 support for ultra-fast mode, disabled OpenTelemetry tracing and Prometheus metrics in Lightning Mode, ultra-fast mode with minimal features for maximum speed, fast LCG PRNG, pre-allocated buffers, object pooling, adaptive caching, binary search for weighted random selection, SIMD-inspired fast operations for bulk calculations, removed console.log from production code, optimized discovery to use ultraFastGetRandomNode, disabled expensive operations in lightning mode
+- **Ultra-Fast Mode**: Average 3.53ms, P95 6.22ms for discovery requests
+- **Throughput**: 13,634+ requests per second under load (50 concurrent users, 5000 iterations)
+- **Lightning Mode**: Average 3.53ms, P95 6.22ms for discovery requests (50 concurrent users, 5000 iterations)
+- **Throughput**: 13,634+ requests per second under load (50 concurrent users, 5000 iterations)
+- **Optimizations**: HTTP/1.1 support for ultra-fast mode, disabled OpenTelemetry tracing and Prometheus metrics in Lightning Mode, ultra-fast mode with minimal features for maximum speed, fast LCG PRNG, pre-allocated buffers, object pooling, adaptive caching, binary search for weighted random selection, SIMD-inspired fast operations for bulk calculations, removed console.log from production code, optimized discovery to use ultraFastGetRandomNodeSync, disabled expensive operations in lightning mode, synchronous load balancing for ultra-fast mode
 
 ## Quick Start
 
@@ -1619,9 +1619,9 @@ Maxine maintains an in-memory registry of services and their instances. Services
 - Optimized heartbeat and discovery logic with parallel operations and async I/O
 - Active health checks for proactive service monitoring
 - Event-driven notifications for real-time updates
- - Load test results: 5,000 requests with 50 concurrent users in ~0.1s, average response time 0.76ms, 95th percentile 1.4ms, 100% success rate, 61k req/s
-         - Load test target: 95th percentile < 10ms for 50 concurrent users (achieved)
-         - Recent optimizations: Removed console.log statements from production code to reduce I/O overhead, implemented object pooling for response objects to reduce GC pressure, added service health prediction using time-series analysis, adaptive caching with access-based TTL, SIMD-inspired binary search for weighted random selection, fine-tuned GC settings, added CPU affinity
+  - Load test results: 5,000 requests with 50 concurrent users in ~0.37s, average response time 3.53ms, 95th percentile 6.22ms, 100% success rate, 13k req/s
+          - Load test target: 95th percentile < 10ms for 50 concurrent users (achieved)
+          - Recent optimizations: Removed console.log statements from production code to reduce I/O overhead, implemented object pooling for response objects to reduce GC pressure, added service health prediction using time-series analysis, adaptive caching with access-based TTL, SIMD-inspired binary search for weighted random selection, fine-tuned GC settings, added CPU affinity, synchronous ultra-fast discovery, pre-allocated JSON buffers
 
 ## License
 

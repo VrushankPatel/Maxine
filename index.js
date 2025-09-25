@@ -387,14 +387,27 @@ if (config.ultraFastMode) {
                 }
             }
 
-            const node = await serviceRegistry.ultraFastGetRandomNode(fullServiceName, strategy, clientIP, tags);
+            const node = serviceRegistry.ultraFastGetRandomNodeSync(fullServiceName, strategy, clientIP, tags);
             if (!node) {
                 res.writeHead(404, { 'Content-Type': 'application/json' });
                 res.end(serviceUnavailable);
                 return;
             }
+            // Ultra-fast JSON response using pre-allocated buffer
+            const addr = node.address;
+            const nodeName = node.nodeName;
+            const addrLen = addr.length;
+            const nodeLen = nodeName.length;
+            const totalLen = 40 + addrLen + nodeLen;
+            const buf = Buffer.allocUnsafe(totalLen);
+            let offset = 0;
+            buf.write('{"address":"', offset); offset += 11;
+            buf.write(addr, offset); offset += addrLen;
+            buf.write('","nodeName":"', offset); offset += 13;
+            buf.write(nodeName, offset); offset += nodeLen;
+            buf.write('","healthy":true}', offset);
             res.writeHead(200, { 'Content-Type': 'application/json' });
-            res.end(stringifyDiscover({ address: node.address, nodeName: node.nodeName, healthy: true }));
+            res.end(buf);
         } catch (error) {
             res.writeHead(500, { 'Content-Type': 'application/json' });
             res.end('{"error": "Internal server error"}');
@@ -446,7 +459,7 @@ if (config.ultraFastMode) {
         if (req.headers.upgrade && req.headers.upgrade.toLowerCase() === 'websocket') {
             return;
         }
-        const parsedUrl = url.parse(req.url, true);
+        const parsedUrl = new URL(req.url, `http://${req.headers.host || 'localhost'}`);
         const pathname = parsedUrl.pathname;
         const method = req.method;
 
@@ -466,7 +479,7 @@ if (config.ultraFastMode) {
                           const parsedBody = body ? JSON.parse(body) : {};
                           // Add correlation ID to request object for handlers
                           req.correlationId = correlationId;
-                          handler(req, res, parsedUrl.query, parsedBody);
+                          handler(req, res, Object.fromEntries(parsedUrl.searchParams), parsedBody);
                       } catch (e) {
                           res.writeHead(400, { 'Content-Type': 'application/json' });
                           res.end(errorInvalidJSON);
@@ -474,7 +487,7 @@ if (config.ultraFastMode) {
                   });
             } else {
                 req.correlationId = correlationId;
-                handler(req, res, parsedUrl.query, {});
+                handler(req, res, Object.fromEntries(parsedUrl.searchParams), {});
             }
         } else {
             res.writeHead(404, { 'Content-Type': 'application/json' });
@@ -508,7 +521,11 @@ if (config.ultraFastMode) {
         server.listen(constants.PORT, () => {
             const protocol = config.http2Enabled ? 'HTTP/2' : 'HTTP/1.1';
             console.log(`Maxine server started in ultra-fast mode with ${protocol} on port ${constants.PORT}`);
+        }).on('error', (err) => {
+            console.error('Server listen error:', err);
         });
+        // Keep the process alive
+        setInterval(() => {}, 1000);
     }
 
     // UDP server for ultra-fast heartbeats
