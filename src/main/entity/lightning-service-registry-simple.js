@@ -980,7 +980,54 @@ class LightningServiceRegistrySimple extends EventEmitter {
         return result;
     }
 
+    // Synchronous version for ultra-fast mode
+    ultraFastGetRandomNodeSync(serviceName, strategy = 'round-robin', clientId = null, tags = []) {
+        const service = this.services.get(serviceName);
+        if (!service || service.healthyNodesArray.length === 0) return null;
+
+        let nodes = service.healthyNodesArray;
+
+        // Filter by tags if specified
+        if (tags && tags.length > 0) {
+            nodes = nodes.filter(node => {
+                const nodeTags = node.metadata && node.metadata.tags;
+                if (!nodeTags || !Array.isArray(nodeTags)) return false;
+                return tags.every(tag => nodeTags.includes(tag));
+            });
+            if (nodes.length === 0) return null;
+        }
+
+        // Ultra-fast mode: only basic strategies for maximum speed
+        if (strategy === 'random') {
+            const randomIndex = (fastRandom() * nodes.length) | 0;
+            return nodes[randomIndex];
+        } else if (strategy === 'consistent-hash' && clientId) {
+            const hash = this.simpleHash(clientId);
+            const index = hash % nodes.length;
+            return nodes[index];
+        } else if (strategy === 'power-of-two-choices') {
+            // Power of two choices: select two random nodes, pick the one with fewer connections
+            if (nodes.length < 2) return nodes[0];
+            const choice1 = nodes[(fastRandom() * nodes.length) | 0];
+            const choice2 = nodes[(fastRandom() * nodes.length) | 0];
+            const conn1 = choice1.connections || 0;
+            const conn2 = choice2.connections || 0;
+            return conn1 <= conn2 ? choice1 : choice2;
+        } else {
+            // round-robin (default)
+            let index = service.roundRobinIndex || 0;
+            const node = nodes[index];
+            service.roundRobinIndex = (index + 1) % nodes.length;
+            return node;
+        }
+    }
+
     async ultraFastGetRandomNode(serviceName, strategy = 'round-robin', clientId = null, tags = []) {
+        // For ultra-fast mode, use sync version to avoid async overhead
+        if (require('../config/config').ultraFastMode) {
+            return this.ultraFastGetRandomNodeSync(serviceName, strategy, clientId, tags);
+        }
+
         const service = this.services.get(serviceName);
         if (!service || service.healthyNodesArray.length === 0) return null;
 
@@ -999,35 +1046,27 @@ class LightningServiceRegistrySimple extends EventEmitter {
         if (this.lbPlugins.has(strategy)) {
             return this.lbPlugins.get(strategy)(nodes, { clientId, serviceName, tags });
         } else if (strategy === 'least-connections') {
-            // SIMD-inspired fast min operation
-            const { fastOps } = require('../util/util');
-            const connections = nodes.map(n => n.connections || 0);
-            const minConnections = fastOps.min(connections);
-            // Find first node with min connections
-            return nodes.find(n => (n.connections || 0) === minConnections) || nodes[0];
-        } else if (strategy === 'weighted-random') {
-            // Optimized weighted random with binary search (SIMD-inspired)
-            const { fastOps } = require('../util/util');
-            const weights = nodes.map(n => n.weight || 1);
-            const totalWeight = fastOps.sum(weights);
-            let rand = fastRandom() * totalWeight;
-            // Precompute cumulative weights for binary search
-            const cumulativeWeights = new Array(nodes.length);
-            cumulativeWeights[0] = nodes[0].weight || 1;
-            for (let i = 1; i < nodes.length; i++) {
-                cumulativeWeights[i] = cumulativeWeights[i - 1] + (nodes[i].weight || 1);
-            }
-            // Binary search
-            let left = 0, right = nodes.length - 1;
-            while (left < right) {
-                const mid = (left + right) >> 1;
-                if (rand < cumulativeWeights[mid]) {
-                    right = mid;
-                } else {
-                    left = mid + 1;
+            // Find node with least connections
+            let minConnections = Infinity;
+            let bestNode = nodes[0];
+            for (const node of nodes) {
+                const conn = node.connections || 0;
+                if (conn < minConnections) {
+                    minConnections = conn;
+                    bestNode = node;
                 }
             }
-            return nodes[left];
+            return bestNode;
+        } else if (strategy === 'weighted-random') {
+            // Weighted random selection
+            const weights = nodes.map(n => n.weight || 1);
+            const totalWeight = weights.reduce((sum, w) => sum + w, 0);
+            let rand = fastRandom() * totalWeight;
+            for (let i = 0; i < nodes.length; i++) {
+                rand -= weights[i];
+                if (rand <= 0) return nodes[i];
+            }
+            return nodes[0];
         } else if (strategy === 'random') {
             const randomIndex = (fastRandom() * nodes.length) | 0;
             return nodes[randomIndex];

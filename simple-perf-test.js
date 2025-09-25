@@ -1,7 +1,7 @@
 const axios = require('axios');
 const { performance } = require('perf_hooks');
 
-const BASE_URL = 'http://localhost:8080';
+const BASE_URL = 'http://localhost:8081';
 const CONCURRENT_USERS = 50;
 const ITERATIONS_PER_USER = 100;
 const TOTAL_REQUESTS = CONCURRENT_USERS * ITERATIONS_PER_USER;
