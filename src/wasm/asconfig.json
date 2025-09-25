@@ -4,8 +4,8 @@
   ],
   "targets": {
     "release": {
-      "outFile": "build/registry.wasm",
-      "textFile": "build/registry.wat",
+      "outFile": "src/wasm/build/registry.wasm",
+      "textFile": "src/wasm/build/registry.wat",
       "sourceMap": true,
       "optimizeLevel": 3,
       "shrinkLevel": 1,
