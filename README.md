@@ -28,6 +28,7 @@ A minimal, high-performance service discovery and registry for microservices.
 - **Minimal Dependencies**: Only essential packages for maximum performance
 - **Lightning Mode**: Dedicated mode for ultimate speed with core features: register, heartbeat, deregister, discover with round-robin/random load balancing, health, optimized for minimal overhead
 - **HTTP/3 Support**: Optional QUIC-based HTTP/3 server for ultra-low latency service discovery (enabled with `HTTP3_ENABLED=true`)
+- **WebAssembly Support**: Complete WebAssembly service registry for edge computing deployments with full API compatibility
 - **Optimized Parsing**: Fast JSON parsing with error handling
 - **Event-Driven**: Real-time events for service changes and notifications via WebSocket and MQTT
 - **Federation**: Connect multiple Maxine instances across datacenters for global service discovery (available in Lightning Mode)

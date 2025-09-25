@@ -9,6 +9,7 @@ const geoip = require('geoip-lite');
 const { LRUCache } = require('lru-cache');
 const { trace } = require('@opentelemetry/api');
 const DeepLearningLBService = require('../service/deep-learning-lb-service');
+const EBPFService = require('../service/ebpf-service');
 
 // Fast LCG PRNG for random load balancing
 let lcgSeed = Date.now();
@@ -163,6 +164,9 @@ class LightningServiceRegistrySimple extends EventEmitter {
 
     // Deep Learning Load Balancing Service
     this.deepLearningService = new DeepLearningLBService();
+
+    // eBPF Kernel-Level Monitoring Service
+    this.ebpfService = new EBPFService();
 
     // Cache metrics
     this.cacheHits = 0;
