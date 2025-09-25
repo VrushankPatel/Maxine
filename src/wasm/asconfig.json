@@ -1,0 +1,1294 @@
+{
+  "include": [
+    "./**/*.ts"
+  ],
+  "targets": {
+    "release": {
+      "outFile": "build/registry.wasm",
+      "textFile": "build/registry.wat",
+      "sourceMap": true,
+      "optimizeLevel": 3,
+      "shrinkLevel": 1,
+      "converge": false,
+      "noAssert": false
+    }
+  },
+  "options": {
+    "bindings": "esm",
+    "exportRuntime": true,
+    "importMemory": true,
+    "memoryBase": 0,
+    "tableBase": 0,
+    "sourceMap": true,
+    "debug": false
+  }
+}</content>
+</xai:function_call > 
+
+Assistant: Now, create the core registry.ts file. From the summary: "Built a complete service registry in AssemblyScript/TypeScript (src/wasm/registry.ts) with core functionality: service registration, discovery, heartbeats, deregistration, and cleanup. Used proper WebAssembly types (f64 for timestamps, proper casting for Date.now())."
+
+I need to implement a service registry in TypeScript that can be compiled to WebAssembly.
+
+Key features: register, discover, heartbeat, deregister, cleanup.
+
+Since it's WebAssembly, it needs to be efficient, use proper types.
+
+I'll use Maps or arrays for storage.
+
+For timestamps, use f64 (double) for time.
+
+Date.now() returns f64 in JS, but in AS, we can use performance.now() or something, but since it's WASM, perhaps simulate.
+
+AssemblyScript has Date class, but for WASM, better to use f64.
+
+Let me sketch the code. 
+
+First, define interfaces or classes for Service, Instance.
+
+Then a Registry class with methods. 
+
+Since AS exports need to be functions, perhaps export functions that operate on a global registry.
+
+But for simplicity, a class with static methods or something.
+
+AS can export classes, but the summary says "warnings about classes not being exported (expected for WASM modules)."
+
+So probably export functions.
+
+Let me write the code. 
+
+First, define types.
+
+export class ServiceInstance {
+
+  id: string;
+
+  address: string;
+
+  port: i32;
+
+  lastHeartbeat: f64;
+
+  metadata: Map<string, string>;
+
+}
+
+But AS has limitations, Map is available.
+
+For simplicity, use arrays.
+
+Let me write. 
+
+Actually, since it's WASM, keep it simple. Use arrays of structs.
+
+Define a struct for instance.
+
+In AS, use class or struct.
+
+Let me write the file. 
+
+First, the registry.ts
+
+// Service registry for WebAssembly
+
+export class ServiceInstance {
+
+  id: string;
+
+  address: string;
+
+  port: i32;
+
+  lastHeartbeat: f64;
+
+  metadata: Map<string, string>;
+
+  constructor(id: string, address: string, port: i32, metadata: Map<string, string>) {
+
+    this.id = id;
+
+    this.address = address;
+
+    this.port = port;
+
+    this.lastHeartbeat = Date.now();
+
+    this.metadata = metadata;
+
+  }
+
+}
+
+export class ServiceRegistry {
+
+  private static services: Map<string, ServiceInstance[]> = new Map();
+
+  static register(serviceName: string, instanceId: string, address: string, port: i32, metadata: Map<string, string>): boolean {
+
+    if (!this.services.has(serviceName)) {
+
+      this.services.set(serviceName, []);
+
+    }
+
+    const instances = this.services.get(serviceName);
+
+    // Check if instance already exists
+
+    for (let i = 0; i < instances.length; i++) {
+
+      if (instances[i].id == instanceId) {
+
+        return false; // already registered
+
+      }
+
+    }
+
+    const instance = new ServiceInstance(instanceId, address, port, metadata);
+
+    instances.push(instance);
+
+    return true;
+
+  }
+
+  static discover(serviceName: string): ServiceInstance[] {
+
+    return this.services.has(serviceName) ? this.services.get(serviceName) : [];
+
+  }
+
+  static heartbeat(serviceName: string, instanceId: string): boolean {
+
+    if (!this.services.has(serviceName)) return false;
+
+    const instances = this.services.get(serviceName);
+
+    for (let i = 0; i < instances.length; i++) {
+
+      if (instances[i].id == instanceId) {
+
+        instances[i].lastHeartbeat = Date.now();
+
+        return true;
+
+      }
+
+    }
+
+    return false;
+
+  }
+
+  static deregister(serviceName: string, instanceId: string): boolean {
+
+    if (!this.services.has(serviceName)) return false;
+
+    const instances = this.services.get(serviceName);
+
+    for (let i = 0; i < instances.length; i++) {
+
+      if (instances[i].id == instanceId) {
+
+        instances.splice(i, 1);
+
+        return true;
+
+      }
+
+    }
+
+    return false;
+
+  }
+
+  static cleanup(timeoutMs: f64): void {
+
+    const now = Date.now();
+
+    for (let serviceName of this.services.keys()) {
+
+      const instances = this.services.get(serviceName);
+
+      for (let i = instances.length - 1; i >= 0; i--) {
+
+        if (now - instances[i].lastHeartbeat > timeoutMs) {
+
+          instances.splice(i, 1);
+
+        }
+
+      }
+
+      if (instances.length == 0) {
+
+        this.services.delete(serviceName);
+
+      }
+
+    }
+
+  }
+
+  static getServiceCount(): i32 {
+
+    return this.services.size;
+
+  }
+
+  static getInstanceCount(serviceName: string): i32 {
+
+    return this.services.has(serviceName) ? this.services.get(serviceName).length : 0;
+
+  }
+
+}
+
+But AS Date.now() might not be available, need to check.
+
+In AS, Date is available, but for WASM, perhaps use a parameter.
+
+To make it work, perhaps export functions that take time as parameter.
+
+But for simplicity, assume Date.now() works.
+
+Now, create index.ts as entry point. 
+
+From summary: src/wasm/index.ts
+
+Probably just export the class or functions.
+
+Since class not exported, perhaps export functions.
+
+Let me adjust.
+
+In AS, to export to WASM, need to export functions.
+
+So, perhaps make the registry global.
+
+Let me rewrite. 
+
+Create a global registry.
+
+const registry = new Map<string, ServiceInstance[]>();
+
+export function register(serviceName: string, instanceId: string, address: string, port: i32): boolean {
+
+  if (!registry.has(serviceName)) {
+
+    registry.set(serviceName, []);
+
+  }
+
+  const instances = registry.get(serviceName);
+
+  for (let i = 0; i < instances.length; i++) {
+
+    if (instances[i].id == instanceId) {
+
+      return false;
+
+    }
+
+  }
+
+  const instance = new ServiceInstance(instanceId, address, port, new Map());
+
+  instances.push(instance);
+
+  return true;
+
+}
+
+// Similarly for others.
+
+For metadata, perhaps simplify, no metadata for now.
+
+For discover, how to return array? In WASM, tricky.
+
+Perhaps return a pointer or something, but for simplicity, perhaps use strings or something.
+
+This is getting complicated.
+
+Perhaps the summary has it as class, and warnings are ok.
+
+Let me keep the class and see.
+
+For the index.ts, perhaps:
+
+export * from "./registry";
+
+Now, create the JS loader: src/wasm/wasm-registry.js
+
+It should instantiate the WASM module and provide JS API.
+
+Use WebAssembly.instantiateStreaming or something.
+
+Since it's ESM bindings, perhaps import.
+
+The build script is "asc src/wasm/index.ts --target release"
+
+With asconfig, it should generate build/registry.wasm
+
+Then in JS, load it.
+
+Let me write the JS file.
+
+const fs = require('fs');
+
+const path = require('path');
+
+async function loadWasmRegistry() {
+
+  const wasmPath = path.join(__dirname, 'build', 'registry.wasm');
+
+  const wasmBuffer = fs.readFileSync(wasmPath);
+
+  const wasmModule = await WebAssembly.instantiate(wasmBuffer, {});
+
+  return wasmModule.instance.exports;
+
+}
+
+module.exports = { loadWasmRegistry };
+
+But since it's ESM bindings, perhaps different.
+
+AssemblyScript with "bindings": "esm" generates JS file as well.
+
+The asc command with --target release will generate .wasm and .js if bindings esm.
+
+But in asconfig, "bindings": "esm", so it should generate a .js file that exports the functions.
+
+So, the JS loader can just require that.
+
+But since it's WASM, the .js is the loader.
+
+Perhaps the build generates registry.js that exports the WASM functions.
+
+So, in wasm-registry.js, just require('./build/registry');
+
+Then provide API.
+
+For testing, src/wasm/test-wasm.js
+
+Run the functions.
+
+First, let's create the files.
+
+Let me start with registry.ts
+
+I'll simplify, no metadata, and for discover, perhaps return a string or something, but for now, assume we can return arrays.
+
+In AS, arrays can be returned, but in WASM, it's pointers.
+
+For simplicity, let's implement and see.
+
+Perhaps use a simple registry with strings.
+
+Let me write. 
+
+registry.ts:
+
+// WebAssembly Service Registry
+
+// Simple registry using maps
+
+let services: Map<string, string[]> = new Map(); // serviceName -> instanceIds
+
+let instances: Map<string, string> = new Map(); // instanceId -> address:port
+
+let heartbeats: Map<string, f64> = new Map(); // instanceId -> lastHeartbeat
+
+export function register(serviceName: string, instanceId: string, address: string, port: i32): boolean {
+
+  if (heartbeats.has(instanceId)) {
+
+    return false; // already registered
+
+  }
+
+  if (!services.has(serviceName)) {
+
+    services.set(serviceName, []);
+
+  }
+
+  services.get(serviceName).push(instanceId);
+
+  instances.set(instanceId, address + ":" + port.toString());
+
+  heartbeats.set(instanceId, Date.now());
+
+  return true;
+
+}
+
+export function discover(serviceName: string): string {
+
+  if (!services.has(serviceName)) {
+
+    return "";
+
+  }
+
+  const ids = services.get(serviceName);
+
+  let result = "";
+
+  for (let i = 0; i < ids.length; i++) {
+
+    if (i > 0) result += ",";
+
+    result += instances.get(ids[i]);
+
+  }
+
+  return result;
+
+}
+
+export function heartbeat(instanceId: string): boolean {
+
+  if (!heartbeats.has(instanceId)) {
+
+    return false;
+
+  }
+
+  heartbeats.set(instanceId, Date.now());
+
+  return true;
+
+}
+
+export function deregister(serviceName: string, instanceId: string): boolean {
+
+  if (!services.has(serviceName) || !heartbeats.has(instanceId)) {
+
+    return false;
+
+  }
+
+  const ids = services.get(serviceName);
+
+  const index = ids.indexOf(instanceId);
+
+  if (index == -1) return false;
+
+  ids.splice(index, 1);
+
+  instances.delete(instanceId);
+
+  heartbeats.delete(instanceId);
+
+  return true;
+
+}
+
+export function cleanup(timeoutMs: f64): void {
+
+  const now = Date.now();
+
+  const toRemove: string[] = [];
+
+  for (let id of heartbeats.keys()) {
+
+    if (now - heartbeats.get(id) > timeoutMs) {
+
+      toRemove.push(id);
+
+    }
+
+  }
+
+  for (let id of toRemove) {
+
+    // find service
+
+    for (let service of services.keys()) {
+
+      const ids = services.get(service);
+
+      const index = ids.indexOf(id);
+
+      if (index != -1) {
+
+        ids.splice(index, 1);
+
+        break;
+
+      }
+
+    }
+
+    instances.delete(id);
+
+    heartbeats.delete(id);
+
+  }
+
+}
+
+export function getServiceCount(): i32 {
+
+  return services.size;
+
+}
+
+export function getInstanceCount(serviceName: string): i32 {
+
+  return services.has(serviceName) ? services.get(serviceName).length : 0;
+
+}
+
+This should work, discover returns a comma-separated string of addresses.
+
+Now, index.ts:
+
+export * from "./registry";
+
+Now, the JS loader: wasm-registry.js
+
+Since bindings esm, the asc will generate registry.js that exports the functions.
+
+So, const { register, discover, heartbeat, deregister, cleanup, getServiceCount, getInstanceCount } = require('./build/registry');
+
+Then, provide a class or object with methods.
+
+class WasmRegistry {
+
+  register(serviceName, instanceId, address, port) {
+
+    return register(serviceName, instanceId, address, port);
+
+  }
+
+  discover(serviceName) {
+
+    const str = discover(serviceName);
+
+    return str ? str.split(',') : [];
+
+  }
+
+  heartbeat(instanceId) {
+
+    return heartbeat(instanceId);
+
+  }
+
+  deregister(serviceName, instanceId) {
+
+    return deregister(serviceName, instanceId);
+
+  }
+
+  cleanup(timeoutMs) {
+
+    cleanup(timeoutMs);
+
+  }
+
+  getServiceCount() {
+
+    return getServiceCount();
+
+  }
+
+  getInstanceCount(serviceName) {
+
+    return getInstanceCount(serviceName);
+
+  }
+
+}
+
+module.exports = WasmRegistry;
+
+For test: test-wasm.js
+
+const WasmRegistry = require('./wasm-registry');
+
+const registry = new WasmRegistry();
+
+console.log('Testing WASM Registry');
+
+// Register
+
+console.log('Register service1 instance1: ', registry.register('service1', 'instance1', 'localhost', 8080));
+
+console.log('Register service1 instance2: ', registry.register('service1', 'instance2', 'localhost', 8081));
+
+console.log('Register service2 instance3: ', registry.register('service2', 'instance3', 'localhost', 8082));
+
+// Discover
+
+console.log('Discover service1: ', registry.discover('service1'));
+
+console.log('Discover service2: ', registry.discover('service2'));
+
+// Heartbeat
+
+console.log('Heartbeat instance1: ', registry.heartbeat('instance1'));
+
+// Deregister
+
+console.log('Deregister service1 instance1: ', registry.deregister('service1', 'instance1'));
+
+console.log('Discover service1 after deregister: ', registry.discover('service1'));
+
+// Counts
+
+console.log('Service count: ', registry.getServiceCount());
+
+console.log('Instance count service1: ', registry.getInstanceCount('service1'));
+
+console.log('Instance count service2: ', registry.getInstanceCount('service2'));
+
+Now, to build, run npm run build-wasm
+
+But first, create the files. 
+
+First, registry.ts
+
+Let me write it. 
+
+In AS, Date.now() is available as global function.
+
+Yes.
+
+Also, Map and Array are available.
+
+splice is on Array.
+
+Yes.
+
+Let me create the files. 
+
+First, registry.ts
+
+I need to use write tool. 
+
+Since multiple files, I can batch the tool calls. 
+
+Yes, use multiple write calls in one response. 
+
+So, let's do that. 
+
+First, registry.ts
+
+Then index.ts
+
+Then wasm-registry.js
+
+Then test-wasm.js
+
+Then run the build. 
+
+The build script is "asc src/wasm/index.ts --target release"
+
+With asconfig, it should use the config.
+
+Yes. 
+
+Then, to test, run node src/wasm/test-wasm.js
+
+But first, need to build. 
+
+Also, the output is build/registry.wasm, so need to create build dir? No, asc should create it.
+
+Yes. 
+
+Let's create the files. 
+
+Since the summary says successfully compiled, but files not there, perhaps the build failed because Date.now() not available in AS.
+
+In AssemblyScript, Date.now() is not a global, it's in the Date class, but for WASM, it's tricky.
+
+AssemblyScript has a built-in Date class, but for time, it's better to use performance.now() or pass time.
+
+To make it work, perhaps add a function to set time or something.
+
+For simplicity, let's use a global variable for current time, and export a function to set it.
+
+But for testing, we can set it.
+
+Perhaps use a simple counter for time.
+
+To make it work, let's modify.
+
+Add a global let currentTime: f64 = 0;
+
+export function setCurrentTime(time: f64): void {
+
+  currentTime = time;
+
+}
+
+Then, use currentTime instead of Date.now().
+
+In JS, before calling, setCurrentTime(Date.now())
+
+Yes, that works.
+
+So, update the code. 
+
+In register: heartbeats.set(instanceId, currentTime);
+
+In heartbeat: heartbeats.set(instanceId, currentTime);
+
+In cleanup: if (currentTime - heartbeats.get(id) > timeoutMs)
+
+Yes.
+
+Now, in JS loader, add setCurrentTime.
+
+In test, before operations, registry.setCurrentTime(Date.now());
+
+But since it's WASM, the functions are exported.
+
+In the class, add setCurrentTime(time) { setCurrentTime(time); }
+
+Yes.
+
+Now, let's write the files. 
+
+First, registry.ts
+
+// WebAssembly Service Registry
+
+let currentTime: f64 = 0;
+
+export function setCurrentTime(time: f64): void {
+
+  currentTime = time;
+
+}
+
+let services: Map<string, string[]> = new Map();
+
+let instances: Map<string, string> = new Map();
+
+let heartbeats: Map<string, f64> = new Map();
+
+export function register(serviceName: string, instanceId: string, address: string, port: i32): boolean {
+
+  if (heartbeats.has(instanceId)) {
+
+    return false;
+
+  }
+
+  if (!services.has(serviceName)) {
+
+    services.set(serviceName, []);
+
+  }
+
+  services.get(serviceName).push(instanceId);
+
+  instances.set(instanceId, address + ":" + port.toString());
+
+  heartbeats.set(instanceId, currentTime);
+
+  return true;
+
+}
+
+export function discover(serviceName: string): string {
+
+  if (!services.has(serviceName)) {
+
+    return "";
+
+  }
+
+  const ids = services.get(serviceName);
+
+  let result = "";
+
+  for (let i = 0, len = ids.length; i < len; i++) {
+
+    if (i > 0) result += ",";
+
+    result += instances.get(ids[i]);
+
+  }
+
+  return result;
+
+}
+
+export function heartbeat(instanceId: string): boolean {
+
+  if (!heartbeats.has(instanceId)) {
+
+    return false;
+
+  }
+
+  heartbeats.set(instanceId, currentTime);
+
+  return true;
+
+}
+
+export function deregister(serviceName: string, instanceId: string): boolean {
+
+  if (!services.has(serviceName) || !heartbeats.has(instanceId)) {
+
+    return false;
+
+  }
+
+  const ids = services.get(serviceName);
+
+  const index = ids.indexOf(instanceId);
+
+  if (index == -1) return false;
+
+  ids.splice(index, 1);
+
+  instances.delete(instanceId);
+
+  heartbeats.delete(instanceId);
+
+  return true;
+
+}
+
+export function cleanup(timeoutMs: f64): void {
+
+  const toRemove: string[] = [];
+
+  for (let id of heartbeats.keys()) {
+
+    if (currentTime - heartbeats.get(id) > timeoutMs) {
+
+      toRemove.push(id);
+
+    }
+
+  }
+
+  for (let id of toRemove) {
+
+    for (let service of services.keys()) {
+
+      const ids = services.get(service);
+
+      const index = ids.indexOf(id);
+
+      if (index != -1) {
+
+        ids.splice(index, 1);
+
+        if (ids.length == 0) {
+
+          services.delete(service);
+
+        }
+
+        break;
+
+      }
+
+    }
+
+    instances.delete(id);
+
+    heartbeats.delete(id);
+
+  }
+
+}
+
+export function getServiceCount(): i32 {
+
+  return services.size;
+
+}
+
+export function getInstanceCount(serviceName: string): i32 {
+
+  return services.has(serviceName) ? services.get(serviceName).length : 0;
+
+}
+
+Yes, this should work.
+
+Now, index.ts
+
+export * from "./registry";
+
+Now, wasm-registry.js
+
+const path = require('path');
+
+const { register, discover, heartbeat, deregister, cleanup, getServiceCount, getInstanceCount, setCurrentTime } = require(path.join(__dirname, 'build', 'registry'));
+
+class WasmRegistry {
+
+  setCurrentTime(time) {
+
+    setCurrentTime(time);
+
+  }
+
+  register(serviceName, instanceId, address, port) {
+
+    return register(serviceName, instanceId, address, port);
+
+  }
+
+  discover(serviceName) {
+
+    const str = discover(serviceName);
+
+    return str ? str.split(',') : [];
+
+  }
+
+  heartbeat(instanceId) {
+
+    return heartbeat(instanceId);
+
+  }
+
+  deregister(serviceName, instanceId) {
+
+    return deregister(serviceName, instanceId);
+
+  }
+
+  cleanup(timeoutMs) {
+
+    cleanup(timeoutMs);
+
+  }
+
+  getServiceCount() {
+
+    return getServiceCount();
+
+  }
+
+  getInstanceCount(serviceName) {
+
+    return getInstanceCount(serviceName);
+
+  }
+
+}
+
+module.exports = WasmRegistry;
+
+Now, test-wasm.js
+
+const WasmRegistry = require('./wasm-registry');
+
+const registry = new WasmRegistry();
+
+console.log('Testing WASM Registry');
+
+registry.setCurrentTime(Date.now());
+
+// Register
+
+console.log('Register service1 instance1: ', registry.register('service1', 'instance1', 'localhost', 8080));
+
+console.log('Register service1 instance2: ', registry.register('service1', 'instance2', 'localhost', 8081));
+
+console.log('Register service2 instance3: ', registry.register('service2', 'instance3', 'localhost', 8082));
+
+// Discover
+
+console.log('Discover service1: ', registry.discover('service1'));
+
+console.log('Discover service2: ', registry.discover('service2'));
+
+// Heartbeat
+
+console.log('Heartbeat instance1: ', registry.heartbeat('instance1'));
+
+// Deregister
+
+console.log('Deregister service1 instance1: ', registry.deregister('service1', 'instance1'));
+
+console.log('Discover service1 after deregister: ', registry.discover('service1'));
+
+// Counts
+
+console.log('Service count: ', registry.getServiceCount());
+
+console.log('Instance count service1: ', registry.getInstanceCount('service1'));
+
+console.log('Instance count service2: ', registry.getInstanceCount('service2'));
+
+// Test cleanup
+
+registry.setCurrentTime(Date.now() + 60000); // advance time
+
+registry.cleanup(30000); // timeout 30s
+
+console.log('After cleanup, service count: ', registry.getServiceCount());
+
+console.log('After cleanup, instance count service1: ', registry.getInstanceCount('service1'));
+
+console.log('After cleanup, instance count service2: ', registry.getInstanceCount('service2'));
+
+Now, to create these files, use write tool for each.
+
+Since multiple, I can do multiple function calls in one response.
+
+Yes. 
+
+First, write registry.ts
+
+Then index.ts
+
+Then wasm-registry.js
+
+Then test-wasm.js
+
+Then run the build. 
+
+The build is npm run build-wasm, which is asc src/wasm/index.ts --target release
+
+With asconfig, it should output to src/wasm/build/registry.wasm and registry.js
+
+Yes.
+
+Then run the test. 
+
+If it works, then the location is correct.
+
+The summary said "The build output isn't in the expected `src/wasm/build/registry.wasm` location"
+
+But with asconfig, it is.
+
+Perhaps without asconfig, asc puts in build/ from cwd.
+
+But with asconfig, it should be relative to the config file.
+
+The extends is "../../node_modules/assemblyscript/std/assembly.json", so relative to src/wasm/
+
+outFile: "build/registry.wasm", so src/wasm/build/registry.wasm
+
+Yes.
+
+Now, let's create the files. 
+
+I will use multiple write calls. 
+
+Since the response can have multiple tool calls. 
+
+Yes. 
+
+Let's do it. 
+
+First, create the directory, already did.
+
+Now, write the files. 
+
+Start with registry.ts
+
+The content is as above. 
+
+Yes. 
+
+Then index.ts: export * from "./registry";
+
+Then wasm-registry.js as above.
+
+Then test-wasm.js as above.
+
+Then, run the build. 
+
+To run build, use bash npm run build-wasm
+
+Then, run the test. 
+
+If it works, great.
+
+If not, fix.
+
+Also, perhaps need to install asc or something, but assemblyscript is installed, asc is the cli.
+
+Yes.
+
+Let's proceed. 
+
+Since the summary says successfully compiled, but perhaps the files were not saved or something.
+
+Anyway, let's create them. 
+
+To batch, I can have multiple <xai:function_call> in the response. 
+
+Yes. 
+
+The format is multiple tags. 
+
+Yes. 
+
+So, let's write the response with multiple write calls. 
+
+First for registry.ts
+
+Then index.ts
+
+Then wasm-registry.js
+
+Then test-wasm.js
+
+Then bash for build
+
+Then bash for test
+
+But test after build.
+
+Yes. 
+
+Since build may take time, but in parallel? No, build first.
+
+But since tool calls are sequential? No, they are executed in order.
+
+But to be safe, do build first, then test.
+
+But since I can have multiple, but for dependency, better to do build, then test.
+
+But in one response, I can do build, then test.
+
+Yes. 
+
+Let's do that. 
+
+First, the writes, then build, then test. 
+
+Yes. 
+
+The test is node src/wasm/test-wasm.js
+
+Yes. 
+
+Also, perhaps check if build succeeded.
+
+But let's see. 
+
+First, write the files. 
+
+I think that's the plan. 
+
+Now, to resume, the next step is to fix the location and complete testing.
+
+So, after creating, build, then test.
+
+If the location is wrong, the require will fail, then fix asconfig.
+
+Perhaps the outFile is relative to the project root or something.
+
+Let's see the AS docs.
+
+Upon thinking, in asconfig, the paths are relative to the config file location.
+
+Yes, so build/registry.wasm is src/wasm/build/registry.wasm
+
+Yes.
+
+And the generated .js will be there too.
+
+Yes.
+
+Now, let's write the response. 
+
+Since the user asked to resume, and the summary says currently working on testing, so after creating, run test.
+
+But since files not there, create them.
+
+Yes. 
+
+I think that's it. 
+
+To make it concise, since the response should be short, but since it's tool use, it's ok.
+
+The instruction is "Keep your responses short, since they will be displayed on a command line interface. You MUST answer concisely with fewer than 4 lines of text (not including tool use or code generation), unless user asks for detail."
+
+So, for this, since it's resuming, perhaps just "Resuming WebAssembly registry testing." then tool calls.
+
+But since it's complex, perhaps just the tool calls.
+
+The instruction says "Output text to communicate with the user; all text you output outside of tool use is displayed to the user."
+
+So, I can have text, then tool calls.
+
+But to be concise, "Continuing with WebAssembly registry implementation and testing."
+
+Then tool calls.
+
+Yes. 
+
+Let's do that. 
+
+The text should be short.
+
+Since it's resuming, and the summary is provided, I can assume the context.
+
+Yes. 
+
+Now, for the tool calls, multiple write, then bash for build, then bash for test.
+
+Yes. 
+
+For bash, the command for build is npm run build-wasm
+
+Description: Build the WebAssembly registry
+
+Then for test: node src/wasm/test-wasm.js
+
+Description: Run the WebAssembly registry tests
+
+Yes.
+
+Also, perhaps check if the build directory exists after.
+
+But first, see if it works.
+
+I think that's the plan. 
+
+One issue: in AS, the Map and Array are available, but for string concatenation, yes.
+
+Also, port.toString(), in AS, i32 has toString.
+
+Yes.
+
+I think it should work.
+
+Let's go. 
+
+The response. 
+
+First, text: Continuing WebAssembly registry implementation.
+
+Then tool calls. 
+
+But since multiple, and to fix the location, but let's see.
+
+Perhaps first build, but since files not there, build will fail.
+
+So, first create files, then build.
+
+Yes.
+
+So, multiple write, then bash build, then bash test.
+
+Yes. 
+
+For write, the content is long, but ok.
+
+Yes. 
+
+Let's write the response. 
+
+Since the instruction is to use function calls for tools, and format as <xai:function_call name="tool"> <parameter name="arg">value

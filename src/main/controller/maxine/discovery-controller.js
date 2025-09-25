@@ -102,36 +102,44 @@ const isCircuitBreakerEnabled =
   config.circuitBreakerEnabled && !isUltraFastMode && !isExtremeFastMode;
 
 // Optimized caches for better performance and memory efficiency
-const ipCache = isUltraFastMode
-  ? null
-  : new LRUCache({
-      max: isHighPerformanceMode ? 100000 : isExtremeFastMode ? 50000 : 100000,
-      ttl: 900000,
-    });
-const addressCache = isUltraFastMode
-  ? null
-  : new LRUCache({
-      max: isHighPerformanceMode ? 100000 : isExtremeFastMode ? 50000 : 100000,
-      ttl: 900000,
-    });
-const serviceNameCache = isUltraFastMode
-  ? null
-  : new LRUCache({
-      max: isHighPerformanceMode ? 100000 : isExtremeFastMode ? 50000 : 100000,
-      ttl: 900000,
-    });
-const nodeMetadataCache = isUltraFastMode
-  ? null
-  : new LRUCache({
-      max: isHighPerformanceMode ? 50000 : isExtremeFastMode ? 25000 : 50000,
-      ttl: 900000,
-    });
-const trafficSplitCache = isUltraFastMode
-  ? null
-  : new LRUCache({
-      max: isHighPerformanceMode ? 10000 : isExtremeFastMode ? 5000 : 10000,
-      ttl: 300000,
-    }); // Cache traffic split results
+const ipCache = new LRUCache({
+  max: isUltraFastMode
+    ? 10000
+    : isHighPerformanceMode
+      ? 100000
+      : isExtremeFastMode
+        ? 50000
+        : 100000,
+  ttl: 900000,
+});
+const addressCache = new LRUCache({
+  max: isUltraFastMode
+    ? 10000
+    : isHighPerformanceMode
+      ? 100000
+      : isExtremeFastMode
+        ? 50000
+        : 100000,
+  ttl: 900000,
+});
+const serviceNameCache = new LRUCache({
+  max: isUltraFastMode
+    ? 10000
+    : isHighPerformanceMode
+      ? 100000
+      : isExtremeFastMode
+        ? 50000
+        : 100000,
+  ttl: 900000,
+});
+const nodeMetadataCache = new LRUCache({
+  max: isUltraFastMode ? 5000 : isHighPerformanceMode ? 50000 : isExtremeFastMode ? 25000 : 50000,
+  ttl: 900000,
+});
+const trafficSplitCache = new LRUCache({
+  max: isUltraFastMode ? 1000 : isHighPerformanceMode ? 10000 : isExtremeFastMode ? 5000 : 10000,
+  ttl: 300000,
+}); // Cache traffic split results
 
 // Ultra-fast mode uses no caching for zero-latency
 
@@ -389,15 +397,10 @@ const normalDiscovery = async (req, res) => {
   const sourceService = req.query.sourceService;
   const advancedFilters = parseAdvancedFilters(req);
   const reqId = req.ip || 'unknown';
-  let ip;
-  if (!isUltraFastMode) {
-    ip = ipCache.get(reqId);
-    if (!ip) {
-      ip = req.clientIp || reqId;
-      ipCache.set(reqId, ip);
-    }
-  } else {
+  let ip = ipCache.get(reqId);
+  if (!ip) {
     ip = req.clientIp || reqId;
+    ipCache.set(reqId, ip);
   }
 
   // if serviceName is not there, responding with error
@@ -416,54 +419,44 @@ const normalDiscovery = async (req, res) => {
   // Handle traffic splitting if no version specified
   let selectedVersion = version;
   let fullServiceName;
-  if (!isUltraFastMode) {
-    const serviceNameKey = `${datacenter}:${namespace}:${serviceName}:${selectedVersion || ''}`;
-    fullServiceName = serviceNameCache.get(serviceNameKey);
-    if (!fullServiceName) {
-      if (!selectedVersion) {
-        const baseServiceName = `${datacenter}:${namespace}:${serviceName}`;
-        const splitKey = baseServiceName;
-        const splitResult = trafficSplitCache.get(splitKey);
-        if (splitResult === undefined) {
-          const split = serviceRegistry.getTrafficSplit(baseServiceName);
-          if (split) {
-            const versions = Object.keys(split);
-            const total = Object.values(split).reduce((a, b) => a + b, 0);
-            let rand = Math.random() * total;
-            for (const v of versions) {
-              rand -= split[v];
-              if (rand <= 0) {
-                selectedVersion = v;
-                fullServiceName = `${datacenter}:${namespace}:${serviceName}:${v}`;
-                break;
-              }
+  const serviceNameKey = `${datacenter}:${namespace}:${serviceName}:${selectedVersion || ''}`;
+  fullServiceName = serviceNameCache.get(serviceNameKey);
+  if (!fullServiceName) {
+    if (!selectedVersion && !isUltraFastMode) {
+      const baseServiceName = `${datacenter}:${namespace}:${serviceName}`;
+      const splitKey = baseServiceName;
+      const splitResult = trafficSplitCache.get(splitKey);
+      if (splitResult === undefined) {
+        const split = serviceRegistry.getTrafficSplit(baseServiceName);
+        if (split) {
+          const versions = Object.keys(split);
+          const total = Object.values(split).reduce((a, b) => a + b, 0);
+          let rand = Math.random() * total;
+          for (const v of versions) {
+            rand -= split[v];
+            if (rand <= 0) {
+              selectedVersion = v;
+              fullServiceName = `${datacenter}:${namespace}:${serviceName}:${v}`;
+              break;
             }
-          } else {
-            fullServiceName = baseServiceName;
           }
-          // Cache the result: selectedVersion or null if no split
-          trafficSplitCache.set(splitKey, selectedVersion || null);
         } else {
-          selectedVersion = splitResult;
-          fullServiceName = selectedVersion
-            ? `${datacenter}:${namespace}:${serviceName}:${selectedVersion}`
-            : baseServiceName;
+          fullServiceName = baseServiceName;
         }
+        // Cache the result: selectedVersion or null if no split
+        trafficSplitCache.set(splitKey, selectedVersion || null);
       } else {
-        fullServiceName = `${datacenter}:${namespace}:${serviceName}:${selectedVersion}`;
-      }
-      serviceNameCache.set(serviceNameKey, fullServiceName);
-    }
-  } else {
-    // Ultra-fast: no traffic splitting, no caching
-    fullServiceName =
-      datacenter !== 'default'
-        ? selectedVersion
+        selectedVersion = splitResult;
+        fullServiceName = selectedVersion
           ? `${datacenter}:${namespace}:${serviceName}:${selectedVersion}`
-          : `${datacenter}:${namespace}:${serviceName}`
-        : selectedVersion
-          ? `${namespace}:${serviceName}:${selectedVersion}`
-          : `${namespace}:${serviceName}`;
+          : baseServiceName;
+      }
+    } else {
+      fullServiceName = selectedVersion
+        ? `${datacenter}:${namespace}:${serviceName}:${selectedVersion}`
+        : `${datacenter}:${namespace}:${serviceName}`;
+    }
+    serviceNameCache.set(serviceNameKey, fullServiceName);
   }
 
   let serviceNodes;
@@ -593,20 +586,13 @@ const normalDiscovery = async (req, res) => {
   req.fullServiceName = fullServiceName;
   req.serviceNode = serviceNode;
   let addressToRedirect;
-  if (!isUltraFastMode) {
-    const addressKey = `${serviceNode.address}:${endPoint || ''}`;
-    addressToRedirect = addressCache.get(addressKey);
-    if (!addressToRedirect) {
-      addressToRedirect = endPoint
-        ? `${serviceNode.address}${endPoint.startsWith('/') ? endPoint : `/${endPoint}`}`
-        : serviceNode.address;
-      addressCache.set(addressKey, addressToRedirect);
-    }
-  } else {
-    // Ultra-fast: no caching for address
+  const addressKey = `${serviceNode.address}:${endPoint || ''}`;
+  addressToRedirect = addressCache.get(addressKey);
+  if (!addressToRedirect) {
     addressToRedirect = endPoint
       ? `${serviceNode.address}${endPoint.startsWith('/') ? endPoint : `/${endPoint}`}`
       : serviceNode.address;
+    addressCache.set(addressKey, addressToRedirect);
   }
 
   // Increment active connections
@@ -615,15 +601,11 @@ const normalDiscovery = async (req, res) => {
   }
 
   let proxyTimeout;
-  if (!isUltraFastMode) {
-    const proxyTimeoutKey = `${fullServiceName}:${serviceNode.nodeName}`;
-    proxyTimeout = nodeMetadataCache.get(proxyTimeoutKey);
-    if (proxyTimeout === undefined) {
-      proxyTimeout = serviceNode.metadata.proxyTimeout || config.proxyTimeout;
-      nodeMetadataCache.set(proxyTimeoutKey, proxyTimeout);
-    }
-  } else {
+  const proxyTimeoutKey = `${fullServiceName}:${serviceNode.nodeName}`;
+  proxyTimeout = nodeMetadataCache.get(proxyTimeoutKey);
+  if (proxyTimeout === undefined) {
     proxyTimeout = serviceNode.metadata.proxyTimeout || config.proxyTimeout;
+    nodeMetadataCache.set(proxyTimeoutKey, proxyTimeout);
   }
   // Add custom headers from service metadata if available
   const proxyOptions = { target: addressToRedirect, changeOrigin: true, timeout: proxyTimeout };

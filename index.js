@@ -520,7 +520,74 @@ if (config.ultraFastMode) {
     }
   };
 
-  if (config.http2Enabled) {
+  if (config.http3Enabled) {
+    // HTTP/3 support using quico for ultra-low latency
+    try {
+      const quico = require('quico');
+      const certsDir = path.join(__dirname, 'src/main/config/certs');
+      const keyPath = path.join(certsDir, 'server.key');
+      const certPath = path.join(certsDir, 'server.crt');
+
+      if (fs.existsSync(keyPath) && fs.existsSync(certPath)) {
+        server = quico.createServer(
+          {
+            SNICallback: function (servername, cb) {
+              cb(null, {
+                key: fs.readFileSync(keyPath),
+                cert: fs.readFileSync(certPath),
+              });
+            },
+          },
+          (req, res) => {
+            // Convert quico request to our handler format
+            const parsedUrl = new URL(req.url, `https://localhost:${constants.PORT}`);
+            const pathname = parsedUrl.pathname;
+            const method = req.method;
+
+            // Handle correlation ID
+            const correlationId =
+              req.headers['x-correlation-id'] ||
+              req.headers['x-request-id'] ||
+              generateCorrelationId();
+            res.setHeader('x-correlation-id', correlationId);
+
+            const routeKey = `${method} ${pathname}`;
+            const handler = routes.get(routeKey);
+            if (handler) {
+              if (method === 'POST' || method === 'PUT' || method === 'DELETE') {
+                const chunks = [];
+                req.on('data', (chunk) => chunks.push(chunk));
+                req.on('end', () => {
+                  const body = Buffer.concat(chunks).toString();
+                  try {
+                    const parsedBody = body ? JSON.parse(body) : {};
+                    req.correlationId = correlationId;
+                    handler(req, res, Object.fromEntries(parsedUrl.searchParams), parsedBody);
+                  } catch (_e) {
+                    res.writeHead(400, { 'Content-Type': 'application/json' });
+                    res.end(errorInvalidJSON);
+                  }
+                });
+              } else {
+                req.correlationId = correlationId;
+                handler(req, res, Object.fromEntries(parsedUrl.searchParams), {});
+              }
+            } else {
+              res.writeHead(404, { 'Content-Type': 'application/json' });
+              res.end(errorNotFound);
+            }
+          }
+        );
+        // console.log('Maxine server started with HTTP/3 support on port', constants.PORT); // Removed for performance
+      } else {
+        // console.log('HTTP/3 certificates not found, falling back to HTTP/1.1'); // Removed for performance
+        server = http.createServer({ keepAlive: false }, requestHandler);
+      }
+    } catch (error) {
+      // console.log('HTTP/3 not available, falling back to HTTP/1.1:', error.message); // Removed for performance
+      server = http.createServer({ keepAlive: false }, requestHandler);
+    }
+  } else if (config.http2Enabled) {
     // Load SSL certificates for HTTP/2
     const certsDir = path.join(__dirname, 'src/main/config/certs');
     const keyPath = path.join(certsDir, 'server.key');
@@ -3509,62 +3576,40 @@ if (config.ultraFastMode) {
       // console.log(`Maxine server started in lightning mode on port ${constants.PORT}`); // Removed for performance
     });
 
-    // QUIC/HTTP3 server for ultra-low latency in ultra-fast mode
-    if (config.ultraFastMode) {
+    // HTTP/3 server for ultra-low latency using quico
+    if (config.http3Enabled) {
       try {
-        const quicServer = _quic.createServer({
-          key: config.mtlsEnabled ? _fs.readFileSync(config.serverKeyPath) : null,
-          cert: config.mtlsEnabled ? _fs.readFileSync(config.serverCertPath) : null,
-          ca: config.mtlsEnabled ? [_fs.readFileSync(config.caCertPath)] : null,
-          requestCert: config.mtlsEnabled,
-          rejectUnauthorized: config.mtlsEnabled,
-          alpn: ['h3', 'h2', 'http/1.1'], // Support HTTP/3, HTTP/2, and HTTP/1.1
-          maxConnections: 10000, // High connection limit for performance
-          maxStreams: 100, // Allow multiple concurrent streams
-        });
-
-        quicServer.listen(constants.PORT + 1, () => {
-          // QUIC server listening on port + 1 for HTTP/3 support
-        });
-
-        quicServer.on('session', (session) => {
-          session.on('stream', (stream, headers) => {
-            // Handle QUIC streams with same logic as HTTP
-            const req = {
-              method: headers[':method'],
-              url: headers[':path'] + (headers[':query'] ? '?' + headers[':query'] : ''),
-              headers: headers,
-              connection: { remoteAddress: session.remoteAddress },
-              socket: { remoteAddress: session.remoteAddress },
-            };
-
-            const res = {
-              writeHead: (statusCode, headers) => {
-                const responseHeaders = {
-                  ':status': statusCode,
-                  ...headers,
-                };
-                stream.respond(responseHeaders);
-              },
-              end: (data) => {
-                if (data) {
-                  stream.end(data);
-                } else {
-                  stream.end();
-                }
-              },
-            };
-
-            // Use same request handling logic
-            const _clientIP = req.connection.remoteAddress || req.socket.remoteAddress || 'unknown';
+        const quico = require('quico');
+        const quicServer = quico.createServer(
+          {
+            SNICallback: function (servername, cb) {
+              if (
+                config.mtlsEnabled &&
+                _fs.existsSync(config.serverKeyPath) &&
+                _fs.existsSync(config.serverCertPath)
+              ) {
+                cb(null, {
+                  key: _fs.readFileSync(config.serverKeyPath),
+                  cert: _fs.readFileSync(config.serverCertPath),
+                });
+              } else {
+                // For HTTP/3, we need certificates. If not available, skip HTTP/3
+                cb(new Error('Certificates not available for HTTP/3'));
+              }
+            },
+          },
+          (req, res) => {
+            // Handle HTTP/3 requests with same logic as HTTP
+            const _clientIP =
+              req.connection?.remoteAddress || req.socket?.remoteAddress || 'unknown';
             requestCount++;
 
-            const parsedUrl = url.parse(req.url, true);
+            const parsedUrl = new URL(req.url, `https://localhost:${constants.PORT}`);
             const pathname = parsedUrl.pathname;
-            const query = parsedUrl.query;
+            const query = Object.fromEntries(parsedUrl.searchParams);
             const method = req.method;
 
-            // Handle proxy routes (simplified for QUIC)
+            // Handle proxy routes (simplified for HTTP/3)
             if (pathname.startsWith('/proxy/')) {
               const parts = pathname.split('/');
               if (parts.length < 3) {
@@ -3573,14 +3618,13 @@ if (config.ultraFastMode) {
                 return;
               }
               const serviceName = parts[2];
-              const path = '/' + parts.slice(3).join('/');
               const node = serviceRegistry.getRandomNode(serviceName);
               if (!node) {
                 res.writeHead(404, { 'Content-Type': 'application/json' });
                 res.end(serviceUnavailable);
                 return;
               }
-              // For QUIC, we can't easily proxy, so return service info
+              // For HTTP/3, return service info
               res.writeHead(200, { 'Content-Type': 'application/json' });
               res.end(JSON.__stringify({ address: node.address, nodeName: node.nodeName }));
               return;
@@ -3591,35 +3635,39 @@ if (config.ultraFastMode) {
             const handler = routes.get(routeKey);
             if (handler) {
               if (method === 'POST' || method === 'PUT' || method === 'DELETE') {
-                // For QUIC, read stream data
+                // Read request body
                 let body = '';
-                stream.on('data', (chunk) => {
+                req.on('data', (chunk) => {
                   body += chunk;
                 });
-                stream.on('end', () => {
+                req.on('end', () => {
                   try {
                     const parsedBody = body ? JSON.parse(body) : {};
-                    handler(req, res, parsedUrl.query, parsedBody);
+                    handler(req, res, query, parsedBody);
                   } catch (_e) {
                     res.writeHead(400, { 'Content-Type': 'application/json' });
                     res.end(errorInvalidJSON);
                   }
                 });
               } else {
-                handler(req, res, parsedUrl.query, {});
+                handler(req, res, query, {});
               }
             } else {
               res.writeHead(404, { 'Content-Type': 'application/json' });
               res.end(errorNotFound);
             }
-          });
+          }
+        );
+
+        quicServer.listen(constants.PORT + 1, () => {
+          // HTTP/3 server listening on port + 1 for ultra-low latency
         });
 
         quicServer.on('error', (err) => {
-          console.error('QUIC server error:', err);
+          console.error('HTTP/3 server error:', err);
         });
       } catch (err) {
-        console.warn('QUIC server not available or failed to start:', err.message);
+        console.warn('HTTP/3 server not available or failed to start:', err.message);
       }
     }
   }

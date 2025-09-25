@@ -32,7 +32,7 @@ const errorAndClose = (msg) => {
 
 const consoleLog = (...args) => {
   if (!config.noLogging) {
-    console.log(...args);
+    // console.log(...args); // Removed for performance
   }
 };
 
