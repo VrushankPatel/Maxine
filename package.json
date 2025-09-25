@@ -15,7 +15,8 @@
     "unit-test": "HIGH_PERFORMANCE_MODE=false ULTRA_FAST_MODE=false LIGHTNING_MODE=false WEBSOCKET_ENABLED=true npx mocha --env dev --timeout 10000 --exit",
     "genreports": "nyc --reporter=html --reporter=lcov npm run unit-test",
     "coverage": "npm run genreports && npx codecov -t $CODECOV_TOKEN",
-    "load-test": "chmod +x bin/k6 && ULTRA_FAST_MODE=true RATE_LIMIT_ENABLED=false node index.js & sleep 2 && bin/k6 run src/test/load-test/performance-test.js"
+    "load-test": "chmod +x bin/k6 && ULTRA_FAST_MODE=true RATE_LIMIT_ENABLED=false node index.js & sleep 2 && bin/k6 run src/test/load-test/performance-test.js",
+    "build-wasm": "asc src/wasm/index.ts --target release"
   },
   "keywords": [
     "maxine",
@@ -65,6 +66,7 @@
     "passport": "^0.7.0",
     "passport-google-oauth20": "^2.0.0",
     "prom-client": "^15.1.0",
+    "quico": "^0.1.1",
     "redis": "^4.6.13",
     "subscriptions-transport-ws": "^0.11.0",
     "swagger-ui-express": "^5.0.1",
@@ -75,6 +77,7 @@
     "ext": "js,properties,yaml"
   },
   "devDependencies": {
+    "assemblyscript": "^0.28.8",
     "chai": "^4.3.6",
     "chai-http": "^4.3.0",
     "chai-json": "^1.0.0",

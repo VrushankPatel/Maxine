@@ -1,0 +1,24 @@
+{
+  "entries": ["./src/wasm/index.ts"],
+  "targets": {
+    "release": {
+      "outFile": "src/wasm/build/registry.wasm",
+      "textFile": "src/wasm/build/registry.wat",
+      "sourceMap": true,
+      "optimizeLevel": 3,
+      "shrinkLevel": 1,
+      "converge": false,
+      "noAssert": false
+    }
+  },
+  "options": {
+    "bindings": "esm",
+    "exportRuntime": true,
+    "importMemory": false,
+    "initialMemory": 100,
+    "memoryBase": 0,
+    "tableBase": 0,
+    "sourceMap": true,
+    "debug": false
+  }
+}
