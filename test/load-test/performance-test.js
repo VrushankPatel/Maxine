@@ -1,7 +1,7 @@
 const axios = require('axios');
 const { performance } = require('perf_hooks');
 
-const BASE_URL = 'http://localhost:8080';
+const BASE_URL = `http://localhost:${process.env.PORT || 8080}`;
 const CONCURRENT_USERS = 100;
 const ITERATIONS_PER_USER = 1000;
 const TOTAL_REQUESTS = CONCURRENT_USERS * ITERATIONS_PER_USER;
@@ -15,7 +15,7 @@ async function registerService() {
         });
         return response.data.nodeId;
     } catch (error) {
-        console.error('Registration failed:', error.message);
+        console.error('Registration failed:', error.code, error.message, error.response ? error.response.status : 'no status');
         return null;
     }
 }
