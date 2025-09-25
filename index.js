@@ -521,70 +521,131 @@ if (config.ultraFastMode) {
   };
 
   if (config.http3Enabled) {
-    // HTTP/3 support using quico for ultra-low latency
+    // HTTP/3 support using @rs/quic for ultra-low latency
     try {
-      const quico = require('quico');
+      const { createQuicSocket } = require('@rs/quic');
       const certsDir = path.join(__dirname, 'src/main/config/certs');
       const keyPath = path.join(certsDir, 'server.key');
       const certPath = path.join(certsDir, 'server.crt');
 
       if (fs.existsSync(keyPath) && fs.existsSync(certPath)) {
-        server = quico.createServer(
-          {
-            SNICallback: function (servername, cb) {
-              cb(null, {
-                key: fs.readFileSync(keyPath),
-                cert: fs.readFileSync(certPath),
-              });
-            },
-          },
-          (req, res) => {
-            // Convert quico request to our handler format
-            const parsedUrl = new URL(req.url, `https://localhost:${constants.PORT}`);
-            const pathname = parsedUrl.pathname;
-            const method = req.method;
+        // Create QUIC socket for HTTP/3
+        const quicSocket = createQuicSocket({
+          port: constants.PORT + 1,
+          key: fs.readFileSync(keyPath),
+          cert: fs.readFileSync(certPath),
+          alpn: ['h3', 'h3-29'], // HTTP/3 ALPN protocols
+          maxStreams: 1000, // High concurrency for service registry
+          idleTimeout: 30000, // 30 second idle timeout
+          '0rtt': true, // Enable 0-RTT for instant requests
+        });
 
-            // Handle correlation ID
-            const correlationId =
-              req.headers['x-correlation-id'] ||
-              req.headers['x-request-id'] ||
-              generateCorrelationId();
-            res.setHeader('x-correlation-id', correlationId);
+        quicSocket.on('session', (session) => {
+          session.on('stream', (stream) => {
+            // Handle HTTP/3 stream
+            let requestData = '';
 
-            const routeKey = `${method} ${pathname}`;
-            const handler = routes.get(routeKey);
-            if (handler) {
-              if (method === 'POST' || method === 'PUT' || method === 'DELETE') {
-                const chunks = [];
-                req.on('data', (chunk) => chunks.push(chunk));
-                req.on('end', () => {
-                  const body = Buffer.concat(chunks).toString();
-                  try {
-                    const parsedBody = body ? JSON.parse(body) : {};
-                    req.correlationId = correlationId;
-                    handler(req, res, Object.fromEntries(parsedUrl.searchParams), parsedBody);
-                  } catch (_e) {
-                    res.writeHead(400, { 'Content-Type': 'application/json' });
-                    res.end(errorInvalidJSON);
+            stream.on('data', (chunk) => {
+              requestData += chunk.toString();
+            });
+
+            stream.on('end', () => {
+              try {
+                // Parse HTTP/3 request (simplified - in production would use proper HTTP/3 parser)
+                const lines = requestData.split('\r\n');
+                if (lines.length === 0) return;
+
+                const requestLine = lines[0].split(' ');
+                if (requestLine.length < 2) return;
+
+                const method = requestLine[0];
+                const url = requestLine[1];
+
+                // Create mock request object
+                const parsedUrl = new URL(url, `https://localhost:${constants.PORT + 1}`);
+                const pathname = parsedUrl.pathname;
+
+                const correlationId = generateCorrelationId();
+
+                const mockReq = {
+                  method,
+                  url,
+                  pathname,
+                  query: parsedUrl.searchParams,
+                  headers: {},
+                  correlationId,
+                  quicStream: stream,
+                  isQuic: true,
+                };
+
+                // Parse headers (simplified)
+                let headerStart = false;
+                for (let i = 1; i < lines.length; i++) {
+                  const line = lines[i];
+                  if (line === '') {
+                    headerStart = true;
+                    continue;
                   }
-                });
-              } else {
-                req.correlationId = correlationId;
-                handler(req, res, Object.fromEntries(parsedUrl.searchParams), {});
+                  if (headerStart) {
+                    const colonIndex = line.indexOf(':');
+                    if (colonIndex > 0) {
+                      const key = line.substring(0, colonIndex).toLowerCase().trim();
+                      const value = line.substring(colonIndex + 1).trim();
+                      mockReq.headers[key] = value;
+                    }
+                  }
+                }
+
+                // Create mock response object
+                const mockRes = {
+                  writeHead: (statusCode, headers) => {
+                    // Send HTTP/3 response headers
+                    let response = `HTTP/3 ${statusCode} OK\r\n`;
+                    Object.entries(headers || {}).forEach(([key, value]) => {
+                      response += `${key}: ${value}\r\n`;
+                    });
+                    response += '\r\n';
+                    stream.write(response);
+                  },
+                  write: (data) => {
+                    stream.write(data);
+                  },
+                  end: (data) => {
+                    if (data) stream.write(data);
+                    stream.end();
+                  },
+                  setHeader: (key, value) => {
+                    // Headers are sent in writeHead for HTTP/3
+                  },
+                  quicStream: stream,
+                };
+
+                // Route to our handler
+                requestHandler(mockReq, mockRes);
+              } catch (error) {
+                console.error('HTTP/3 request parsing error:', error);
+                stream.write('HTTP/3 400 Bad Request\r\n\r\n');
+                stream.end();
               }
-            } else {
-              res.writeHead(404, { 'Content-Type': 'application/json' });
-              res.end(errorNotFound);
-            }
-          }
-        );
-        // console.log('Maxine server started with HTTP/3 support on port', constants.PORT); // Removed for performance
+            });
+
+            stream.on('error', (err) => {
+              console.error('HTTP/3 stream error:', err);
+            });
+          });
+        });
+
+        quicSocket.on('error', (err) => {
+          console.error('QUIC socket error:', err);
+        });
+
+        console.log(`HTTP/3 server listening on UDP port ${constants.PORT + 1}`);
       } else {
-        // console.log('HTTP/3 certificates not found, falling back to HTTP/1.1'); // Removed for performance
+        console.warn('HTTP/3 certificates not found, skipping HTTP/3 server');
         server = http.createServer({ keepAlive: false }, requestHandler);
       }
     } catch (error) {
-      // console.log('HTTP/3 not available, falling back to HTTP/1.1:', error.message); // Removed for performance
+      console.warn('HTTP/3 library not available, falling back to HTTP/1.1:', error.message);
       server = http.createServer({ keepAlive: false }, requestHandler);
     }
   } else if (config.http2Enabled) {
@@ -3036,6 +3097,75 @@ if (config.ultraFastMode) {
     }
   });
 
+  // eBPF Kernel-Level Monitoring Endpoints
+  routes.set('GET /api/maxine/ebpf/status', (req, res, _query, _body) => {
+    try {
+      const status = serviceRegistry.ebpfService.getStatus();
+      res.writeHead(200, { 'Content-Type': 'application/json' });
+      res.end(JSON.__stringify(status));
+    } catch (error) {
+      res.writeHead(500, { 'Content-Type': 'application/json' });
+      res.end(JSON.__stringify({ error: error.message }));
+    }
+  });
+
+  routes.set('GET /api/maxine/ebpf/topology', (req, res, _query, _body) => {
+    try {
+      const topology = serviceRegistry.ebpfService.getNetworkTopology();
+      res.writeHead(200, { 'Content-Type': 'application/json' });
+      res.end(JSON.__stringify(topology));
+    } catch (error) {
+      res.writeHead(500, { 'Content-Type': 'application/json' });
+      res.end(JSON.__stringify({ error: error.message }));
+    }
+  });
+
+  routes.set('GET /api/maxine/ebpf/metrics', (req, res, _query, _body) => {
+    try {
+      const metrics = serviceRegistry.ebpfService.getCommunicationMetrics();
+      res.writeHead(200, { 'Content-Type': 'application/json' });
+      res.end(JSON.__stringify(metrics));
+    } catch (error) {
+      res.writeHead(500, { 'Content-Type': 'application/json' });
+      res.end(JSON.__stringify({ error: error.message }));
+    }
+  });
+
+  routes.set('GET /api/maxine/ebpf/anomalies', (req, res, _query, _body) => {
+    try {
+      const anomalies = serviceRegistry.ebpfService.detectAnomalies();
+      res.writeHead(200, { 'Content-Type': 'application/json' });
+      res.end(JSON.__stringify(anomalies));
+    } catch (error) {
+      res.writeHead(500, { 'Content-Type': 'application/json' });
+      res.end(JSON.__stringify({ error: error.message }));
+    }
+  });
+
+  routes.set('POST /api/maxine/ebpf/probe/load', (req, res, _query, body) => {
+    try {
+      const { programName, config } = body;
+      const success = serviceRegistry.ebpfService.loadProgram(programName, config || {});
+      res.writeHead(200, { 'Content-Type': 'application/json' });
+      res.end(JSON.__stringify({ success, programName }));
+    } catch (error) {
+      res.writeHead(500, { 'Content-Type': 'application/json' });
+      res.end(JSON.__stringify({ error: error.message }));
+    }
+  });
+
+  routes.set('POST /api/maxine/ebpf/probe/unload', (req, res, _query, body) => {
+    try {
+      const { programName } = body;
+      const success = serviceRegistry.ebpfService.unloadProgram(programName);
+      res.writeHead(200, { 'Content-Type': 'application/json' });
+      res.end(JSON.__stringify({ success, programName }));
+    } catch (error) {
+      res.writeHead(500, { 'Content-Type': 'application/json' });
+      res.end(JSON.__stringify({ error: error.message }));
+    }
+  });
+
   // Config endpoint for compatibility
   // Handle config get for compatibility
   routes.set('GET /api/maxine/control/config', (req, res, _query, _body) => {
@@ -3576,96 +3706,152 @@ if (config.ultraFastMode) {
       // console.log(`Maxine server started in lightning mode on port ${constants.PORT}`); // Removed for performance
     });
 
-    // HTTP/3 server for ultra-low latency using quico
+    // HTTP/3 server for ultra-low latency using @rs/quic
     if (config.http3Enabled) {
       try {
-        const quico = require('quico');
-        const quicServer = quico.createServer(
-          {
-            SNICallback: function (servername, cb) {
-              if (
-                config.mtlsEnabled &&
-                _fs.existsSync(config.serverKeyPath) &&
-                _fs.existsSync(config.serverCertPath)
-              ) {
-                cb(null, {
-                  key: _fs.readFileSync(config.serverKeyPath),
-                  cert: _fs.readFileSync(config.serverCertPath),
-                });
-              } else {
-                // For HTTP/3, we need certificates. If not available, skip HTTP/3
-                cb(new Error('Certificates not available for HTTP/3'));
-              }
-            },
-          },
-          (req, res) => {
-            // Handle HTTP/3 requests with same logic as HTTP
-            const _clientIP =
-              req.connection?.remoteAddress || req.socket?.remoteAddress || 'unknown';
-            requestCount++;
+        const { createQuicSocket } = require('@rs/quic');
+        const certsDir = path.join(__dirname, 'src/main/config/certs');
+        const keyPath = path.join(certsDir, 'server.key');
+        const certPath = path.join(certsDir, 'server.crt');
 
-            const parsedUrl = new URL(req.url, `https://localhost:${constants.PORT}`);
-            const pathname = parsedUrl.pathname;
-            const query = Object.fromEntries(parsedUrl.searchParams);
-            const method = req.method;
+        if (fs.existsSync(keyPath) && fs.existsSync(certPath)) {
+          // Create QUIC socket for HTTP/3
+          const quicSocket = createQuicSocket({
+            port: constants.PORT + 1,
+            key: fs.readFileSync(keyPath),
+            cert: fs.readFileSync(certPath),
+            alpn: ['h3', 'h3-29'], // HTTP/3 ALPN protocols
+            maxStreams: 1000, // High concurrency for service registry
+            idleTimeout: 30000, // 30 second idle timeout
+            '0rtt': true, // Enable 0-RTT for instant requests
+          });
 
-            // Handle proxy routes (simplified for HTTP/3)
-            if (pathname.startsWith('/proxy/')) {
-              const parts = pathname.split('/');
-              if (parts.length < 3) {
-                res.writeHead(400, { 'Content-Type': 'application/json' });
-                res.end('{"error": "Invalid proxy path"}');
-                return;
-              }
-              const serviceName = parts[2];
-              const node = serviceRegistry.getRandomNode(serviceName);
-              if (!node) {
-                res.writeHead(404, { 'Content-Type': 'application/json' });
-                res.end(serviceUnavailable);
-                return;
-              }
-              // For HTTP/3, return service info
-              res.writeHead(200, { 'Content-Type': 'application/json' });
-              res.end(JSON.__stringify({ address: node.address, nodeName: node.nodeName }));
-              return;
-            }
+          quicSocket.on('session', (session) => {
+            session.on('stream', (stream) => {
+              // Handle HTTP/3 stream
+              let requestData = '';
 
-            // Use routes map for O(1) lookup
-            const routeKey = `${method} ${pathname}`;
-            const handler = routes.get(routeKey);
-            if (handler) {
-              if (method === 'POST' || method === 'PUT' || method === 'DELETE') {
-                // Read request body
-                let body = '';
-                req.on('data', (chunk) => {
-                  body += chunk;
-                });
-                req.on('end', () => {
-                  try {
-                    const parsedBody = body ? JSON.parse(body) : {};
-                    handler(req, res, query, parsedBody);
-                  } catch (_e) {
-                    res.writeHead(400, { 'Content-Type': 'application/json' });
-                    res.end(errorInvalidJSON);
+              stream.on('data', (chunk) => {
+                requestData += chunk.toString();
+              });
+
+              stream.on('end', () => {
+                try {
+                  // Parse HTTP/3 request (simplified - in production would use proper HTTP/3 parser)
+                  const lines = requestData.split('\r\n');
+                  if (lines.length === 0) return;
+
+                  const requestLine = lines[0].split(' ');
+                  if (requestLine.length < 2) return;
+
+                  const method = requestLine[0];
+                  const url = requestLine[1];
+
+                  // Create mock request object
+                  const parsedUrl = new URL(url, `https://localhost:${constants.PORT + 1}`);
+                  const pathname = parsedUrl.pathname;
+
+                  const correlationId = generateCorrelationId();
+
+                  const mockReq = {
+                    method,
+                    url,
+                    pathname,
+                    query: parsedUrl.searchParams,
+                    headers: {},
+                    correlationId,
+                    quicStream: stream,
+                    isQuic: true,
+                  };
+
+                  // Parse headers (simplified)
+                  let headerStart = false;
+                  for (let i = 1; i < lines.length; i++) {
+                    const line = lines[i];
+                    if (line === '') {
+                      headerStart = true;
+                      continue;
+                    }
+                    if (headerStart) {
+                      const colonIndex = line.indexOf(':');
+                      if (colonIndex > 0) {
+                        const key = line.substring(0, colonIndex).toLowerCase().trim();
+                        const value = line.substring(colonIndex + 1).trim();
+                        mockReq.headers[key] = value;
+                      }
+                    }
                   }
-                });
-              } else {
-                handler(req, res, query, {});
-              }
-            } else {
-              res.writeHead(404, { 'Content-Type': 'application/json' });
-              res.end(errorNotFound);
-            }
-          }
-        );
 
-        quicServer.listen(constants.PORT + 1, () => {
-          // HTTP/3 server listening on port + 1 for ultra-low latency
-        });
+                  // Create mock response object
+                  const mockRes = {
+                    writeHead: (statusCode, headers) => {
+                      // Send HTTP/3 response headers
+                      let response = `HTTP/3 ${statusCode} OK\r\n`;
+                      Object.entries(headers || {}).forEach(([key, value]) => {
+                        response += `${key}: ${value}\r\n`;
+                      });
+                      response += '\r\n';
+                      stream.write(response);
+                    },
+                    write: (data) => {
+                      stream.write(data);
+                    },
+                    end: (data) => {
+                      if (data) stream.write(data);
+                      stream.end();
+                    },
+                    setHeader: (key, value) => {
+                      // Headers are sent in writeHead for HTTP/3
+                    },
+                    quicStream: stream,
+                  };
 
-        quicServer.on('error', (err) => {
-          console.error('HTTP/3 server error:', err);
-        });
+                  // Handle proxy routes (simplified for HTTP/3)
+                  if (pathname.startsWith('/proxy/')) {
+                    const parts = pathname.split('/');
+                    if (parts.length < 3) {
+                      mockRes.writeHead(400, { 'Content-Type': 'application/json' });
+                      mockRes.end('{"error": "Invalid proxy path"}');
+                      return;
+                    }
+                    const serviceName = parts[2];
+                    const node = serviceRegistry.getRandomNode(serviceName);
+                    if (!node) {
+                      mockRes.writeHead(404, { 'Content-Type': 'application/json' });
+                      mockRes.end(serviceUnavailable);
+                      return;
+                    }
+                    // For HTTP/3, return service info
+                    mockRes.writeHead(200, { 'Content-Type': 'application/json' });
+                    mockRes.end(
+                      JSON.__stringify({ address: node.address, nodeName: node.nodeName })
+                    );
+                    return;
+                  }
+
+                  // Route to our handler
+                  handleRequest(mockReq, mockRes);
+                } catch (error) {
+                  console.error('HTTP/3 request parsing error:', error);
+                  stream.write('HTTP/3 400 Bad Request\r\n\r\n');
+                  stream.end();
+                }
+              });
+
+              stream.on('error', (err) => {
+                console.error('HTTP/3 stream error:', err);
+              });
+            });
+          });
+
+          quicSocket.on('error', (err) => {
+            console.error('QUIC socket error:', err);
+          });
+
+          console.log(`HTTP/3 server listening on UDP port ${constants.PORT + 1}`);
+        } else {
+          console.warn('HTTP/3 certificates not found, skipping HTTP/3 server');
+        }
       } catch (err) {
         console.warn('HTTP/3 server not available or failed to start:', err.message);
       }
