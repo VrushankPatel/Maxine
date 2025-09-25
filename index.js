@@ -813,8 +813,8 @@ if (config.ultraFastMode) {
                 errors.push('metadata must be an object');
             } else {
                 // Version validation
-                if (metadata.version && (typeof metadata.version !== 'string' || !/^\d+\.\d+\.\d+$/.test(metadata.version))) {
-                    errors.push('version must be a semantic version string (e.g., 1.0.0)');
+                if (metadata.version && (typeof metadata.version !== 'string' || !/^\d+\.\d+(\.\d+)?$/.test(metadata.version))) {
+                    errors.push('version must be a semantic version string (e.g., 1.0 or 1.0.0)');
                 }
 
                 // Weight validation
