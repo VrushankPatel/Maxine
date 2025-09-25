@@ -37,8 +37,8 @@ const dependencyGraphController = (req, res) => {
             ws.onmessage = function(event) {
                 const data = JSON.parse(event.data);
                 if (data.event === 'dependency_added' || data.event === 'dependency_removed') {
-                    // Refresh the page or update the graph dynamically
-                    setTimeout(() => window.location.reload(), 1000); // Simple refresh for now
+                    // Update the graph dynamically without refreshing
+                    updateGraphData();
                 }
             };
 
@@ -310,6 +310,120 @@ const dependencyGraphController = (req, res) => {
 
         // Initial cycle detection
         detectCycles();
+
+        // Function to update graph data dynamically
+        async function updateGraphData() {
+            try {
+                const response = await fetch('/api/maxine/serviceops/dependency/graph');
+                const newGraphData = await response.json();
+
+                // Update global graph data
+                Object.assign(graphData, newGraphData);
+
+                // Rebuild dependents data
+                const newDependents = {};
+                for (const [service, deps] of Object.entries(newGraphData)) {
+                    for (const dep of deps) {
+                        if (!newDependents[dep]) newDependents[dep] = new Set();
+                        newDependents[dep].add(service);
+                    }
+                }
+                Object.assign(dependentsData, Object.fromEntries(Object.entries(newDependents).map(([k, v]) => [k, Array.from(v)])));
+
+                // Re-render the graph
+                updateGraph();
+                detectCycles();
+            } catch (error) {
+                console.error('Failed to update graph data:', error);
+            }
+        }
+
+        // Function to update the D3 graph
+        function updateGraph() {
+            // Clear existing graph
+            svg.selectAll('*').remove();
+
+            // Re-prepare data
+            const newNodes = [];
+            const newLinks = [];
+            const newNodeMap = new Map();
+
+            // Add nodes
+            for (const service in graphData) {
+                if (!newNodeMap.has(service)) {
+                    newNodeMap.set(service, { id: service, label: service });
+                    newNodes.push(newNodeMap.get(service));
+                }
+                const deps = graphData[service];
+                for (const dep of deps) {
+                    if (!newNodeMap.has(dep)) {
+                        newNodeMap.set(dep, { id: dep, label: dep });
+                        newNodes.push(newNodeMap.get(dep));
+                    }
+                    newLinks.push({ source: service, target: dep });
+                }
+            }
+
+            // Add isolated nodes
+            for (const service in dependentsData) {
+                if (!newNodeMap.has(service)) {
+                    newNodeMap.set(service, { id: service, label: service });
+                    newNodes.push(newNodeMap.get(service));
+                }
+            }
+
+            // Update simulation with new data
+            simulation.nodes(newNodes);
+            simulation.force('link').links(newLinks);
+
+            // Re-create links
+            const newLink = svg.append('g')
+                .selectAll('line')
+                .data(newLinks)
+                .enter().append('line')
+                .attr('class', 'link');
+
+            // Re-create nodes
+            const newNode = svg.append('g')
+                .selectAll('g')
+                .data(newNodes)
+                .enter().append('g')
+                .attr('class', 'node')
+                .call(d3.drag()
+                    .on('start', dragstarted)
+                    .on('drag', dragged)
+                    .on('end', dragended));
+
+            newNode.append('circle')
+                .attr('r', 20)
+                .attr('fill', d => {
+                    if (graphData[d.id] && graphData[d.id].length > 0) {
+                        return '#667eea'; // Services with dependencies
+                    } else if (dependentsData[d.id] && dependentsData[d.id].length > 0) {
+                        return '#28a745'; // Services with dependents
+                    } else {
+                        return '#6c757d'; // Isolated services
+                    }
+                });
+
+            newNode.append('text')
+                .attr('dy', 5)
+                .text(d => d.label);
+
+            // Update simulation
+            simulation.on('tick', () => {
+                newLink
+                    .attr('x1', d => d.source.x)
+                    .attr('y1', d => d.source.y)
+                    .attr('x2', d => d.target.x)
+                    .attr('y2', d => d.target.y);
+
+                newNode
+                    .attr('transform', d => `translate(${d.x},${d.y})`);
+            });
+
+            simulation.alpha(1).restart();
+        }
     </script>
 </body>
 </html>`;

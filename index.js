@@ -6,7 +6,7 @@ require('./src/main/util/logging/log-generic-exceptions')();
 
 const config = require('./src/main/config/config');
 // console.log('Config loaded:', { ultraFastMode: config.ultraFastMode, lightningMode: config.lightningMode }); // Removed for performance
-const { trace, metrics } = require('@opentelemetry/api');
+const { trace: _trace, metrics } = require('@opentelemetry/api');
 const http = require('http');
 const http2 = require('http2');
 const https = require('https');
@@ -31,7 +31,7 @@ if (!config.ultraFastMode && !config.lightningMode) {
 
   try {
     sdk.start();
-  } catch (e) {
+  } catch (_e) {
     // Ignore if start is deprecated
   }
 
@@ -153,7 +153,7 @@ process.on('uncaughtException', (err) => {
   process.exit(1);
 });
 
-process.on('unhandledRejection', (reason, promise) => {
+process.on('unhandledRejection', (reason, _promise) => {
   console.error('unhandled rejection', reason);
   process.exit(1);
 });
@@ -182,22 +182,24 @@ if (config.ultraFastMode) {
 
   // Raw HTTP server for maximum performance, but stripped down
   const http = require('http');
-  const url = require('url');
+  const _url = require('url');
   const dgram = require('dgram');
-  const jwt = require('jsonwebtoken');
-  const bcrypt = require('bcrypt');
-  const httpProxy = require('http-proxy');
-  const proxy = httpProxy.createProxyServer({});
-  const WebSocket = require('ws');
-  const mqtt = require('mqtt');
+  const _jwt = require('jsonwebtoken');
+  const _bcrypt = require('bcrypt');
+  const _httpProxy = require('http-proxy');
+  const _proxy = _httpProxy.createProxyServer({});
+  const _WebSocket = require('ws');
+  const _mqtt = require('mqtt');
 
-  const stringify = require('fast-json-stringify');
-  const winston = require('winston');
-  const { logConfiguration } = require('./src/main/config/logging/logging-config');
+  const _stringify = require('fast-json-stringify');
+  const _winston = require('winston');
+  const {
+    logConfiguration: _logConfiguration,
+  } = require('./src/main/config/logging/logging-config');
   // Disable logging in ultra-fast mode
-  // winston.configure(logConfiguration);
+  // _winston.configure(_logConfiguration);
   const path = require('path');
-  const GrpcServer = require('./src/main/grpc/grpc-server');
+  const _GrpcServer = require('./src/main/grpc/grpc-server');
 
   // Precompiled stringify functions for performance
   const registerResponseSchema = {

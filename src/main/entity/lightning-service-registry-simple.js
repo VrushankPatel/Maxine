@@ -2141,6 +2141,11 @@ class LightningServiceRegistrySimple extends EventEmitter {
     this.dependents.get(dependsOn).add(serviceName);
 
     this.saveRegistry();
+
+    // Broadcast dependency change
+    if (global.broadcast) {
+      global.broadcast('dependency_added', { serviceName, dependsOn });
+    }
   }
 
   removeDependency(serviceName, dependsOn) {
@@ -2151,6 +2156,11 @@ class LightningServiceRegistrySimple extends EventEmitter {
       this.dependents.get(dependsOn).delete(serviceName);
     }
     this.saveRegistry();
+
+    // Broadcast dependency change
+    if (global.broadcast) {
+      global.broadcast('dependency_removed', { serviceName, dependsOn });
+    }
   }
 
   getDependencies(serviceName) {
