@@ -10,8 +10,15 @@ const { trace: _trace, metrics } = require('@opentelemetry/api');
 const _http = require('http');
 const _http2 = require('http2');
 const _https = require('https');
+let _quic;
+try {
+  _quic = require('node:quic');
+} catch (_e) {
+  // QUIC not available, skip
+}
 const _fs = require('fs');
 const _path = require('path');
+const url = require('url');
 
 // Initialize OpenTelemetry tracing and metrics only if not ultra-fast mode and not lightning mode
 let sdk;
@@ -3500,6 +3507,120 @@ if (config.ultraFastMode) {
     server.listen(constants.PORT, () => {
       // console.log(`Maxine server started in lightning mode on port ${constants.PORT}`); // Removed for performance
     });
+
+    // QUIC/HTTP3 server for ultra-low latency in ultra-fast mode
+    if (config.ultraFastMode) {
+      try {
+        const quicServer = _quic.createServer({
+          key: config.mtlsEnabled ? _fs.readFileSync(config.serverKeyPath) : null,
+          cert: config.mtlsEnabled ? _fs.readFileSync(config.serverCertPath) : null,
+          ca: config.mtlsEnabled ? [_fs.readFileSync(config.caCertPath)] : null,
+          requestCert: config.mtlsEnabled,
+          rejectUnauthorized: config.mtlsEnabled,
+          alpn: ['h3', 'h2', 'http/1.1'], // Support HTTP/3, HTTP/2, and HTTP/1.1
+          maxConnections: 10000, // High connection limit for performance
+          maxStreams: 100, // Allow multiple concurrent streams
+        });
+
+        quicServer.listen(constants.PORT + 1, () => {
+          // QUIC server listening on port + 1 for HTTP/3 support
+        });
+
+        quicServer.on('session', (session) => {
+          session.on('stream', (stream, headers) => {
+            // Handle QUIC streams with same logic as HTTP
+            const req = {
+              method: headers[':method'],
+              url: headers[':path'] + (headers[':query'] ? '?' + headers[':query'] : ''),
+              headers: headers,
+              connection: { remoteAddress: session.remoteAddress },
+              socket: { remoteAddress: session.remoteAddress },
+            };
+
+            const res = {
+              writeHead: (statusCode, headers) => {
+                const responseHeaders = {
+                  ':status': statusCode,
+                  ...headers,
+                };
+                stream.respond(responseHeaders);
+              },
+              end: (data) => {
+                if (data) {
+                  stream.end(data);
+                } else {
+                  stream.end();
+                }
+              },
+            };
+
+            // Use same request handling logic
+            const _clientIP = req.connection.remoteAddress || req.socket.remoteAddress || 'unknown';
+            requestCount++;
+
+            const parsedUrl = url.parse(req.url, true);
+            const pathname = parsedUrl.pathname;
+            const query = parsedUrl.query;
+            const method = req.method;
+
+            // Handle proxy routes (simplified for QUIC)
+            if (pathname.startsWith('/proxy/')) {
+              const parts = pathname.split('/');
+              if (parts.length < 3) {
+                res.writeHead(400, { 'Content-Type': 'application/json' });
+                res.end('{"error": "Invalid proxy path"}');
+                return;
+              }
+              const serviceName = parts[2];
+              const path = '/' + parts.slice(3).join('/');
+              const node = serviceRegistry.getRandomNode(serviceName);
+              if (!node) {
+                res.writeHead(404, { 'Content-Type': 'application/json' });
+                res.end(serviceUnavailable);
+                return;
+              }
+              // For QUIC, we can't easily proxy, so return service info
+              res.writeHead(200, { 'Content-Type': 'application/json' });
+              res.end(JSON.__stringify({ address: node.address, nodeName: node.nodeName }));
+              return;
+            }
+
+            // Use routes map for O(1) lookup
+            const routeKey = `${method} ${pathname}`;
+            const handler = routes.get(routeKey);
+            if (handler) {
+              if (method === 'POST' || method === 'PUT' || method === 'DELETE') {
+                // For QUIC, read stream data
+                let body = '';
+                stream.on('data', (chunk) => {
+                  body += chunk;
+                });
+                stream.on('end', () => {
+                  try {
+                    const parsedBody = body ? JSON.parse(body) : {};
+                    handler(req, res, parsedUrl.query, parsedBody);
+                  } catch (_e) {
+                    res.writeHead(400, { 'Content-Type': 'application/json' });
+                    res.end(errorInvalidJSON);
+                  }
+                });
+              } else {
+                handler(req, res, parsedUrl.query, {});
+              }
+            } else {
+              res.writeHead(404, { 'Content-Type': 'application/json' });
+              res.end(errorNotFound);
+            }
+          });
+        });
+
+        quicServer.on('error', (err) => {
+          console.error('QUIC server error:', err);
+        });
+      } catch (err) {
+        console.warn('QUIC server not available or failed to start:', err.message);
+      }
+    }
   }
 
   // Start DNS server for service discovery
