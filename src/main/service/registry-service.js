@@ -240,7 +240,7 @@ class RegistryService {
         serviceObj = { ...template, ...serviceObj };
       }
     }
-    let service = Service.buildByObj(serviceObj);
+    const service = Service.buildByObj(serviceObj);
     if (!service) return;
     if (config.approvalRequired) {
       const key = `${service.serviceName}:${service.nodeName}`;

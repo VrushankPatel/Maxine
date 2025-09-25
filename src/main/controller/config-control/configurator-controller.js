@@ -13,7 +13,7 @@ const configuratorController = (req, res) => {
     logFormat,
   } = req.body;
 
-  let resultObj = {};
+  const resultObj = {};
 
   if (logAsync !== undefined) {
     const result = configuratorService.updateLoggingType(logAsync);

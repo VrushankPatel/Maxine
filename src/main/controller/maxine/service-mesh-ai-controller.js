@@ -10,8 +10,8 @@ const analyzeTrafficPatterns = (serviceName) => {
   let totalErrors = 0;
   let totalLatency = 0;
   let nodeCount = 0;
-  let peakLoadTimes = [];
-  let errorPatterns = [];
+  const peakLoadTimes = [];
+  const errorPatterns = [];
 
   for (const [nodeId, node] of Object.entries(nodes)) {
     const metrics = node.metrics || {};

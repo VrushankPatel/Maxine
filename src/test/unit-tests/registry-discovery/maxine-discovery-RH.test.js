@@ -3,8 +3,8 @@ const config = require('../../../main/config/config');
 const { discoveryService } = require('../../../main/service/discovery-service');
 const { registryService } = require('../../../main/service/registry-service');
 const { constants } = require('../../../main/util/constants/constants');
-var chai = require('chai');
-var should = chai.should();
+const chai = require('chai');
+const should = chai.should();
 
 const fileName = require('path').basename(__filename).replace('.js', '');
 const serviceSampleRH = {

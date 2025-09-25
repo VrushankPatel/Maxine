@@ -52,7 +52,7 @@ describe(`${fileName} : JSON Builder Test`, () => {
       sampleKey3: 'sampleValue3',
     };
 
-    let jsonSample = JsonBuilder.createNewJson()
+    const jsonSample = JsonBuilder.createNewJson()
       .registerObj(sampleObject) // same key as reference object (key1 -> key1)
       .putFromRegObj('key1')
       .putFromRegObj('key2')

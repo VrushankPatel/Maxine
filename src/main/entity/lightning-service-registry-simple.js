@@ -767,7 +767,7 @@ class LightningServiceRegistrySimple extends EventEmitter {
               selectedNode = this.selectPowerOfTwoChoices(availableNodes);
               break;
             default: // round-robin
-              let index = service.roundRobinIndex || 0;
+              const index = service.roundRobinIndex || 0;
               selectedNode = availableNodes[index % availableNodes.length];
               service.roundRobinIndex = (index + 1) % availableNodes.length;
           }
@@ -917,7 +917,7 @@ class LightningServiceRegistrySimple extends EventEmitter {
         selectedNode = this.selectPowerOfTwoChoices(availableNodes);
         break;
       default: // round-robin
-        let index = service.roundRobinIndex || 0;
+        const index = service.roundRobinIndex || 0;
         selectedNode = availableNodes[index % availableNodes.length];
         service.roundRobinIndex = (index + 1) % availableNodes.length;
     }
@@ -1256,7 +1256,7 @@ class LightningServiceRegistrySimple extends EventEmitter {
       return conn1 <= conn2 ? choice1 : choice2;
     } else {
       // round-robin (default)
-      let index = service.roundRobinIndex || 0;
+      const index = service.roundRobinIndex || 0;
       const node = nodes[index];
       service.roundRobinIndex = (index + 1) % nodes.length;
       return node;
@@ -1328,7 +1328,7 @@ class LightningServiceRegistrySimple extends EventEmitter {
       return conn1 <= conn2 ? choice1 : choice2;
     } else {
       // round-robin
-      let index = service.roundRobinIndex || 0;
+      const index = service.roundRobinIndex || 0;
       const node = nodes[index];
       service.roundRobinIndex = (index + 1) % nodes.length;
       return node;
@@ -2023,7 +2023,7 @@ class LightningServiceRegistrySimple extends EventEmitter {
           }
         }
       }
-      let node = await this.getRandomNode(fullServiceName, loadBalancing, ip, tags);
+      const node = await this.getRandomNode(fullServiceName, loadBalancing, ip, tags);
       if (node) {
         span.setAttribute('node.selected', node.nodeName);
         span.setAttribute('discovery.result', 'local');
