@@ -1,0 +1,25 @@
+
+
+╔══════════════════════════════════════════════════════════════════════════════════════════╗
+║      ___           ___           ___                       ___            ___            ║
+║     /__/\         /  /\         /__/|        ___          /__/\          /  /\           ║
+║    |  |::\       /  /::\       |  |:|       /  /\         \  \:\        /  /:/_          ║
+║    |  |:|:\     /  /:/\:\      |  |:|      /  /:/          \  \:\      /  /:/ /\         ║
+║  __|__|:|\:\   /  /:/~/::\   __|__|:|     /__/::\      _____\__\:\    /  /:/ /:/_        ║
+║ /__/::::| \:\ /__/:/ /:/\:\ /__/::::\____ \__\/\:\__  /__/::::::::\  /__/:/ /:/ /\       ║
+║ \  \:\~~\__\/ \  \:\/:/__\/ \__\~\~\::::/|   \  \:\/\ \  \:\~~\~~\:\ \  \:\/:/ /:/       ║
+║  \  \:\        \  \::/          |~~|:|~~|/    \__\::/  \  \:\  \__\/  \  \::/ /:/        ║
+║   \  \:\        \  \:\          |  |:|        /__/:/    \  \:\         \  \:\/:/         ║
+║    \  \:\        \  \:\         |  |:|        \__\/      \  \:\         \  \::/          ║
+║     \__\/         \__\/         |__|/                     \__\/          \__\/           ║
+║                                                                                          ║
+╚═════════════════════════╣ Maxine Service Discovery & Registry ╠══════════════════════════╝
+
+
+ » prod server started on port : 8080
+
+{"LogLevel":"INFO","LogType":"WEBREQUEST","Timestamp":"30/03/2026 13:02:17","Status":200,"Method":"GET","ClientIp":"::1","Endpoint":"/","HTTPVersion":"1.1"}
+{"LogLevel":"INFO","LogType":"WEBREQUEST","Timestamp":"30/03/2026 13:02:17","Status":200,"Method":"GET","ClientIp":"::1","Endpoint":"/manifest.json","HTTPVersion":"1.1"}
+{"LogLevel":"INFO","LogType":"WEBREQUEST","Timestamp":"30/03/2026 13:02:17","Status":200,"Method":"GET","ClientIp":"::1","Endpoint":"/favicon.ico","HTTPVersion":"1.1"}
+{"LogLevel":"INFO","LogType":"WEBREQUEST","Timestamp":"30/03/2026 13:02:21","Status":200,"Method":"POST","ClientIp":"::1","Endpoint":"/api/maxine/signin","HTTPVersion":"1.1"}
+{"LogLevel":"INFO","LogType":"WEBREQUEST","Timestamp":"30/03/2026 13:02:21","Status":200,"Method":"GET","ClientIp":"::1","Endpoint":"/api/maxine/control/config","HTTPVersion":"1.1"}
