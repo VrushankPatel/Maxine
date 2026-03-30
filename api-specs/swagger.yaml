@@ -1,7 +1,7 @@
 openapi: 3.0.1
 info:
   title: Maxine API
-  version: v1.1
+  version: v1
   description: >-
     Maxine is a service discovery and a naming server for microservices that
     solves the issue of hard-wiring urls by hostnames and ports.
@@ -135,233 +135,69 @@ paths:
             application/json:
               example: '{"message":"File not found"}'
   /api/maxine/serviceops/register:
-     post:
-       summary: >-
-         Register the server with it's data (ServiceName, NodeName, Host, Port,
-         Weight, ssl, timeOut, weight, path).
-       tags:
-         - "ServiceOps"
-       operationId: Maxine service register
-       requestBody:
-         description: The service to register.
-         content:
-           application/json:
-             schema:
-               $ref: '#/components/schemas/Service'
-         required: false
-       responses:
-         '200':
-           description: OK
-           content:
-             application/json:
-               example: >-
-                 {"serviceName":"MAXINE-123","nodeName":"NODE-4","address":"http://192.168.23.11:8080","timeOut":50,"weight":5,"registeredAt":"5/4/2022,
-                 10:00:56 am"}
-         '400':
-           description: Error, Bad Request
-           content:
-             application/json:
-               example: >-
-                 {"message": "Please provide all of these -> hostName, nodeName,
-                 port and serviceName"}
-       x-codegen-request-body-name: service
-  /api/maxine/serviceops/deregister:
-     delete:
-       summary: Deregister a service node by serviceName and nodeName.
-       tags:
-         - "ServiceOps"
-       operationId: Maxine service deregister
-       requestBody:
-         description: The service to deregister.
-         content:
-           application/json:
-             schema:
-               $ref: '#/components/schemas/Deregister'
-         required: true
-       responses:
-         '200':
-           description: OK
-           content:
-             application/json:
-               example: '{"message": "Deregistered successfully"}'
-         '404':
-           description: Not Found
-           content:
-             application/json:
-               example: '{"message": "Service not found"}'
-         '400':
-           description: Error, Bad Request
-           content:
-             application/json:
-               example: '{"message": "Missing serviceName or nodeName"}'
-       x-codegen-request-body-name: deregister
+    post:
+      summary: >-
+        Register the server with it's data (ServiceName, NodeName, Host, Port,
+        Weight, ssl, timeOut, weight, path).
+      tags:
+        - "ServiceOps"
+      operationId: Maxine service register
+      requestBody:
+        description: The service to register.
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Service'
+        required: false
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              example: >-
+                {"serviceName":"MAXINE-123","nodeName":"NODE-4","address":"http://192.168.23.11:8080","timeOut":50,"weight":5,"registeredAt":"5/4/2022,
+                10:00:56 am"}
+        '400':
+          description: Error, Bad Request
+          content:
+            application/json:
+              example: >-
+                {"message": "Please provide all of these -> hostName, nodeName,
+                port and serviceName"}
+      x-codegen-request-body-name: service
   /api/maxine/serviceops/discover:
-      get:
-        summary: >-
-          Proxy the request to the registered service based on service name and load balancing strategy.
-        tags:
-          - "ServiceOps"
-        operationId: Maxine service discover
-        parameters:
-          - in: query
-            name: serviceName
-            schema:
-              type: string
-              example: db-service
-            required: true
-          - in: query
-            name: endPoint
-            schema:
-              type: string
-              example: /info
-            required: false
-        responses:
-          '200':
-            description: OK
-            content:
-              '*/*':
-                example: Response from the proxied service.
-          '503':
-            description: Service Unavailable
-            content:
-              application/json:
-                example: '{"message": "Service Unavailable"}'
-          '502':
-            description: Bad Gateway
-            content:
-              application/json:
-                example: '{"message": "Bad Gateway"}'
-        x-codegen-request-body-name: service
-  /api/maxine/serviceops/discover/filtered:
-      get:
-        summary: >-
-          Proxy the request to the registered service based on service name, tags, and load balancing strategy.
-        tags:
-          - "ServiceOps"
-        operationId: Maxine service filtered discover
-        parameters:
-          - in: query
-            name: serviceName
-            schema:
-              type: string
-              example: db-service
-            required: true
-          - in: query
-            name: tags
-            schema:
-              type: string
-              example: prod,api
-            required: false
-          - in: query
-            name: endPoint
-            schema:
-              type: string
-              example: /info
-            required: false
-        responses:
-          '200':
-            description: OK
-            content:
-              '*/*':
-                example: Response from the proxied service.
-          '503':
-            description: Service Unavailable
-            content:
-              application/json:
-                example: '{"message": "No nodes match the specified tags"}'
-          '502':
-            description: Bad Gateway
-            content:
-              application/json:
-                example: '{"message": "Bad Gateway"}'
-         x-codegen-request-body-name: service
-     /api/maxine/serviceops/discover/info:
-       get:
-         summary: >-
-           Get the service node information without proxying the request.
-         tags:
-           - "ServiceOps"
-         operationId: Maxine service discover info
-         parameters:
-           - in: query
-             name: serviceName
-             schema:
-               type: string
-               example: db-service
-             required: true
-           - in: query
-             name: version
-             schema:
-               type: string
-               example: 1.0
-             required: false
-         responses:
-           '200':
-             description: OK
-             content:
-               application/json:
-                 example: '{"serviceName":"db-service","node":{"nodeName":"node-x-1-0","address":"http://192.168.0.1:8080","metadata":{}}}'
-           '503':
-             description: Service Unavailable
-             content:
-               application/json:
-                 example: '{"message": "Service Unavailable"}'
-           '400':
-             description: Bad Request
-             content:
-               application/json:
-                 example: '{"message": "Missing serviceName"}'
-          x-codegen-request-body-name: service
-     /api/maxine/serviceops/discover/dns:
-       get:
-         summary: >-
-           Get DNS SRV-like records for a service.
-         tags:
-           - "ServiceOps"
-         operationId: Maxine service discover dns
-         parameters:
-           - in: query
-             name: serviceName
-             schema:
-               type: string
-             required: true
-           - in: query
-             name: version
-             schema:
-               type: string
-             required: false
-           - in: query
-             name: namespace
-             schema:
-               type: string
-             required: false
-           - in: query
-             name: region
-             schema:
-               type: string
-             required: false
-           - in: query
-             name: zone
-             schema:
-               type: string
-             required: false
-         responses:
-           '200':
-             description: OK
-             content:
-               application/json:
-                 example: '{"srvRecords": [{"name": "db-service", "host": "192.168.0.1", "port": 8080, "priority": 0, "weight": 1}]}'
-           '400':
-             description: Bad Request
-             content:
-               application/json:
-                 example: '{"message": "Missing serviceName"}'
-           '404':
-             description: Service Not Found
-             content:
-               application/json:
-                 example: '{"message": "Service not found"}'
-         x-codegen-request-body-name: service
+    get:
+      summary: >-
+        Get the server from registry if there is any registered one by service
+        name.
+      tags:
+        - "ServiceOps"
+      operationId: Maxine service discover
+      parameters:
+        - in: query
+          name: serviceName
+          schema:
+            type: string
+            example: db-service
+          required: true
+        - in: query
+          name: endPoint
+          schema:
+            type: string
+            example: /info
+          required: true
+      responses:
+        '200':
+          description: OK
+          content:
+            redirect:
+              example: Redirect to registered service host:port if it is registered.
+        '503':
+          description: Service Unavailable
+          content:
+            application/json:
+              example: '{"message": "Service Unavailable"}'
+      x-codegen-request-body-name: service
   /api/maxine/serviceops/servers:
     get:
       summary: >-
@@ -393,163 +229,11 @@ paths:
           content:
             application/json:
               example: '{"message":"Unauthorized"}'
-         '403':
-           description: Forbidden
-           content:
-             application/json:
-               example: '{"message":"Forbidden"}'
-  /api/maxine/serviceops/aliases/add:
-      post:
-        summary: Add an alias for a service.
-        tags:
-          - "ServiceOps"
-        operationId: Maxine add alias
-        security:
-          - bearerAuth: []
-        requestBody:
-          description: The alias to add.
+        '403':
+          description: Forbidden
           content:
             application/json:
-              schema:
-                type: object
-                required:
-                  - alias
-                  - serviceName
-                properties:
-                  alias:
-                    type: string
-                    example: db-service-alias
-                  serviceName:
-                    type: string
-                    example: db-service
-                  version:
-                    type: string
-                    example: 1.0
-                  namespace:
-                    type: string
-                    example: default
-                  region:
-                    type: string
-                    example: default
-                  zone:
-                    type: string
-                    example: default
-          required: true
-        responses:
-          '200':
-            description: OK
-            content:
-              application/json:
-                example: '{"message": "Alias added successfully", "alias": "default:db-service-alias", "service": "default:db-service"}'
-          '400':
-            description: Bad Request
-            content:
-              application/json:
-                example: '{"message": "alias and serviceName are required"}'
-          '401':
-            description: Unauthorized
-            content:
-              application/json:
-                example: '{"message":"Unauthorized"}'
-  /api/maxine/serviceops/aliases/remove:
-      delete:
-        summary: Remove an alias for a service.
-        tags:
-          - "ServiceOps"
-        operationId: Maxine remove alias
-        security:
-          - bearerAuth: []
-        requestBody:
-          description: The alias to remove.
-          content:
-            application/json:
-              schema:
-                type: object
-                required:
-                  - alias
-                properties:
-                  alias:
-                    type: string
-                    example: db-service-alias
-                  version:
-                    type: string
-                    example: 1.0
-                  namespace:
-                    type: string
-                    example: default
-                  region:
-                    type: string
-                    example: default
-                  zone:
-                    type: string
-                    example: default
-          required: true
-        responses:
-          '200':
-            description: OK
-            content:
-              application/json:
-                example: '{"message": "Alias removed successfully", "alias": "default:db-service-alias"}'
-          '400':
-            description: Bad Request
-            content:
-              application/json:
-                example: '{"message": "alias is required"}'
-          '401':
-            description: Unauthorized
-            content:
-              application/json:
-                example: '{"message":"Unauthorized"}'
-  /api/maxine/serviceops/aliases:
-      get:
-        summary: Get aliases for services.
-        tags:
-          - "ServiceOps"
-        operationId: Maxine get aliases
-        security:
-          - bearerAuth: []
-        parameters:
-          - in: query
-            name: serviceName
-            schema:
-              type: string
-              example: db-service
-            required: false
-          - in: query
-            name: version
-            schema:
-              type: string
-              example: 1.0
-            required: false
-          - in: query
-            name: namespace
-            schema:
-              type: string
-              example: default
-            required: false
-          - in: query
-            name: region
-            schema:
-              type: string
-              example: default
-            required: false
-          - in: query
-            name: zone
-            schema:
-              type: string
-              example: default
-            required: false
-        responses:
-          '200':
-            description: OK
-            content:
-              application/json:
-                example: '{"aliases": [{"alias": "default:db-service-alias", "service": "default:db-service"}]}'
-          '401':
-            description: Unauthorized
-            content:
-              application/json:
-                example: '{"message":"Unauthorized"}'
+              example: '{"message":"Forbidden"}'
   /api/maxine/control/config:
     get:
       summary: Get the current config data of Maxine.
@@ -607,58 +291,41 @@ paths:
               example: '{"message":"Forbidden"}'
 components:
   schemas:
-     Service:
-       required:
-         - hostName
-         - nodeName
-         - serviceName
-       type: object
-       properties:
-         hostName:
-           type: string
-           example: 192.168.0.1
-         nodeName:
-           type: string
-           example: node-x-1
-         port:
-           maximum: 65353
-           type: integer
-           example: 8080
-         serviceName:
-           type: string
-           example: db-service
-         ssl:
-           type: boolean
-           example: false
-         timeOut:
-           minimum: 1
-           type: integer
-           example: 5
-         weight:
-           maximum: 10
-           minimum: 1
-           type: integer
-           example: 5
-         path:
-           type: string
-           example: /api/actuator
-          metadata:
-            type: object
-            properties:
-              healthEndpoint:
-                type: string
-                example: /health
-              tags:
-                type: array
-                items:
-                  type: string
-                example: ["prod", "api"]
-          aliases:
-            type: array
-            items:
-              type: string
-            example: ["db-service-alias", "database"]
-            description: Alternative names for the service that can be used for discovery
+    Service:
+      required:
+        - hostName
+        - nodeName
+        - serviceName
+      type: object
+      properties:
+        hostName:
+          type: string
+          example: 192.168.0.1
+        nodeName:
+          type: string
+          example: node-x-1
+        port:
+          maximum: 65353
+          type: integer
+          example: 8080
+        serviceName:
+          type: string
+          example: db-service
+        ssl:
+          type: boolean
+          example: false
+        timeOut:
+          minimum: 1
+          type: integer
+          example: 5
+        weight:
+          maximum: 10
+          minimum: 1
+          type: integer
+          example: 5
+        path:
+          type: string
+          example: /api/actuator
     Config:
       type: object
       properties:
@@ -700,27 +367,15 @@ components:
         password:
           type: string
           example: "admin"
-     Passwords:
-       type: object
-       properties:
-         password:
-           type: string
-           example: "admin"
-         newPassword:
-           type: string
-           example: "admin2"
-     Deregister:
-       required:
-         - serviceName
-         - nodeName
-       type: object
-       properties:
-         serviceName:
-           type: string
-           example: db-service
-         nodeName:
-           type: string
-           example: node-x-1
+    Passwords:
+      type: object
+      properties:
+        password:
+          type: string
+          example: "admin"
+        newPassword:
+          type: string
+          example: "admin2"
   securitySchemes:
     bearerAuth:
       type: http

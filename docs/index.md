@@ -1,292 +1,57 @@
-# Maxine - Lightning Fast Service Registry
+<p align="center"><img src="img/logo.png"  title="Maxine Logo"></p>
 
-A minimal, high-performance service discovery and registry for microservices.
+<p align="center">
+<div align=center>
+<br/>
+<a target="_blank" href="https://sonarcloud.io/summary/new_code?id=VrushankPatel_Gargantua-Maxine-Server"><img src="https://sonarcloud.io/api/project_badges/measure?project=VrushankPatel_Gargantua-Maxine-Server&metric=alert_status" />
+<a target="_blank" href="https://github.com/VrushankPatel/Gargantua-Maxine-Server/actions/workflows/codeql.yml"><img src="https://github.com/VrushankPatel/Gargantua-Maxine-Server/actions/workflows/codeql.yml/badge.svg"/></a>
+<a target="_blank" href="https://github.com/VrushankPatel/Maxine-Server/actions/workflows/node.js.yml"><img src="https://github.com/VrushankPatel/Maxine-Server/actions/workflows/node.js.yml/badge.svg?branch=master"/></a>
+<a target="_blank" href="https://codecov.io/gh/VrushankPatel/Maxine"><img src="https://codecov.io/gh/VrushankPatel/Maxine/branch/master/graph/badge.svg?token=SONYL0TJKT"/></a>
+<a target="_blank" href="https://maxine-x.herokuapp.com/api/actuator/performance"><img src="https://img.shields.io/badge/k6-Load Test Report-blue"/></a>
+<a target="_blank" href="https://circleci.com/gh/VrushankPatel/Maxine/tree/master"><img src="https://circleci.com/gh/VrushankPatel/Maxine/tree/master.svg?style=svg"></a>
+<a target="_blank" href="https://opensource.org/licenses/MIT"><img src="https://img.shields.io/badge/License-MIT-teal.svg"/></a>
+<a target="_blank" href="https://github.com/VrushankPatel/Maxine-Server/releases"><img src="https://img.shields.io/badge/Maxine-Release-blue" /></a>
+<a target="_blank" href="https://app.fossa.com/reports/a83419a2-657c-400c-b3b6-f04c8a032a56"><img src="https://img.shields.io/badge/Fossa-Report-blue"/></a>
+<a target="_blank" href="https://app.swaggerhub.com/apis-docs/VRUSHANKPATEL5/maxine-api_s/2.0.2#/"><img src="https://img.shields.io/badge/API Docs-Swagger-blue"/></a>
+</div>
+</p>
 
-## Features
+## Introduction
 
-- **Lightning Fast**: In-memory storage with O(1) lookups
-- **Simple API**: Register, discover, and heartbeat services
-- **Automatic Cleanup**: Removes expired services with efficient periodic cleanup (every 30 seconds in lightning mode)
-- **Load Balancing**: Round-robin, weighted round-robin, least-connections, random for even load distribution
-- **Service Tags**: Filter services by tags for fine-grained discovery
-- **Service Versioning**: Support for version-based service discovery
-- **Environment Support**: Filter services by environment (dev, staging, prod)
-- **Canary Deployments**: Support for gradual traffic shifting to new versions
-- **Blue-Green Deployments**: Support for instant traffic switching between versions
-- **Key-Value Store**: Simple in-memory KV store for configuration and metadata
-- **Maintenance Mode**: Temporarily exclude service nodes from discovery without deregistration
-- **Service Aliases**: Allow services to be discoverable under multiple names
-- **Minimal Dependencies**: Only essential packages for maximum performance
-- **Lightning Mode**: Dedicated minimal mode for ultimate speed with federation, tracing, and dependency mapping
-- **Multiple Protocols**: HTTP, UDP, and TCP support for flexible and fast communication
-- **Federation**: Connect multiple Maxine registries for distributed service discovery
-- **Tracing**: Basic distributed tracing support for observability
- - **Dependency Mapping**: Track service dependencies and impact analysis
- - **Access Control Lists (ACLs)**: Control access to services with allow/deny lists
- - **Service Intentions**: Define communication policies between services
- - **Blacklists**: Temporarily block services from discovery
+Maxine is a Service registry and a discovery server that detects and registers each service and device in the network and works as a reverse proxy to make each service available by its name. Maxine SRD solves the problem of hardwiring URLs to establish flawless communication between microservices.
 
-## Quick Start
+Maxine SRD has the ability to locate a network automatically making it so that there is no need for a long configuration setup process. The Service discovery works by services connecting through REST on the network allowing devices or services to connect without any manual intervention.
 
-```bash
-npm install
-npm start
-```
+## How Maxine works
 
-## Modes
+1. Assuming that the Maxine SRD server is up and running and all the services or microservices in the network have MAXINE-CLIENT added as a dependency in it, below is the explaination of how Maxine SRD works.
+2. The Maxine client installed in all the services will start sending the heartbeat (A special request that'll have all the necessary metadata of that service to let the other services connect) to the Maxine SRD.
+3. The SRD server will extract the service metadata from that request payload and will save it in the in-memory database (to reduce the latency), The server will also run a thread that'll remove that service metadata after the given timeout in the metadata (If not provided, then default heartbeat timeout will be used). SRD will store the data by keeping the serviceName as the primary key so that by the serviceName, its URL can be discovered.
+4. After this, all the services that want to intercommunicate inside its network, They'll connect to that service via the Maxine client, and here, it'll use the serviceName instead of the service URL, and the Maxine API client will pass that request to SRD.
+5. SRD will receive the request and will extract the serviceName from it. It'll discover if that service is stored there in the registry, If it is, then it'll redirect the request to that service's URL.
+6. If that service name has multiple nodes in the registry, then SRD will distribute the traffic across all the nodes of that service by maxine's inbuilt load balancer.
 
-- **Lightning Mode** (default): Ultra-fast, minimal features. Uses root-level API endpoints like `/register`, `/discover`.
-- **Full Mode**: Comprehensive features with management UI, security, metrics, etc. Uses `/api/*` endpoints.
+Below is a tiny animation that explains how maxine registers all the services in the network by their HEARTBEATs sent by the maxine client.
+<br/><br/>
+<img src="img/anim/maxine-registry.gif" />
+<br/><br/>
+Notice that the service 3 doesn't have maxine-client installed so it is not sending the heartbeat and therefore, it is not being registered in the maxine registry.
+However, that's not the end of it, the explicit custom client can be developed (based on the API Documentation) to communicate with maxine server.
 
-To run in full mode: `LIGHTNING_MODE=false npm start`
+Once the services are registered, Below is the animation that shows how services intercommunicate by maxine client and via maxine's service discovery.
+<br/><br/>
+<img src="img/anim/maxine-discovery.gif" />
+<br/><br/>
+As we can see, maxine SRD is working as a reverse proxy for each servers, and redirecting all the requests to the respective servers by searching for their URLS in registery by using the serviceName as a key.
+## What problems does Maxine solve?
 
-## API
+* When working with SOA (Service oriented architecture) or microservices, we usually have to establish the inter-service communication by their URL that gets constituted by SSL check, Hostname, port, and path.
+* The host and port are not something that'll be the same every time. Based on the availability of ports, we have to achieve a flexible architecture so, we can choose the ports randomly but what about the service communication, how'd the other services know that some service's address is changed?
+* That's the issue that Maxine solves. No matter where (on which port) the service is running, as long as the MAXINE-CLIENT is added to it, it'll always be discoverable to the SRD. This centralized service store and retrieval architecture make inter-service communication more reliable and robust.
+* Also, based on the service's performance diagnostics (If it's down or not working properly), we can stop its registration to the SRD. The client provides functions that can stop sending the heartbeat to the SRD so that the service can be deregistered.
+* Also, If any of the services are hosted on more powerful hardware, then we can make SRD distribute more traffic on that service's nodes than the others. All we have to do is to provide weight property to that service's client. the weight means how much power that service has compared to others. Based on weight property, the SRD will register that service will replications, and traffic will be distributed accordingly.
 
-### Lightning Mode (Default)
+## Limitations
 
-#### HTTP API
-
-##### Register a Service
-```http
-POST /register
-Content-Type: application/json
-
-{
-  "serviceName": "my-service",
-  "host": "localhost",
-  "port": 3000,
-  "metadata": {"version": "1.0"},
-  "tags": ["web", "api"],
-  "version": "1.0",
-  "environment": "prod"
-}
-```
-
-##### Discover a Service
-```http
-GET /discover?serviceName=my-service&tags=web,api&version=1.0&environment=prod
-```
-Filtering by tags, version, environment is supported for fine-grained discovery.
-
-##### Heartbeat
-```http
-POST /heartbeat
-Content-Type: application/json
-
-{
-  "nodeId": "my-service:localhost:3000"
-}
-```
-
-##### Deregister a Service
-```http
-DELETE /deregister
-Content-Type: application/json
-
-{
-  "serviceName": "my-service",
-  "nodeName": "localhost:3000"
-}
-```
-
-##### List All Services
-```http
-GET /servers
-```
-
-##### Weighted Discovery
-```http
-GET /discover/weighted?serviceName=my-service
-```
-
-##### Least Connections Discovery
-```http
-GET /discover/least-connections?serviceName=my-service
-```
-
-##### Set Canary Deployment (Full Mode Only)
-```http
-POST /canary/set
-Content-Type: application/json
-
-{
-  "serviceName": "my-service",
-  "percentage": 10,
-  "canaryNodes": ["node-1", "node-2"]
-}
-```
-
-##### Set Blue-Green Deployment
-```http
-POST /api/maxine/serviceops/blue-green/set
-Content-Type: application/json
-
-{
-  "serviceName": "my-service",
-  "blueNodes": ["node-1", "node-2"],
-  "greenNodes": ["node-3", "node-4"],
-  "activeColor": "blue"
-}
-```
-
-##### Set Service Alias
-```http
-POST /alias/set
-Content-Type: application/json
-
-{
-  "alias": "my-alias",
-  "serviceName": "my-service"
-}
-```
-
-##### Get Service Alias
-```http
-GET /alias/get?alias=my-alias
-```
-
-##### Set Maintenance Mode
-```http
-POST /maintenance/set
-Content-Type: application/json
-
-{
-  "nodeName": "localhost:3000",
-  "inMaintenance": true
-}
-```
-
-##### Set KV
-```http
-POST /kv/set
-Content-Type: application/json
-
-{
-  "key": "my-key",
-  "value": "my-value"
-}
-```
-
- ##### Get KV
-```http
-GET /kv/get?key=my-key
-```
-
- ##### Set ACL
-```http
-POST /acl/set
-Content-Type: application/json
-
-{
-  "serviceName": "my-service",
-  "allow": ["client1", "client2"],
-  "deny": ["client3"]
-}
-```
-
- ##### Get ACL
-```http
-GET /acl/get?serviceName=my-service
-```
-
- ##### Set Intention
-```http
-POST /intention/set
-Content-Type: application/json
-
-{
-  "source": "service-a",
-  "destination": "service-b",
-  "action": "allow"
-}
-```
-
- ##### Get Intention
-```http
-GET /intention/get?source=service-a&destination=service-b
-```
-
- ##### Add to Blacklist
-```http
-POST /blacklist/add
-Content-Type: application/json
-
-{
-  "serviceName": "bad-service"
-}
-```
-
- ##### Remove from Blacklist
-```http
-DELETE /blacklist/remove
-Content-Type: application/json
-
-{
-  "serviceName": "bad-service"
-}
-```
-
- ##### Check Blacklist
-```http
-GET /blacklist/check?serviceName=bad-service
-```
-
- ##### Health Check
-```http
-GET /health
-```
-
-##### Metrics
-```http
-GET /metrics
-```
-
-#### UDP API (Port 8081)
-
-For ultra-fast communication, use UDP for discovery and heartbeat. Enabled by default in lightning mode for maximum speed.
-
-##### Discover a Service
-Send: `discover my-service`
-Receive: `localhost:3000 node-x-10` or `not found`
-
-##### Heartbeat
-Send: `heartbeat my-service:localhost:3000`
-Receive: `ok` or `error`
-
-#### TCP API (Port 8082)
-
-For reliable fast communication, use TCP for discovery and heartbeat. Enabled by default in lightning mode for maximum speed.
-
-##### Discover a Service
-Send: `discover my-service`
-Receive: `localhost:3000 node-x-10\n` or `not found\n`
-
-##### Heartbeat
-Send: `heartbeat my-service:localhost:3000`
-Receive: `ok\n` or `error\n`
-
-## Architecture
-
-Maxine maintains an in-memory registry of services and their instances. Services register with heartbeats, and expired services are automatically cleaned up. Discovery returns a random healthy instance for load balancing.
-
-## Performance
-
-    - **Lightning Mode**: Ultra-fast response times using raw Node.js HTTP server for zero middleware overhead, O(1) lookups using optimized in-memory data structures with strategy-based load balancing, pre-allocated buffer responses, optimized GET routes with minimal parsing overhead, simplified heartbeat with periodic cleanup every 30 seconds, disabled circuit breaker for maximum speed, fast LCG PRNG for random selection, optimized least-connections balancing with efficient min-finding, dedicated lightweight registry for minimal overhead, healthyNodes as Set for O(1) additions/removals, precomputed min connection and response time nodes for O(1) lookups, improved weighted load balancing, 15-second discovery cache TTL for better freshness, service versioning and environment filtering enabled with optimized Set-based operations, federation support, tracing, dependency mapping, precompiled regex for UDP/TCP parsing, async I/O for persistence, clustering disabled for in-memory consistency
-- **Full Mode**: Comprehensive features with optimized caching, async operations, and JWT authentication
-- Minimal memory footprint with lazy loading and conditional initialization
-- Automatic cleanup prevents memory leaks with efficient periodic sweeps
-- Conditional loading of features for optimal performance
-- Rate limiting prevents abuse while maintaining high throughput
-- Optimized cleanup algorithm using reverse maps for O(1) node removal
-- Load test results: 5000 iterations with 50 concurrent users, sub-millisecond average response time, 100% success rate
-- Load test target: 95th percentile < 10ms for 50 concurrent users
-- Optimized heartbeat and discovery logic for reduced overhead
-- **UDP/TCP Protocols**: Available in lightning mode for even faster communication with optimized parsing, enabled by default in lightning mode for faster communication
- - **Advanced Load Balancing**: Round-robin, least-connections, LRT, weighted round-robin, random, hash-based, power-of-two-choices, adaptive, sticky-round-robin, consistent-hash (blue-green and canary supported)
- - **Service Governance**: ACLs, Intentions, and Blacklists for access control and policy enforcement
- - **Optimized Filtering**: Set-based intersection for tag filtering, reducing discovery time
- - **Consistent Hashing**: Using hashring library for stable load distribution
-
-## License
-
-MIT
+Maxine SRD has no such option like internal scaling, multi-node SRD is under development still.
+SRD can be replicated explicitly but without that, SRD can be a single point of failure in the System.

@@ -1,99 +1,55 @@
-const { serviceRegistry } = require('../../entity/service-registry');
+const { serviceRegistry } = require("../../entity/service-registry");
+const _ = require('lodash');
 const crypto = require('crypto');
-const { constants } = require('../../util/constants/constants');
+const { constants } = require("../../util/constants/constants");
 const separator = Buffer.from('\0');
 
-class RendezvousHashDiscovery {
-  constructor() {
-    this.cache = new Map(); // key -> {node, timestamp}
-    this.cacheTTL = 1000; // 1 second
-  }
-
-  /**
-   * Calls Select method and returns node retrieved from select method.
-   * @param {string} serviceName
-   * @param {string} ip
-   * @param {string} group
-   * @param {array} tags
-   * @returns {object} returns the node by calling select method
-   */
-  getNode = (fullServiceName, ip, group, tags, deployment, filter, advancedFilters) => {
-    const groupKey = group ? `:${group}` : '';
-    const tagKey = tags && tags.length > 0 ? `:${tags.sort().join(',')}` : '';
-    const deploymentKey = deployment ? `:${deployment}` : '';
-    const cacheKey = `${fullServiceName}:${ip}${groupKey}${tagKey}${deploymentKey}`;
-    const cached = this.cache.get(cacheKey);
-    if (cached && Date.now() - cached.timestamp < this.cacheTTL) {
-      return cached.node;
+class RendezvousHashDiscovery{
+    /**
+     * Calls Select method and returns node retrieved from select method.
+     * @param {string} serviceName
+     * @param {string} ip
+     * @returns {object} returns the node by calling select method
+     */
+    getNode = (serviceName, ip) => {
+        const serviceNodesObj = serviceRegistry.getNodes(serviceName);
+        return this.selectNode(serviceNodesObj, ip) || {};
     }
-    const targetNode = this.selectNode(
-      ip,
-      fullServiceName,
-      group,
-      tags,
-      deployment,
-      filter,
-      advancedFilters
-    );
-    this.cache.set(cacheKey, { node: targetNode, timestamp: Date.now() });
-    return targetNode;
-  };
 
-  /**
-   * Selects the node based on hash-digest of IP.
-   * @param {string} ip
-   * @param {string} serviceName
-   * @param {string} group
-   * @param {array} tags
-   * @returns {object} select the node based on IP Hashing
-   */
-  selectNode(ip, fullServiceName, group, tags, deployment, filter, advancedFilters) {
-    let targetNode,
-      targetNodeRank = -1;
-    const healthyNodes = serviceRegistry.getHealthyNodes(
-      fullServiceName,
-      group,
-      tags,
-      deployment,
-      filter,
-      advancedFilters
-    );
-    for (const node of healthyNodes) {
-      const nodeRank = this.rank(node.nodeName, ip);
-      if (nodeRank > targetNodeRank) {
-        targetNode = node;
-        targetNodeRank = nodeRank;
-      }
+    /**
+     * Selects the node based on hash-digest of IP.
+     * @param {object} nodes
+     * @param {string} ip
+     * @returns {object} select the node based on IP Hashing
+     */
+    selectNode(nodes, ip) {
+        if(_.isUndefined(nodes)) return {};
+        let targetNodeId, targetNodeRank = 0;
+        for (let nodeId in nodes) if ({}.hasOwnProperty.call(nodes, nodeId)) {
+            let nodeRank = this.rank(nodeId, ip);
+            if (nodeRank > targetNodeRank) {
+                targetNodeId = nodeId;
+                targetNodeRank = nodeRank;
+            }
+        }
+        return nodes[targetNodeId];
     }
-    return targetNode || null;
-  }
 
-  /**
-   * Returns rank by hash of nodeId and ip.
-   * @param {string} nodeId
-   * @param {string} ip
-   * @returns {number} return rank by hash of nodeId and ip.
-   */
-  rank = (nodeId, ip) => this.hashString(nodeId + ip);
-
-  hashString = (str) => {
-    let hash = 5381;
-    for (let i = 0; i < str.length; i++) {
-      hash = (hash << 5) + hash + str.charCodeAt(i);
-    }
-    return hash;
-  };
-
-  invalidateCache = (fullServiceName) => {
-    // Clear cache entries for this service
-    for (const key of this.cache.keys()) {
-      if (key.startsWith(`${fullServiceName}:`)) {
-        this.cache.delete(key);
-      }
-    }
-  };
+    /**
+     * Returns rank by hashing nodeId and ip with hash algo defined in constants.
+     * @param {string} nodeId
+     * @param {string} ip
+     * @returns {number} return rank by hashing nodeId and ip with hash algo defined in constants.
+     */
+    rank = (nodeId, ip)  => crypto
+                                .createHash(constants.RENDEZVOUS_HASH_ALGO)
+                                .update(nodeId)
+                                .update(separator)
+                                .update(ip)
+                                .digest()
+                                .readUInt32LE(0, true);
 }
 
 module.exports = {
-  RendezvousHashDiscovery,
-};
+    RendezvousHashDiscovery
+}
