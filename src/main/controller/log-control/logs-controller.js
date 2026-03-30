@@ -1,29 +1,21 @@
-const { clearRecents, getRecents } = require('../../config/logging/logging-config');
+let { clearRecents, getRecents } = require('../../config/logging/logging-config');
 const LogFilesService = require('../../service/logfiles-service');
 
 const logFilesService = new LogFilesService();
 
-const logsLinkGenController = async (_, res) => {
-  try {
-    const links = await logFilesService.getLogLinks();
-    res.send(links);
-  } catch (err) {
-    res.status(500).send({ error: err.message });
-  }
-};
+const logsLinkGenController = (_, res) => res.send(logFilesService.getLogLinks());
 
-const recentLogsController = (_, res) =>
-  res.status(200).json({
-    logs: getRecents(),
-  });
+const recentLogsController = (_, res) => res.status(200).json({
+    "logs" : getRecents()
+});
 
 const recentLogsClearController = (_, res) => {
-  clearRecents();
-  res.status(200).send();
+    clearRecents();
+    res.status(200).send();
 };
 
 module.exports = {
-  recentLogsClearController,
-  recentLogsController,
-  logsLinkGenController,
+    recentLogsClearController,
+    recentLogsController,
+    logsLinkGenController
 };
