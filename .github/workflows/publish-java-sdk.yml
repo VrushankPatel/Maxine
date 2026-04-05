@@ -1,0 +1,54 @@
+name: Publish Java SDK
+
+on:
+  workflow_dispatch:
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+
+    env:
+      ARTIFACTORY_MAVEN_RELEASE_URL: ${{ vars.ARTIFACTORY_MAVEN_RELEASE_URL }}
+      ARTIFACTORY_USERNAME: ${{ secrets.ARTIFACTORY_USERNAME }}
+      ARTIFACTORY_PASSWORD: ${{ secrets.ARTIFACTORY_PASSWORD }}
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Validate publishing configuration
+        run: |
+          test -n "$ARTIFACTORY_MAVEN_RELEASE_URL" || (echo "Missing repository variable ARTIFACTORY_MAVEN_RELEASE_URL" && exit 1)
+          test -n "$ARTIFACTORY_USERNAME" || (echo "Missing secret ARTIFACTORY_USERNAME" && exit 1)
+          test -n "$ARTIFACTORY_PASSWORD" || (echo "Missing secret ARTIFACTORY_PASSWORD" && exit 1)
+
+      - name: Set up Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+          cache: maven
+
+      - name: Write Maven settings.xml
+        run: |
+          mkdir -p ~/.m2
+          cat <<'EOF' > ~/.m2/settings.xml
+          <settings xmlns="http://maven.apache.org/SETTINGS/1.0.0"
+                    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                    xsi:schemaLocation="http://maven.apache.org/SETTINGS/1.0.0 https://maven.apache.org/xsd/settings-1.0.0.xsd">
+            <servers>
+              <server>
+                <id>artifactory</id>
+                <username>${env.ARTIFACTORY_USERNAME}</username>
+                <password>${env.ARTIFACTORY_PASSWORD}</password>
+              </server>
+            </servers>
+          </settings>
+          EOF
+
+      - name: Build Java SDK modules
+        run: mvn -B -f client-sdk/java/pom.xml -DskipTests package
+
+      - name: Deploy Java SDK modules to Artifactory
+        run: mvn -B -f client-sdk/java/pom.xml -DskipTests deploy -DaltDeploymentRepository=artifactory::default::${ARTIFACTORY_MAVEN_RELEASE_URL}

@@ -1,0 +1,51 @@
+name: Maxine Load Test
+
+on:
+  workflow_dispatch:
+
+jobs:
+  load-test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    permissions:
+      contents: read
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Use Node.js 22.x
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22.x
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Start Maxine
+        run: node index.js > maxine-server.log 2>&1 &
+
+      - name: Wait for Maxine to become healthy
+        run: |
+          for attempt in $(seq 1 30); do
+            if curl --fail --silent http://127.0.0.1:8080/api/actuator/health > /dev/null; then
+              exit 0
+            fi
+            sleep 2
+          done
+          echo "Maxine did not become healthy in time." >&2
+          exit 1
+
+      - name: Run k6 load test
+        env:
+          MAXINE_HOST: http://127.0.0.1:8080
+        run: npm run load-test
+
+      - name: Upload load-test artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: load-test-report
+          path: |
+            artifacts/performance-summary.html
+            maxine-server.log
+          if-no-files-found: error

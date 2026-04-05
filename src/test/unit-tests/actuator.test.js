@@ -54,4 +54,15 @@ describe(`${fileName} : API /api/actuator`, () => {
                 done();
             });
     });
-});
+
+    it('GET /performance -> 404 when performance report URL is not configured', (done) => {
+        chai.request(app)
+            .get('/api/actuator/performance')
+            .end((_, res) => {
+                res.should.have.status(404);
+                res.should.be.json;
+                res.body.should.be.eql({"message": "Performance report URL is not configured."});
+                done();
+            });
+    });
+}); 

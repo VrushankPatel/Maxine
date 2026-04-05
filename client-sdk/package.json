@@ -1,0 +1,33 @@
+{
+  "name": "maxine-client",
+  "version": "1.0.0",
+  "description": "Official Node.js client for the Maxine service registry and discovery server",
+  "main": "index.js",
+  "types": "index.d.ts",
+  "type": "commonjs",
+  "files": [
+    "index.js",
+    "index.d.ts",
+    "README.md"
+  ],
+  "keywords": [
+    "maxine",
+    "service-discovery",
+    "service-registry",
+    "microservices"
+  ],
+  "author": "Vrushank Patel",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/VrushankPatel/Maxine.git",
+    "directory": "client-sdk"
+  },
+  "bugs": {
+    "url": "https://github.com/VrushankPatel/Maxine/issues"
+  },
+  "homepage": "https://github.com/VrushankPatel/Maxine/tree/master/client-sdk",
+  "dependencies": {
+    "axios": "^1.8.4"
+  }
+}

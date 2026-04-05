@@ -7,6 +7,7 @@ const registryController = (req, res) => {
     const serviceResponse = registryService.registryService(req.body);
     if(!serviceResponse){
         res.status(statusAndMsgs.STATUS_GENERIC_ERROR).json({"message" : statusAndMsgs.MSG_INVALID_SERVICE_DATA});
+        return;
     }
     info(serviceResponse);
     res.status(statusAndMsgs.STATUS_SUCCESS).json(serviceResponse);
@@ -14,8 +15,7 @@ const registryController = (req, res) => {
 
 
 const serverListController = (_req, res) => {
-    res.type('application/json');
-    res.send(JSON.stringify(serviceRegistry.getRegServers()));
+    res.json(serviceRegistry.getRegServers());
 }
 
 module.exports = {

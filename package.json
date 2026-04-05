@@ -9,7 +9,7 @@
     "dev": "nodemon index.js --env dev",
     "test": "npm run unit-test",
     "maxibuild": "npx pkg -t node14-linux-arm64,node14-macos-arm64,node14-win-arm64 --out-path artifacts/build/ .",
-    "unit-test": "npx mocha --reporter mocha-circleci-reporter --timeout 10000 --exit",
+    "unit-test": "npx mocha --timeout 10000 --exit",
     "genreports": "nyc --reporter=html --reporter=lcov npm run unit-test",
     "coverage": "npm run genreports && npx codecov -t $CODECOV_TOKEN",
     "load-test": "chmod +x bin/k6 && bin/k6 run src/test/load-test/performance-test.js"
@@ -53,7 +53,6 @@
     "codecov": "^3.8.3",
     "istanbul": "^0.4.5",
     "mocha": "^9.2.1",
-    "mocha-circleci-reporter": "0.0.3",
     "nodemon": "^2.0.15",
     "nyc": "^15.1.0"
   },

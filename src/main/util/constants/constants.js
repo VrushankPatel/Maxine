@@ -1,3 +1,4 @@
+const path = require('path');
 const envArgs = require('minimist')(process.argv.slice(2));
 const Enums = require("enums");
 const PORT = process.env.PORT || parseInt(envArgs['p']) || parseInt(envArgs['port']) || 8080;
@@ -18,18 +19,23 @@ const SWAGGER_PATH = "./api-specs/swagger.yaml";
 const ACTUATORPATH = '/api/actuator';
 const STATUSMONITORTITLE = 'Status : Maxine';
 const REQUEST_LOG_TIMESTAMP_FORMAT = 'DD/MM/YYYY HH:mm:ss';
-const DEFAULT_ADMIN_USERNAME_PWD = "admin";
+const DEFAULT_ADMIN_USERNAME = process.env.MAXINE_ADMIN_USERNAME || "admin";
+const DEFAULT_ADMIN_PASSWORD = process.env.MAXINE_ADMIN_PASSWORD || "admin";
+const ADMIN_CREDENTIALS_MANAGED_BY_ENV = Boolean(process.env.MAXINE_ADMIN_USERNAME || process.env.MAXINE_ADMIN_PASSWORD);
+const ADMIN_STATE_FILE = process.env.MAXINE_ADMIN_STATE_FILE || path.join(CURRDIR, "data", "admin-user.json");
+const REGISTRY_STATE_FILE = process.env.MAXINE_REGISTRY_STATE_FILE || path.join(CURRDIR, "data", "registry-state.json");
+const REGISTRY_PERSISTENCE_ENABLED = process.env.MAXINE_REGISTRY_PERSISTENCE !== "false";
 const EXPIRATION_TIME = PROFILE === "dev" ? 86000 : 1800;
 const DEV_SECRET = "55e871f9889bb099df419b6b3c3a852582f9f0551d0ddc367b329dcd608a22d43b60efa62979ba0d9fe91d12cc56d03aa0c89e28707b1e039a7fc33e3a86b2d0";
 const PROD_SECRET = require('crypto').randomBytes(64).toString('hex');
-const SECRET = PROFILE === "dev" ? DEV_SECRET : PROD_SECRET;
+const SECRET = process.env.MAXINE_JWT_SECRET || (PROFILE === "dev" ? DEV_SECRET : PROD_SECRET);
 const MAX_SERVER_WEIGHT = 10;
 const RENDEZVOUS_HASH_ALGO = "sha256";
 const CONSISTENT_HASH_ALGO = "sha256";
 const CONSISTENT_HASHING_OPTIONS = {
     algorithm: CONSISTENT_HASH_ALGO
 }
-const CIRCLECI_ARTIFACTS = "https://circleci.com/api/v1.1/project/github/VrushankPatel/Maxine/latest/artifacts?branch=master";
+const PERFORMANCE_REPORT_URL = process.env.MAXINE_PERFORMANCE_REPORT_URL || "";
 /**
  * Below are SSS : Server Selection Strategies for Load Balancer
  * RR : Round Robin
@@ -56,6 +62,7 @@ const STATUS_SERVER_ERROR = 500;
 const SERVICE_UNAVAILABLE = 503;
 const STATUS_UNAUTHORIZED = 401;
 const STATUS_FORBIDDEN = 403;
+const STATUS_CONFLICT = 409;
 const MSG_MAXINE_SERVER_ERROR = "Unknown error occured, Please try again later";
 const MSG_FILE_NOT_FOUND = "File not found";
 const MSG_DISCOVER_MISSING_DATA = "Please provide the serviceName.";
@@ -69,6 +76,7 @@ const MSG_DB_CON_FAILURE = "Unable to connect to DB, closing App..";
 const MSG_JWT_EXPIRED = "JWT token expired";
 const MSG_FORBIDDEN = "Forbidden";
 const MSG_UNAUTHORIZED = "Unauthorized";
+const MSG_ADMIN_CREDENTIALS_MANAGED_BY_ENV = "Admin credentials are managed by environment variables and cannot be changed at runtime.";
 const MSG_INVALID_SERVICE_DATA = `Invalid or missing -> hostName, nodeName, serviceName or weight (Maximum allowed size of weight is ${MAX_SERVER_WEIGHT} (One server can maximum be ${MAX_SERVER_WEIGHT}x more powerful than others)`;
 const CONFIGTYPES = ["sync", "async"];
 const SERVER_SELECTION_STRATEGIES = ["round-robin", "consistent-hashing"];
@@ -103,10 +111,15 @@ const constants = {
     ACTUATORPATH,
     STATUSMONITORTITLE,
     REQUEST_LOG_TIMESTAMP_FORMAT,
-    DEFAULT_ADMIN_USERNAME_PWD,
+    DEFAULT_ADMIN_USERNAME,
+    DEFAULT_ADMIN_PASSWORD,
+    ADMIN_CREDENTIALS_MANAGED_BY_ENV,
+    ADMIN_STATE_FILE,
+    REGISTRY_STATE_FILE,
+    REGISTRY_PERSISTENCE_ENABLED,
     EXPIRATION_TIME,
     SECRET,
-    CIRCLECI_ARTIFACTS,
+    PERFORMANCE_REPORT_URL,
     API_URLS_WITH_AUTH,
     MAX_SERVER_WEIGHT,
     SSS,
@@ -130,6 +143,7 @@ const statusAndMsgs = {
     STATUS_GENERIC_ERROR,
     STATUS_UNAUTHORIZED,
     STATUS_FORBIDDEN,
+    STATUS_CONFLICT,
     SERVICE_UNAVAILABLE,
     MSG_MAXINE_SERVER_ERROR,
     MSG_FILE_NOT_FOUND,
@@ -145,7 +159,8 @@ const statusAndMsgs = {
     MSG_MISSING_PWD,
     MSG_JWT_EXPIRED,
     MSG_UNAUTHORIZED,
-    MSG_FORBIDDEN
+    MSG_FORBIDDEN,
+    MSG_ADMIN_CREDENTIALS_MANAGED_BY_ENV
 }
 
 module.exports = {

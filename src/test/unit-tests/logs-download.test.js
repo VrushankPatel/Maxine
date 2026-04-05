@@ -8,7 +8,7 @@ chai.use(require('chai-json'));
 chai.use(chaiHttp);
 
 const fileName = require('path').basename(__filename).replace(".js","");
-const accessToken = generateAccessToken(testUser);
+const getAccessToken = () => generateAccessToken(testUser);
 
 describe(`${fileName} : API /api/logs`, () => {
     let logFiles = [];
@@ -16,7 +16,7 @@ describe(`${fileName} : API /api/logs`, () => {
     it('GET /download -> 200 && it should return all the log files available in logs dir in JSON format', (done) => {
         chai.request(app)
             .get(ENDPOINTS.logs.download)
-            .set("Authorization", `Bearer ${accessToken}`)
+            .set("Authorization", `Bearer ${getAccessToken()}`)
             .end((_, res) => {
                 res.should.have.status(200);
                 res.should.be.json;

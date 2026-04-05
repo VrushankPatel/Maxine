@@ -10,14 +10,14 @@ chai.use(require('chai-json'));
 chai.use(chaiHttp);
 
 const fileName = require('path').basename(__filename).replace(".js","");
-const accessToken = generateAccessToken(testUser);
+const getAccessToken = () => generateAccessToken(testUser);
 
 describe(`${fileName} : API /api/maxine`, () => {
 
     it('GET /config -> 200 & should return the initial configs of maxine', (done) => {
         chai.request(app)
             .get(ENDPOINTS.maxine.config)
-            .set("Authorization", `Bearer ${accessToken}`)
+            .set("Authorization", `Bearer ${getAccessToken()}`)
             .end((_, res) => {
                 res.should.have.status(200);
                 res.should.be.json;
@@ -31,7 +31,7 @@ describe(`${fileName} : API /api/maxine`, () => {
 
         chai.request(app)
             .put(ENDPOINTS.maxine.config)
-            .set("Authorization", `Bearer ${accessToken}`)
+            .set("Authorization", `Bearer ${getAccessToken()}`)
             .set('Content-Type', 'application/json')
             .send(serviceDataToUpdate)
             .end((_, res) => {
@@ -50,7 +50,7 @@ describe(`${fileName} : API /api/maxine`, () => {
 
         chai.request(app)
             .put(ENDPOINTS.maxine.config)
-            .set("Authorization", `Bearer ${accessToken}`)
+            .set("Authorization", `Bearer ${getAccessToken()}`)
             .set('Content-Type', 'application/json')
             .send(serviceDataToUpdate)
             .end((_, res) => {
@@ -69,7 +69,7 @@ describe(`${fileName} : API /api/maxine`, () => {
 
         chai.request(app)
             .put(ENDPOINTS.maxine.config)
-            .set("Authorization", `Bearer ${accessToken}`)
+            .set("Authorization", `Bearer ${getAccessToken()}`)
             .set('Content-Type', 'application/json')
             .send(serviceDataToUpdate)
             .end((_, res) => {
@@ -88,7 +88,7 @@ describe(`${fileName} : API /api/maxine`, () => {
 
         chai.request(app)
             .put(ENDPOINTS.maxine.config)
-            .set("Authorization", `Bearer ${accessToken}`)
+            .set("Authorization", `Bearer ${getAccessToken()}`)
             .set('Content-Type', 'application/json')
             .send(serviceDataToUpdate)
             .end((_, res) => {
@@ -109,7 +109,7 @@ describe(`${fileName} : API /api/maxine`, () => {
 
         chai.request(app)
             .put(ENDPOINTS.maxine.config)
-            .set("Authorization", `Bearer ${accessToken}`)
+            .set("Authorization", `Bearer ${getAccessToken()}`)
             .set('Content-Type', 'application/json')
             .send(serviceDataToUpdate)
             .end((_, res) => {
@@ -130,7 +130,7 @@ describe(`${fileName} : API /api/maxine`, () => {
 
         chai.request(app)
             .put(ENDPOINTS.maxine.config)
-            .set("Authorization", `Bearer ${accessToken}`)
+            .set("Authorization", `Bearer ${getAccessToken()}`)
             .set('Content-Type', 'application/json')
             .send(serviceDataToUpdate)
             .end((_, res) => {
@@ -151,7 +151,7 @@ describe(`${fileName} : API /api/maxine`, () => {
 
         chai.request(app)
             .put(ENDPOINTS.maxine.config)
-            .set("Authorization", `Bearer ${accessToken}`)
+            .set("Authorization", `Bearer ${getAccessToken()}`)
             .set('Content-Type', 'application/json')
             .send(serviceDataToUpdate)
             .end((_, res) => {
@@ -171,7 +171,7 @@ describe(`${fileName} : API /api/maxine`, () => {
 
         chai.request(app)
             .put(ENDPOINTS.maxine.config)
-            .set("Authorization", `Bearer ${accessToken}`)
+            .set("Authorization", `Bearer ${getAccessToken()}`)
             .set('Content-Type', 'application/json')
             .send(serviceDataToUpdate)
             .end((_, res) => {

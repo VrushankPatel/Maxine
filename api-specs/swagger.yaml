@@ -1,302 +1,543 @@
-openapi: 3.0.1
+openapi: 3.0.3
 info:
   title: Maxine API
   version: v1
-  description: >-
-    Maxine is a service discovery and a naming server for microservices that
-    solves the issue of hard-wiring urls by hostnames and ports.
+  description: >
+    Maxine is a Node.js service registry and discovery server that stores
+    service heartbeats in memory, restores active registrations from a local
+    state snapshot after restart, and resolves service names to registered nodes.
   contact:
     name: Vrushank Patel
   license:
     name: MIT
-    url: https://github.com/VrushankPatel/Maxine-Server/blob/master/LICENSE
+    url: https://github.com/VrushankPatel/Maxine/blob/master/LICENSE
+servers:
+  - url: http://localhost:8080
 paths:
   /api/maxine/signin:
     post:
-      summary: To sign in and get auth token.
+      summary: Sign in and get an access token
       tags:
-        - "UAC"
-      operationId: Maxine Security
+        - Security
+      operationId: signIn
       requestBody:
-        description: User.
+        required: true
         content:
           application/json:
             schema:
               $ref: '#/components/schemas/User'
-        required: true
       responses:
         '200':
-          description: OK
+          description: Access token generated
           content:
             application/json:
-              example: >-
-                {"accessToken":"eyJhbGciOiJIUzI1GiIsInR5cCI6IkpXVCJ9.eyJ1c2VyTmFtZSI6ImFkbWluIiwicGFzc3dvcmQiOiJhZG1pbiIsImlhdCI6MTY0OTMyNTI0NywiZXhwIjoxNjQ5NDExMjQ3fQ.yQev9kn9yIChCXE-vlOLpc3Y89qNy_p7TKxoDJ1HghQ"}
-        '401':
-          description: Unauthorized
-          content:
-            application/json:
-              example: '{"message":"Unauthorized"}'
+              schema:
+                type: object
+                properties:
+                  accessToken:
+                    type: string
+              example:
+                accessToken: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
         '400':
-          description: Error, Bad Request
+          description: Missing credentials
           content:
             application/json:
-              example: '{"message":"Please provide both of these -> userName and password."}'
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                message: Please provide both of these -> userName and password.
+        '401':
+          description: Invalid credentials
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                message: Unauthorized
+
   /api/maxine/change-password:
     put:
-      summary: To change the password
+      summary: Change the admin password
       tags:
-        - "UAC"
-      operationId: Maxine UAC
+        - Security
+      operationId: changePassword
       security:
         - bearerAuth: []
       requestBody:
-        description: Current password and new password to be updated.
+        required: true
         content:
           application/json:
             schema:
               $ref: '#/components/schemas/Passwords'
-        required: true
       responses:
         '200':
-          description: OK
+          description: Password updated
           content:
             application/json:
-              example: >-
-                {"message" : "successfully updated password"}
-        '401':
-          description: Unauthorized
-          content:
-            application/json:
-              example: '{"message":"Unauthorized"}'
+              example:
+                message: successfully updated password
         '400':
-          description: Error, Bad Request
+          description: Missing or invalid password payload
           content:
             application/json:
-              example: '{"message":"Please provide valid existing password and new password both."}'
-  /api/actuator/metrics:
-    get:
-      summary: Get the memory metrics info
-      tags:
-        - "Actuator"
-      operationId: actuatorMetrics
-      responses:
-        '200':
-          description: 200 response
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                message: Please provide valid existing password and new password both.
+        '409':
+          description: Password changes are disabled because admin credentials are managed by environment variables
           content:
             application/json:
-              example: >-
-                {"mem": {"rss": 54534144,"heapTotal": 25661440,"heapUsed":
-                22980160,"external": 1701211,"arrayBuffers": 83266},"uptime":
-                47.998038}
-  /api/actuator/info:
-    get:
-      summary: Get the project info
-      tags:
-        - "Actuator"
-      operationId: actuatorInfo
-      responses:
-        '200':
-          description: 200 response
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                message: Admin credentials are managed by environment variables and cannot be changed at runtime.
+        '401':
+          description: Missing or invalid bearer token
           content:
             application/json:
-              example: >-
-                {"build":{"name":"maxine-discovery","description":"Maxine is a
-                service discovery and a registry server for all the running
-                nodes with gargantua client dependency.","version":"1.0.0"}}
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                message: Unauthorized
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                message: Forbidden
+
   /api/actuator/health:
     get:
-      summary: Get the currently running heartbeat
+      summary: Get service health
       tags:
-        - "Actuator"
+        - Actuator
       operationId: actuatorHealth
       responses:
         '200':
-          description: 200 response
+          description: Health response
           content:
             application/json:
-              example: '{"status": "UP"}'
+              example:
+                status: UP
+
+  /api/actuator/info:
+    get:
+      summary: Get project info
+      tags:
+        - Actuator
+      operationId: actuatorInfo
+      responses:
+        '200':
+          description: Build metadata
+          content:
+            application/json:
+              example:
+                build:
+                  name: maxine-discovery
+                  description: Maxine is a service discovery and a registry server for all the running nodes with gargantua client dependency.
+                  version: 1.0.0
+
+  /api/actuator/metrics:
+    get:
+      summary: Get memory metrics and uptime
+      tags:
+        - Actuator
+      operationId: actuatorMetrics
+      responses:
+        '200':
+          description: Process metrics
+          content:
+            application/json:
+              example:
+                mem:
+                  rss: 54534144
+                  heapTotal: 25661440
+                  heapUsed: 22980160
+                  external: 1701211
+                  arrayBuffers: 83266
+                uptime: 47.998038
+
+  /api/actuator/performance:
+    get:
+      summary: Retrieve the configured HTML performance report
+      tags:
+        - Actuator
+      operationId: actuatorPerformance
+      responses:
+        '200':
+          description: HTML performance report
+          content:
+            text/html:
+              schema:
+                type: string
+        '404':
+          description: Performance report is not configured or not retrievable
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                missingConfig:
+                  value:
+                    message: Performance report URL is not configured.
+                fetchFailed:
+                  value:
+                    message: Could not retrieve load test report.
+
   /api/logs/download:
     get:
-      summary: Get the Maxine log files and it's download path
+      summary: List downloadable log files
       tags:
-        - "Logs"
-      operationId: Maxine Logs
+        - Logs
+      operationId: listLogFiles
       security:
         - bearerAuth: []
       responses:
         '200':
-          description: OK
+          description: Log links keyed by file name
           content:
             application/json:
-              example: '{"Maxine-info.log": "/api/logs/download/Maxine-info.log"}'
-        '404':
-          description: Not Found
+              schema:
+                type: object
+                additionalProperties:
+                  type: string
+              example:
+                Maxine-info.log: /logs/Maxine-info.log
+        '401':
+          description: Missing or invalid bearer token
           content:
             application/json:
-              example: '{"message":"File not found"}'
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                message: Unauthorized
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                message: Forbidden
+
+  /api/logs/recent:
+    get:
+      summary: Get recent in-memory log lines
+      tags:
+        - Logs
+      operationId: recentLogs
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Recent logs joined as a string
+          content:
+            application/json:
+              example:
+                logs: |-
+                  {"LogLevel":"INFO","LogType":"GENERIC","Message":"Example"}
+                  {"LogLevel":"ERROR","LogType":"GENERIC","Message":"Example"}
+        '401':
+          description: Missing or invalid bearer token
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                message: Unauthorized
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                message: Forbidden
+
+  /api/logs/recent/clear:
+    get:
+      summary: Clear recent in-memory logs
+      tags:
+        - Logs
+      operationId: clearRecentLogs
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Recent log buffer cleared
+        '401':
+          description: Missing or invalid bearer token
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                message: Unauthorized
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                message: Forbidden
+
   /api/maxine/serviceops/register:
     post:
-      summary: >-
-        Register the server with it's data (ServiceName, NodeName, Host, Port,
-        Weight, ssl, timeOut, weight, path).
+      summary: Register or refresh a service node
       tags:
-        - "ServiceOps"
-      operationId: Maxine service register
+        - ServiceOps
+      operationId: registerService
       requestBody:
-        description: The service to register.
+        required: true
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/Service'
-        required: false
+              $ref: '#/components/schemas/ServiceRegistrationRequest'
       responses:
         '200':
-          description: OK
+          description: Service registered
           content:
             application/json:
-              example: >-
-                {"serviceName":"MAXINE-123","nodeName":"NODE-4","address":"http://192.168.23.11:8080","timeOut":50,"weight":5,"registeredAt":"5/4/2022,
-                10:00:56 am"}
+              schema:
+                $ref: '#/components/schemas/ServiceRegistrationResponse'
+              example:
+                hostName: 192.168.23.11
+                nodeName: NODE-4
+                serviceName: MAXINE-123
+                timeOut: 50
+                weight: 5
+                address: http://192.168.23.11:8080
+                registeredAt: 3/30/2026, 1:08:26 PM
         '400':
-          description: Error, Bad Request
+          description: Invalid service registration payload
           content:
             application/json:
-              example: >-
-                {"message": "Please provide all of these -> hostName, nodeName,
-                port and serviceName"}
-      x-codegen-request-body-name: service
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                message: Invalid or missing -> hostName, nodeName, serviceName or weight (Maximum allowed size of weight is 10 (One server can maximum be 10x more powerful than others)
+
   /api/maxine/serviceops/discover:
     get:
-      summary: >-
-        Get the server from registry if there is any registered one by service
-        name.
+      summary: Discover a registered service by name
       tags:
-        - "ServiceOps"
-      operationId: Maxine service discover
+        - ServiceOps
+      operationId: discoverService
       parameters:
         - in: query
           name: serviceName
+          required: true
           schema:
             type: string
             example: db-service
-          required: true
         - in: query
           name: endPoint
+          required: false
           schema:
             type: string
             example: /info
-          required: true
       responses:
-        '200':
-          description: OK
-          content:
-            redirect:
-              example: Redirect to registered service host:port if it is registered.
-        '503':
-          description: Service Unavailable
+        '302':
+          description: Redirect to the discovered service node
+          headers:
+            Location:
+              schema:
+                type: string
+              description: Redirect target
+        '400':
+          description: Missing service name
           content:
             application/json:
-              example: '{"message": "Service Unavailable"}'
-      x-codegen-request-body-name: service
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                message: Please provide the serviceName.
+        '503':
+          description: Service unavailable
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                message: Service Unavailable
+
   /api/maxine/serviceops/servers:
     get:
-      summary: >-
-        Get all the registered servers in Maxine service registry if there are
-        registered server nodes, otherwise empty object {}.
+      summary: Get the current registry snapshot
       tags:
-        - "ServiceOps"
-      operationId: Maxine services list
+        - ServiceOps
+      operationId: listRegisteredServices
       security:
         - bearerAuth: []
       responses:
         '200':
-          description: OK
+          description: Registry snapshot
           content:
             application/json:
-              example: >-
-                {"DB-SERVICE":{"offset":0,"nodes":{"NODE-X-1-0":{"nodeName":"NODE-X-1-0","parentNode":"NODE-X-1","address":"https://192.168.0.1:8082","timeOut":50,"registeredAt":"5/4/2022,
-                3:38:58
-                pm"},"NODE-X-1-1":{"nodeName":"NODE-X-1-1","parentNode":"NODE-X-1","address":"https://192.168.0.1:8082","timeOut":50,"registeredAt":"5/4/2022,
-                3:38:58
-                pm"},"NODE-X-1-2":{"nodeName":"NODE-X-1-2","parentNode":"NODE-X-1","address":"https://192.168.0.1:8082","timeOut":50,"registeredAt":"5/4/2022,
-                3:38:58
-                pm"},"NODE-X-1-3":{"nodeName":"NODE-X-1-3","parentNode":"NODE-X-1","address":"https://192.168.0.1:8082","timeOut":50,"registeredAt":"5/4/2022,
-                3:38:58
-                pm"},"NODE-X-1-4":{"nodeName":"NODE-X-1-4","parentNode":"NODE-X-1","address":"https://192.168.0.1:8082","timeOut":50,"registeredAt":"5/4/2022,
-                3:38:58 pm"}}}}
+              schema:
+                $ref: '#/components/schemas/RegistrySnapshot'
+              example:
+                DB-SERVICE:
+                  offset: 0
+                  nodes:
+                    NODE-X-1-0:
+                      nodeName: NODE-X-1-0
+                      parentNode: NODE-X-1
+                      address: https://192.168.0.1:8082
+                      timeOut: 50
+                      registeredAt: 1711784306000
         '401':
-          description: Unauthorized
+          description: Missing or invalid bearer token
           content:
             application/json:
-              example: '{"message":"Unauthorized"}'
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                message: Unauthorized
         '403':
           description: Forbidden
           content:
             application/json:
-              example: '{"message":"Forbidden"}'
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                message: Forbidden
+
   /api/maxine/control/config:
     get:
-      summary: Get the current config data of Maxine.
+      summary: Get the current runtime configuration
       tags:
-        - "Controls"
-      operationId: Maxine configuration Retrieval.
+        - Controls
+      operationId: getConfig
       security:
         - bearerAuth: []
       responses:
         '200':
-            description: OK
-            content:
-              application/json:
-                example: '{"logAsync":false,"heartBeatTimeout":3,"logJsonPrettify":false,"actuatorEnabled":true,"statusMonitorEnabled":true,"serverSelectionStrategy":{"name":"CH","code":"1","message":"Consistent Hashing","ordinal":1},"logFormat":{"name":"PLAIN","code":"1","message":"Plain logs","ordinal":1}}'
-        '401':
-          description: Unauthorized
+          description: Current config state
           content:
             application/json:
-              example: '{"message":"Unauthorized"}'
+              schema:
+                $ref: '#/components/schemas/ConfigState'
+              example:
+                logAsync: true
+                heartBeatTimeout: 5
+                logJsonPrettify: false
+                actuatorEnabled: true
+                statusMonitorEnabled: true
+                serverSelectionStrategy:
+                  name: RR
+                  code: '0'
+                  message: Round Robin
+                  ordinal: 0
+                logFormat:
+                  name: JSON
+                  code: '0'
+                  message: Jsonified logging
+                  ordinal: 0
+                port: 8080
+        '401':
+          description: Missing or invalid bearer token
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                message: Unauthorized
         '403':
           description: Forbidden
           content:
             application/json:
-              example: '{"message":"Forbidden"}'
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                message: Forbidden
     put:
-      summary: Update the config data of Maxine.
+      summary: Update mutable runtime configuration
       tags:
-        - "Controls"
-      operationId: Maxine configuration manipulation
+        - Controls
+      operationId: updateConfig
       security:
         - bearerAuth: []
       requestBody:
-        description: The updated config data.
+        required: true
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/Config'
-        required: false
+              $ref: '#/components/schemas/ConfigUpdateRequest'
       responses:
         '200':
-          description: OK
+          description: Result for each updated field
           content:
             application/json:
-              example: >-
-                {"logAsync":"Success","heartBeatTimeout":"Success","logJsonPrettify":"Success","serverSelectionStrategy":"Success","logFormat":"Success"}
+              schema:
+                $ref: '#/components/schemas/ConfigUpdateResult'
+              example:
+                logAsync: Success
+                heartBeatTimeout: Success
+                logJsonPrettify: Success
+                serverSelectionStrategy: Success
+                logFormat: Success
         '401':
-          description: Unauthorized
+          description: Missing or invalid bearer token
           content:
             application/json:
-              example: '{"message":"Unauthorized"}'
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                message: Unauthorized
         '403':
           description: Forbidden
           content:
             application/json:
-              example: '{"message":"Forbidden"}'
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                message: Forbidden
+
 components:
   schemas:
-    Service:
+    ErrorResponse:
+      type: object
+      properties:
+        message:
+          type: string
+
+    User:
+      type: object
+      required:
+        - userName
+        - password
+      properties:
+        userName:
+          type: string
+          example: admin
+        password:
+          type: string
+          example: admin
+
+    Passwords:
+      type: object
+      required:
+        - password
+        - newPassword
+      properties:
+        password:
+          type: string
+          example: admin
+        newPassword:
+          type: string
+          example: admin2
+
+    ServiceRegistrationRequest:
+      type: object
       required:
         - hostName
         - nodeName
         - serviceName
-      type: object
       properties:
         hostName:
           type: string
@@ -305,8 +546,9 @@ components:
           type: string
           example: node-x-1
         port:
-          maximum: 65353
           type: integer
+          minimum: 1
+          maximum: 65535
           example: 8080
         serviceName:
           type: string
@@ -315,67 +557,122 @@ components:
           type: boolean
           example: false
         timeOut:
-          minimum: 1
           type: integer
+          minimum: 1
           example: 5
         weight:
-          maximum: 10
-          minimum: 1
           type: integer
+          minimum: 1
+          maximum: 10
           example: 5
         path:
           type: string
           example: /api/actuator
-    Config:
+
+    ServiceRegistrationResponse:
+      type: object
+      properties:
+        hostName:
+          type: string
+        nodeName:
+          type: string
+        serviceName:
+          type: string
+        timeOut:
+          type: integer
+        weight:
+          type: integer
+        address:
+          type: string
+        registeredAt:
+          type: string
+
+    RegisteredNode:
+      type: object
+      properties:
+        nodeName:
+          type: string
+        parentNode:
+          type: string
+        address:
+          type: string
+        timeOut:
+          type: integer
+        registeredAt:
+          type: integer
+          format: int64
+
+    RegistrySnapshot:
+      type: object
+      additionalProperties:
+        type: object
+        properties:
+          offset:
+            type: integer
+          nodes:
+            type: object
+            additionalProperties:
+              $ref: '#/components/schemas/RegisteredNode'
+
+    EnumState:
+      type: object
+      properties:
+        name:
+          type: string
+        code:
+          type: string
+        message:
+          type: string
+        ordinal:
+          type: integer
+
+    ConfigState:
       type: object
       properties:
         logAsync:
           type: boolean
-          example: false
+        heartBeatTimeout:
+          type: integer
+        logJsonPrettify:
+          type: boolean
+        actuatorEnabled:
+          type: boolean
+        statusMonitorEnabled:
+          type: boolean
+        serverSelectionStrategy:
+          $ref: '#/components/schemas/EnumState'
+        logFormat:
+          $ref: '#/components/schemas/EnumState'
+        port:
+          type: integer
+
+    ConfigUpdateRequest:
+      type: object
+      properties:
+        logAsync:
+          type: boolean
         heartBeatTimeout:
           type: integer
           minimum: 1
-          example: 3
         logJsonPrettify:
           type: boolean
-          example: true
         serverSelectionStrategy:
           type: string
-          enum: [RR, CH, RH]
-          example: "CH"
-          description: >
-            Server Selection Strategies:
-
-              * `RR` - Round Robin
-              * `CH` - Consistent Hashing
-              * `RH` - Rendezvous Hashing
+          enum:
+            - RR
+            - CH
+            - RH
         logFormat:
           type: string
-          enum: [JSON, PLAIN]
-          example: "JSON"
-          description: >
-            Log Formats:
+          enum:
+            - JSON
+            - PLAIN
 
-              * `PLAIN` - Plain Logging
-              * `JSON`  - JSON Logging
-    User:
+    ConfigUpdateResult:
       type: object
-      properties:
-        userName:
-          type: string
-          example: "admin"
-        password:
-          type: string
-          example: "admin"
-    Passwords:
-      type: object
-      properties:
-        password:
-          type: string
-          example: "admin"
-        newPassword:
-          type: string
-          example: "admin2"
+      additionalProperties:
+        type: string
+
   securitySchemes:
     bearerAuth:
       type: http

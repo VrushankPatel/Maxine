@@ -8,7 +8,7 @@ chai.use(require('chai-json'));
 chai.use(chaiHttp);
 
 const fileName = require('path').basename(__filename).replace(".js","");
-const accessToken = generateAccessToken(testUser);
+const getAccessToken = () => generateAccessToken(testUser);
 const serviceSampleRS = {
     "hostName": "xx.xxx.xx.xx",
     "nodeName": "node-x-10",
@@ -57,7 +57,7 @@ describe(`${fileName} : API /api/maxine/{registry urls}`, () => {
     it('GET /servers -> 200 & should show the registered server (we just registered one above)', (done) => {
         chai.request(app)
             .get(ENDPOINTS.maxine.serviceops.servers)
-            .set({ "Authorization": `Bearer ${accessToken}` })
+            .set({ "Authorization": `Bearer ${getAccessToken()}` })
             .end((_, res) => {
                 res.should.have.status(200);
                 res.should.be.json;
