@@ -13,6 +13,12 @@ artifacts/**
 # production
 /build
 /dist
+target/
+__pycache__/
+*.pyc
+*.egg-info/
+client-sdk/python/build/
+client-sdk/python/dist/
 
 # misc
 .DS_Store
@@ -26,6 +32,7 @@ yarn-debug.log*
 yarn-error.log*
 *.log
 logs/
+data/
 
 endpoints.*
 .nyc_output/

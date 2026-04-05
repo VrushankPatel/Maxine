@@ -1,0 +1,40 @@
+name: Publish Python SDK
+
+on:
+  workflow_dispatch:
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+
+    env:
+      ARTIFACTORY_PYPI_REPOSITORY_URL: ${{ vars.ARTIFACTORY_PYPI_REPOSITORY_URL }}
+      ARTIFACTORY_USERNAME: ${{ secrets.ARTIFACTORY_USERNAME }}
+      ARTIFACTORY_PASSWORD: ${{ secrets.ARTIFACTORY_PASSWORD }}
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Validate publishing configuration
+        run: |
+          test -n "$ARTIFACTORY_PYPI_REPOSITORY_URL" || (echo "Missing repository variable ARTIFACTORY_PYPI_REPOSITORY_URL" && exit 1)
+          test -n "$ARTIFACTORY_USERNAME" || (echo "Missing secret ARTIFACTORY_USERNAME" && exit 1)
+          test -n "$ARTIFACTORY_PASSWORD" || (echo "Missing secret ARTIFACTORY_PASSWORD" && exit 1)
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
+
+      - name: Build Python SDK distributions
+        run: |
+          python -m pip install --upgrade pip build twine
+          python -m build client-sdk/python
+
+      - name: Publish Python SDK to Artifactory
+        env:
+          TWINE_USERNAME: ${{ env.ARTIFACTORY_USERNAME }}
+          TWINE_PASSWORD: ${{ env.ARTIFACTORY_PASSWORD }}
+        run: python -m twine upload --repository-url "$ARTIFACTORY_PYPI_REPOSITORY_URL" client-sdk/python/dist/*

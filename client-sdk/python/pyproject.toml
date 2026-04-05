@@ -1,0 +1,37 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "maxine-client"
+version = "1.0.0"
+description = "Official Python client for the Maxine service registry and discovery server"
+readme = "README.md"
+requires-python = ">=3.9"
+license = "MIT"
+authors = [
+  { name = "Vrushank Patel" }
+]
+keywords = [
+  "maxine",
+  "service-discovery",
+  "service-registry",
+  "microservices"
+]
+classifiers = [
+  "Development Status :: 4 - Beta",
+  "Intended Audience :: Developers",
+  "Programming Language :: Python :: 3",
+  "Programming Language :: Python :: 3 :: Only",
+  "Topic :: Internet :: WWW/HTTP",
+  "Topic :: System :: Networking"
+]
+
+[project.urls]
+Homepage = "https://github.com/VrushankPatel/Maxine/tree/master/client-sdk/python"
+Repository = "https://github.com/VrushankPatel/Maxine"
+Issues = "https://github.com/VrushankPatel/Maxine/issues"
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["maxine_client*"]

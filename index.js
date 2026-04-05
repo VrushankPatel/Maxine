@@ -8,6 +8,7 @@ const expressStatusMonitor = require('express-status-monitor');
 const logWebExceptions = require('./src/main/util/logging/log-web-exceptions');
 const logRequest = require('./src/main/util/logging/log-request');
 const { authenticationController } = require('./src/main/controller/security/authentication-controller');
+const { registryService } = require('./src/main/service/registry-service');
 const swaggerUi = require('swagger-ui-express');
 const { statusMonitorConfig, actuatorConfig } = require('./src/main/config/actuator/actuator-config');
 const { loadSwaggerYAML } = require('./src/main/util/util');
@@ -15,23 +16,37 @@ const swaggerDocument = loadSwaggerYAML();
 const path = require("path");
 const currDir = require('./conf');
 
-const app = ExpressAppBuilder.createNewApp()
-                .addCors()
-                .ifPropertyOnce("statusMonitorEnabled")
-                    .use(expressStatusMonitor(statusMonitorConfig))
-                .use(logRequest)
-                .use(authenticationController)
-                .mapStaticDir(path.join(currDir, "client"))
-                .mapStaticDirWithRoute('/logs', path.join(currDir,"logs"))
-                .ifPropertyOnce("actuatorEnabled")
-                    .use(actuator(actuatorConfig))
-                .use('/api',maxineApiRoutes)
-                .ifPropertyOnce('profile','dev')
-                    .use('/api-spec', swaggerUi.serve, swaggerUi.setup(swaggerDocument))
-                    .use('/shutdown', process.exit)
-                .blockUnknownUrls()
-                .use(logWebExceptions)
-                .listen(constants.PORT, loggingUtil.initApp)
-                .getApp();
+registryService.initialize();
+
+const buildApp = () => ExpressAppBuilder.createNewApp()
+    .addCors()
+    .ifPropertyOnce("statusMonitorEnabled")
+        .use(expressStatusMonitor(statusMonitorConfig))
+    .use(logRequest)
+    .use(authenticationController)
+    .mapStaticDir(path.join(currDir, "client"))
+    .mapStaticDirWithRoute('/logs', path.join(currDir, "logs"))
+    .ifPropertyOnce("actuatorEnabled")
+        .use(actuator(actuatorConfig))
+    .use('/api', maxineApiRoutes)
+    .ifPropertyOnce('profile', 'dev')
+        .use('/api-spec', swaggerUi.serve, swaggerUi.setup(swaggerDocument))
+        .use('/shutdown', (_req, res) => {
+            res.status(202).json({ message: 'Shutdown requested. Stopping Maxine.' });
+            process.exit(0);
+        })
+    .blockUnknownUrls()
+    .use(logWebExceptions)
+    .getApp();
+
+const app = buildApp();
+
+const startServer = () => app.listen(constants.PORT, loggingUtil.initApp);
+
+if (require.main === module) {
+    startServer();
+}
 
 module.exports = app;
+module.exports.buildApp = buildApp;
+module.exports.startServer = startServer;

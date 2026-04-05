@@ -1,6 +1,5 @@
-const { default: axios } = require("axios")
-const { constants, statusAndMsgs } = require("../../util/constants/constants")
-const { error } = require("../../util/logging/logging-util");
+const { default: axios } = require("axios");
+const { constants, statusAndMsgs } = require("../../util/constants/constants");
 
 const statusMonitorConfig = {
     title: constants.STATUSMONITORTITLE,
@@ -23,17 +22,22 @@ const actuatorConfig = {
     customEndpoints: [
         {
             id: 'performance',
-            controller: (_req, res) => {
-                axios.get(constants.CIRCLECI_ARTIFACTS)
-                    .then(response => {
-                        axios.get(response.data[1].url)
-                            .then(webres => {
-                                res.set('Content-Type', 'text/html');
-                                res.send(Buffer.from(webres.data));
-                            });
-                    }).catch(_err => {
-                        res.status(404).send({"message" : "Could not retrieve load test report."})
-                    })
+            controller: async (_req, res) => {
+                if (!constants.PERFORMANCE_REPORT_URL) {
+                    res.status(404).json({ "message": "Performance report URL is not configured." });
+                    return;
+                }
+
+                try {
+                    const response = await axios.get(constants.PERFORMANCE_REPORT_URL, {
+                        responseType: 'text'
+                    });
+
+                    res.set('Content-Type', 'text/html');
+                    res.send(response.data);
+                } catch (_err) {
+                    res.status(404).json({ "message": "Could not retrieve load test report." });
+                }
             }
         }
     ]

@@ -5,9 +5,11 @@
 <img src="/en/latest/img/maxine-dashboard.png" />
 ### Service registry
 - The service registry is the part of Maxine that register or save the service metadata (Extracted data like serviceName, hostName, nodeName, port, SSL, timeOut, weight, path from heartbeat) in memory to make the retrieval faster.
+- Active registry data is also snapshotted to a local state file so services can be restored after a restart.
 - Also, the SRD replicates the more weighted services (The service that sends a weight of more than one).
 - After registering the Service, the SRD will run a thread asynchronously that'll remove that service from the registry once the timeout exceeds and that Service is not re-registered.
-- If the service sends the heartbeat before the timeout passes since it was registered, then the thread that was executed earlier will be suspended and a new thread will start doing the same again.
+- If the service sends the heartbeat before the timeout passes since it was registered, then the earlier timeout is cancelled and a new timeout starts.
+- Re-registering a node with a different weight now replaces stale virtual nodes from the old registration instead of leaving them behind.
 ### Service discovery
 - The service discovery discovers the service that is registered in the registry.
 - When the service discovery receives the request, it extracts the serviceName from the request and discovers the service with that service name.
@@ -62,6 +64,8 @@
             "registeredAt": "9/19/2022, 2:09:34 PM"
         }
 - Maxine client takes care of sending the heartbeat to the registry but before you start the server, you have to provide all these parameters in the properties or configurations.
+- The Java SDK now includes a Spring Boot starter that can derive these values from `application.properties` / `application.yml` and keep the heartbeat running automatically.
+- Official SDKs are now maintained in-repo for Node.js, Java, Python, and Go.
 - If you pass the above example request to Maxine registry and then open the Maxine UI's servers page, it'll show the registered server like given below.
 <img src="/en/latest/img/maxine-servers.png" />
 

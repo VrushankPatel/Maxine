@@ -3,7 +3,7 @@ import { check } from 'k6';
 import { textSummary } from 'https://jslib.k6.io/k6-summary/0.0.1/index.js';
 import { htmlReport } from "https://raw.githubusercontent.com/benc-uk/k6-reporter/main/dist/bundle.js";
 
-const host = "https://maxine-x.herokuapp.com";
+const host = (__ENV.MAXINE_HOST || "http://127.0.0.1:8080").replace(/\/$/, "");
 const apiUrl = `${host}/api`;
 const statusCheck = {"is status 200": response => response.status === 200};
 
@@ -13,7 +13,7 @@ const serviceObj = JSON.stringify({
     "hostName": host,
     "nodeName": "node-x-10",
     "serviceName": "dbservice",
-    "ssl": false,
+    "ssl": host.startsWith("https://"),
     "timeOut": 50,
     "weight": 10,
     "path": "/api/actuator/health"

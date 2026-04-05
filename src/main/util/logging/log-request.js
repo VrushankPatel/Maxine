@@ -3,7 +3,7 @@ const { logBuilder } = require("../util");
 const { log, logger } = require("./logging-util");
 
 const logRequest = (req, res, next) => {
-    log(() => {
+    res.on('finish', () => log(() => {
         if (constants.LOG_EXPELLED_URLS.includes(req.originalUrl)) return;
         let logRequired = true;
         constants.LOG_EXPELLED_URLS.forEach(url => {
@@ -14,7 +14,7 @@ const logRequest = (req, res, next) => {
         if (!logRequired) return;
         const logLevel = res.statusCode >= statusAndMsgs.STATUS_NOT_FOUND ? "ERROR" : "INFO";
         logger.info(logBuilder(logLevel, "WEBREQUEST", res.statusCode, req));
-    });
+    }));
     next();
 }
 

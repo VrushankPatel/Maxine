@@ -1,8 +1,8 @@
 const { constants } = require("../../main/util/constants/constants");
 
 const TESTUSER = {
-    userName: constants.DEFAULT_ADMIN_USERNAME_PWD,
-    password: constants.DEFAULT_ADMIN_USERNAME_PWD
+    userName: constants.DEFAULT_ADMIN_USERNAME,
+    password: constants.DEFAULT_ADMIN_PASSWORD
 }
 
 const ENDPOINTS = {
@@ -21,7 +21,8 @@ const ENDPOINTS = {
             servers: '/api/maxine/serviceops/servers',
             discover: '/api/maxine/serviceops/discover'
         },
-        signin: '/api/maxine/signin'
+        signin: '/api/maxine/signin',
+        changePassword: '/api/maxine/change-password'
     }
 }
 

@@ -1,6 +1,6 @@
 const jwt = require('jsonwebtoken');
 const _ = require('lodash');
-const { admin, User } = require('../../entity/user');
+const { admin } = require('../../entity/user');
 const { statusAndMsgs, constants } = require('../../util/constants/constants');
 
 function authenticationController(req, res, next) {
@@ -25,7 +25,7 @@ function authenticationController(req, res, next) {
     }
 
     jwt.verify(token, constants.SECRET, (err, user) => {
-        if (user && _.isEqual(User.createUserFromObj(user), admin)){
+        if (user && user.userName === admin.userName && user.credentialVersion === admin.credentialVersion){
             next();
             return;
         }

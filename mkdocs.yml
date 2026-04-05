@@ -2,10 +2,10 @@ site_name: Maxine SRD
 nav:
   - Introduction: index.md
   - Features: features.md
-  - Getting started: about.md
+  - Roadmap: roadmap.md
+  - Maintainer: about.md
   - API: api.md
   - LICENCE: licence.md
-  - About: about.md
 theme:
   name: readthedocs
   nav_style: dark
