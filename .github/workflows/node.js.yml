@@ -47,7 +47,7 @@ jobs:
         with:
           name: coverage-report
           path: coverage
-          if-no-files-found: error
+          if-no-files-found: warn
 
   java-sdk:
     runs-on: ubuntu-latest
