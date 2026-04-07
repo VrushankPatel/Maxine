@@ -6,17 +6,18 @@ Maxine currently works as a single-process Node.js registry and discovery server
 
 - In-memory service registration, timeout-based eviction, and local registry-state restart recovery
 - Optional `shared-file` registry state synchronization for shared-volume deployments
+- Redis-backed shared registry state for multi-replica coordination
 - Redirect-based discovery with `RR`, `CH`, and `RH` selection strategies
 - Runtime config mutation through admin APIs
 - Basic JWT-protected admin endpoints
 - A compiled dashboard UI bundle checked into `client/`
-- A Docker image definition plus a single-replica Helm chart for Kubernetes installs
+- A Docker image definition plus a Helm chart that supports both single-replica local mode and Redis-backed multi-replica mode
 
 ## Highest-Priority Gaps
 
 ### Architecture and runtime
 
-- The registry is single-node and becomes a control-plane single point of failure.
+- The registry now has a shared-state backend option, but the application is still logically a single control plane with no consensus or split-brain protection.
 - Discovery is redirect-based rather than request-forwarding proxying, so upstream semantics are limited.
 - Health is inferred only from heartbeats. There is no active liveness or readiness verification.
 
@@ -25,7 +26,7 @@ Maxine currently works as a single-process Node.js registry and discovery server
 - Admin auth now supports env-backed or file-backed credentials, but it still needs stronger secret management and rotation controls.
 - JWT stability depends on setting `MAXINE_JWT_SECRET` outside of dev.
 - Observability is partial: there are logs and actuator endpoints, but no metrics export, tracing, or audit trail.
-- Kubernetes packaging now exists, and the first shared-file synchronization mode exists, but HA-safe operation still needs clustered state and stronger operational primitives than the current chart can provide.
+- Kubernetes packaging now exists, and Redis-backed state is available, but HA-safe operation still needs stronger operational primitives, managed dependency guidance, and failover validation.
 
 ### UI
 
@@ -43,7 +44,7 @@ Maxine currently works as a single-process Node.js registry and discovery server
 
 - A GHCR container publish workflow and a GitHub Pages Helm publish workflow now exist in-repo.
 - The first public publish and package-visibility setup still need to be completed in GitHub.
-- The chart is intentionally single-replica because Maxine is not yet a clustered control plane.
+- The chart defaults to single-replica local mode, but Redis-backed multi-replica installs now exist and need production validation.
 
 ## Delivery Plan
 
@@ -56,10 +57,10 @@ Maxine currently works as a single-process Node.js registry and discovery server
 
 ### Phase 2: Harden the registry model
 
-- Strengthen the current file-backed registry recovery and add durable/shared persistence options.
+- Move beyond the current Redis/shared-file coordination model toward a truly clustered control plane.
 - Add upstream health-checking and stale-node cleanup beyond passive timeouts.
 - Revisit weighted-node modeling so load-balancing and observability stay accurate.
-- Design for HA or clustered Maxine instances.
+- Add stronger HA semantics, failover behavior, and operational runbooks for clustered Maxine instances.
 
 ### Phase 3: Recover and improve the UI
 

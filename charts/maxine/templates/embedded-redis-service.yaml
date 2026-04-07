@@ -1,0 +1,19 @@
+{{- if .Values.embeddedRedis.enabled }}
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "maxine.embeddedRedisFullname" . }}
+  labels:
+    {{- include "maxine.labels" . | nindent 4 }}
+    app.kubernetes.io/component: redis
+spec:
+  type: ClusterIP
+  ports:
+    - name: redis
+      port: {{ .Values.embeddedRedis.service.port }}
+      targetPort: redis
+      protocol: TCP
+  selector:
+    app.kubernetes.io/instance: {{ .Release.Name }}
+    app.kubernetes.io/component: redis
+{{- end }}

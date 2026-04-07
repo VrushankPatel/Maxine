@@ -18,13 +18,13 @@ Maxine SRD has the ability to locate a network automatically making it so that t
 
 The current implementation plan and known gaps are tracked in [roadmap.md](roadmap.md).
 Official SDKs currently live in-repo for Node.js, Java, Python, and Go.
-Maxine also now includes a Helm chart for namespace-scoped Kubernetes installs.
+Maxine also now includes a Helm chart for namespace-scoped Kubernetes installs plus a Redis-backed shared state mode for multi-replica deployments.
 
 ## How Maxine works
 
 1. Assuming that the Maxine SRD server is up and running and all the services or microservices in the network have MAXINE-CLIENT added as a dependency in it, below is the explaination of how Maxine SRD works.
 2. The Maxine client installed in all the services will start sending the heartbeat (A special request that'll have all the necessary metadata of that service to let the other services connect) to the Maxine SRD.
-3. The SRD server will extract the service metadata from that request payload and will save it in the in-memory registry (to reduce the latency). It also snapshots that registry to local disk so active nodes can be restored after a restart. The server will run a timeout task that'll remove that service metadata after the given timeout in the metadata (If not provided, then default heartbeat timeout will be used). SRD will store the data by keeping the serviceName as the primary key so that by the serviceName, its URL can be discovered.
+3. The SRD server will extract the service metadata from that request payload and will save it in the in-memory registry (to reduce the latency). It can also snapshot that registry to local disk or to Redis so active nodes can be restored after a restart or shared across replicas. The server will run a timeout task or shared-state pruning cycle that'll remove that service metadata after the given timeout in the metadata (If not provided, then default heartbeat timeout will be used). SRD will store the data by keeping the serviceName as the primary key so that by the serviceName, its URL can be discovered.
 4. After this, all the services that want to intercommunicate inside its network, They'll connect to that service via the Maxine client, and here, it'll use the serviceName instead of the service URL, and the Maxine API client will pass that request to SRD.
 5. SRD will receive the request and will extract the serviceName from it. It'll discover if that service is stored there in the registry, If it is, then it'll redirect the request to that service's URL.
 6. If that service name has multiple nodes in the registry, then SRD will distribute the traffic across all the nodes of that service by maxine's inbuilt load balancer.
@@ -52,5 +52,5 @@ As we can see, maxine SRD is working as a reverse proxy for each servers, and re
 
 ## Limitations
 
-Maxine SRD can now recover registry state from a local file, but it still has no internal clustering or shared durability.
-SRD can be replicated explicitly but without a shared control plane, it remains a single point of failure in the system.
+Maxine SRD can now recover registry state from a local file and can share that state through Redis, but it still has no internal consensus, leader election, or split-brain protection.
+SRD can now be replicated with a shared Redis backend, but the application is still logically a single control plane and needs more hardening before it should be treated as a production-grade distributed registry.

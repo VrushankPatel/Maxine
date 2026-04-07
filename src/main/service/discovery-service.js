@@ -16,9 +16,9 @@ class DiscoveryService{
      * @param {string} ip
      * @returns {object}
      */
-    getNode = (serviceName, ip) => {
-        registryService.initialize();
-        registryService.syncForRead();
+    getNode = async (serviceName, ip) => {
+        await registryService.initialize();
+        await registryService.syncForRead();
 
         switch(config.serverSelectionStrategy){
             case constants.SSS.RR:

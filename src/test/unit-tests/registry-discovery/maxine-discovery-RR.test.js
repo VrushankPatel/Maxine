@@ -20,19 +20,19 @@ const serviceSampleRR = {
     "weight": 10
 };
 
-// Registering fake server to discover afterwards for tests.
-registryService.registryService(serviceSampleRR);
-
 describe(`${fileName} : NON API discover with config with Round Robin`, () => {
-    it(`RR discover with NonAPI`, (done) => {
+    before(async () => {
+        await registryService.registryService(serviceSampleRR);
+    });
+
+    it(`RR discover with NonAPI`, async () => {
         // Making sure that server selection strategy is CH
         config.serverSelectionStrategy = constants.SSS.RR;
-        const response1 = discoveryService.getNode(serviceSampleRR.serviceName,serviceSampleRR.hostName);
+        const response1 = await discoveryService.getNode(serviceSampleRR.serviceName,serviceSampleRR.hostName);
         response1.should.be.a('object');
         // by default, Round robin will return node with name lke nodename + '-0', w'll test it.
         response1.should.have.own.property("nodeName", `${serviceSampleRR.nodeName}-0`);
         response1.should.have.own.property("parentNode", serviceSampleRR.nodeName);
         response1.should.have.own.property("address");
-        done();
     });
 });

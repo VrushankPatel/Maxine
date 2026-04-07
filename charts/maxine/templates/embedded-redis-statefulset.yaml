@@ -1,0 +1,74 @@
+{{- if .Values.embeddedRedis.enabled }}
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: {{ include "maxine.embeddedRedisFullname" . }}
+  labels:
+    {{- include "maxine.labels" . | nindent 4 }}
+    app.kubernetes.io/component: redis
+spec:
+  serviceName: {{ include "maxine.embeddedRedisFullname" . }}
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/instance: {{ .Release.Name }}
+      app.kubernetes.io/component: redis
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/instance: {{ .Release.Name }}
+        app.kubernetes.io/component: redis
+    spec:
+      containers:
+        - name: redis
+          image: "{{ .Values.embeddedRedis.image.repository }}:{{ .Values.embeddedRedis.image.tag }}"
+          imagePullPolicy: {{ .Values.embeddedRedis.image.pullPolicy }}
+          command:
+            - /bin/sh
+            - -ec
+            - |
+              if [ -n "${REDIS_PASSWORD:-}" ]; then
+                exec redis-server --appendonly yes --save 60 1 --requirepass "$REDIS_PASSWORD"
+              fi
+              exec redis-server --appendonly yes --save 60 1
+          ports:
+            - name: redis
+              containerPort: {{ .Values.embeddedRedis.service.port }}
+              protocol: TCP
+          {{- if .Values.embeddedRedis.auth.enabled }}
+          env:
+            - name: REDIS_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "maxine.embeddedRedisSecretName" . }}
+                  key: REDIS_PASSWORD
+          {{- end }}
+          volumeMounts:
+            - name: redis-data
+              mountPath: /data
+          resources:
+            {{- toYaml .Values.embeddedRedis.resources | nindent 12 }}
+      {{- if not .Values.embeddedRedis.persistence.enabled }}
+      volumes:
+        - name: redis-data
+          emptyDir: {}
+      {{- end }}
+  {{- if .Values.embeddedRedis.persistence.enabled }}
+  volumeClaimTemplates:
+    - metadata:
+        name: redis-data
+        {{- with .Values.embeddedRedis.persistence.annotations }}
+        annotations:
+          {{- toYaml . | nindent 10 }}
+        {{- end }}
+      spec:
+        accessModes:
+          {{- toYaml .Values.embeddedRedis.persistence.accessModes | nindent 10 }}
+        resources:
+          requests:
+            storage: {{ .Values.embeddedRedis.persistence.size }}
+        {{- if .Values.embeddedRedis.persistence.storageClassName }}
+        storageClassName: {{ .Values.embeddedRedis.persistence.storageClassName | quote }}
+        {{- end }}
+  {{- end }}
+{{- end }}

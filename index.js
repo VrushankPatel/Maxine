@@ -16,8 +16,6 @@ const swaggerDocument = loadSwaggerYAML();
 const path = require("path");
 const currDir = require('./conf');
 
-registryService.initialize();
-
 const buildApp = () => ExpressAppBuilder.createNewApp()
     .addCors()
     .ifPropertyOnce("statusMonitorEnabled")
@@ -41,10 +39,21 @@ const buildApp = () => ExpressAppBuilder.createNewApp()
 
 const app = buildApp();
 
-const startServer = () => app.listen(constants.PORT, loggingUtil.initApp);
+const startServer = async () => {
+    await registryService.initialize();
+
+    return new Promise((resolve) => {
+        const server = app.listen(constants.PORT, () => {
+            loggingUtil.initApp();
+            resolve(server);
+        });
+    });
+};
 
 if (require.main === module) {
-    startServer();
+    startServer().catch((err) => {
+        loggingUtil.errorAndClose(`Unable to start Maxine: ${err.message}`);
+    });
 }
 
 module.exports = app;

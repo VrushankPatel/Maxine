@@ -7,9 +7,9 @@ class RoundRobinDiscovery{
      * @param {string} serviceName
      * @returns {object}
      */
-    getNode = (serviceName) => {
+    getNode = async (serviceName) => {
         const nodes = serviceRegistry.getNodes(serviceName) || {};
-        const offset = this.getOffsetAndIncrement(serviceName) || 0;
+        const offset = await this.getOffsetAndIncrement(serviceName) || 0;
         const keys = Object.keys(nodes);
         if (keys.length === 0) {
             return {};
@@ -23,7 +23,7 @@ class RoundRobinDiscovery{
      * @param {string} serviceName
      * @returns {number}
      */
-    getOffsetAndIncrement = (serviceName) => {
+    getOffsetAndIncrement = async (serviceName) => {
         return registryService.getOffsetAndIncrement(serviceName);
     }
 }

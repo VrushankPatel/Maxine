@@ -12,4 +12,7 @@ data:
   MAXINE_REGISTRY_STATE_MODE: {{ .Values.maxine.registryStateMode | quote }}
   MAXINE_REGISTRY_STATE_LOCK_TIMEOUT_MS: {{ .Values.maxine.registryStateLockTimeoutMs | quote }}
   MAXINE_REGISTRY_STATE_LOCK_RETRY_MS: {{ .Values.maxine.registryStateLockRetryMs | quote }}
+  MAXINE_REGISTRY_REDIS_URL: {{ include "maxine.redisUrl" . | quote }}
+  MAXINE_REGISTRY_REDIS_KEY_PREFIX: {{ .Values.maxine.redis.keyPrefix | quote }}
+  MAXINE_REGISTRY_REDIS_CONNECT_TIMEOUT_MS: {{ .Values.maxine.redis.connectTimeoutMs | quote }}
   MAXINE_PERFORMANCE_REPORT_URL: {{ .Values.maxine.performanceReportUrl | quote }}

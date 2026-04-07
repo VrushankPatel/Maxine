@@ -2,15 +2,15 @@
 ### Container and Helm packaging
 - Maxine now ships with a Docker image definition for GHCR publication.
 - A Helm chart is available in `charts/maxine` so the server can be installed into a namespace with persistent local state.
-- The chart intentionally defaults to a single replica because Maxine does not yet have clustered/shared registry coordination.
-- The runtime now also supports a `shared-file` registry state mode so multiple pods can synchronize through a shared registry-state file when mounted on shared storage.
+- The chart intentionally defaults to a single replica, but it now also supports a Redis-backed deployment path for multi-replica installs.
+- The runtime now supports `shared-file` registry state mode for shared-volume coordination and `redis` mode for an external shared-state backend with distributed mutation locking.
 ### Dashboard UI
 - Maxine dashboard UI provides a very interactive way to monitor the configuration, logs, SRD info and the SRD's current status like memory occupied, requests per second etc.
 
 <img src="/en/latest/img/maxine-dashboard.png" />
 ### Service registry
 - The service registry is the part of Maxine that register or save the service metadata (Extracted data like serviceName, hostName, nodeName, port, SSL, timeOut, weight, path from heartbeat) in memory to make the retrieval faster.
-- Active registry data is also snapshotted to a local state file so services can be restored after a restart.
+- Active registry data can also be snapshotted to a local state file or shared through Redis so services can be restored after a restart or coordinated across replicas.
 - Also, the SRD replicates the more weighted services (The service that sends a weight of more than one).
 - After registering the Service, the SRD will run a thread asynchronously that'll remove that service from the registry once the timeout exceeds and that Service is not re-registered.
 - If the service sends the heartbeat before the timeout passes since it was registered, then the earlier timeout is cancelled and a new timeout starts.
