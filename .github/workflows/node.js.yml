@@ -106,3 +106,19 @@ jobs:
       - name: Run Go SDK tests
         working-directory: client-sdk/go
         run: go test ./...
+
+  helm-chart:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Helm
+        uses: azure/setup-helm@v4
+
+      - name: Lint and render Helm chart
+        run: |
+          helm lint charts/maxine
+          helm template maxine charts/maxine >/tmp/maxine-chart.yaml

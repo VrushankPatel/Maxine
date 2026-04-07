@@ -8,6 +8,16 @@ This module contains the Java client source for Maxine.
 mvn package
 ```
 
+## Dependency
+
+```xml
+<dependency>
+    <groupId>io.github.vrushankpatel</groupId>
+    <artifactId>maxine-client</artifactId>
+    <version>1.0.0</version>
+</dependency>
+```
+
 ## Features
 
 - Sign in and store a bearer token

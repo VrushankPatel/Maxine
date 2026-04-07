@@ -1,0 +1,12 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "maxine.configMapName" . }}
+  labels:
+    {{- include "maxine.labels" . | nindent 4 }}
+data:
+  PORT: {{ .Values.service.port | quote }}
+  MAXINE_ADMIN_STATE_FILE: /app/data/admin-user.json
+  MAXINE_REGISTRY_STATE_FILE: /app/data/registry-state.json
+  MAXINE_REGISTRY_PERSISTENCE: {{ ternary "true" "false" .Values.persistence.enabled | quote }}
+  MAXINE_PERFORMANCE_REPORT_URL: {{ .Values.maxine.performanceReportUrl | quote }}

@@ -112,11 +112,48 @@ CircleCI has been removed from this repository. GitHub Actions is now the source
 
 - `.github/workflows/node.js.yml` runs the automated test suite on Node.js `20.x` and `22.x`
 - `.github/workflows/node.js.yml` also builds the Java SDK modules and validates the Python and Go SDKs
+- `.github/workflows/node.js.yml` also lints and renders the Helm chart
 - `.github/workflows/codeql.yml` runs CodeQL analysis
 - `.github/workflows/load-test.yml` provides a manual load-test workflow and uploads the k6 HTML report as a GitHub Actions artifact
-- `.github/workflows/publish-node-sdk.yml` publishes the Node SDK to Artifactory using `MAXINE_NPM_REGISTRY_URL` and `ARTIFACTORY_NPM_TOKEN`
-- `.github/workflows/publish-java-sdk.yml` deploys the Java SDK modules to Artifactory using `ARTIFACTORY_MAVEN_RELEASE_URL`, `ARTIFACTORY_USERNAME`, and `ARTIFACTORY_PASSWORD`
-- `.github/workflows/publish-python-sdk.yml` publishes the Python SDK to Artifactory using `ARTIFACTORY_PYPI_REPOSITORY_URL`, `ARTIFACTORY_USERNAME`, and `ARTIFACTORY_PASSWORD`
+- `.github/workflows/publish-container.yml` builds and publishes the Maxine runtime container image to GHCR
+- `.github/workflows/publish-helm-chart.yml` packages charts from `charts/` and publishes the Helm repository to GitHub Pages
+- `.github/workflows/publish-node-sdk.yml` publishes the Node SDK to GitHub Packages using the repository `GITHUB_TOKEN`
+- `.github/workflows/publish-java-sdk.yml` deploys the Java SDK modules to Maven Central using `MAVEN_CENTRAL_USERNAME`, `MAVEN_CENTRAL_PASSWORD`, `MAVEN_GPG_PRIVATE_KEY`, and `MAVEN_GPG_PASSPHRASE`
+- `.github/workflows/publish-python-sdk.yml` publishes the Python SDK to PyPI using PyPI trusted publishing
+- The Go SDK is released by tagging the repository because Go modules are fetched directly from the VCS path
+
+## Docker and Helm
+
+Maxine now ships with:
+
+- a production-oriented container image definition in `Dockerfile`
+- a Helm chart in `charts/maxine`
+- a GHCR image publishing workflow
+- a GitHub Pages Helm repository publishing workflow
+
+The recommended install path is:
+
+```bash
+helm repo add maxine https://vrushankpatel.github.io/Maxine
+helm repo update
+helm install maxine maxine/maxine --namespace maxine --create-namespace
+```
+
+For direct source installs during development:
+
+```bash
+helm install maxine ./charts/maxine --namespace maxine --create-namespace
+```
+
+Important chart behavior:
+
+- the chart defaults to `replicaCount=1`
+- `/app/data` is persisted by default so registry snapshots survive pod restarts
+- `/app/logs` is ephemeral by default
+- probes target `GET /api/actuator/health`
+- the default image repository is `ghcr.io/vrushankpatel/maxine`
+
+Before advertising public installs, publish the container once and make the GHCR package public if GitHub creates it as private on first push.
 
 ## SDKs
 
@@ -132,8 +169,16 @@ These are intentionally narrower than the old multi-language experiments in git 
 
 ### Node.js usage
 
+Install:
+
+```bash
+npm config set @vrushankpatel:registry https://npm.pkg.github.com
+npm login --scope=@vrushankpatel --auth-type=legacy --registry=https://npm.pkg.github.com
+npm install @vrushankpatel/maxine-client
+```
+
 ```js
-const { MaxineClient } = require('./client-sdk');
+const { MaxineClient } = require('@vrushankpatel/maxine-client');
 
 async function main() {
   const client = new MaxineClient({ baseUrl: 'http://localhost:8080' });
@@ -158,6 +203,16 @@ async function main() {
 ```
 
 ### Java client usage
+
+Dependency:
+
+```xml
+<dependency>
+    <groupId>io.github.vrushankpatel</groupId>
+    <artifactId>maxine-client</artifactId>
+    <version>1.0.0</version>
+</dependency>
+```
 
 ```java
 import com.maxine.client.MaxineClient;
@@ -184,6 +239,16 @@ heartbeat.stop();
 
 ### Spring Boot starter example
 
+Dependency:
+
+```xml
+<dependency>
+    <groupId>io.github.vrushankpatel</groupId>
+    <artifactId>maxine-spring-boot-starter</artifactId>
+    <version>1.0.0</version>
+</dependency>
+```
+
 ```properties
 spring.application.name=orders-service
 server.port=8081
@@ -194,9 +259,15 @@ maxine.client.heartbeat-interval=5s
 maxine.client.weight=1
 ```
 
-With `com.maxine:maxine-spring-boot-starter:1.0.0` on the classpath, that is enough to auto-register the service and keep heartbeats running.
+With `io.github.vrushankpatel:maxine-spring-boot-starter:1.0.0` on the classpath, that is enough to auto-register the service and keep heartbeats running.
 
 ### Python usage
+
+Install:
+
+```bash
+pip install maxine-client
+```
 
 ```python
 from maxine_client import MaxineClient
@@ -222,6 +293,12 @@ heartbeat.stop()
 ```
 
 ### Go usage
+
+Install:
+
+```bash
+go get github.com/VrushankPatel/Maxine/client-sdk/go@latest
+```
 
 ```go
 package main
@@ -265,7 +342,57 @@ func main() {
 
 - OpenAPI spec: [api-specs/swagger.yaml](api-specs/swagger.yaml)
 - Docs entry: [docs/index.md](docs/index.md)
+- Helm guide: [docs/helm.md](docs/helm.md)
 - Roadmap: [docs/roadmap.md](docs/roadmap.md)
+
+## Package Publishing Setup
+
+For the public SDK releases:
+
+- GitHub Packages only supports scoped npm packages, so the Node SDK is published as `@vrushankpatel/maxine-client`.
+- There is no separate "create package" screen in GitHub Packages. The package is created by the first successful publish to `npm.pkg.github.com`, and GitHub marks npm packages private by default until you change package visibility.
+- PyPI does not have a separate "create project" screen for this flow either. The `maxine-client` project is created by the first successful publish, or by configuring a pending trusted publisher first.
+- Maven Central should use the GitHub-personal namespace `io.github.vrushankpatel`. A namespace shaped like `io.github.vrushankpatel.maxine` is treated by Sonatype as if `vrushankpatel.maxine` were the GitHub account name, which makes the verification URL invalid.
+
+GitHub repository configuration still required outside the repo:
+
+- PyPI trusted publisher for owner `VrushankPatel`, repository `Maxine`, workflow `publish-python-sdk.yml`
+- Repository secrets for Maven Central: `MAVEN_CENTRAL_USERNAME`, `MAVEN_CENTRAL_PASSWORD`, `MAVEN_GPG_PRIVATE_KEY`, `MAVEN_GPG_PASSPHRASE`
+- No extra secret is needed for Node publishing because the GitHub Packages workflow uses the repository `GITHUB_TOKEN`
+
+Recommended one-time release setup:
+
+1. Cancel the unverified `io.github.vrushankpatel.maxine` Sonatype namespace request.
+2. Add `io.github.vrushankpatel` instead. If Sonatype does not auto-verify it, verify the new key with a temporary public repository under `https://github.com/VrushankPatel/<verification-key>`.
+3. Publish `@vrushankpatel/maxine-client` once through GitHub Actions so GitHub Packages creates the package.
+4. Configure PyPI trusted publishing for `maxine-client`.
+5. Add the Maven Central and GPG secrets to this GitHub repository.
+
+The current publish workflows are manual `workflow_dispatch` jobs so the first public releases can be performed deliberately. The GitHub Packages npm registry still requires consumers to authenticate with GitHub when installing outside Actions. The Go SDK does not need a separate registry account; consumers install it from the module path and version tags.
+
+## Production Readiness
+
+Maxine is better than it was at the start of this cleanup, but it is still not something I would call fully production grade yet.
+
+What is now in place:
+
+- restart recovery for registry state via local disk snapshots
+- safer admin/JWT handling than the original code
+- multi-language SDKs
+- GitHub Actions CI
+- container packaging and Helm delivery
+
+What still keeps it from production-grade service-registry status:
+
+- Maxine is still a single control-plane node with no clustering, no leader election, and no shared registry state.
+- The registry is still in-memory first and only snapshotted locally, so node loss is still a control-plane outage.
+- Scaling the server to multiple replicas is not safe today without architectural changes.
+- Service discovery still redirects clients instead of proxying requests, which limits observability, policy enforcement, and failure handling.
+- There are no active health checks against registered upstreams beyond heartbeat expiry.
+- Security is still basic: single admin user, no RBAC, no external identity provider, no secret-rotation workflow, and no audit trail.
+- There is no first-class metrics export, tracing, SLO monitoring, or alerting integration.
+- The editable UI source is still missing, which makes frontend fixes and operational UX work risky.
+- Release hardening is still incomplete: Maven Central credentials and signing are not finished, and the GHCR/Helm publish paths need the first real public run.
 
 ## Known Gaps
 
@@ -274,7 +401,8 @@ func main() {
 - Registry membership is heartbeat-driven only. There is no active upstream health-checking.
 - The admin model is better than before but still needs stronger secret storage, rotation, and auditability.
 - The UI source is missing from the repo, which blocks safe iterative frontend work.
-- Public release/versioning policy is still missing even though Artifactory publish workflows now exist for the Node, Java, and Python SDKs and Go module packaging is now present in-repo.
+- Public release/versioning policy is still missing even though npm, PyPI, and Maven Central workflows now exist and the Go module is installable from the repository path.
+- Helm packaging now exists, but HA-safe Kubernetes operation still requires real multi-node registry design rather than a bigger chart.
 
 ## Implementation Roadmap
 
@@ -283,8 +411,9 @@ The active roadmap is tracked in [docs/roadmap.md](docs/roadmap.md). The next ma
 1. Harden the runtime: persistent secrets, safer auth, better startup/config boundaries, and registry lifecycle fixes.
 2. Improve the registry itself: stronger durability, health-aware eviction, better proxy semantics, and multi-node operation.
 3. Recover or rebuild the frontend source so the UI can evolve safely.
-4. Expand official client SDKs for Java, Node.js, Python, and Go with richer retry/backoff and release versioning.
-5. Add semantic versioning, changelog generation, and public package distribution beyond Artifactory.
+4. Harden the platform story: public GHCR image publication, GitHub Pages Helm publication, pinned release tags, and installation guides.
+5. Expand official client SDKs for Java, Node.js, Python, and Go with richer retry/backoff and release versioning.
+6. Add semantic versioning, changelog generation, and tagged public package distribution.
 
 ## License
 
