@@ -14,6 +14,10 @@ Admin username source:
   {{- end }}
 
 Important:
-  - Maxine is currently designed for a single active replica. Keep replicaCount at 1 unless you add shared state and leader/coordinator logic outside this chart.
+  - Local mode is single-replica only. For multi-replica installs, set maxine.registryStateMode=redis and back it with embeddedRedis.enabled=true or an external Redis URL.
+  - If you enable replicaCount > 1, prefer auth.existingSecret and either disable /app/data persistence or use shared storage intentionally.
   - Change the default admin credentials before exposing Maxine outside a trusted environment.
   - If you publish the container to GHCR for public reuse, make the package public after the first push.
+  {{- if .Values.embeddedRedis.enabled }}
+  - Embedded Redis is enabled at svc/{{ include "maxine.embeddedRedisFullname" . }}:{{ .Values.embeddedRedis.service.port }}.
+  {{- end }}

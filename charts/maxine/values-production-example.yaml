@@ -1,19 +1,19 @@
+replicaCount: 3
+
 image:
   repository: ghcr.io/vrushankpatel/maxine
   tag: "1.0.0"
 
 maxine:
-  registryStateMode: shared-file
+  registryStateMode: redis
+  redis:
+    keyPrefix: maxine:prod
 
 auth:
   existingSecret: maxine-auth
 
 persistence:
-  enabled: true
-  accessModes:
-    - ReadWriteMany
-  size: 5Gi
-  storageClassName: standard
+  enabled: false
 
 logs:
   persistence:
@@ -37,3 +37,13 @@ resources:
   limits:
     cpu: "1"
     memory: 1Gi
+
+embeddedRedis:
+  enabled: true
+  auth:
+    enabled: true
+    existingSecret: maxine-redis-auth
+  persistence:
+    enabled: true
+    size: 5Gi
+    storageClassName: standard

@@ -7,7 +7,7 @@ metadata:
 spec:
   replicas: {{ .Values.replicaCount }}
   strategy:
-    type: Recreate
+    type: {{ ternary "RollingUpdate" "Recreate" (and (eq .Values.maxine.registryStateMode "redis") (gt (int .Values.replicaCount) 1)) }}
   selector:
     matchLabels:
       {{- include "maxine.selectorLabels" . | nindent 6 }}
@@ -21,6 +21,9 @@ spec:
       annotations:
         checksum/config: {{ include (print $.Template.BasePath "/configmap.yaml") . | sha256sum }}
         checksum/secret: {{ include (print $.Template.BasePath "/secret.yaml") . | sha256sum }}
+        {{- if and .Values.embeddedRedis.enabled .Values.embeddedRedis.auth.enabled }}
+        checksum/embedded-redis-secret: {{ include (print $.Template.BasePath "/embedded-redis-secret.yaml") . | sha256sum }}
+        {{- end }}
         {{- with .Values.podAnnotations }}
         {{- toYaml . | nindent 8 }}
         {{- end }}
@@ -45,8 +48,18 @@ spec:
                 name: {{ include "maxine.configMapName" . }}
             - secretRef:
                 name: {{ include "maxine.secretName" . }}
-          {{- with .Values.extraEnv }}
+          {{- if and .Values.embeddedRedis.enabled .Values.embeddedRedis.auth.enabled }}
           env:
+            - name: MAXINE_REGISTRY_REDIS_URL
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "maxine.embeddedRedisSecretName" . }}
+                  key: MAXINE_REGISTRY_REDIS_URL
+          {{- end }}
+          {{- with .Values.extraEnv }}
+          {{- if not (and $.Values.embeddedRedis.enabled $.Values.embeddedRedis.auth.enabled) }}
+          env:
+          {{- end }}
             {{- toYaml . | nindent 12 }}
           {{- end }}
           volumeMounts:

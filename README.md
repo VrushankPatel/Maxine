@@ -21,11 +21,12 @@
 
 ## Overview
 
-Maxine is a Node.js service registry and discovery server for microservice-style systems. It accepts heartbeat-style registrations over HTTP, stores active service nodes in memory, snapshots them to disk for restart recovery, and resolves a service name to a concrete upstream node by acting as a redirecting reverse-proxy entry point.
+Maxine is a Node.js service registry and discovery server for microservice-style systems. It accepts heartbeat-style registrations over HTTP, stores active service nodes in memory, can mirror that state to local disk or Redis for restart/shared recovery, and resolves a service name to a concrete upstream node by acting as a redirecting reverse-proxy entry point.
 
 Today the project ships with:
 
 - In-memory service registration and timeout-based eviction
+- Local, shared-file, and Redis-backed registry state modes
 - Three node-selection strategies: round robin, consistent hashing, and rendezvous hashing
 - Auth-protected admin endpoints for config and logs
 - Actuator-style health/info/metrics endpoints
@@ -36,7 +37,7 @@ Today the project ships with:
 ### Service registration
 
 - `POST /api/maxine/serviceops/register` accepts a service heartbeat payload.
-- Registration is stored in memory under `serviceName` and mirrored to a local state file for restart recovery.
+- Registration is stored in memory under `serviceName` and mirrored to either a local state file or a Redis-backed shared snapshot, depending on runtime mode.
 - `weight` is implemented by creating multiple virtual nodes in the registry.
 - Nodes expire after `timeOut` seconds unless the service re-registers.
 - Re-registering a node now replaces its old virtual-node footprint so stale replicas are not left behind when `weight` changes.
@@ -101,11 +102,14 @@ The HTML summary is written to `artifacts/performance-summary.html`.
 | `MAXINE_ADMIN_USERNAME` | env var | `admin` | Overrides the admin username |
 | `MAXINE_ADMIN_PASSWORD` | env var | `admin` | Overrides the admin password |
 | `MAXINE_ADMIN_STATE_FILE` | env var | `data/admin-user.json` | Local file used to persist password changes when admin credentials are not managed by env vars |
-| `MAXINE_REGISTRY_PERSISTENCE` | env var | `true` | Set to `false` to disable file-backed registry snapshots |
+| `MAXINE_REGISTRY_PERSISTENCE` | env var | `true` | Set to `false` to disable local file-backed registry snapshots; Redis mode ignores this and keeps shared state enabled |
 | `MAXINE_REGISTRY_STATE_FILE` | env var | `data/registry-state.json` | Local file used to restore active registrations after restart |
-| `MAXINE_REGISTRY_STATE_MODE` | env var | `local` | `local` uses the existing node-local snapshot behavior, `shared-file` re-synchronizes registry state from the snapshot file on every read/write path |
-| `MAXINE_REGISTRY_STATE_LOCK_TIMEOUT_MS` | env var | `5000` | File-lock acquisition timeout used by `shared-file` mode |
-| `MAXINE_REGISTRY_STATE_LOCK_RETRY_MS` | env var | `100` | Retry interval for the shared-file lock |
+| `MAXINE_REGISTRY_STATE_MODE` | env var | `local` | `local` uses node-local snapshots, `shared-file` re-synchronizes from a shared snapshot file, and `redis` uses Redis for shared state plus distributed mutation locking |
+| `MAXINE_REGISTRY_STATE_LOCK_TIMEOUT_MS` | env var | `5000` | Lock timeout used by `shared-file` and Redis-backed mutation paths |
+| `MAXINE_REGISTRY_STATE_LOCK_RETRY_MS` | env var | `100` | Retry interval used while waiting for the shared state lock |
+| `MAXINE_REGISTRY_REDIS_URL` | env var | unset | Required when `MAXINE_REGISTRY_STATE_MODE=redis` unless the Helm chart injects an embedded Redis URL |
+| `MAXINE_REGISTRY_REDIS_KEY_PREFIX` | env var | `maxine:registry` | Redis key prefix used for the shared registry snapshot and lock |
+| `MAXINE_REGISTRY_REDIS_CONNECT_TIMEOUT_MS` | env var | `5000` | Redis client connect timeout in milliseconds |
 | `MAXINE_JWT_SECRET` | env var | unset | Strongly recommended in non-dev environments so JWTs remain valid across restarts |
 | `MAXINE_PERFORMANCE_REPORT_URL` | env var | unset | Public URL consumed by `GET /api/actuator/performance` |
 
@@ -133,6 +137,7 @@ Maxine now ships with:
 - a Helm chart in `charts/maxine`
 - a GHCR image publishing workflow
 - a GitHub Pages Helm repository publishing workflow
+- an optional Redis-backed multi-replica deployment path for Kubernetes
 
 The recommended install path is:
 
@@ -148,6 +153,17 @@ For direct source installs during development:
 helm install maxine ./charts/maxine --namespace maxine --create-namespace
 ```
 
+For the Redis-backed multi-replica chart path:
+
+```bash
+helm install maxine maxine/maxine \
+  --namespace maxine \
+  --create-namespace \
+  --set replicaCount=3 \
+  --set maxine.registryStateMode=redis \
+  --set embeddedRedis.enabled=true
+```
+
 Important chart behavior:
 
 - the chart defaults to `replicaCount=1`
@@ -155,7 +171,8 @@ Important chart behavior:
 - `/app/logs` is ephemeral by default
 - probes target `GET /api/actuator/health`
 - the default image repository is `ghcr.io/vrushankpatel/maxine`
-- `shared-file` registry mode is available for a shared-volume deployment model, but it is still a coordination step rather than full clustered HA
+- `shared-file` registry mode is still available for shared-volume coordination, but Redis mode is the first real shared-state option for multi-replica installs
+- the chart can run an embedded single-instance Redis or point Maxine at an external Redis URL
 
 Before advertising public installs, publish the container once and make the GHCR package public if GitHub creates it as private on first push.
 
@@ -382,6 +399,7 @@ What is now in place:
 
 - restart recovery for registry state via local disk snapshots
 - optional shared-file registry synchronization for shared-volume deployments
+- Redis-backed shared registry state with distributed mutation locking
 - safer admin/JWT handling than the original code
 - multi-language SDKs
 - GitHub Actions CI
@@ -389,26 +407,26 @@ What is now in place:
 
 What still keeps it from production-grade service-registry status:
 
-- Maxine is still a single control-plane node with no clustering, no leader election, and no shared registry state.
-- The new `shared-file` mode helps multiple pods see the same registry file, but it is not a substitute for a real distributed coordination backend.
-- The registry is still in-memory first and only snapshotted locally, so node loss is still a control-plane outage.
-- Scaling the server to multiple replicas is not safe today without architectural changes.
+- Maxine now has a Redis-backed shared state mode, but it is still not a fully clustered control plane with leader election, fencing, or consensus.
+- The registry is still in-memory first inside each pod and is rebuilt from shared state on demand, so there is more coordination latency and less rigor than a purpose-built distributed registry.
+- Embedded Redis in the Helm chart is useful for self-contained installs, but serious production setups should still prefer an external managed Redis with backup and failover.
 - Service discovery still redirects clients instead of proxying requests, which limits observability, policy enforcement, and failure handling.
 - There are no active health checks against registered upstreams beyond heartbeat expiry.
 - Security is still basic: single admin user, no RBAC, no external identity provider, no secret-rotation workflow, and no audit trail.
 - There is no first-class metrics export, tracing, SLO monitoring, or alerting integration.
 - The editable UI source is still missing, which makes frontend fixes and operational UX work risky.
-- Release hardening is still incomplete: Maven Central credentials and signing are not finished, and the GHCR/Helm publish paths need the first real public run.
+- Release hardening is still incomplete: Maven Central credentials and signing are not finished, and the public package channels still need their first official versioned release cycle.
 
 ## Known Gaps
 
-- Registry state is now restored from a local file, but it is still single-node and not durable across shared storage or clustered deployments.
-- Maxine is still a single-node control plane and therefore a single point of failure.
+- Redis mode gives Maxine a shared state backend, but there is still no consensus-based clustering or clean split-brain prevention story.
+- Shared-file mode remains a coordination fallback, not a production-grade HA design.
+- Maxine is still logically a single control plane and therefore a single point of failure at the application layer.
 - Registry membership is heartbeat-driven only. There is no active upstream health-checking.
 - The admin model is better than before but still needs stronger secret storage, rotation, and auditability.
 - The UI source is missing from the repo, which blocks safe iterative frontend work.
 - Public release/versioning policy is still missing even though npm, PyPI, and Maven Central workflows now exist and the Go module is installable from the repository path.
-- Helm packaging now exists, but HA-safe Kubernetes operation still requires real multi-node registry design rather than a bigger chart.
+- Helm packaging now supports Redis-backed multi-replica installs, but HA-safe Kubernetes operation still needs stronger operational guidance, external dependency monitoring, and failover testing.
 
 ## Implementation Roadmap
 

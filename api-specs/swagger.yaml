@@ -4,8 +4,8 @@ info:
   version: v1
   description: >
     Maxine is a Node.js service registry and discovery server that stores
-    service heartbeats in memory, restores active registrations from a local
-    state snapshot after restart, and resolves service names to registered nodes.
+    service heartbeats in memory, restores active registrations from local or
+    Redis-backed shared state, and resolves service names to registered nodes.
   contact:
     name: Vrushank Patel
   license:

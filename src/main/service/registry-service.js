@@ -3,24 +3,45 @@ const { serviceRegistry: sRegistry } = require("../entity/service-registry");
 const { registryStateService } = require("./registry-state-service");
 const config = require("../config/config");
 const { constants } = require("../util/constants/constants");
+const { error } = require("../util/logging/logging-util");
 const _ = require('lodash');
+
 class RegistryService{
     initialized = false;
+    initializationPromise;
 
     isSharedFileMode = () => constants.REGISTRY_STATE_MODE === 'shared-file';
 
-    initialize = () => {
+    isRedisMode = () => constants.REGISTRY_STATE_MODE === 'redis';
+
+    isSharedStateMode = () => this.isSharedFileMode() || this.isRedisMode();
+
+    initialize = async () => {
         if (this.initialized) {
             return;
         }
 
-        this.initialized = true;
-        if (this.isSharedFileMode()) {
-            this.syncForRead();
-            return;
+        if (this.initializationPromise) {
+            return this.initializationPromise;
         }
 
-        this.restoreRegistryState();
+        this.initializationPromise = (async () => {
+            if (this.isSharedStateMode()) {
+                await registryStateService.initialize();
+                await this.syncForRead();
+            } else {
+                await this.restoreRegistryState();
+            }
+
+            this.initialized = true;
+        })().catch((err) => {
+            this.initialized = false;
+            throw err;
+        }).finally(() => {
+            this.initializationPromise = undefined;
+        });
+
+        return this.initializationPromise;
     }
 
     ensureServiceEntry = (serviceName, offset = 0) => {
@@ -29,12 +50,12 @@ class RegistryService{
         }
     }
 
-    persistRegistry = () => {
-        registryStateService.save(sRegistry.getRegServers());
+    persistRegistry = async () => {
+        await registryStateService.save(sRegistry.getRegServers());
     }
 
     scheduleNodeExpiry = (serviceName, nodeName, ttlMs) => {
-        if (this.isSharedFileMode()) {
+        if (this.isSharedStateMode()) {
             return;
         }
 
@@ -43,11 +64,13 @@ class RegistryService{
         }
 
         sRegistry.timeResetters[nodeName] = setTimeout(() => {
-            this.removeNode(serviceName, nodeName);
+            Promise.resolve(this.removeNode(serviceName, nodeName)).catch((err) => {
+                error(`Unable to expire node ${nodeName}: ${err.message}`);
+            });
         }, Math.max(1000, ttlMs));
     }
 
-    removeNode = (serviceName, nodeName, shouldPersist = true) => {
+    removeNode = async (serviceName, nodeName, shouldPersist = true) => {
         const service = sRegistry.registry[serviceName];
         if (!service || !service.nodes[nodeName]) {
             return;
@@ -71,7 +94,7 @@ class RegistryService{
         }
 
         if (shouldPersist) {
-            this.persistRegistry();
+            await this.persistRegistry();
         }
     }
 
@@ -128,7 +151,7 @@ class RegistryService{
         };
     }
 
-    loadSnapshotIntoMemory = (snapshot = {}, shouldScheduleExpiries = !this.isSharedFileMode()) => {
+    loadSnapshotIntoMemory = (snapshot = {}, shouldScheduleExpiries = !this.isSharedStateMode()) => {
         sRegistry.reset();
 
         Object.entries(snapshot).forEach(([serviceName, serviceState]) => {
@@ -153,51 +176,69 @@ class RegistryService{
         });
     }
 
-    syncForRead = () => {
-        if (!this.isSharedFileMode()) {
+    syncForRead = async () => {
+        if (!this.isSharedStateMode()) {
             return;
         }
 
-        registryStateService.mutate((snapshot) => {
-            const activeSnapshot = this.pruneExpiredSnapshot(snapshot).snapshot;
-            this.loadSnapshotIntoMemory(activeSnapshot, false);
+        if (this.isSharedFileMode()) {
+            await registryStateService.mutate((snapshot) => {
+                const activeSnapshot = this.pruneExpiredSnapshot(snapshot).snapshot;
+                this.loadSnapshotIntoMemory(activeSnapshot, false);
+                return {
+                    result: activeSnapshot,
+                    registry: activeSnapshot
+                };
+            });
+            return;
+        }
+
+        const snapshot = await registryStateService.load() || {};
+        const { snapshot: activeSnapshot, changed } = this.pruneExpiredSnapshot(snapshot);
+        this.loadSnapshotIntoMemory(activeSnapshot, false);
+
+        if (!changed) {
+            return;
+        }
+
+        await registryStateService.mutate((latestSnapshot) => {
+            const nextSnapshot = this.pruneExpiredSnapshot(latestSnapshot).snapshot;
+            this.loadSnapshotIntoMemory(nextSnapshot, false);
             return {
-                result: activeSnapshot,
-                registry: activeSnapshot
+                result: nextSnapshot,
+                registry: nextSnapshot
             };
         });
     }
 
-    upsertNode = (serviceName, nodeName, nodeData, ttlMs, shouldPersist = true) => {
+    upsertNode = async (serviceName, nodeName, nodeData, ttlMs, shouldPersist = true) => {
         this.ensureServiceEntry(serviceName);
         sRegistry.addNodeToHashRegistry(serviceName, nodeName);
         sRegistry.registry[serviceName].nodes[nodeName] = nodeData;
         this.scheduleNodeExpiry(serviceName, nodeName, ttlMs);
 
         if (shouldPersist) {
-            this.persistRegistry();
+            await this.persistRegistry();
         }
     }
 
-    removeParentNodeRegistrations = (serviceName, parentNode, shouldPersist = true) => {
+    removeParentNodeRegistrations = async (serviceName, parentNode, shouldPersist = true) => {
         const service = sRegistry.registry[serviceName];
         if (!service) {
             return;
         }
 
-        Object.values(service.nodes)
-            .filter((node) => node.parentNode === parentNode)
-            .forEach((node) => {
-                this.removeNode(serviceName, node.nodeName, false);
-            });
+        for (const node of Object.values(service.nodes).filter((candidate) => candidate.parentNode === parentNode)) {
+            await this.removeNode(serviceName, node.nodeName, false);
+        }
 
         if (shouldPersist) {
-            this.persistRegistry();
+            await this.persistRegistry();
         }
     }
 
-    restoreRegistryState = () => {
-        const savedRegistry = registryStateService.load();
+    restoreRegistryState = async () => {
+        const savedRegistry = await registryStateService.load();
         if (!savedRegistry) {
             return;
         }
@@ -233,37 +274,37 @@ class RegistryService{
             }
         });
 
-        this.persistRegistry();
+        await this.persistRegistry();
         registryStateService.logRestoreSummary(restoredNodeCount);
     }
 
-    registerService = (serviceObj, shouldPersist = true) => {
+    registerService = async (serviceObj, shouldPersist = true) => {
         const {serviceName, nodeName, address, timeOut, weight} = serviceObj;
 
         this.ensureServiceEntry(serviceName);
-        this.removeParentNodeRegistrations(serviceName, nodeName, false);
+        await this.removeParentNodeRegistrations(serviceName, nodeName, false);
 
-        [...Array(weight).keys()].forEach(index => {
+        for (const index of [...Array(weight).keys()]) {
             const subNodeName = `${nodeName}-${index}`;
-            this.upsertNode(serviceName, subNodeName, {
+            await this.upsertNode(serviceName, subNodeName, {
                 "nodeName" : subNodeName,
                 "parentNode" : nodeName,
                 "address" : address,
                 "timeOut" : timeOut,
                 "registeredAt" : Date.now()
             }, ((timeOut)*1000)+500, false);
-        });
+        }
 
         if (shouldPersist) {
-            this.persistRegistry();
+            await this.persistRegistry();
         }
     }
 
-    registryService = (serviceObj) => {
-        this.initialize();
+    registryService = async (serviceObj) => {
+        await this.initialize();
 
-        if (this.isSharedFileMode()) {
-            return registryStateService.mutate((snapshot) => {
+        if (this.isSharedStateMode()) {
+            return registryStateService.mutate(async (snapshot) => {
                 const activeSnapshot = this.pruneExpiredSnapshot(snapshot).snapshot;
                 this.loadSnapshotIntoMemory(activeSnapshot, false);
 
@@ -275,7 +316,7 @@ class RegistryService{
                     };
                 }
 
-                this.registerService(service, false);
+                await this.registerService(service, false);
                 service.registeredAt = new Date().toLocaleString();
 
                 return {
@@ -285,23 +326,26 @@ class RegistryService{
             });
         }
 
-        let service = Service.buildByObj(serviceObj);
-        if(!service || _.isNull(service)) return;
-        this.registerService(service);
+        const service = Service.buildByObj(serviceObj);
+        if (!service || _.isNull(service)) {
+            return;
+        }
+
+        await this.registerService(service);
         service.registeredAt = new Date().toLocaleString();
         return service;
     }
 
-    getRegisteredServers = () => {
-        this.initialize();
-        this.syncForRead();
+    getRegisteredServers = async () => {
+        await this.initialize();
+        await this.syncForRead();
         return sRegistry.getRegServers();
     }
 
-    getOffsetAndIncrement = (serviceName) => {
-        this.initialize();
+    getOffsetAndIncrement = async (serviceName) => {
+        await this.initialize();
 
-        if (this.isSharedFileMode()) {
+        if (this.isSharedStateMode()) {
             return registryStateService.mutate((snapshot) => {
                 const activeSnapshot = this.pruneExpiredSnapshot(snapshot).snapshot;
                 this.loadSnapshotIntoMemory(activeSnapshot, false);
@@ -334,12 +378,13 @@ class RegistryService{
         return currentOffset;
     }
 
-    reset = (clearPersistedState = true) => {
+    reset = async (clearPersistedState = true) => {
         sRegistry.reset();
         if (clearPersistedState) {
-            registryStateService.clear();
+            await registryStateService.clear();
         }
         this.initialized = false;
+        this.initializationPromise = undefined;
     }
 }
 

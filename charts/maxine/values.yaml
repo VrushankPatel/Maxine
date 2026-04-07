@@ -51,6 +51,10 @@ maxine:
   registryStateMode: local
   registryStateLockTimeoutMs: 5000
   registryStateLockRetryMs: 100
+  redis:
+    url: ""
+    keyPrefix: maxine:registry
+    connectTimeoutMs: 5000
   performanceReportUrl: ""
 
 auth:
@@ -120,3 +124,30 @@ affinity: {}
 extraEnv: []
 extraVolumes: []
 extraVolumeMounts: []
+
+embeddedRedis:
+  enabled: false
+  image:
+    repository: redis
+    tag: 7.2-alpine
+    pullPolicy: IfNotPresent
+  auth:
+    enabled: false
+    existingSecret: ""
+    password: ""
+  service:
+    port: 6379
+  persistence:
+    enabled: true
+    accessModes:
+      - ReadWriteOnce
+    size: 1Gi
+    storageClassName: ""
+    annotations: {}
+  resources:
+    requests:
+      cpu: 50m
+      memory: 128Mi
+    limits:
+      cpu: 250m
+      memory: 256Mi

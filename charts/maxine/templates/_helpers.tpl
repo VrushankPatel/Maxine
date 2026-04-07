@@ -82,3 +82,28 @@ Service account name.
 {{- printf "%s-logs" (include "maxine.fullname" .) -}}
 {{- end -}}
 {{- end -}}
+
+{{- define "maxine.embeddedRedisFullname" -}}
+{{- printf "%s-redis" (include "maxine.fullname" .) -}}
+{{- end -}}
+
+{{- define "maxine.embeddedRedisSecretName" -}}
+{{- if .Values.embeddedRedis.auth.existingSecret -}}
+{{- .Values.embeddedRedis.auth.existingSecret -}}
+{{- else -}}
+{{- printf "%s-auth" (include "maxine.embeddedRedisFullname" .) -}}
+{{- end -}}
+{{- end -}}
+
+{{- define "maxine.redisUrl" -}}
+{{- if .Values.maxine.redis.url -}}
+{{- .Values.maxine.redis.url -}}
+{{- else if .Values.embeddedRedis.enabled -}}
+{{- printf "redis://%s:%v/0" (include "maxine.embeddedRedisFullname" .) (.Values.embeddedRedis.service.port | int) -}}
+{{- end -}}
+{{- end -}}
+
+{{- define "maxine.embeddedRedisUrlWithAuth" -}}
+{{- $password := .Values.embeddedRedis.auth.password -}}
+{{- printf "redis://:%s@%s:%v/0" $password (include "maxine.embeddedRedisFullname" .) (.Values.embeddedRedis.service.port | int) -}}
+{{- end -}}

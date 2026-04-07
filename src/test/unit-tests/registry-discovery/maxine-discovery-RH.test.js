@@ -20,22 +20,21 @@ const serviceSampleRH = {
     "weight": 10
 };
 
-// Registering fake server to discover afterwards for tests.
-registryService.registryService(serviceSampleRH);
-
 // We'll check if we're getting same server for multiple endpoint hits.
 describe(`${fileName} : API /api/maxine/discover with config with Rendezvous Hashing`, () => {
+    before(async () => {
+        await registryService.registryService(serviceSampleRH);
+    });
 
-    it(`RH discover with NonAPI`, (done) => {
+    it(`RH discover with NonAPI`, async () => {
         // Making sure that server selection strategy is RH
         config.serverSelectionStrategy = constants.SSS.RH;
 
-        const response1 = discoveryService.getNode(serviceSampleRH.serviceName,serviceSampleRH.hostName);
+        const response1 = await discoveryService.getNode(serviceSampleRH.serviceName,serviceSampleRH.hostName);
 
-        const response2 = discoveryService.getNode(serviceSampleRH.serviceName,serviceSampleRH.hostName);
+        const response2 = await discoveryService.getNode(serviceSampleRH.serviceName,serviceSampleRH.hostName);
 
         // Because of consistent hashing, we should expect both the responses same because the ip we're passing is the same.
         response1.should.be.eql(response2);
-        done();
     });
 });
