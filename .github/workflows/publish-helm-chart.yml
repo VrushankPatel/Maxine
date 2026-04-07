@@ -27,6 +27,11 @@ jobs:
           helm lint charts/maxine
           helm template maxine charts/maxine >/tmp/maxine-chart-rendered.yaml
 
+      - name: Configure Git identity for Pages updates
+        run: |
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
       - name: Package and release chart
         uses: helm/chart-releaser-action@v1.6.0
         env:
