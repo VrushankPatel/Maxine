@@ -34,3 +34,4 @@ jobs:
         with:
           charts_dir: charts
           pages_branch: pages
+          skip_existing: true
