@@ -1,0 +1,19 @@
+Maxine has been installed as {{ include "maxine.fullname" . }}.
+
+Access it inside the cluster with:
+  kubectl port-forward svc/{{ include "maxine.fullname" . }} 8080:{{ .Values.service.port }}
+
+Then open:
+  http://127.0.0.1:8080
+
+Admin username source:
+  {{- if .Values.auth.existingSecret }}
+  existing secret {{ .Values.auth.existingSecret }}
+  {{- else }}
+  chart-managed secret {{ printf "%s-auth" (include "maxine.fullname" .) }}
+  {{- end }}
+
+Important:
+  - Maxine is currently designed for a single active replica. Keep replicaCount at 1 unless you add shared state and leader/coordinator logic outside this chart.
+  - Change the default admin credentials before exposing Maxine outside a trusted environment.
+  - If you publish the container to GHCR for public reuse, make the package public after the first push.

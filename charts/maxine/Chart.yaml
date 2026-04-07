@@ -1,0 +1,18 @@
+apiVersion: v2
+name: maxine
+description: Helm chart for deploying the Maxine service registry and discovery server
+type: application
+version: 0.1.0
+appVersion: "1.0.0"
+kubeVersion: ">=1.24.0-0"
+home: https://github.com/VrushankPatel/Maxine
+sources:
+  - https://github.com/VrushankPatel/Maxine
+maintainers:
+  - name: Vrushank Patel
+    email: vrushankofficial@gmail.com
+keywords:
+  - maxine
+  - service-registry
+  - service-discovery
+  - load-balancer

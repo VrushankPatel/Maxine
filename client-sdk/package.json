@@ -1,5 +1,5 @@
 {
-  "name": "maxine-client",
+  "name": "@vrushankpatel/maxine-client",
   "version": "1.0.0",
   "description": "Official Node.js client for the Maxine service registry and discovery server",
   "main": "index.js",
@@ -27,6 +27,9 @@
     "url": "https://github.com/VrushankPatel/Maxine/issues"
   },
   "homepage": "https://github.com/VrushankPatel/Maxine/tree/master/client-sdk",
+  "publishConfig": {
+    "registry": "https://npm.pkg.github.com"
+  },
   "dependencies": {
     "axios": "^1.8.4"
   }

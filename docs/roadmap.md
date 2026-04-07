@@ -9,6 +9,7 @@ Maxine currently works as a single-process Node.js registry and discovery server
 - Runtime config mutation through admin APIs
 - Basic JWT-protected admin endpoints
 - A compiled dashboard UI bundle checked into `client/`
+- A Docker image definition plus a single-replica Helm chart for Kubernetes installs
 
 ## Highest-Priority Gaps
 
@@ -23,6 +24,7 @@ Maxine currently works as a single-process Node.js registry and discovery server
 - Admin auth now supports env-backed or file-backed credentials, but it still needs stronger secret management and rotation controls.
 - JWT stability depends on setting `MAXINE_JWT_SECRET` outside of dev.
 - Observability is partial: there are logs and actuator endpoints, but no metrics export, tracing, or audit trail.
+- Kubernetes packaging now exists, but HA-safe operation still needs clustered state and stronger operational primitives than the current chart can provide.
 
 ### UI
 
@@ -32,8 +34,15 @@ Maxine currently works as a single-process Node.js registry and discovery server
 ### SDKs and releases
 
 - Initial Java, Node.js, Python, and Go SDKs now exist in-repo and target the current Maxine API.
-- Artifactory publication workflows now exist for the Node, Java, and Python SDK lines.
-- Semantic versioning, changelog generation, and release publishing are not automated.
+- GitHub Actions release workflows now exist for GitHub Packages, PyPI, and Maven Central publication.
+- Trusted publisher setup and signed Maven Central release credentials still need to be completed outside the repository settings.
+- Semantic versioning, changelog generation, and release publishing are still manual.
+
+### Platform packaging
+
+- A GHCR container publish workflow and a GitHub Pages Helm publish workflow now exist in-repo.
+- The first public publish and package-visibility setup still need to be completed in GitHub.
+- The chart is intentionally single-replica because Maxine is not yet a clustered control plane.
 
 ## Delivery Plan
 
@@ -57,7 +66,14 @@ Maxine currently works as a single-process Node.js registry and discovery server
 - Align the UI with current APIs and add real registry, config, and logs workflows.
 - Add frontend build/test pipelines instead of shipping only compiled artifacts.
 
-### Phase 4: Ship official client SDKs
+### Phase 4: Harden the platform packaging
+
+- Publish the GHCR runtime image and make public access explicit.
+- Publish the Helm repository to GitHub Pages and keep it versioned with the app.
+- Add release-tag alignment between the container image, Helm chart, and SDK artifacts.
+- Add environment-specific values examples for local, staging, and production-style clusters.
+
+### Phase 5: Ship official client SDKs
 
 Java SDK:
 - Spring Boot starter with `application.properties` auto-registration and heartbeat lifecycle
@@ -66,13 +82,13 @@ Java SDK:
 - Public release channels and version alignment with the server
 
 Node.js SDK:
-- npm package with TypeScript types
+- GitHub Packages npm package with TypeScript types
 - Heartbeat scheduler and deregistration helpers
 - Discovery client with fetch/axios integration
-- Public release automation beyond internal Artifactory publishing
+- Install/auth guidance and release tagging policy
 
 Python SDK:
-- Publishable package metadata and release automation
+- Publishable package metadata and PyPI trusted publishing
 - Retry/backoff helpers and optional async client support
 - Heartbeat lifecycle examples for FastAPI, Flask, and Django
 
@@ -81,7 +97,7 @@ Go SDK:
 - Context-aware request variants and retry helpers
 - Examples for service startup/shutdown integration
 
-### Phase 5: Release engineering and platform work
+### Phase 6: Release engineering and production hardening
 
 - Automate tagging, changelog generation, and package publishing
 - Add container publishing and deployment examples

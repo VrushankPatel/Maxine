@@ -1,0 +1,34 @@
+name: Publish Helm Chart
+
+on:
+  push:
+    branches: [ master ]
+    paths:
+      - charts/**
+  workflow_dispatch:
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Helm
+        uses: azure/setup-helm@v4
+
+      - name: Lint chart
+        run: |
+          helm lint charts/maxine
+          helm template maxine charts/maxine >/tmp/maxine-chart-rendered.yaml
+
+      - name: Package and release chart
+        uses: helm/chart-releaser-action@v1.6.0
+        env:
+          CR_TOKEN: "${{ secrets.GITHUB_TOKEN }}"
+        with:
+          charts_dir: charts

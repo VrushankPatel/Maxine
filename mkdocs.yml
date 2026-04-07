@@ -2,6 +2,7 @@ site_name: Maxine SRD
 nav:
   - Introduction: index.md
   - Features: features.md
+  - Helm: helm.md
   - Roadmap: roadmap.md
   - Maintainer: about.md
   - API: api.md

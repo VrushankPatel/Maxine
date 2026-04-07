@@ -18,6 +18,7 @@ Maxine SRD has the ability to locate a network automatically making it so that t
 
 The current implementation plan and known gaps are tracked in [roadmap.md](roadmap.md).
 Official SDKs currently live in-repo for Node.js, Java, Python, and Go.
+Maxine also now includes a Helm chart for namespace-scoped Kubernetes installs.
 
 ## How Maxine works
 

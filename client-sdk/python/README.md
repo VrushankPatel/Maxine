@@ -6,7 +6,7 @@ API.
 ## Install locally
 
 ```bash
-pip install -e client-sdk/python
+pip install maxine-client
 ```
 
 ## Usage

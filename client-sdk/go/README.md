@@ -3,6 +3,12 @@
 The Go SDK provides a typed HTTP client for the current Maxine API plus a
 background heartbeat helper.
 
+## Install
+
+```bash
+go get github.com/VrushankPatel/Maxine/client-sdk/go@latest
+```
+
 ## Usage
 
 ```go

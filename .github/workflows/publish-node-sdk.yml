@@ -8,30 +8,24 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: read
-
-    env:
-      MAXINE_NPM_REGISTRY_URL: ${{ vars.MAXINE_NPM_REGISTRY_URL }}
-      NODE_AUTH_TOKEN: ${{ secrets.ARTIFACTORY_NPM_TOKEN }}
+      packages: write
 
     steps:
       - uses: actions/checkout@v4
-
-      - name: Validate publishing configuration
-        run: |
-          test -n "$MAXINE_NPM_REGISTRY_URL" || (echo "Missing repository variable MAXINE_NPM_REGISTRY_URL" && exit 1)
-          test -n "$NODE_AUTH_TOKEN" || (echo "Missing secret ARTIFACTORY_NPM_TOKEN" && exit 1)
 
       - name: Set up Node.js
         uses: actions/setup-node@v4
         with:
           node-version: '22'
-          registry-url: ${{ env.MAXINE_NPM_REGISTRY_URL }}
-          always-auth: true
+          registry-url: https://npm.pkg.github.com
+          scope: '@vrushankpatel'
 
       - name: Validate package contents
         working-directory: client-sdk
         run: npm pack --dry-run
 
-      - name: Publish package to Artifactory
+      - name: Publish package to GitHub Packages
         working-directory: client-sdk
-        run: npm publish --registry "$MAXINE_NPM_REGISTRY_URL"
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: npm publish

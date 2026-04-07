@@ -23,6 +23,18 @@ cd client-sdk/java
 mvn package
 ```
 
+## Maven coordinates
+
+Plain Java client:
+
+```xml
+<dependency>
+    <groupId>io.github.vrushankpatel</groupId>
+    <artifactId>maxine-client</artifactId>
+    <version>1.0.0</version>
+</dependency>
+```
+
 ## Example
 
 ```java
@@ -49,7 +61,7 @@ Add the starter dependency:
 
 ```xml
 <dependency>
-    <groupId>com.maxine</groupId>
+    <groupId>io.github.vrushankpatel</groupId>
     <artifactId>maxine-spring-boot-starter</artifactId>
     <version>1.0.0</version>
 </dependency>

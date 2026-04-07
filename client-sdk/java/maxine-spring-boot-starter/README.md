@@ -7,7 +7,7 @@ heartbeat running for the lifetime of the application.
 
 ```xml
 <dependency>
-    <groupId>com.maxine</groupId>
+    <groupId>io.github.vrushankpatel</groupId>
     <artifactId>maxine-spring-boot-starter</artifactId>
     <version>1.0.0</version>
 </dependency>
