@@ -5,6 +5,7 @@
 Maxine currently works as a single-process Node.js registry and discovery server with:
 
 - In-memory service registration, timeout-based eviction, and local registry-state restart recovery
+- Optional `shared-file` registry state synchronization for shared-volume deployments
 - Redirect-based discovery with `RR`, `CH`, and `RH` selection strategies
 - Runtime config mutation through admin APIs
 - Basic JWT-protected admin endpoints
@@ -24,7 +25,7 @@ Maxine currently works as a single-process Node.js registry and discovery server
 - Admin auth now supports env-backed or file-backed credentials, but it still needs stronger secret management and rotation controls.
 - JWT stability depends on setting `MAXINE_JWT_SECRET` outside of dev.
 - Observability is partial: there are logs and actuator endpoints, but no metrics export, tracing, or audit trail.
-- Kubernetes packaging now exists, but HA-safe operation still needs clustered state and stronger operational primitives than the current chart can provide.
+- Kubernetes packaging now exists, and the first shared-file synchronization mode exists, but HA-safe operation still needs clustered state and stronger operational primitives than the current chart can provide.
 
 ### UI
 

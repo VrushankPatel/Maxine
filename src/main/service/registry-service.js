@@ -2,9 +2,12 @@ const Service = require("../entity/service-body");
 const { serviceRegistry: sRegistry } = require("../entity/service-registry");
 const { registryStateService } = require("./registry-state-service");
 const config = require("../config/config");
+const { constants } = require("../util/constants/constants");
 const _ = require('lodash');
 class RegistryService{
     initialized = false;
+
+    isSharedFileMode = () => constants.REGISTRY_STATE_MODE === 'shared-file';
 
     initialize = () => {
         if (this.initialized) {
@@ -12,6 +15,11 @@ class RegistryService{
         }
 
         this.initialized = true;
+        if (this.isSharedFileMode()) {
+            this.syncForRead();
+            return;
+        }
+
         this.restoreRegistryState();
     }
 
@@ -26,6 +34,10 @@ class RegistryService{
     }
 
     scheduleNodeExpiry = (serviceName, nodeName, ttlMs) => {
+        if (this.isSharedFileMode()) {
+            return;
+        }
+
         if (sRegistry.timeResetters[nodeName]) {
             clearTimeout(sRegistry.timeResetters[nodeName]);
         }
@@ -61,6 +73,99 @@ class RegistryService{
         if (shouldPersist) {
             this.persistRegistry();
         }
+    }
+
+    normalizeNodeState = (nodeName, nodeState, now = Date.now()) => {
+        const nodeTimeOut = Math.abs(parseInt(nodeState.timeOut)) || config.heartBeatTimeout;
+        const registeredAt = Number(nodeState.registeredAt) || now;
+
+        return {
+            ...nodeState,
+            nodeName,
+            parentNode: nodeState.parentNode || nodeName,
+            timeOut: nodeTimeOut,
+            registeredAt
+        };
+    }
+
+    pruneExpiredSnapshot = (snapshot = {}) => {
+        const now = Date.now();
+        let changed = false;
+        const activeSnapshot = {};
+
+        Object.entries(snapshot).forEach(([serviceName, serviceState]) => {
+            const activeNodes = {};
+            const offset = Number.isInteger(serviceState.offset) ? serviceState.offset : 0;
+
+            Object.entries(serviceState.nodes || {}).forEach(([nodeName, nodeState]) => {
+                const normalizedNode = this.normalizeNodeState(nodeName, nodeState, now);
+                const ttlMs = (normalizedNode.timeOut * 1000) + 500 - (now - normalizedNode.registeredAt);
+
+                if (ttlMs <= 0) {
+                    changed = true;
+                    return;
+                }
+
+                activeNodes[nodeName] = normalizedNode;
+            });
+
+            if (Object.keys(activeNodes).length > 0) {
+                activeSnapshot[serviceName] = {
+                    offset,
+                    nodes: activeNodes
+                };
+                return;
+            }
+
+            if (serviceState && Object.keys(serviceState.nodes || {}).length > 0) {
+                changed = true;
+            }
+        });
+
+        return {
+            snapshot: activeSnapshot,
+            changed
+        };
+    }
+
+    loadSnapshotIntoMemory = (snapshot = {}, shouldScheduleExpiries = !this.isSharedFileMode()) => {
+        sRegistry.reset();
+
+        Object.entries(snapshot).forEach(([serviceName, serviceState]) => {
+            this.ensureServiceEntry(serviceName, Number.isInteger(serviceState.offset) ? serviceState.offset : 0);
+
+            Object.entries(serviceState.nodes || {}).forEach(([nodeName, nodeState]) => {
+                const normalizedNode = this.normalizeNodeState(nodeName, nodeState);
+                sRegistry.addNodeToHashRegistry(serviceName, nodeName);
+                sRegistry.registry[serviceName].nodes[nodeName] = normalizedNode;
+
+                if (shouldScheduleExpiries) {
+                    const ttlMs = (normalizedNode.timeOut * 1000) + 500 - (Date.now() - normalizedNode.registeredAt);
+                    if (ttlMs > 0) {
+                        this.scheduleNodeExpiry(serviceName, nodeName, ttlMs);
+                    }
+                }
+            });
+
+            if (Object.keys(sRegistry.registry[serviceName].nodes).length === 0) {
+                delete sRegistry.registry[serviceName];
+            }
+        });
+    }
+
+    syncForRead = () => {
+        if (!this.isSharedFileMode()) {
+            return;
+        }
+
+        registryStateService.mutate((snapshot) => {
+            const activeSnapshot = this.pruneExpiredSnapshot(snapshot).snapshot;
+            this.loadSnapshotIntoMemory(activeSnapshot, false);
+            return {
+                result: activeSnapshot,
+                registry: activeSnapshot
+            };
+        });
     }
 
     upsertNode = (serviceName, nodeName, nodeData, ttlMs, shouldPersist = true) => {
@@ -132,7 +237,7 @@ class RegistryService{
         registryStateService.logRestoreSummary(restoredNodeCount);
     }
 
-    registerService = (serviceObj) => {
+    registerService = (serviceObj, shouldPersist = true) => {
         const {serviceName, nodeName, address, timeOut, weight} = serviceObj;
 
         this.ensureServiceEntry(serviceName);
@@ -149,16 +254,84 @@ class RegistryService{
             }, ((timeOut)*1000)+500, false);
         });
 
-        this.persistRegistry();
+        if (shouldPersist) {
+            this.persistRegistry();
+        }
     }
 
     registryService = (serviceObj) => {
         this.initialize();
+
+        if (this.isSharedFileMode()) {
+            return registryStateService.mutate((snapshot) => {
+                const activeSnapshot = this.pruneExpiredSnapshot(snapshot).snapshot;
+                this.loadSnapshotIntoMemory(activeSnapshot, false);
+
+                const service = Service.buildByObj(serviceObj);
+                if (!service || _.isNull(service)) {
+                    return {
+                        result: undefined,
+                        registry: sRegistry.getRegServers()
+                    };
+                }
+
+                this.registerService(service, false);
+                service.registeredAt = new Date().toLocaleString();
+
+                return {
+                    result: service,
+                    registry: sRegistry.getRegServers()
+                };
+            });
+        }
+
         let service = Service.buildByObj(serviceObj);
         if(!service || _.isNull(service)) return;
         this.registerService(service);
         service.registeredAt = new Date().toLocaleString();
         return service;
+    }
+
+    getRegisteredServers = () => {
+        this.initialize();
+        this.syncForRead();
+        return sRegistry.getRegServers();
+    }
+
+    getOffsetAndIncrement = (serviceName) => {
+        this.initialize();
+
+        if (this.isSharedFileMode()) {
+            return registryStateService.mutate((snapshot) => {
+                const activeSnapshot = this.pruneExpiredSnapshot(snapshot).snapshot;
+                this.loadSnapshotIntoMemory(activeSnapshot, false);
+                const service = sRegistry.registry[serviceName];
+
+                if (!service) {
+                    return {
+                        result: undefined,
+                        registry: sRegistry.getRegServers()
+                    };
+                }
+
+                const currentOffset = Number.isInteger(service.offset) ? service.offset : 0;
+                service.offset = currentOffset + 1;
+
+                return {
+                    result: currentOffset,
+                    registry: sRegistry.getRegServers()
+                };
+            });
+        }
+
+        const service = sRegistry.registry[serviceName];
+        if (!service) {
+            return undefined;
+        }
+
+        const currentOffset = Number.isInteger(service.offset) ? service.offset : 0;
+        service.offset = currentOffset + 1;
+        return currentOffset;
     }
 
     reset = (clearPersistedState = true) => {

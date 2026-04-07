@@ -29,6 +29,7 @@ helm install maxine maxine/maxine --namespace maxine --create-namespace
 
 - `image.repository`: container image repository, defaults to `ghcr.io/vrushankpatel/maxine`
 - `image.tag`: defaults to `latest`, but production should pin a release tag
+- `maxine.registryStateMode`: defaults to `local`; set to `shared-file` only when `/app/data` is backed by shared storage
 - `auth.adminUsername`: default admin username
 - `auth.adminPassword`: default admin password
 - `auth.jwtSecret`: JWT signing secret
@@ -62,4 +63,5 @@ To make the chart installable publicly:
 
 - The chart uses `/api/actuator/health` for probes, which checks process health rather than deep dependency readiness.
 - Admin credentials are still single-user and environment-driven.
+- `shared-file` mode is a useful first coordination step on shared storage, but it is not a substitute for a true distributed registry backend.
 - The chart is appropriate for dev, test, demos, and careful internal deployments, but not yet for HA production service-registry use.

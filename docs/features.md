@@ -3,6 +3,7 @@
 - Maxine now ships with a Docker image definition for GHCR publication.
 - A Helm chart is available in `charts/maxine` so the server can be installed into a namespace with persistent local state.
 - The chart intentionally defaults to a single replica because Maxine does not yet have clustered/shared registry coordination.
+- The runtime now also supports a `shared-file` registry state mode so multiple pods can synchronize through a shared registry-state file when mounted on shared storage.
 ### Dashboard UI
 - Maxine dashboard UI provides a very interactive way to monitor the configuration, logs, SRD info and the SRD's current status like memory occupied, requests per second etc.
 
