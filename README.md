@@ -103,6 +103,9 @@ The HTML summary is written to `artifacts/performance-summary.html`.
 | `MAXINE_ADMIN_STATE_FILE` | env var | `data/admin-user.json` | Local file used to persist password changes when admin credentials are not managed by env vars |
 | `MAXINE_REGISTRY_PERSISTENCE` | env var | `true` | Set to `false` to disable file-backed registry snapshots |
 | `MAXINE_REGISTRY_STATE_FILE` | env var | `data/registry-state.json` | Local file used to restore active registrations after restart |
+| `MAXINE_REGISTRY_STATE_MODE` | env var | `local` | `local` uses the existing node-local snapshot behavior, `shared-file` re-synchronizes registry state from the snapshot file on every read/write path |
+| `MAXINE_REGISTRY_STATE_LOCK_TIMEOUT_MS` | env var | `5000` | File-lock acquisition timeout used by `shared-file` mode |
+| `MAXINE_REGISTRY_STATE_LOCK_RETRY_MS` | env var | `100` | Retry interval for the shared-file lock |
 | `MAXINE_JWT_SECRET` | env var | unset | Strongly recommended in non-dev environments so JWTs remain valid across restarts |
 | `MAXINE_PERFORMANCE_REPORT_URL` | env var | unset | Public URL consumed by `GET /api/actuator/performance` |
 
@@ -152,6 +155,7 @@ Important chart behavior:
 - `/app/logs` is ephemeral by default
 - probes target `GET /api/actuator/health`
 - the default image repository is `ghcr.io/vrushankpatel/maxine`
+- `shared-file` registry mode is available for a shared-volume deployment model, but it is still a coordination step rather than full clustered HA
 
 Before advertising public installs, publish the container once and make the GHCR package public if GitHub creates it as private on first push.
 
@@ -377,6 +381,7 @@ Maxine is better than it was at the start of this cleanup, but it is still not s
 What is now in place:
 
 - restart recovery for registry state via local disk snapshots
+- optional shared-file registry synchronization for shared-volume deployments
 - safer admin/JWT handling than the original code
 - multi-language SDKs
 - GitHub Actions CI
@@ -385,6 +390,7 @@ What is now in place:
 What still keeps it from production-grade service-registry status:
 
 - Maxine is still a single control-plane node with no clustering, no leader election, and no shared registry state.
+- The new `shared-file` mode helps multiple pods see the same registry file, but it is not a substitute for a real distributed coordination backend.
 - The registry is still in-memory first and only snapshotted locally, so node loss is still a control-plane outage.
 - Scaling the server to multiple replicas is not safe today without architectural changes.
 - Service discovery still redirects clients instead of proxying requests, which limits observability, policy enforcement, and failure handling.

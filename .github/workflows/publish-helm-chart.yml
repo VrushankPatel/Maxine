@@ -4,6 +4,7 @@ on:
   push:
     branches: [ master ]
     paths:
+      - .github/workflows/publish-helm-chart.yml
       - charts/**
   workflow_dispatch:
 
@@ -32,3 +33,4 @@ jobs:
           CR_TOKEN: "${{ secrets.GITHUB_TOKEN }}"
         with:
           charts_dir: charts
+          pages_branch: pages

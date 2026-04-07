@@ -2,11 +2,16 @@ image:
   repository: ghcr.io/vrushankpatel/maxine
   tag: "1.0.0"
 
+maxine:
+  registryStateMode: shared-file
+
 auth:
   existingSecret: maxine-auth
 
 persistence:
   enabled: true
+  accessModes:
+    - ReadWriteMany
   size: 5Gi
   storageClassName: standard
 

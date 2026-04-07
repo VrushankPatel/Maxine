@@ -9,4 +9,7 @@ data:
   MAXINE_ADMIN_STATE_FILE: /app/data/admin-user.json
   MAXINE_REGISTRY_STATE_FILE: /app/data/registry-state.json
   MAXINE_REGISTRY_PERSISTENCE: {{ ternary "true" "false" .Values.persistence.enabled | quote }}
+  MAXINE_REGISTRY_STATE_MODE: {{ .Values.maxine.registryStateMode | quote }}
+  MAXINE_REGISTRY_STATE_LOCK_TIMEOUT_MS: {{ .Values.maxine.registryStateLockTimeoutMs | quote }}
+  MAXINE_REGISTRY_STATE_LOCK_RETRY_MS: {{ .Values.maxine.registryStateLockRetryMs | quote }}
   MAXINE_PERFORMANCE_REPORT_URL: {{ .Values.maxine.performanceReportUrl | quote }}

@@ -48,6 +48,9 @@ ingress:
   tls: []
 
 maxine:
+  registryStateMode: local
+  registryStateLockTimeoutMs: 5000
+  registryStateLockRetryMs: 100
   performanceReportUrl: ""
 
 auth:

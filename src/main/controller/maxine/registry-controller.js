@@ -1,7 +1,6 @@
 const { info } = require('../../util/logging/logging-util');
 const { statusAndMsgs } = require('../../util/constants/constants');
 const { registryService } = require('../../service/registry-service');
-const { serviceRegistry } = require('../../entity/service-registry');
 
 const registryController = (req, res) => {
     const serviceResponse = registryService.registryService(req.body);
@@ -15,7 +14,7 @@ const registryController = (req, res) => {
 
 
 const serverListController = (_req, res) => {
-    res.json(serviceRegistry.getRegServers());
+    res.json(registryService.getRegisteredServers());
 }
 
 module.exports = {

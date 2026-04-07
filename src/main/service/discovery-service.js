@@ -3,6 +3,7 @@ const { RendezvousHashDiscovery } = require("./discovery-services/rendezvous-has
 const { RoundRobinDiscovery } = require("./discovery-services/round-robin-discovery");
 const config = require("../config/config");
 const { constants } = require("../util/constants/constants");
+const { registryService } = require("./registry-service");
 
 class DiscoveryService{
     rrd = new RoundRobinDiscovery();
@@ -16,6 +17,9 @@ class DiscoveryService{
      * @returns {object}
      */
     getNode = (serviceName, ip) => {
+        registryService.initialize();
+        registryService.syncForRead();
+
         switch(config.serverSelectionStrategy){
             case constants.SSS.RR:
             return this.rrd.getNode(serviceName, ip);

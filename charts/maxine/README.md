@@ -23,6 +23,7 @@ helm install maxine ./charts/maxine --namespace maxine --create-namespace
 - Persistence is enabled for `/app/data` so the registry snapshot survives restarts.
 - Log persistence is disabled by default.
 - The chart exposes `/api/actuator/health` as the liveness, readiness, and startup probe target.
+- `maxine.registryStateMode` defaults to `local`; use `shared-file` only with shared storage and with the understanding that it is still not full clustered HA.
 
 ## Existing secret format
 
