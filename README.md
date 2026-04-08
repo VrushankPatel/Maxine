@@ -2,7 +2,7 @@
   <img src="docs/img/logo.png" alt="Maxine logo" />
 </p>
 
-## Maxine: Service Registry, Discovery, and Reverse Proxy
+## Maxine
 
 <div align="center">
   <a target="_blank" href="https://github.com/VrushankPatel/Maxine/actions/workflows/node.js.yml">
@@ -11,60 +11,42 @@
   <a target="_blank" href="https://github.com/VrushankPatel/Maxine/actions/workflows/codeql.yml">
     <img src="https://github.com/VrushankPatel/Maxine/actions/workflows/codeql.yml/badge.svg" alt="CodeQL" />
   </a>
+  <a target="_blank" href="https://github.com/VrushankPatel/Maxine/actions/workflows/publish-container.yml">
+    <img src="https://github.com/VrushankPatel/Maxine/actions/workflows/publish-container.yml/badge.svg" alt="Publish Maxine Container" />
+  </a>
+  <a target="_blank" href="https://github.com/VrushankPatel/Maxine/actions/workflows/publish-helm-chart.yml">
+    <img src="https://github.com/VrushankPatel/Maxine/actions/workflows/publish-helm-chart.yml/badge.svg" alt="Publish Helm Chart" />
+  </a>
   <a target="_blank" href="https://opensource.org/licenses/MIT">
     <img src="https://img.shields.io/badge/License-MIT-teal.svg" alt="MIT License" />
   </a>
-  <a target="_blank" href="api-specs/swagger.yaml">
-    <img src="https://img.shields.io/badge/OpenAPI-Swagger-blue" alt="OpenAPI spec" />
-  </a>
 </div>
 
-## Overview
+Maxine is a Node.js service registry, discovery service, and operational control
+plane for service-to-service communication.
 
-Maxine is a Node.js service registry and discovery server for microservice-style systems. It accepts heartbeat-style registrations over HTTP, stores active service nodes in memory, can mirror that state to local disk or Redis for restart/shared recovery, and resolves a service name to a concrete upstream node by acting as a redirecting reverse-proxy entry point.
+It supports:
 
-Today the project ships with:
+- heartbeat-based service registration
+- redirect and proxy-based service discovery
+- weighted distribution with round robin, consistent hashing, and rendezvous hashing
+- local, shared-file, and Redis-backed registry state modes
+- Redis lease leadership for leader-protected control-plane work
+- optional active upstream health checks
+- RBAC-protected config and operational APIs
+- audit, alerts, traces, cluster status, and Prometheus-formatted metrics
+- Docker, Helm, and multi-language SDK packaging
 
-- In-memory service registration and timeout-based eviction
-- Local, shared-file, and Redis-backed registry state modes
-- Three node-selection strategies: round robin, consistent hashing, and rendezvous hashing
-- Auth-protected admin endpoints for config and logs
-- Actuator-style health/info/metrics endpoints
-- A bundled static dashboard UI in `client/`
+## Quick Start
 
-## Current Implementation
-
-### Service registration
-
-- `POST /api/maxine/serviceops/register` accepts a service heartbeat payload.
-- Registration is stored in memory under `serviceName` and mirrored to either a local state file or a Redis-backed shared snapshot, depending on runtime mode.
-- `weight` is implemented by creating multiple virtual nodes in the registry.
-- Nodes expire after `timeOut` seconds unless the service re-registers.
-- Re-registering a node now replaces its old virtual-node footprint so stale replicas are not left behind when `weight` changes.
-
-### Service discovery
-
-- `GET /api/maxine/serviceops/discover?serviceName=...` finds a node and issues an HTTP redirect.
-- Selection strategy is controlled at runtime through `/api/maxine/control/config`.
-- Supported strategies are `RR`, `CH`, and `RH`.
-
-### Admin and observability
-
-- JWT-protected endpoints expose current config, logs, and the full registry snapshot.
-- Admin credentials can now come from environment variables or a local persisted state file.
-- `GET /api/actuator/performance` is optional and only works when `MAXINE_PERFORMANCE_REPORT_URL` points to a public HTML report.
-- The checked-in UI is a compiled build artifact. The editable frontend source is not currently present in this repository.
-
-## Local Development
-
-### Start the server
+### Run locally
 
 ```bash
 npm install
 npm run dev
 ```
 
-For a production-style run:
+Production-style local run:
 
 ```bash
 npm start
@@ -76,70 +58,84 @@ npm start
 npm test
 ```
 
-To generate coverage reports locally:
+Coverage:
 
 ```bash
 npm run genreports
 ```
 
-### Run the load test locally
+### Default local credentials
 
-Start Maxine first, then run:
+Unless overridden through environment variables:
 
-```bash
-MAXINE_HOST=http://127.0.0.1:8080 npm run load-test
-```
+- username: `admin`
+- password: `admin`
 
-The HTML summary is written to `artifacts/performance-summary.html`.
+## Runtime Modes
 
-## Runtime Configuration
+### `local`
 
-| Setting | Type | Default | Notes |
-| --- | --- | --- | --- |
-| `PORT` | env var | `8080` | HTTP port for Maxine |
-| `--port` / `-p` | CLI arg | unset | CLI override for the HTTP port |
-| `--env` / `--profile` | CLI arg | `prod` | `dev` enables `/api-spec` and `/shutdown` |
-| `MAXINE_ADMIN_USERNAME` | env var | `admin` | Overrides the admin username |
-| `MAXINE_ADMIN_PASSWORD` | env var | `admin` | Overrides the admin password |
-| `MAXINE_ADMIN_STATE_FILE` | env var | `data/admin-user.json` | Local file used to persist password changes when admin credentials are not managed by env vars |
-| `MAXINE_REGISTRY_PERSISTENCE` | env var | `true` | Set to `false` to disable local file-backed registry snapshots; Redis mode ignores this and keeps shared state enabled |
-| `MAXINE_REGISTRY_STATE_FILE` | env var | `data/registry-state.json` | Local file used to restore active registrations after restart |
-| `MAXINE_REGISTRY_STATE_MODE` | env var | `local` | `local` uses node-local snapshots, `shared-file` re-synchronizes from a shared snapshot file, and `redis` uses Redis for shared state plus distributed mutation locking |
-| `MAXINE_REGISTRY_STATE_LOCK_TIMEOUT_MS` | env var | `5000` | Lock timeout used by `shared-file` and Redis-backed mutation paths |
-| `MAXINE_REGISTRY_STATE_LOCK_RETRY_MS` | env var | `100` | Retry interval used while waiting for the shared state lock |
-| `MAXINE_REGISTRY_REDIS_URL` | env var | unset | Required when `MAXINE_REGISTRY_STATE_MODE=redis` unless the Helm chart injects an embedded Redis URL |
-| `MAXINE_REGISTRY_REDIS_KEY_PREFIX` | env var | `maxine:registry` | Redis key prefix used for the shared registry snapshot and lock |
-| `MAXINE_REGISTRY_REDIS_CONNECT_TIMEOUT_MS` | env var | `5000` | Redis client connect timeout in milliseconds |
-| `MAXINE_JWT_SECRET` | env var | unset | Strongly recommended in non-dev environments so JWTs remain valid across restarts |
-| `MAXINE_PERFORMANCE_REPORT_URL` | env var | unset | Public URL consumed by `GET /api/actuator/performance` |
+- in-memory registry
+- local restart recovery through persisted snapshots
+- safest default for single-instance use
 
-## CI/CD
+### `shared-file`
 
-CircleCI has been removed from this repository. GitHub Actions is now the source of truth:
+- shared snapshot coordination on shared storage
+- useful as a transitional coordination model
+- not a replacement for real clustered consensus
 
-- `.github/workflows/node.js.yml` runs the automated test suite on Node.js `20.x` and `22.x`
-- `.github/workflows/node.js.yml` also builds the Java SDK modules and validates the Python and Go SDKs
-- `.github/workflows/node.js.yml` also lints and renders the Helm chart
-- `.github/workflows/codeql.yml` runs CodeQL analysis
-- `.github/workflows/load-test.yml` provides a manual load-test workflow and uploads the k6 HTML report as a GitHub Actions artifact
-- `.github/workflows/publish-container.yml` builds and publishes the Maxine runtime container image to GHCR
-- `.github/workflows/publish-helm-chart.yml` packages charts from `charts/` and publishes the Helm repository to GitHub Pages
-- `.github/workflows/publish-node-sdk.yml` publishes the Node SDK to GitHub Packages using the repository `GITHUB_TOKEN`
-- `.github/workflows/publish-java-sdk.yml` deploys the Java SDK modules to Maven Central using `MAVEN_CENTRAL_USERNAME`, `MAVEN_CENTRAL_PASSWORD`, `MAVEN_GPG_PRIVATE_KEY`, and `MAVEN_GPG_PASSPHRASE`
-- `.github/workflows/publish-python-sdk.yml` publishes the Python SDK to PyPI using PyPI trusted publishing
-- The Go SDK is released by tagging the repository because Go modules are fetched directly from the VCS path
+### `redis`
 
-## Docker and Helm
+- Redis-backed shared registry state
+- distributed mutation locking
+- lease-based leader election with fencing tokens
+- recommended mode for multi-replica Maxine deployments today
 
-Maxine now ships with:
+## Discovery Modes
 
-- a production-oriented container image definition in `Dockerfile`
-- a Helm chart in `charts/maxine`
-- a GHCR image publishing workflow
-- a GitHub Pages Helm repository publishing workflow
-- an optional Redis-backed multi-replica deployment path for Kubernetes
+### Redirect
 
-The recommended install path is:
+`GET /api/maxine/serviceops/discover` resolves a node and redirects the caller
+to the upstream.
+
+### Proxy
+
+Maxine can proxy traffic either by:
+
+- calling discovery with proxy mode enabled
+- using `/api/maxine/serviceops/proxy/:serviceName/*`
+
+Proxy mode keeps Maxine in the data path, which is useful for operational
+visibility and routing control.
+
+## Security and Operations
+
+Maxine now includes:
+
+- JWT-based auth
+- RBAC roles for viewer, operator, and admin
+- file-backed or env-backed admin credentials
+- JWT rotation support through current and previous secrets
+- actuator endpoints for:
+  - health and info
+  - audit events
+  - alerts
+  - cluster state
+  - traces
+  - upstream probe state
+  - Prometheus-formatted metrics
+
+## Deployment
+
+### Docker
+
+The repository includes a production-oriented [Dockerfile](Dockerfile) and a
+GHCR publish workflow.
+
+### Helm
+
+Install from the published chart repository:
 
 ```bash
 helm repo add maxine https://vrushankpatel.github.io/Maxine
@@ -147,13 +143,13 @@ helm repo update
 helm install maxine maxine/maxine --namespace maxine --create-namespace
 ```
 
-For direct source installs during development:
+Source install:
 
 ```bash
 helm install maxine ./charts/maxine --namespace maxine --create-namespace
 ```
 
-For the Redis-backed multi-replica chart path:
+Redis-backed multi-replica example:
 
 ```bash
 helm install maxine maxine/maxine \
@@ -164,281 +160,81 @@ helm install maxine maxine/maxine \
   --set embeddedRedis.enabled=true
 ```
 
-Important chart behavior:
-
-- the chart defaults to `replicaCount=1`
-- `/app/data` is persisted by default so registry snapshots survive pod restarts
-- `/app/logs` is ephemeral by default
-- probes target `GET /api/actuator/health`
-- the default image repository is `ghcr.io/vrushankpatel/maxine`
-- `shared-file` registry mode is still available for shared-volume coordination, but Redis mode is the first real shared-state option for multi-replica installs
-- the chart can run an embedded single-instance Redis or point Maxine at an external Redis URL
-
-Before advertising public installs, publish the container once and make the GHCR package public if GitHub creates it as private on first push.
+See [docs/helm.md](docs/helm.md) and [charts/maxine/README.md](charts/maxine/README.md) for deployment details.
 
 ## SDKs
 
-The repository now contains actively maintained SDK starters for the current server API:
+The repository currently ships official SDK work for:
 
-- Node.js SDK: `client-sdk/`
-- Java HTTP client: `client-sdk/java/maxine-client/`
-- Java Spring Boot starter: `client-sdk/java/maxine-spring-boot-starter/`
-- Python client: `client-sdk/python/`
-- Go client: `client-sdk/go/`
+- Node.js: [client-sdk/](client-sdk/)
+- Java HTTP client: [client-sdk/java/maxine-client/](client-sdk/java/maxine-client/)
+- Java Spring Boot starter: [client-sdk/java/maxine-spring-boot-starter/](client-sdk/java/maxine-spring-boot-starter/)
+- Python: [client-sdk/python/](client-sdk/python/)
+- Go: [client-sdk/go/](client-sdk/go/)
 
-These are intentionally narrower than the old multi-language experiments in git history and are aligned to the endpoints that exist in this codebase today. The Spring Boot starter reads `application.properties` / `application.yml`, derives service metadata from the running app, and starts the Maxine heartbeat automatically.
+Top-level SDK guidance lives in [client-sdk/README.md](client-sdk/README.md).
 
-### Node.js usage
+## CI/CD
 
-Install:
+GitHub Actions is the only CI/CD system for this repository.
 
-```bash
-npm config set @vrushankpatel:registry https://npm.pkg.github.com
-npm login --scope=@vrushankpatel --auth-type=legacy --registry=https://npm.pkg.github.com
-npm install @vrushankpatel/maxine-client
-```
+Key workflows:
 
-```js
-const { MaxineClient } = require('@vrushankpatel/maxine-client');
+- [`.github/workflows/node.js.yml`](.github/workflows/node.js.yml): test suite, SDK validation, Helm validation
+- [`.github/workflows/codeql.yml`](.github/workflows/codeql.yml): code analysis
+- [`.github/workflows/load-test.yml`](.github/workflows/load-test.yml): manual load testing
+- [`.github/workflows/publish-container.yml`](.github/workflows/publish-container.yml): GHCR image publication
+- [`.github/workflows/publish-helm-chart.yml`](.github/workflows/publish-helm-chart.yml): Helm publication to GitHub Pages
+- [`.github/workflows/publish-node-sdk.yml`](.github/workflows/publish-node-sdk.yml): GitHub Packages publication for the Node SDK
+- [`.github/workflows/publish-java-sdk.yml`](.github/workflows/publish-java-sdk.yml): Maven Central publication for Java artifacts
+- [`.github/workflows/publish-python-sdk.yml`](.github/workflows/publish-python-sdk.yml): PyPI publication for the Python SDK
 
-async function main() {
-  const client = new MaxineClient({ baseUrl: 'http://localhost:8080' });
-  await client.signIn('admin', 'admin');
+The workflow stack has been refreshed to current GitHub Actions majors and the
+Node 24 action runtime path.
 
-  const registration = {
-    hostName: '127.0.0.1',
-    nodeName: 'orders-node',
-    serviceName: 'orders-service',
-    port: 8081,
-    ssl: false,
-    timeOut: 10,
-    weight: 1
-  };
+## Documentation
 
-  const heartbeat = client.startHeartbeat(registration, { intervalMs: 5000 });
-  const discovery = await client.discoverLocation('orders-service', '/health');
-  console.log(discovery.location);
-
-  heartbeat.stop();
-}
-```
-
-### Java client usage
-
-Dependency:
-
-```xml
-<dependency>
-    <groupId>io.github.vrushankpatel</groupId>
-    <artifactId>maxine-client</artifactId>
-    <version>1.0.0</version>
-</dependency>
-```
-
-```java
-import com.maxine.client.MaxineClient;
-
-import java.util.Map;
-
-MaxineClient client = new MaxineClient("http://localhost:8080");
-client.signIn("admin", "admin");
-
-Map<String, Object> registration = Map.of(
-    "hostName", "127.0.0.1",
-    "nodeName", "orders-node",
-    "serviceName", "orders-service",
-    "port", 8081,
-    "ssl", false,
-    "timeOut", 10,
-    "weight", 1
-);
-
-MaxineClient.HeartbeatHandle heartbeat = client.startHeartbeat(registration);
-System.out.println(client.discoverLocation("orders-service", "/health").orElse(""));
-heartbeat.stop();
-```
-
-### Spring Boot starter example
-
-Dependency:
-
-```xml
-<dependency>
-    <groupId>io.github.vrushankpatel</groupId>
-    <artifactId>maxine-spring-boot-starter</artifactId>
-    <version>1.0.0</version>
-</dependency>
-```
-
-```properties
-spring.application.name=orders-service
-server.port=8081
-
-maxine.client.base-url=http://localhost:8080
-maxine.client.time-out=10
-maxine.client.heartbeat-interval=5s
-maxine.client.weight=1
-```
-
-With `io.github.vrushankpatel:maxine-spring-boot-starter:1.0.0` on the classpath, that is enough to auto-register the service and keep heartbeats running.
-
-### Python usage
-
-Install:
-
-```bash
-pip install maxine-client
-```
-
-```python
-from maxine_client import MaxineClient
-
-client = MaxineClient("http://localhost:8080")
-client.sign_in("admin", "admin")
-
-registration = {
-    "hostName": "127.0.0.1",
-    "nodeName": "orders-node",
-    "serviceName": "orders-service",
-    "port": 8081,
-    "ssl": False,
-    "timeOut": 10,
-    "weight": 1,
-}
-
-heartbeat = client.start_heartbeat(registration, interval_seconds=5)
-discovery = client.discover_location("orders-service", "/health")
-print(discovery["location"])
-
-heartbeat.stop()
-```
-
-### Go usage
-
-Install:
-
-```bash
-go get github.com/VrushankPatel/Maxine/client-sdk/go@latest
-```
-
-```go
-package main
-
-import (
-    "fmt"
-    "log"
-    "time"
-
-    maxine "github.com/VrushankPatel/Maxine/client-sdk/go"
-)
-
-func main() {
-    client := maxine.NewClient("http://localhost:8080")
-    if _, err := client.SignIn("admin", "admin"); err != nil {
-        log.Fatal(err)
-    }
-
-    registration := map[string]any{
-        "hostName":    "127.0.0.1",
-        "nodeName":    "orders-node",
-        "serviceName": "orders-service",
-        "port":        8081,
-        "ssl":         false,
-        "timeOut":     10,
-        "weight":      1,
-    }
-
-    heartbeat := client.StartHeartbeat(registration, 5*time.Second, true, nil)
-    discovery, err := client.DiscoverLocation("orders-service", "/health")
-    if err != nil {
-        log.Fatal(err)
-    }
-
-    fmt.Println(discovery.Location)
-    heartbeat.Stop()
-}
-```
-
-## API and Documentation
-
-- OpenAPI spec: [api-specs/swagger.yaml](api-specs/swagger.yaml)
-- Docs entry: [docs/index.md](docs/index.md)
-- Helm guide: [docs/helm.md](docs/helm.md)
+- Overview: [docs/index.md](docs/index.md)
+- Features: [docs/features.md](docs/features.md)
+- API: [docs/api.md](docs/api.md)
+- Helm: [docs/helm.md](docs/helm.md)
 - Roadmap: [docs/roadmap.md](docs/roadmap.md)
+- Contributing: [CONTRIBUTING.md](CONTRIBUTING.md)
+- OpenAPI: [api-specs/swagger.yaml](api-specs/swagger.yaml)
 
-## Package Publishing Setup
+## Production Status
 
-For the public SDK releases:
+Maxine is substantially stronger than the original registry prototype, but it is
+not yet a fully consensus-backed distributed control plane.
 
-- GitHub Packages only supports scoped npm packages, so the Node SDK is published as `@vrushankpatel/maxine-client`.
-- There is no separate "create package" screen in GitHub Packages. The package is created by the first successful publish to `npm.pkg.github.com`, and GitHub marks npm packages private by default until you change package visibility.
-- PyPI does not have a separate "create project" screen for this flow either. The `maxine-client` project is created by the first successful publish, or by configuring a pending trusted publisher first.
-- Maven Central should use the GitHub-personal namespace `io.github.vrushankpatel`. A namespace shaped like `io.github.vrushankpatel.maxine` is treated by Sonatype as if `vrushankpatel.maxine` were the GitHub account name, which makes the verification URL invalid.
+The most important remaining gaps are:
 
-GitHub repository configuration still required outside the repo:
+- stronger clustered semantics beyond Redis lease coordination
+- deeper proxy controls and failure handling
+- richer readiness and upstream health modeling
+- external identity, stronger secret management, and transport hardening
+- long-term observability integrations and operational runbooks
+- frontend build and test automation
+- release/version discipline across server, chart, and SDK artifacts
 
-- PyPI trusted publisher for owner `VrushankPatel`, repository `Maxine`, workflow `publish-python-sdk.yml`
-- Repository secrets for Maven Central: `MAVEN_CENTRAL_USERNAME`, `MAVEN_CENTRAL_PASSWORD`, `MAVEN_GPG_PRIVATE_KEY`, `MAVEN_GPG_PASSPHRASE`
-- No extra secret is needed for Node publishing because the GitHub Packages workflow uses the repository `GITHUB_TOKEN`
+These are tracked in [docs/roadmap.md](docs/roadmap.md) and explained in more
+detail for contributors in [CONTRIBUTING.md](CONTRIBUTING.md).
 
-Recommended one-time release setup:
+## Contributing
 
-1. Cancel the unverified `io.github.vrushankpatel.maxine` Sonatype namespace request.
-2. Add `io.github.vrushankpatel` instead. If Sonatype does not auto-verify it, verify the new key with a temporary public repository under `https://github.com/VrushankPatel/<verification-key>`.
-3. Publish `@vrushankpatel/maxine-client` once through GitHub Actions so GitHub Packages creates the package.
-4. Configure PyPI trusted publishing for `maxine-client`.
-5. Add the Maven Central and GPG secrets to this GitHub repository.
+If you contribute here, keep the user-facing and operator-facing documentation
+in sync with the code.
 
-The current publish workflows are manual `workflow_dispatch` jobs so the first public releases can be performed deliberately. The GitHub Packages npm registry still requires consumers to authenticate with GitHub when installing outside Actions. The Go SDK does not need a separate registry account; consumers install it from the module path and version tags.
+At a minimum, relevant changes should update:
 
-## Production Readiness
+- [README.md](README.md)
+- [docs/](docs)
+- [api-specs/swagger.yaml](api-specs/swagger.yaml) when the HTTP contract changes
+- SDK or Helm docs when those surfaces change
 
-Maxine is better than it was at the start of this cleanup, but it is still not something I would call fully production grade yet.
-
-What is now in place:
-
-- restart recovery for registry state via local disk snapshots
-- optional shared-file registry synchronization for shared-volume deployments
-- Redis-backed shared registry state with distributed mutation locking
-- safer admin/JWT handling than the original code
-- multi-language SDKs
-- GitHub Actions CI
-- container packaging and Helm delivery
-
-What still keeps it from production-grade service-registry status:
-
-- Maxine now has a Redis-backed shared state mode, but it is still not a fully clustered control plane with leader election, fencing, or consensus.
-- The registry is still in-memory first inside each pod and is rebuilt from shared state on demand, so there is more coordination latency and less rigor than a purpose-built distributed registry.
-- Embedded Redis in the Helm chart is useful for self-contained installs, but serious production setups should still prefer an external managed Redis with backup and failover.
-- Service discovery still redirects clients instead of proxying requests, which limits observability, policy enforcement, and failure handling.
-- There are no active health checks against registered upstreams beyond heartbeat expiry.
-- Security is still basic: single admin user, no RBAC, no external identity provider, no secret-rotation workflow, and no audit trail.
-- There is no first-class metrics export, tracing, SLO monitoring, or alerting integration.
-- The editable UI source is still missing, which makes frontend fixes and operational UX work risky.
-- Release hardening is still incomplete: Maven Central credentials and signing are not finished, and the public package channels still need their first official versioned release cycle.
-
-## Known Gaps
-
-- Redis mode gives Maxine a shared state backend, but there is still no consensus-based clustering or clean split-brain prevention story.
-- Shared-file mode remains a coordination fallback, not a production-grade HA design.
-- Maxine is still logically a single control plane and therefore a single point of failure at the application layer.
-- Registry membership is heartbeat-driven only. There is no active upstream health-checking.
-- The admin model is better than before but still needs stronger secret storage, rotation, and auditability.
-- The UI source is missing from the repo, which blocks safe iterative frontend work.
-- Public release/versioning policy is still missing even though npm, PyPI, and Maven Central workflows now exist and the Go module is installable from the repository path.
-- Helm packaging now supports Redis-backed multi-replica installs, but HA-safe Kubernetes operation still needs stronger operational guidance, external dependency monitoring, and failover testing.
-
-## Implementation Roadmap
-
-The active roadmap is tracked in [docs/roadmap.md](docs/roadmap.md). The next major phases are:
-
-1. Harden the runtime: persistent secrets, safer auth, better startup/config boundaries, and registry lifecycle fixes.
-2. Improve the registry itself: stronger durability, health-aware eviction, better proxy semantics, and multi-node operation.
-3. Recover or rebuild the frontend source so the UI can evolve safely.
-4. Harden the platform story: public GHCR image publication, GitHub Pages Helm publication, pinned release tags, and installation guides.
-5. Expand official client SDKs for Java, Node.js, Python, and Go with richer retry/backoff and release versioning.
-6. Add semantic versioning, changelog generation, and tagged public package distribution.
+See [CONTRIBUTING.md](CONTRIBUTING.md) for the detailed contribution guide and
+the current prioritized backlog.
 
 ## License
 
-MIT License. See [LICENSE](LICENSE).
+MIT. See [LICENSE](LICENSE).

@@ -12,6 +12,17 @@ data:
   MAXINE_REGISTRY_STATE_MODE: {{ .Values.maxine.registryStateMode | quote }}
   MAXINE_REGISTRY_STATE_LOCK_TIMEOUT_MS: {{ .Values.maxine.registryStateLockTimeoutMs | quote }}
   MAXINE_REGISTRY_STATE_LOCK_RETRY_MS: {{ .Values.maxine.registryStateLockRetryMs | quote }}
+  MAXINE_LEADER_ELECTION_ENABLED: {{ ternary "true" "false" .Values.maxine.cluster.leaderElectionEnabled | quote }}
+  MAXINE_LEADER_ELECTION_LEASE_MS: {{ .Values.maxine.cluster.leaseMs | quote }}
+  MAXINE_LEADER_ELECTION_RENEW_MS: {{ .Values.maxine.cluster.renewMs | quote }}
+  MAXINE_ACTIVE_HEALTH_CHECKS_ENABLED: {{ ternary "true" "false" .Values.maxine.activeHealthChecks.enabled | quote }}
+  MAXINE_ACTIVE_HEALTH_CHECK_INTERVAL_MS: {{ .Values.maxine.activeHealthChecks.intervalMs | quote }}
+  MAXINE_ACTIVE_HEALTH_CHECK_TIMEOUT_MS: {{ .Values.maxine.activeHealthChecks.timeoutMs | quote }}
+  MAXINE_ACTIVE_HEALTH_CHECK_FAILURE_THRESHOLD: {{ .Values.maxine.activeHealthChecks.failureThreshold | quote }}
+  MAXINE_ACTIVE_HEALTH_CHECK_PATH: {{ .Values.maxine.activeHealthChecks.path | quote }}
+  MAXINE_ALERT_WEBHOOK_URL: {{ .Values.maxine.alerts.webhookUrl | quote }}
+  MAXINE_ALERT_WEBHOOK_TIMEOUT_MS: {{ .Values.maxine.alerts.webhookTimeoutMs | quote }}
+  MAXINE_TRACE_HEADER_NAME: {{ .Values.maxine.tracing.headerName | quote }}
   MAXINE_REGISTRY_REDIS_URL: {{ include "maxine.redisUrl" . | quote }}
   MAXINE_REGISTRY_REDIS_KEY_PREFIX: {{ .Values.maxine.redis.keyPrefix | quote }}
   MAXINE_REGISTRY_REDIS_CONNECT_TIMEOUT_MS: {{ .Values.maxine.redis.connectTimeoutMs | quote }}

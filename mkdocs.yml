@@ -1,12 +1,16 @@
-site_name: Maxine SRD
+site_name: Maxine
+site_description: Service registry, discovery, and operational control plane
+repo_url: https://github.com/VrushankPatel/Maxine
+repo_name: VrushankPatel/Maxine
 nav:
-  - Introduction: index.md
+  - Overview: index.md
   - Features: features.md
+  - API: api.md
   - Helm: helm.md
+  - Contributing: contributing.md
   - Roadmap: roadmap.md
   - Maintainer: about.md
-  - API: api.md
-  - LICENCE: licence.md
+  - License: licence.md
 theme:
   name: readthedocs
   nav_style: dark

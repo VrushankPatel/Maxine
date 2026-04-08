@@ -1,6 +1,8 @@
 const { info } = require('../../util/logging/logging-util');
 const { statusAndMsgs } = require('../../util/constants/constants');
 const { registryService } = require('../../service/registry-service');
+const { observabilityService } = require('../../service/observability-service');
+const { auditService } = require('../../service/audit-service');
 
 const registryController = async (req, res, next) => {
     try {
@@ -9,6 +11,14 @@ const registryController = async (req, res, next) => {
             res.status(statusAndMsgs.STATUS_GENERIC_ERROR).json({"message" : statusAndMsgs.MSG_INVALID_SERVICE_DATA});
             return;
         }
+        observabilityService.recordRegistration();
+        auditService.record('registry.register', {
+            outcome: 'REGISTERED',
+            serviceName: serviceResponse.serviceName,
+            nodeName: serviceResponse.nodeName,
+            address: serviceResponse.address,
+            traceId: req.traceId
+        });
         info(serviceResponse);
         res.status(statusAndMsgs.STATUS_SUCCESS).json(serviceResponse);
     } catch (err) {

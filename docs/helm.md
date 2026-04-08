@@ -1,23 +1,22 @@
 # Helm Deployment
 
-Maxine now ships with a Helm chart in `charts/maxine/`.
+Maxine ships with a Helm chart in `charts/maxine` and a GitHub Pages-backed Helm
+repository publish flow.
 
-## Why this chart is single-replica by default
+## Default Topology
 
-Maxine still keeps its active registry in-process, so the safe default chart
-topology is still:
+The chart defaults to:
 
-- one replica
-- one namespace-scoped release
-- one persistent volume for `/app/data`
+- `replicaCount=1`
+- `maxine.registryStateMode=local`
+- persistent `/app/data`
+- ephemeral `/app/logs`
 
-The chart no longer pretends that local mode is horizontally scalable. If you
-increase `replicaCount` without switching to `maxine.registryStateMode=redis`,
-you will create divergent registry state across pods.
+That default is intentional. Local mode keeps active registry state in-process,
+so scaling replicas without shared coordination will create divergent views of
+service state.
 
-## Published install path
-
-The chart is designed to be published as a GitHub Pages Helm repository:
+## Install from the Published Repo
 
 ```bash
 helm repo add maxine https://vrushankpatel.github.io/Maxine
@@ -25,37 +24,13 @@ helm repo update
 helm install maxine maxine/maxine --namespace maxine --create-namespace
 ```
 
-## Key values
+## Install from Source
 
-- `image.repository`: container image repository, defaults to `ghcr.io/vrushankpatel/maxine`
-- `image.tag`: defaults to `latest`, but production should pin a release tag
-- `maxine.registryStateMode`: defaults to `local`; `shared-file` is shared-storage coordination, and `redis` is the shared backend for multi-replica installs
-- `maxine.redis.url`: optional external Redis URL; if unset and `embeddedRedis.enabled=true`, the chart wires Maxine to the in-release Redis service
-- `maxine.redis.keyPrefix`: Redis key prefix used by Maxine
-- `auth.adminUsername`: default admin username
-- `auth.adminPassword`: default admin password
-- `auth.jwtSecret`: JWT signing secret
-- `auth.existingSecret`: use an existing secret instead of chart-managed credentials
-- `persistence.enabled`: controls the `/app/data` PVC
-- `logs.persistence.enabled`: optionally persists `/app/logs`
-- `ingress.enabled`: exposes Maxine through an Ingress resource
-- `embeddedRedis.enabled`: deploys a single-instance Redis StatefulSet inside the release
-- `embeddedRedis.auth.enabled`: protects the embedded Redis instance with a password-backed secret
+```bash
+helm install maxine ./charts/maxine --namespace maxine --create-namespace
+```
 
-When using `auth.existingSecret`, the secret must contain:
-
-- `MAXINE_ADMIN_USERNAME`
-- `MAXINE_ADMIN_PASSWORD`
-- `MAXINE_JWT_SECRET`
-
-When using `embeddedRedis.auth.existingSecret`, the secret must contain:
-
-- `REDIS_PASSWORD`
-- `MAXINE_REGISTRY_REDIS_URL`
-
-An example production-style values file is included at `charts/maxine/values-production-example.yaml`.
-
-## Redis-backed install example
+## Redis-Backed Multi-Replica Example
 
 ```bash
 helm install maxine maxine/maxine \
@@ -66,23 +41,57 @@ helm install maxine maxine/maxine \
   --set embeddedRedis.enabled=true
 ```
 
-## Publish model
+## Important Values
 
-The repository now includes:
+- `image.repository` and `image.tag`
+- `maxine.registryStateMode`
+- `maxine.cluster.leaderElectionEnabled`
+- `maxine.activeHealthChecks.*`
+- `maxine.alerts.*`
+- `maxine.redis.*`
+- `auth.*`
+- `persistence.*`
+- `logs.persistence.*`
+- `ingress.*`
+- `embeddedRedis.*`
 
-- a GHCR container publish workflow for the Maxine runtime image
-- a Helm chart release workflow that packages charts from `charts/` and publishes them to GitHub Pages
+The chart also injects `MAXINE_INSTANCE_ID` from the pod name so cluster status
+and leadership reporting remain instance-aware.
 
-To make the chart installable publicly:
+## Existing Secret Requirements
 
-1. Publish the GHCR image and make the image package public if needed.
-2. Enable GitHub Pages for this repository and point it at the `pages` branch root.
-3. Run the Helm chart publish workflow.
+If `auth.existingSecret` is used, that secret must provide:
 
-## Operational caveats
+- `MAXINE_ADMIN_USERNAME`
+- `MAXINE_ADMIN_PASSWORD`
+- `MAXINE_OPERATOR_USERNAME`
+- `MAXINE_OPERATOR_PASSWORD`
+- `MAXINE_VIEWER_USERNAME`
+- `MAXINE_VIEWER_PASSWORD`
+- `MAXINE_JWT_SECRET`
 
-- The chart uses `/api/actuator/health` for probes, which checks process health rather than deep dependency readiness.
-- Admin credentials are still single-user and environment-driven.
-- `shared-file` mode is a useful first coordination step on shared storage, but it is not a substitute for a true distributed registry backend.
-- Redis mode is a real shared backend, but Maxine still needs stronger HA semantics, deeper observability, and more failover testing before it should be treated as a mature distributed registry.
-- The embedded Redis option is convenient for a self-contained namespace install, but production environments should usually prefer an external managed Redis with backups and failover.
+If `embeddedRedis.auth.existingSecret` is used, that secret must provide:
+
+- `REDIS_PASSWORD`
+- `MAXINE_REGISTRY_REDIS_URL`
+
+## Publishing Model
+
+Helm publication is handled through GitHub Actions:
+
+- container image publication to GHCR
+- chart packaging and GitHub Pages publication
+
+To make public installs work end to end:
+
+1. publish the GHCR image
+2. make the image package public if GitHub marks it private on first release
+3. enable GitHub Pages for the chart branch
+4. run the Helm publish workflow
+
+## Operational Notes
+
+- Probes hit `/api/actuator/health`, which is process health, not deep dependency readiness.
+- `shared-file` mode is coordination on shared storage, not distributed consensus.
+- Redis mode is the recommended shared-state path, but it is still not a full consensus-backed clustered control plane.
+- Embedded Redis is useful for self-contained installs, but production environments should generally prefer managed Redis with backup and failover.

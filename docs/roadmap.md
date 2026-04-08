@@ -1,107 +1,78 @@
-# Maxine Roadmap
+# Roadmap
 
-## Current State
+## Current Baseline
 
-Maxine currently works as a single-process Node.js registry and discovery server with:
+Maxine already includes:
 
-- In-memory service registration, timeout-based eviction, and local registry-state restart recovery
-- Optional `shared-file` registry state synchronization for shared-volume deployments
-- Redis-backed shared registry state for multi-replica coordination
-- Redirect-based discovery with `RR`, `CH`, and `RH` selection strategies
-- Runtime config mutation through admin APIs
-- Basic JWT-protected admin endpoints
-- A compiled dashboard UI bundle checked into `client/`
-- A Docker image definition plus a Helm chart that supports both single-replica local mode and Redis-backed multi-replica mode
+- local, shared-file, and Redis-backed registry state modes
+- redirect and proxy discovery modes
+- weighted distribution with `RR`, `CH`, and `RH`
+- Redis lease leadership with fencing tokens
+- opt-in active upstream health checks
+- RBAC, audit, alerts, traces, and Prometheus-formatted metrics
+- editable dashboard source
+- GitHub Actions-based CI/CD, GHCR packaging, and Helm publication
+- in-repo SDKs for Node.js, Java, Python, and Go
 
-## Highest-Priority Gaps
+## Highest-Priority Remaining Work
 
-### Architecture and runtime
+### 1. Distributed Control Plane
 
-- The registry now has a shared-state backend option, but the application is still logically a single control plane with no consensus or split-brain protection.
-- Discovery is redirect-based rather than request-forwarding proxying, so upstream semantics are limited.
-- Health is inferred only from heartbeats. There is no active liveness or readiness verification.
+- move beyond Redis lease coordination toward stronger clustered semantics
+- improve split-brain handling and failover guarantees
+- add deeper leadership-aware mutation coverage
+- document operational behavior for replica failure and recovery
 
-### Security and operations
+### 2. Proxy and Health Model
 
-- Admin auth now supports env-backed or file-backed credentials, but it still needs stronger secret management and rotation controls.
-- JWT stability depends on setting `MAXINE_JWT_SECRET` outside of dev.
-- Observability is partial: there are logs and actuator endpoints, but no metrics export, tracing, or audit trail.
-- Kubernetes packaging now exists, and Redis-backed state is available, but HA-safe operation still needs stronger operational primitives, managed dependency guidance, and failover validation.
+- deepen proxy timeouts, retries, and policy controls
+- improve request/response edge-case handling in proxy mode
+- add richer upstream readiness semantics beyond the current probe model
+- improve recovery behavior after active eviction
 
-### UI
+### 3. Security and Identity
 
-- The repository only contains the compiled frontend build.
-- The editable UI source tree is currently missing, which blocks meaningful refactors and reliable bug fixes.
+- add stronger secret lifecycle guidance and automation
+- explore external identity integration
+- strengthen authorization boundaries and audit retention strategy
+- document transport hardening expectations for production use
 
-### SDKs and releases
+### 4. Observability and Operations
 
-- Initial Java, Node.js, Python, and Go SDKs now exist in-repo and target the current Maxine API.
-- GitHub Actions release workflows now exist for GitHub Packages, PyPI, and Maven Central publication.
-- Trusted publisher setup and signed Maven Central release credentials still need to be completed outside the repository settings.
-- Semantic versioning, changelog generation, and release publishing are still manual.
+- add durable monitoring guidance and dashboards
+- integrate with a tracing backend
+- improve alert routing patterns and operational runbooks
+- expand SLO-oriented metrics and signals
 
-### Platform packaging
+### 5. UI and Frontend Tooling
 
-- A GHCR container publish workflow and a GitHub Pages Helm publish workflow now exist in-repo.
-- The first public publish and package-visibility setup still need to be completed in GitHub.
-- The chart defaults to single-replica local mode, but Redis-backed multi-replica installs now exist and need production validation.
+- add frontend tests
+- improve accessibility and role-aware workflows
+- validate responsive behavior and operational UX
+- decide on a longer-term frontend packaging strategy
 
-## Delivery Plan
+### 6. SDKs and Release Engineering
 
-### Phase 1: Stabilize the core server
+- formalize semantic versioning and release notes
+- align server, SDK, chart, and container versioning
+- improve retry/backoff ergonomics in clients
+- complete first polished public release flow across all artifacts
 
-- Externalize secrets and admin credentials cleanly.
-- Separate app construction from process startup everywhere.
-- Tighten request validation and error handling.
-- Add tests around startup, discovery redirects, config mutation, and registry expiration.
+## Delivery Direction
 
-### Phase 2: Harden the registry model
+### Near Term
 
-- Move beyond the current Redis/shared-file coordination model toward a truly clustered control plane.
-- Add upstream health-checking and stale-node cleanup beyond passive timeouts.
-- Revisit weighted-node modeling so load-balancing and observability stay accurate.
-- Add stronger HA semantics, failover behavior, and operational runbooks for clustered Maxine instances.
+- stabilize the new cluster, proxy, health, and security surfaces
+- keep docs, Helm, SDKs, and API specs aligned with runtime behavior
+- improve operational guidance for Redis-backed deployments
 
-### Phase 3: Recover and improve the UI
+### Mid Term
 
-- Restore the frontend source or rebuild the dashboard from source control.
-- Align the UI with current APIs and add real registry, config, and logs workflows.
-- Add frontend build/test pipelines instead of shipping only compiled artifacts.
+- harden production deployment patterns
+- improve release engineering and version discipline
+- mature the UI and observability story
 
-### Phase 4: Harden the platform packaging
+### Long Term
 
-- Publish the GHCR runtime image and make public access explicit.
-- Publish the Helm repository to GitHub Pages and keep it versioned with the app.
-- Add release-tag alignment between the container image, Helm chart, and SDK artifacts.
-- Add environment-specific values examples for local, staging, and production-style clusters.
-
-### Phase 5: Ship official client SDKs
-
-Java SDK:
-- Spring Boot starter with `application.properties` auto-registration and heartbeat lifecycle
-- Discovery helper with retry/backoff support
-- Auth/config helpers where appropriate
-- Public release channels and version alignment with the server
-
-Node.js SDK:
-- GitHub Packages npm package with TypeScript types
-- Heartbeat scheduler and deregistration helpers
-- Discovery client with fetch/axios integration
-- Install/auth guidance and release tagging policy
-
-Python SDK:
-- Publishable package metadata and PyPI trusted publishing
-- Retry/backoff helpers and optional async client support
-- Heartbeat lifecycle examples for FastAPI, Flask, and Django
-
-Go SDK:
-- Stable module import/versioning strategy
-- Context-aware request variants and retry helpers
-- Examples for service startup/shutdown integration
-
-### Phase 6: Release engineering and production hardening
-
-- Automate tagging, changelog generation, and package publishing
-- Add container publishing and deployment examples
-- Decide whether performance reports should be published to GitHub Pages, Releases, or another public artifact store
-- Keep `README`, `docs/`, and `api-specs/swagger.yaml` updated as first-class release outputs
+- decide whether Maxine remains Redis-coordinated or evolves into a stronger clustered control plane
+- validate the architecture against real production-style failure modes

@@ -6,8 +6,16 @@ image:
 
 maxine:
   registryStateMode: redis
+  cluster:
+    leaderElectionEnabled: true
   redis:
     keyPrefix: maxine:prod
+  activeHealthChecks:
+    enabled: true
+    intervalMs: 15000
+    timeoutMs: 3000
+    failureThreshold: 3
+    path: /actuator/health
 
 auth:
   existingSecret: maxine-auth

@@ -2,6 +2,7 @@ const RouteBuilder = require('../builders/route-builder');
 const bodyParser = require('body-parser');
 const { serverListController, registryController } = require('../controller/maxine/registry-controller');
 const discoveryController = require('../controller/maxine/discovery-controller');
+const { serviceProxyController } = require('../controller/maxine/proxy-controller');
 const { signInController } = require('../controller/uac/signin-controller');
 const { logsLinkGenController, recentLogsController, recentLogsClearController } = require('../controller/log-control/logs-controller');
 const { configuratorController, configurationController } = require('../controller/config-control/configurator-controller');
@@ -22,6 +23,7 @@ let maxineApiRoutes = RouteBuilder.createNewRoute()
                                 .get("servers", serverListController)
                                 .post("register", bodyParser.json(), registryController)
                                 .get("discover", discoveryController)
+                                .all("proxy/:serviceName/*", bodyParser.raw({ type: '*/*', limit: '10mb' }), serviceProxyController)
                             .stepBack()
                             .post("signin", bodyParser.json(), signInController)
                             .put("change-password", bodyParser.json(), changePwdController)

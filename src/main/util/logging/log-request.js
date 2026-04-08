@@ -1,9 +1,15 @@
 const { statusAndMsgs, constants } = require("../constants/constants");
 const { logBuilder } = require("../util");
 const { log, logger } = require("./logging-util");
+const { observabilityService } = require("../../service/observability-service");
 
 const logRequest = (req, res, next) => {
     res.on('finish', () => log(() => {
+        const durationMs = req.startedAt
+            ? Number(process.hrtime.bigint() - req.startedAt) / 1000000
+            : undefined;
+
+        observabilityService.recordRequest(req, res, durationMs);
         if (constants.LOG_EXPELLED_URLS.includes(req.originalUrl)) return;
         let logRequired = true;
         constants.LOG_EXPELLED_URLS.forEach(url => {
