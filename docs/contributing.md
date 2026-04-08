@@ -9,7 +9,7 @@ Start with the repository contribution guide:
 
 The most important rule is simple:
 
-- if behavior changes, update [README.md](../README.md), the relevant pages in [docs/](.), and [api-specs/swagger.yaml](../api-specs/swagger.yaml) when the HTTP contract changes
+- if behavior changes, update [README.md on GitHub](https://github.com/VrushankPatel/Maxine/blob/master/README.md), the relevant docs pages, and [api-specs/swagger.yaml on GitHub](https://github.com/VrushankPatel/Maxine/blob/master/api-specs/swagger.yaml) when the HTTP contract changes
 
 ## Highest-Value Contribution Areas
 
