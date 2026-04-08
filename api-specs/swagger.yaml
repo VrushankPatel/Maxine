@@ -5,7 +5,9 @@ info:
   description: >
     Maxine is a Node.js service registry and discovery server that stores
     service heartbeats in memory, restores active registrations from local or
-    Redis-backed shared state, and resolves service names to registered nodes.
+    Redis-backed shared state, uses lease-based leader election for
+    leader-protected control-plane work in Redis mode, and resolves service
+    names to registered nodes by redirecting or proxying requests.
   contact:
     name: Vrushank Patel
   license:
@@ -32,12 +34,10 @@ paths:
           content:
             application/json:
               schema:
-                type: object
-                properties:
-                  accessToken:
-                    type: string
+                $ref: '#/components/schemas/SignInResponse'
               example:
                 accessToken: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+                role: admin
         '400':
           description: Missing credentials
           content:
@@ -186,6 +186,174 @@ paths:
                 fetchFailed:
                   value:
                     message: Could not retrieve load test report.
+
+  /api/actuator/audit:
+    get:
+      summary: Get recent audit events
+      tags:
+        - Actuator
+      operationId: actuatorAudit
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Recent audit events
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuditResponse'
+        '401':
+          description: Missing or invalid bearer token
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /api/actuator/alerts:
+    get:
+      summary: Get recent emitted alerts
+      tags:
+        - Actuator
+      operationId: actuatorAlerts
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Recent alert events
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AlertsResponse'
+        '401':
+          description: Missing or invalid bearer token
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /api/actuator/cluster:
+    get:
+      summary: Get cluster leadership status
+      tags:
+        - Actuator
+      operationId: actuatorCluster
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Current cluster leadership view for this instance
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ClusterStatus'
+        '401':
+          description: Missing or invalid bearer token
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /api/actuator/traces:
+    get:
+      summary: Get recent request traces
+      tags:
+        - Actuator
+      operationId: actuatorTraces
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Recent in-memory request traces
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TracesResponse'
+        '401':
+          description: Missing or invalid bearer token
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /api/actuator/upstreams:
+    get:
+      summary: Get active upstream probe state
+      tags:
+        - Actuator
+      operationId: actuatorUpstreams
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Current active health-check status
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UpstreamStatus'
+        '401':
+          description: Missing or invalid bearer token
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /api/actuator/prometheus:
+    get:
+      summary: Get Prometheus-formatted Maxine metrics
+      tags:
+        - Actuator
+      operationId: actuatorPrometheus
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Prometheus text exposition
+          content:
+            text/plain:
+              schema:
+                type: string
+        '401':
+          description: Missing or invalid bearer token
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
 
   /api/logs/download:
     get:
@@ -340,9 +508,19 @@ paths:
           schema:
             type: string
             example: /info
+        - in: query
+          name: mode
+          required: false
+          schema:
+            type: string
+            enum:
+              - proxy
+            example: proxy
       responses:
+        '200':
+          description: Proxied response from the discovered upstream when proxy mode is requested
         '302':
-          description: Redirect to the discovered service node
+          description: Redirect to the discovered service node when redirect mode is active
           headers:
             Location:
               schema:
@@ -364,6 +542,89 @@ paths:
                 $ref: '#/components/schemas/ErrorResponse'
               example:
                 message: Service Unavailable
+
+  /api/maxine/serviceops/proxy/{serviceName}/{proxyPath}:
+    parameters:
+      - in: path
+        name: serviceName
+        required: true
+        schema:
+          type: string
+      - in: path
+        name: proxyPath
+        required: true
+        schema:
+          type: string
+    get:
+      summary: Proxy a request through Maxine to a resolved upstream
+      tags:
+        - ServiceOps
+      operationId: proxyServiceGet
+      responses:
+        '200':
+          description: Successful proxied response
+        '503':
+          description: Service unavailable
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+    post:
+      summary: Proxy a POST request through Maxine to a resolved upstream
+      tags:
+        - ServiceOps
+      operationId: proxyServicePost
+      responses:
+        '200':
+          description: Successful proxied response
+        '503':
+          description: Service unavailable
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+    put:
+      summary: Proxy a PUT request through Maxine to a resolved upstream
+      tags:
+        - ServiceOps
+      operationId: proxyServicePut
+      responses:
+        '200':
+          description: Successful proxied response
+        '503':
+          description: Service unavailable
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+    patch:
+      summary: Proxy a PATCH request through Maxine to a resolved upstream
+      tags:
+        - ServiceOps
+      operationId: proxyServicePatch
+      responses:
+        '200':
+          description: Successful proxied response
+        '503':
+          description: Service unavailable
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+    delete:
+      summary: Proxy a DELETE request through Maxine to a resolved upstream
+      tags:
+        - ServiceOps
+      operationId: proxyServiceDelete
+      responses:
+        '200':
+          description: Successful proxied response
+        '503':
+          description: Service unavailable
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
 
   /api/maxine/serviceops/servers:
     get:
@@ -433,6 +694,11 @@ paths:
                   code: '0'
                   message: Round Robin
                   ordinal: 0
+                discoveryMode:
+                  name: REDIRECT
+                  code: '0'
+                  message: Redirect
+                  ordinal: 0
                 logFormat:
                   name: JSON
                   code: '0'
@@ -480,6 +746,7 @@ paths:
                 heartBeatTimeout: Success
                 logJsonPrettify: Success
                 serverSelectionStrategy: Success
+                discoveryMode: Success
                 logFormat: Success
         '401':
           description: Missing or invalid bearer token
@@ -489,6 +756,14 @@ paths:
                 $ref: '#/components/schemas/ErrorResponse'
               example:
                 message: Unauthorized
+        '409':
+          description: This instance is not the current cluster leader for leader-protected config mutations
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                message: This control-plane mutation must be handled by the current leader instance.
         '403':
           description: Forbidden
           content:
@@ -505,6 +780,18 @@ components:
       properties:
         message:
           type: string
+
+    SignInResponse:
+      type: object
+      properties:
+        accessToken:
+          type: string
+        role:
+          type: string
+          enum:
+            - viewer
+            - operator
+            - admin
 
     User:
       type: object
@@ -568,6 +855,9 @@ components:
         path:
           type: string
           example: /api/actuator
+        healthCheckPath:
+          type: string
+          example: /health
 
     ServiceRegistrationResponse:
       type: object
@@ -583,6 +873,8 @@ components:
         weight:
           type: integer
         address:
+          type: string
+        healthCheckPath:
           type: string
         registeredAt:
           type: string
@@ -601,6 +893,8 @@ components:
         registeredAt:
           type: integer
           format: int64
+        healthCheckPath:
+          type: string
 
     RegistrySnapshot:
       type: object
@@ -641,6 +935,8 @@ components:
           type: boolean
         serverSelectionStrategy:
           $ref: '#/components/schemas/EnumState'
+        discoveryMode:
+          $ref: '#/components/schemas/EnumState'
         logFormat:
           $ref: '#/components/schemas/EnumState'
         port:
@@ -662,6 +958,11 @@ components:
             - RR
             - CH
             - RH
+        discoveryMode:
+          type: string
+          enum:
+            - REDIRECT
+            - PROXY
         logFormat:
           type: string
           enum:
@@ -672,6 +973,118 @@ components:
       type: object
       additionalProperties:
         type: string
+
+    AuditEvent:
+      type: object
+      properties:
+        timestamp:
+          type: string
+          format: date-time
+        type:
+          type: string
+        outcome:
+          type: string
+        userName:
+          type: string
+        role:
+          type: string
+        serviceName:
+          type: string
+        nodeName:
+          type: string
+        traceId:
+          type: string
+
+    AuditResponse:
+      type: object
+      properties:
+        events:
+          type: array
+          items:
+            $ref: '#/components/schemas/AuditEvent'
+
+    AlertEvent:
+      type: object
+      properties:
+        timestamp:
+          type: string
+          format: date-time
+        severity:
+          type: string
+        type:
+          type: string
+        message:
+          type: string
+        details:
+          type: object
+          additionalProperties: true
+
+    AlertsResponse:
+      type: object
+      properties:
+        alerts:
+          type: array
+          items:
+            $ref: '#/components/schemas/AlertEvent'
+
+    TraceEvent:
+      type: object
+      properties:
+        traceId:
+          type: string
+        traceparent:
+          type: string
+        method:
+          type: string
+        path:
+          type: string
+        status:
+          type: integer
+        durationMs:
+          type: number
+        timestamp:
+          type: string
+          format: date-time
+
+    TracesResponse:
+      type: object
+      properties:
+        traces:
+          type: array
+          items:
+            $ref: '#/components/schemas/TraceEvent'
+
+    ClusterStatus:
+      type: object
+      properties:
+        enabled:
+          type: boolean
+        instanceId:
+          type: string
+        isLeader:
+          type: boolean
+        hasLeader:
+          type: boolean
+        fencingToken:
+          type: integer
+        leaderInstanceId:
+          type: string
+          nullable: true
+        observedAt:
+          type: string
+          format: date-time
+
+    UpstreamStatus:
+      type: object
+      properties:
+        started:
+          type: boolean
+        unhealthyNodes:
+          type: integer
+        failureCounts:
+          type: object
+          additionalProperties:
+            type: integer
 
   securitySchemes:
     bearerAuth:

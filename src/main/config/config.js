@@ -7,6 +7,7 @@ const config = {
     actuatorEnabled: true,
     statusMonitorEnabled: true,
     serverSelectionStrategy: constants.SSS.RR,
+    discoveryMode: constants.DISCOVERY_MODES.REDIRECT,
     logFormat: constants.LOG_FORMATS.JSON
 }
 

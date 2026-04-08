@@ -36,7 +36,10 @@ helm install maxine maxine/maxine \
 - Log persistence is disabled by default.
 - The chart exposes `/api/actuator/health` as the liveness, readiness, and startup probe target.
 - `maxine.registryStateMode` defaults to `local`; `shared-file` is still shared-storage coordination, while `redis` is the first shared-state option for multi-replica installs.
+- `maxine.cluster.leaderElectionEnabled=true` keeps leader-protected control-plane mutations tied to a single lease holder in Redis mode.
+- `maxine.activeHealthChecks.enabled=false` by default so services are not unexpectedly evicted unless probing is explicitly configured.
 - `embeddedRedis.enabled=false` by default so production users can point Maxine at an external Redis if preferred.
+- The chart injects `MAXINE_INSTANCE_ID` from the pod name for cluster status and leadership reporting.
 
 ## Existing secret format
 
@@ -44,6 +47,10 @@ If you set `auth.existingSecret`, that secret must expose these keys:
 
 - `MAXINE_ADMIN_USERNAME`
 - `MAXINE_ADMIN_PASSWORD`
+- `MAXINE_OPERATOR_USERNAME`
+- `MAXINE_OPERATOR_PASSWORD`
+- `MAXINE_VIEWER_USERNAME`
+- `MAXINE_VIEWER_PASSWORD`
 - `MAXINE_JWT_SECRET`
 
 If you enable `embeddedRedis.auth.enabled` with `embeddedRedis.auth.existingSecret`, that secret must expose:
@@ -54,6 +61,8 @@ If you enable `embeddedRedis.auth.enabled` with `embeddedRedis.auth.existingSecr
 ## Production notes
 
 - Set `auth.adminPassword` and `auth.jwtSecret` explicitly before production use.
+- Configure `auth.operator*` and `auth.viewer*` if you want RBAC-separated operational access.
+- Enable `maxine.activeHealthChecks` only after you have valid upstream health endpoints to probe.
 - Pin `image.tag` to a release tag instead of `latest`.
 - If you publish the GHCR container publicly, make the package public after the first push.
 - Start from `values-production-example.yaml` and then replace the placeholder values for your cluster.

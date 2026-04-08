@@ -1,22 +1,25 @@
 name: Maxine Load Test
 
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+
 on:
   workflow_dispatch:
 
 jobs:
   load-test:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 20
     permissions:
       contents: read
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
 
-      - name: Use Node.js 22.x
-        uses: actions/setup-node@v4
+      - name: Use Node.js 24.x
+        uses: actions/setup-node@v6
         with:
-          node-version: 22.x
+          node-version: 24.x
           cache: npm
 
       - name: Install dependencies
@@ -42,7 +45,7 @@ jobs:
         run: npm run load-test
 
       - name: Upload load-test artifacts
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: load-test-report
           path: |

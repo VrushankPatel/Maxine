@@ -35,6 +35,13 @@ class ConfiguratorService{
         config.logFormat = loggingFormat;
         return constants.CODE_SUCCESS;
     }
+
+    updateDiscoveryMode(discoveryMode){
+        const selectedMode = constants.DISCOVERY_MODES[discoveryMode];
+        if(_.isUndefined(selectedMode)) return constants.CODE_INVALID_DATA;
+        config.discoveryMode = selectedMode;
+        return constants.CODE_SUCCESS;
+    }
 }
 
 module.exports = {

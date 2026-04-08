@@ -107,7 +107,8 @@ class RegistryService{
             nodeName,
             parentNode: nodeState.parentNode || nodeName,
             timeOut: nodeTimeOut,
-            registeredAt
+            registeredAt,
+            healthCheckPath: nodeState.healthCheckPath || ""
         };
     }
 
@@ -246,19 +247,19 @@ class RegistryService{
         const now = Date.now();
         let restoredNodeCount = 0;
 
-        Object.entries(savedRegistry).forEach(([serviceName, serviceState]) => {
+        for (const [serviceName, serviceState] of Object.entries(savedRegistry)) {
             this.ensureServiceEntry(serviceName, serviceState.offset || 0);
 
-            Object.entries(serviceState.nodes || {}).forEach(([nodeName, nodeState]) => {
+            for (const [nodeName, nodeState] of Object.entries(serviceState.nodes || {})) {
                 const nodeTimeOut = Math.abs(parseInt(nodeState.timeOut)) || config.heartBeatTimeout;
                 const registeredAt = Number(nodeState.registeredAt) || now;
                 const ttlMs = (nodeTimeOut * 1000) + 500 - (now - registeredAt);
 
                 if (ttlMs <= 0) {
-                    return;
+                    continue;
                 }
 
-                this.upsertNode(serviceName, nodeName, {
+                await this.upsertNode(serviceName, nodeName, {
                     nodeName,
                     parentNode: nodeState.parentNode || nodeName,
                     address: nodeState.address,
@@ -266,20 +267,20 @@ class RegistryService{
                     registeredAt
                 }, ttlMs, false);
                 restoredNodeCount += 1;
-            });
+            }
 
             const service = sRegistry.registry[serviceName];
             if (service && Object.keys(service.nodes).length === 0) {
                 delete sRegistry.registry[serviceName];
             }
-        });
+        }
 
         await this.persistRegistry();
         registryStateService.logRestoreSummary(restoredNodeCount);
     }
 
     registerService = async (serviceObj, shouldPersist = true) => {
-        const {serviceName, nodeName, address, timeOut, weight} = serviceObj;
+        const {serviceName, nodeName, address, timeOut, weight, healthCheckPath} = serviceObj;
 
         this.ensureServiceEntry(serviceName);
         await this.removeParentNodeRegistrations(serviceName, nodeName, false);
@@ -291,7 +292,8 @@ class RegistryService{
                 "parentNode" : nodeName,
                 "address" : address,
                 "timeOut" : timeOut,
-                "registeredAt" : Date.now()
+                "registeredAt" : Date.now(),
+                "healthCheckPath" : healthCheckPath || ""
             }, ((timeOut)*1000)+500, false);
         }
 
@@ -385,6 +387,26 @@ class RegistryService{
         }
         this.initialized = false;
         this.initializationPromise = undefined;
+    }
+
+    evictParentNode = async (serviceName, parentNode) => {
+        await this.initialize();
+
+        if (this.isSharedStateMode()) {
+            return registryStateService.mutate(async (snapshot) => {
+                const activeSnapshot = this.pruneExpiredSnapshot(snapshot).snapshot;
+                this.loadSnapshotIntoMemory(activeSnapshot, false);
+                await this.removeParentNodeRegistrations(serviceName, parentNode, false);
+
+                return {
+                    result: sRegistry.getRegServers(),
+                    registry: sRegistry.getRegServers()
+                };
+            });
+        }
+
+        await this.removeParentNodeRegistrations(serviceName, parentNode, true);
+        return sRegistry.getRegServers();
     }
 }
 

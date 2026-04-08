@@ -4,6 +4,7 @@ const app = require('../../../index');
 const config = require('../../main/config/config');
 const { generateAccessToken } = require('../../main/security/jwt');
 const { sssChecker, logFormatChecker } = require('../../main/util/util');
+const { constants } = require('../../main/util/constants/constants');
 const { testUser, ENDPOINTS } = require('../testUtil/test-constants');
 var should = chai.should();
 chai.use(require('chai-json'));
@@ -182,6 +183,21 @@ describe(`${fileName} : API /api/maxine`, () => {
                 body.should.have.own.property("logFormat", "Success");
                 logFormatChecker.isJsonFormat().should.be.false;
                 logFormatChecker.isPlainFormat().should.be.true;
+                done();
+            });
+    });
+
+    it('PUT /config (Update discoveryMode to PROXY) -> 200 & Update config discoveryMode (PROXY)', (done) => {
+        chai.request(app)
+            .put(ENDPOINTS.maxine.config)
+            .set("Authorization", `Bearer ${getAccessToken()}`)
+            .set('Content-Type', 'application/json')
+            .send({ discoveryMode: 'PROXY' })
+            .end((_, res) => {
+                res.should.have.status(200);
+                res.should.be.json;
+                res.body.should.have.own.property("discoveryMode", "Success");
+                config.discoveryMode.should.be.eql(constants.DISCOVERY_MODES.PROXY);
                 done();
             });
     });

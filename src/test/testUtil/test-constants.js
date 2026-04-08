@@ -9,7 +9,13 @@ const ENDPOINTS = {
     actuator: {
         health: '/api/actuator/health',
         info: '/api/actuator/info',
-        metrics: '/api/actuator/metrics'
+        metrics: '/api/actuator/metrics',
+        audit: '/api/actuator/audit',
+        alerts: '/api/actuator/alerts',
+        cluster: '/api/actuator/cluster',
+        prometheus: '/api/actuator/prometheus',
+        traces: '/api/actuator/traces',
+        upstreams: '/api/actuator/upstreams'
     },
     logs: {
         download: '/api/logs/download'
@@ -19,7 +25,8 @@ const ENDPOINTS = {
         serviceops: {
             register: '/api/maxine/serviceops/register',
             servers: '/api/maxine/serviceops/servers',
-            discover: '/api/maxine/serviceops/discover'
+            discover: '/api/maxine/serviceops/discover',
+            proxy: '/api/maxine/serviceops/proxy'
         },
         signin: '/api/maxine/signin',
         changePassword: '/api/maxine/change-password'

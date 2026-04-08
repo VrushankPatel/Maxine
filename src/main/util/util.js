@@ -34,6 +34,7 @@ function jsonLogBuilder(logLevel, logType, statusAndMsgs, req, msg = ""){
                             .putFromRegObj("ip", "ClientIp")
                             .putFromRegObj("originalUrl", "Endpoint")
                             .putFromRegObj("httpVersion", "HTTPVersion")
+                            .putFromRegObj("traceId", "TraceId")
                         .deregisterObj()
                     .endCondition()
                     .formatJson()
@@ -49,7 +50,8 @@ function plainLogBuilder(logLevel, logType, statusAndMsgs, req, msg = ""){
                 .concat(`| ${req.method} |`)
                 .concat(` ${req.ip} |`)
                 .concat(` [ ${req.originalUrl} ] |`)
-                .concat(` HTTP/${req.httpVersion} |`);
+                .concat(` HTTP/${req.httpVersion} |`)
+                .concat(` ${req.traceId || "-"} |`);
     }
     if(!_.isEmpty(msg)) log = log.concat(` | ${JSON.stringify(msg)} |`);
     log = log.concat(` [ ${new Date().toUTCString()} ] `);

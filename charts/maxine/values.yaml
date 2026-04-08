@@ -51,6 +51,21 @@ maxine:
   registryStateMode: local
   registryStateLockTimeoutMs: 5000
   registryStateLockRetryMs: 100
+  cluster:
+    leaderElectionEnabled: true
+    leaseMs: 15000
+    renewMs: 5000
+  activeHealthChecks:
+    enabled: false
+    intervalMs: 15000
+    timeoutMs: 3000
+    failureThreshold: 3
+    path: ""
+  alerts:
+    webhookUrl: ""
+    webhookTimeoutMs: 5000
+  tracing:
+    headerName: x-trace-id
   redis:
     url: ""
     keyPrefix: maxine:registry
@@ -61,6 +76,10 @@ auth:
   existingSecret: ""
   adminUsername: admin
   adminPassword: admin
+  operatorUsername: ""
+  operatorPassword: ""
+  viewerUsername: ""
+  viewerPassword: ""
   jwtSecret: ""
 
 persistence:

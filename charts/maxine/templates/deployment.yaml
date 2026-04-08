@@ -48,8 +48,12 @@ spec:
                 name: {{ include "maxine.configMapName" . }}
             - secretRef:
                 name: {{ include "maxine.secretName" . }}
-          {{- if and .Values.embeddedRedis.enabled .Values.embeddedRedis.auth.enabled }}
           env:
+            - name: MAXINE_INSTANCE_ID
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.name
+          {{- if and .Values.embeddedRedis.enabled .Values.embeddedRedis.auth.enabled }}
             - name: MAXINE_REGISTRY_REDIS_URL
               valueFrom:
                 secretKeyRef:
@@ -57,9 +61,6 @@ spec:
                   key: MAXINE_REGISTRY_REDIS_URL
           {{- end }}
           {{- with .Values.extraEnv }}
-          {{- if not (and $.Values.embeddedRedis.enabled $.Values.embeddedRedis.auth.enabled) }}
-          env:
-          {{- end }}
             {{- toYaml . | nindent 12 }}
           {{- end }}
           volumeMounts:

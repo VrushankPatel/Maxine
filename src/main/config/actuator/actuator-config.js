@@ -1,5 +1,11 @@
 const { default: axios } = require("axios");
 const { constants, statusAndMsgs } = require("../../util/constants/constants");
+const { auditService } = require("../../service/audit-service");
+const { alertService } = require("../../service/alert-service");
+const { observabilityService } = require("../../service/observability-service");
+const { clusterLeaderService } = require("../../service/cluster-leader-service");
+const { upstreamHealthService } = require("../../service/upstream-health-service");
+const { registryService } = require("../../service/registry-service");
 
 const statusMonitorConfig = {
     title: constants.STATUSMONITORTITLE,
@@ -38,6 +44,55 @@ const actuatorConfig = {
                 } catch (_err) {
                     res.status(404).json({ "message": "Could not retrieve load test report." });
                 }
+            }
+        },
+        {
+            id: 'audit',
+            controller: (_req, res) => {
+                res.json({
+                    events: auditService.getRecentEvents()
+                });
+            }
+        },
+        {
+            id: 'alerts',
+            controller: (_req, res) => {
+                res.json({
+                    alerts: alertService.getRecentAlerts()
+                });
+            }
+        },
+        {
+            id: 'cluster',
+            controller: (_req, res) => {
+                res.json(clusterLeaderService.getStatus());
+            }
+        },
+        {
+            id: 'traces',
+            controller: (_req, res) => {
+                res.json({
+                    traces: observabilityService.getRecentTraces()
+                });
+            }
+        },
+        {
+            id: 'upstreams',
+            controller: (_req, res) => {
+                res.json(upstreamHealthService.getStatus());
+            }
+        },
+        {
+            id: 'prometheus',
+            controller: async (_req, res) => {
+                const registrySnapshot = await registryService.getRegisteredServers();
+                const payload = observabilityService.renderPrometheus({
+                    registrySnapshot,
+                    clusterStatus: clusterLeaderService.getStatus(),
+                    upstreamStatus: upstreamHealthService.getStatus()
+                });
+                res.set('Content-Type', 'text/plain; version=0.0.4');
+                res.send(payload);
             }
         }
     ]

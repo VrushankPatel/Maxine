@@ -2,11 +2,19 @@ const config = require("../../config/config");
 const { ConfiguratorService } = require("../../service/configurator-service");
 const { statusAndMsgs, constants } = require("../../util/constants/constants");
 const { info } = require("../../util/logging/logging-util");
+const { auditService } = require("../../service/audit-service");
 const _ = require('lodash');
 const configuratorService = new ConfiguratorService();
 
 const configuratorController = (req, res) => {
-    const { logAsync, heartBeatTimeout, logJsonPrettify, serverSelectionStrategy: serverSelStrat, logFormat } = req.body;
+    const {
+        logAsync,
+        heartBeatTimeout,
+        logJsonPrettify,
+        serverSelectionStrategy: serverSelStrat,
+        logFormat,
+        discoveryMode
+    } = req.body;
 
     let resultObj = {};
 
@@ -35,7 +43,19 @@ const configuratorController = (req, res) => {
         resultObj['logFormat'] = constants.CONFIG_STATUS_CODES[result.toString()];
     }
 
+    if(!_.isUndefined(discoveryMode)){
+        const result = configuratorService.updateDiscoveryMode(discoveryMode);
+        resultObj['discoveryMode'] = constants.CONFIG_STATUS_CODES[result.toString()];
+    }
+
     info(`config alter : ${JSON.stringify(resultObj)}`);
+    auditService.record('config.updated', {
+        outcome: 'UPDATED',
+        userName: req.authUser ? req.authUser.userName : undefined,
+        role: req.authUser ? req.authUser.role : undefined,
+        traceId: req.traceId,
+        changes: resultObj
+    });
     res.status(statusAndMsgs.STATUS_SUCCESS).json(resultObj);
 }
 

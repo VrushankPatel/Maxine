@@ -10,15 +10,17 @@ class Service{
     timeOut;
     weight;
     address;
+    healthCheckPath;
 
     static buildByObj(obj){
-        let {hostName, nodeName, port, serviceName, timeOut, weight, ssl, path} = obj;
+        let {hostName, nodeName, port, serviceName, timeOut, weight, ssl, path, healthCheckPath} = obj;
         const service = new Service();
         service.hostName = hostName;
         service.nodeName = nodeName;
         service.serviceName = serviceName;
         service.timeOut = Math.abs(parseInt(timeOut)) || config.heartBeatTimeout;
         service.weight = Math.abs(parseInt(weight)) || 1;
+        service.healthCheckPath = healthCheckPath || "";
         hostName = hostName || "";
         port = _.isUndefined(port) || _.isString(port) && _.isEmpty(port) ? "" : `:${port}`;
         path = path || "";

@@ -1,1 +1,204 @@
-<!doctype html><html lang="en"><head><meta charset="utf-8"/><link rel="icon" href="/favicon.ico"/><link href="https://fonts.googleapis.com/css?family=JetBrains Mono" rel="stylesheet"><meta name="viewport" content="width=device-width,initial-scale=1"/><meta name="theme-color" content="#000000"/><meta name="description" content="Maxine-UI"/><link rel="manifest" href="/manifest.json"/><title>Maxine Service Registry</title><script defer="defer" src="/static/js/main.b8911f37.js"></script><link href="/static/css/main.24b68c36.css" rel="stylesheet"></head><body><div id="root"></div></body></html>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#132026">
+  <meta name="description" content="Maxine control plane dashboard">
+  <link rel="icon" href="/favicon.ico">
+  <link rel="manifest" href="/manifest.json">
+  <link rel="stylesheet" href="/styles.css">
+  <title>Maxine Control Plane</title>
+</head>
+<body>
+  <div class="shell">
+    <aside class="sidebar">
+      <div class="brand">
+        <div class="brand-mark">M</div>
+        <div>
+          <p class="eyebrow">Maxine</p>
+          <h1>Control Plane</h1>
+        </div>
+      </div>
+      <p class="sidebar-copy">
+        Registry, discovery, proxying, cluster leadership, and operational visibility in one place.
+      </p>
+
+      <section class="auth-panel">
+        <div class="section-head">
+          <h2>Session</h2>
+          <span id="session-role" class="pill muted">Signed out</span>
+        </div>
+        <form id="login-form" class="stack-form">
+          <label>
+            <span>Username</span>
+            <input type="text" id="username" autocomplete="username" value="admin">
+          </label>
+          <label>
+            <span>Password</span>
+            <input type="password" id="password" autocomplete="current-password" value="admin">
+          </label>
+          <div class="button-row">
+            <button type="submit">Sign In</button>
+            <button type="button" class="ghost" id="signout-button">Sign Out</button>
+          </div>
+        </form>
+        <p id="login-status" class="status-text">Use an admin, operator, or viewer token to unlock protected panels.</p>
+      </section>
+
+      <nav class="sidebar-nav">
+        <button class="nav-link active" data-panel="overview">Overview</button>
+        <button class="nav-link" data-panel="registry">Registry</button>
+        <button class="nav-link" data-panel="config">Runtime Config</button>
+        <button class="nav-link" data-panel="ops">Ops Signals</button>
+      </nav>
+    </aside>
+
+    <main class="content">
+      <section class="hero">
+        <div>
+          <p class="eyebrow">Production Hardening</p>
+          <h2>Proxy-aware discovery, lease leadership, and active upstream checks</h2>
+          <p class="hero-copy">
+            This dashboard now runs from editable source in <code>client/</code> and surfaces the new control-plane features directly from live APIs.
+          </p>
+        </div>
+        <div class="hero-metrics">
+          <div class="metric-card">
+            <span>Leader</span>
+            <strong id="leader-state">Unknown</strong>
+          </div>
+          <div class="metric-card">
+            <span>Services</span>
+            <strong id="service-count">0</strong>
+          </div>
+          <div class="metric-card">
+            <span>Alerts</span>
+            <strong id="alert-count">0</strong>
+          </div>
+        </div>
+      </section>
+
+      <section id="overview-panel" class="panel active">
+        <div class="grid two-up">
+          <article class="card">
+            <div class="section-head">
+              <h3>Cluster Status</h3>
+              <button class="ghost" data-refresh="overview">Refresh</button>
+            </div>
+            <dl id="cluster-details" class="definition-list"></dl>
+          </article>
+          <article class="card">
+            <div class="section-head">
+              <h3>Health and Metrics</h3>
+              <button class="ghost" data-refresh="overview">Refresh</button>
+            </div>
+            <dl id="health-details" class="definition-list"></dl>
+          </article>
+        </div>
+        <article class="card">
+          <div class="section-head">
+            <h3>Prometheus Snapshot</h3>
+            <button class="ghost" data-refresh="overview">Refresh</button>
+          </div>
+          <pre id="prometheus-output" class="code-block"></pre>
+        </article>
+      </section>
+
+      <section id="registry-panel" class="panel">
+        <div class="grid two-up">
+          <article class="card">
+            <div class="section-head">
+              <h3>Registered Services</h3>
+              <button class="ghost" data-refresh="registry">Refresh</button>
+            </div>
+            <div id="registry-table" class="table-wrap"></div>
+          </article>
+          <article class="card">
+            <div class="section-head">
+              <h3>Upstream Probe State</h3>
+              <button class="ghost" data-refresh="registry">Refresh</button>
+            </div>
+            <pre id="upstream-output" class="code-block"></pre>
+          </article>
+        </div>
+      </section>
+
+      <section id="config-panel" class="panel">
+        <div class="grid two-up">
+          <article class="card">
+            <div class="section-head">
+              <h3>Current Runtime Config</h3>
+              <button class="ghost" data-refresh="config">Refresh</button>
+            </div>
+            <pre id="config-output" class="code-block"></pre>
+          </article>
+          <article class="card">
+            <div class="section-head">
+              <h3>Patch Config</h3>
+              <span class="pill">Admin or Operator</span>
+            </div>
+            <form id="config-form" class="stack-form">
+              <label>
+                <span>Discovery Mode</span>
+                <select id="config-discovery-mode">
+                  <option value="">Leave unchanged</option>
+                  <option value="REDIRECT">REDIRECT</option>
+                  <option value="PROXY">PROXY</option>
+                </select>
+              </label>
+              <label>
+                <span>Server Selection Strategy</span>
+                <select id="config-selection">
+                  <option value="">Leave unchanged</option>
+                  <option value="RR">RR</option>
+                  <option value="CH">CH</option>
+                  <option value="RH">RH</option>
+                </select>
+              </label>
+              <label>
+                <span>Heartbeat Timeout</span>
+                <input type="number" id="config-heartbeat" min="1" placeholder="Leave unchanged">
+              </label>
+              <label class="checkbox-row">
+                <input type="checkbox" id="config-log-async">
+                <span>Async logging enabled</span>
+              </label>
+              <button type="submit">Apply Runtime Patch</button>
+            </form>
+            <p id="config-status" class="status-text">Runtime config updates are leader-protected in Redis-backed control-plane mode.</p>
+          </article>
+        </div>
+      </section>
+
+      <section id="ops-panel" class="panel">
+        <div class="grid two-up">
+          <article class="card">
+            <div class="section-head">
+              <h3>Audit Trail</h3>
+              <button class="ghost" data-refresh="ops">Refresh</button>
+            </div>
+            <div id="audit-list" class="timeline"></div>
+          </article>
+          <article class="card">
+            <div class="section-head">
+              <h3>Alerts</h3>
+              <button class="ghost" data-refresh="ops">Refresh</button>
+            </div>
+            <div id="alerts-list" class="timeline"></div>
+          </article>
+        </div>
+        <article class="card">
+          <div class="section-head">
+            <h3>Recent Traces</h3>
+            <button class="ghost" data-refresh="ops">Refresh</button>
+          </div>
+          <div id="trace-list" class="table-wrap"></div>
+        </article>
+      </section>
+    </main>
+  </div>
+
+  <script type="module" src="/app.js"></script>
+</body>
+</html>
