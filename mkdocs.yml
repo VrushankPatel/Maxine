@@ -2,6 +2,7 @@ site_name: Maxine
 site_description: Service registry, discovery, and operational control plane
 repo_url: https://github.com/VrushankPatel/Maxine
 repo_name: VrushankPatel/Maxine
+site_url: https://vrushankpatel.github.io/Maxine/
 nav:
   - Overview: index.md
   - Features: features.md
@@ -19,3 +20,5 @@ plugins:
   - swagger-ui-tag:
       background: white
 site_dir: buildocs
+copyright: 'Copyright &copy; 2026. Built with ❤️ by <a href="https://vrushankpatel.github.io">Vrushank Patel</a>'
+

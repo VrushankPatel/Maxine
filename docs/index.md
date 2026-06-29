@@ -1,5 +1,9 @@
 # Maxine
 
+<p align="center">
+  <img src="img/logo.png" alt="Maxine logo" width="180" />
+</p>
+
 [![Maxine CI](https://github.com/VrushankPatel/Maxine/actions/workflows/node.js.yml/badge.svg?branch=master)](https://github.com/VrushankPatel/Maxine/actions/workflows/node.js.yml)
 [![CodeQL](https://github.com/VrushankPatel/Maxine/actions/workflows/codeql.yml/badge.svg)](https://github.com/VrushankPatel/Maxine/actions/workflows/codeql.yml)
 [![Publish Maxine Container](https://github.com/VrushankPatel/Maxine/actions/workflows/publish-container.yml/badge.svg)](https://github.com/VrushankPatel/Maxine/actions/workflows/publish-container.yml)
@@ -8,6 +12,11 @@
 
 Maxine is a Node.js service registry, discovery service, and operational control
 plane for service-to-service communication.
+
+<p align="center">
+  <img src="img/maxine-dashboard.png" alt="Maxine Dashboard" width="700" style="border-radius: 8px; box-shadow: 0 4px 10px rgba(0,0,0,0.15);" />
+</p>
+
 
 It provides:
 
