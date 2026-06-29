@@ -43,3 +43,8 @@ test-results.xml
 maxinedb.sqlite
 
 .vscode/
+
+# docs build and virtualenv
+/buildocs/
+/.venv/
+
