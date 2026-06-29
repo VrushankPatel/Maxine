@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+    <meta charset="utf-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><link rel="canonical" href="https://vrushankpatel.github.io/Maxine/features/" />
+      <link rel="shortcut icon" href="../img/favicon.ico" />
+    <title>Features - Maxine</title>
+    <link rel="stylesheet" href="../css/theme.css" />
+    <link rel="stylesheet" href="../css/theme_extra.css" />
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/styles/github.min.css" />
+    
+      <script>
+        // Current page data
+        var mkdocs_page_name = "Features";
+        var mkdocs_page_input_path = "features.md";
+        var mkdocs_page_url = "/Maxine/features/";
+      </script>
+    
+    <!--[if lt IE 9]>
+      <script src="../js/html5shiv.min.js"></script>
+    <![endif]-->
+      <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/highlight.min.js"></script>
+      <script>hljs.highlightAll();</script> 
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side stickynav">
+    <div class="wy-side-scroll">
+      <div class="wy-side-nav-search">
+          <a href=".." class="icon icon-home"> Maxine
+        </a>
+      </div>
+
+      <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul>
+                <li class="toctree-l1"><a class="reference internal" href="..">Overview</a>
+                </li>
+              </ul>
+              <ul class="current">
+                <li class="toctree-l1 current"><a class="reference internal current" href="#">Features</a>
+    <ul class="current">
+    <li class="toctree-l2"><a class="reference internal" href="#registry-and-lifecycle">Registry and Lifecycle</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#discovery-and-routing">Discovery and Routing</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#control-plane-and-high-availability">Control Plane and High Availability</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#upstream-health">Upstream Health</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#security-and-access-control">Security and Access Control</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#observability-and-operations">Observability and Operations</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#ui-and-developer-experience">UI and Developer Experience</a>
+    </li>
+    </ul>
+                </li>
+              </ul>
+              <ul>
+                <li class="toctree-l1"><a class="reference internal" href="../api/">API</a>
+                </li>
+              </ul>
+              <ul>
+                <li class="toctree-l1"><a class="reference internal" href="../helm/">Helm</a>
+                </li>
+              </ul>
+              <ul>
+                <li class="toctree-l1"><a class="reference internal" href="../contributing/">Contributing</a>
+                </li>
+              </ul>
+              <ul>
+                <li class="toctree-l1"><a class="reference internal" href="../roadmap/">Roadmap</a>
+                </li>
+              </ul>
+              <ul>
+                <li class="toctree-l1"><a class="reference internal" href="../about/">Maintainer</a>
+                </li>
+              </ul>
+              <ul>
+                <li class="toctree-l1"><a class="reference internal" href="../licence/">License</a>
+                </li>
+              </ul>
+      </div>
+    </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+      <nav class="wy-nav-top" role="navigation" aria-label="Mobile navigation menu">
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="..">Maxine</a>
+        
+      </nav>
+      <div class="wy-nav-content">
+        <div class="rst-content"><div role="navigation" aria-label="breadcrumbs navigation">
+  <ul class="wy-breadcrumbs">
+    <li><a href=".." class="icon icon-home" aria-label="Docs"></a></li>
+      <li class="breadcrumb-item active">Features</li>
+    <li class="wy-breadcrumbs-aside">
+          <a href="https://github.com/VrushankPatel/Maxine/edit/master/docs/features.md">Edit on VrushankPatel/Maxine</a>
+    </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+            <div class="section" itemprop="articleBody">
+              
+                <h1 id="features">Features</h1>
+<h2 id="registry-and-lifecycle">Registry and Lifecycle</h2>
+<ul>
+<li>Heartbeat-driven service registration through <code>POST /api/maxine/serviceops/register</code></li>
+<li>Timeout-based expiration for inactive nodes</li>
+<li>Local restart recovery from persisted registry snapshots</li>
+<li>Shared coordination through <code>shared-file</code> mode</li>
+<li>Redis-backed shared state for multi-replica coordination</li>
+<li>Weighted node support through virtual-node registration</li>
+<li>Re-registration cleanup so stale virtual nodes are removed when weight changes</li>
+</ul>
+<h2 id="discovery-and-routing">Discovery and Routing</h2>
+<ul>
+<li><code>GET /api/maxine/serviceops/discover</code> for name-based service resolution</li>
+<li>Redirect mode for lightweight resolution</li>
+<li>Proxy mode for request-forwarding through Maxine</li>
+<li>Direct proxy endpoint at <code>/api/maxine/serviceops/proxy/:serviceName/*</code></li>
+<li>Load-balancing strategies:</li>
+<li>round robin</li>
+<li>consistent hashing</li>
+<li>rendezvous hashing</li>
+</ul>
+<h2 id="control-plane-and-high-availability">Control Plane and High Availability</h2>
+<ul>
+<li>Runtime configuration APIs for mutable behavior</li>
+<li>Lease-based leadership in Redis mode</li>
+<li>Fencing-token based leadership state</li>
+<li>Leader-protected control-plane mutation paths</li>
+<li>Helm-driven single-replica and Redis-backed multi-replica deployment modes</li>
+</ul>
+<h2 id="upstream-health">Upstream Health</h2>
+<ul>
+<li>Passive removal through heartbeat timeout</li>
+<li>Optional active upstream probing</li>
+<li>Per-registration <code>healthCheckPath</code> support</li>
+<li>Automated unhealthy-node eviction after repeated probe failures</li>
+</ul>
+<h2 id="security-and-access-control">Security and Access Control</h2>
+<ul>
+<li>JWT-based authentication</li>
+<li>RBAC roles for viewer, operator, and admin</li>
+<li>Admin password persistence for file-backed local deployments</li>
+<li>JWT secret rotation support through current and previous secrets</li>
+</ul>
+<h2 id="observability-and-operations">Observability and Operations</h2>
+<ul>
+<li>Actuator endpoints for health, info, metrics, and performance report lookup</li>
+<li>Audit trail endpoint</li>
+<li>Alerts endpoint with optional webhook fan-out</li>
+<li>Cluster leadership endpoint</li>
+<li>Recent request traces endpoint</li>
+<li>Upstream probe status endpoint</li>
+<li>Prometheus-formatted metrics export</li>
+</ul>
+<h2 id="ui-and-developer-experience">UI and Developer Experience</h2>
+<ul>
+<li>Editable dashboard source under <code>client/</code></li>
+<li>Registry, config, audit, alerts, traces, and Prometheus views in the UI</li>
+<li>GitHub Actions-based CI/CD</li>
+<li>Container packaging for GHCR</li>
+<li>Helm chart publishing to GitHub Pages</li>
+<li>In-repo SDKs for Node.js, Java, Python, and Go</li>
+</ul>
+              
+            </div>
+          </div><footer>
+    <div class="rst-footer-buttons" role="navigation" aria-label="Footer Navigation">
+        <a href=".." class="btn btn-neutral float-left" title="Overview"><span class="icon icon-circle-arrow-left"></span> Previous</a>
+        <a href="../api/" class="btn btn-neutral float-right" title="API">Next <span class="icon icon-circle-arrow-right"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <!-- Copyright etc -->
+      <p>Copyright &copy; 2026. Built with ❤️ by <a href="https://vrushankpatel.github.io">Vrushank Patel</a></p>
+  </div>
+
+  Built with <a href="https://www.mkdocs.org/">MkDocs</a> using a <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>.
+</footer>
+          
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+
+  <div class="rst-versions" role="note" aria-label="Versions">
+  <span class="rst-current-version" data-toggle="rst-current-version">
+    
+        <span>
+          <a href="https://github.com/VrushankPatel/Maxine" class="fa fa-code-fork" style="color: #fcfcfc"> VrushankPatel/Maxine</a>
+        </span>
+    
+    
+      <span><a href=".." style="color: #fcfcfc">&laquo; Previous</a></span>
+    
+    
+      <span><a href="../api/" style="color: #fcfcfc">Next &raquo;</a></span>
+    
+  </span>
+</div>
+    <script src="../js/jquery-3.6.0.min.js"></script>
+    <script>var base_url = "..";</script>
+    <script src="../js/theme_extra.js"></script>
+    <script src="../js/theme.js"></script>
+    <script>
+        jQuery(function () {
+            SphinxRtdTheme.Navigation.enable(true);
+        });
+    </script>
+
+</body>
+</html>
