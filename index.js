@@ -1,3 +1,6 @@
+const { initializeOtel } = require('./src/main/config/otel-config');
+initializeOtel();
+
 require('./src/main/util/logging/log-generic-exceptions')();
 const loggingUtil = require('./src/main/util/logging/logging-util');
 const { constants } = require('./src/main/util/constants/constants');

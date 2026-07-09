@@ -153,12 +153,17 @@ class ClusterLeaderService {
     }
 
     observeLeader = async () => {
-        const currentLeader = await this.getLeaderSnapshot();
+        let currentLeader = null;
+        try {
+            currentLeader = await this.getLeaderSnapshot();
+        } catch (_err) {
+            // Redis is unreachable, assume no leader/not leader
+        }
         await this.markLeadership({
             isLeader: false,
             fencingToken: currentLeader ? currentLeader.fencingToken : 0,
             leaderInstanceId: currentLeader ? currentLeader.instanceId : null,
-            changed: this.leaderState.isLeader && (!currentLeader || currentLeader.instanceId !== constants.CLUSTER_INSTANCE_ID)
+            changed: this.leaderState.isLeader
         });
     }
 

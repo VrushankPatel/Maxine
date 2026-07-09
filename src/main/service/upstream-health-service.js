@@ -10,6 +10,7 @@ class UpstreamHealthService {
     started = false;
     intervalRef;
     failureCounts = new Map();
+    recoveringNodes = new Map();
 
     buildFailureKey = (serviceName, parentNode) => `${serviceName}:${parentNode}`
 
@@ -54,11 +55,30 @@ class UpstreamHealthService {
             distinctNodes.push(...parentNodes.values());
         });
 
+        // Also probe evicted nodes from recoveringNodes map
+        this.recoveringNodes.forEach((node) => {
+            if (node.state === 'EVICTED') {
+                const alreadyProbed = distinctNodes.some(
+                    (dn) => dn.serviceName === node.serviceName && dn.parentNode === node.parentNode
+                );
+                if (!alreadyProbed) {
+                    distinctNodes.push({
+                        address: node.address,
+                        serviceName: node.serviceName,
+                        parentNode: node.parentNode,
+                        healthCheckPath: node.healthCheckPath || "",
+                        timeOut: node.timeOut
+                    });
+                }
+            }
+        });
+
         return distinctNodes;
     }
 
     probeNode = async (node) => {
         const healthUrl = this.buildHealthUrl(node);
+        const key = this.buildFailureKey(node.serviceName, node.parentNode);
 
         try {
             const response = await axios.get(healthUrl, {
@@ -71,7 +91,77 @@ class UpstreamHealthService {
             observabilityService.recordHealthCheck({ failed: !healthy });
 
             if (healthy) {
-                this.resetFailure(node.serviceName, node.parentNode);
+                if (this.recoveringNodes.has(key)) {
+                    const rec = this.recoveringNodes.get(key);
+                    if (rec.state === 'EVICTED') {
+                        // Evicted -> HALF-OPEN (weight 1)
+                        rec.state = 'HALF-OPEN';
+                        rec.consecutivePasses = 1;
+                        await registryService.registerService({
+                            serviceName: node.serviceName,
+                            nodeName: node.parentNode,
+                            address: node.address,
+                            timeOut: node.timeOut,
+                            weight: 1,
+                            healthCheckPath: node.healthCheckPath
+                        }, true);
+                        
+                        auditService.record('upstream.half_open', {
+                            outcome: 'HALF_OPEN',
+                            serviceName: node.serviceName,
+                            parentNode: node.parentNode,
+                            address: node.address,
+                            healthUrl
+                        });
+                    } else if (rec.state === 'HALF-OPEN') {
+                        rec.consecutivePasses++;
+                        if (rec.consecutivePasses >= 2) {
+                            // HALF-OPEN -> HEALTHY (restore original weight)
+                            await registryService.evictParentNode(node.serviceName, node.parentNode);
+                            await registryService.registerService({
+                                serviceName: node.serviceName,
+                                nodeName: node.parentNode,
+                                address: node.address,
+                                timeOut: node.timeOut,
+                                weight: rec.originalWeight,
+                                healthCheckPath: node.healthCheckPath
+                            }, true);
+                            
+                            this.recoveringNodes.delete(key);
+                            this.resetFailure(node.serviceName, node.parentNode);
+                            
+                            auditService.record('upstream.recovered', {
+                                outcome: 'RESTORED',
+                                serviceName: node.serviceName,
+                                parentNode: node.parentNode,
+                                address: node.address,
+                                healthUrl
+                            });
+                        }
+                    }
+                } else {
+                    this.resetFailure(node.serviceName, node.parentNode);
+                }
+                return;
+            }
+
+            // Unhealthy response
+            if (this.recoveringNodes.has(key)) {
+                const rec = this.recoveringNodes.get(key);
+                if (rec.state === 'HALF-OPEN') {
+                    // Fail in HALF-OPEN -> Go back to EVICTED
+                    await registryService.evictParentNode(node.serviceName, node.parentNode);
+                    rec.state = 'EVICTED';
+                    rec.consecutivePasses = 0;
+                    auditService.record('upstream.evicted', {
+                        outcome: 'REMOVED',
+                        serviceName: node.serviceName,
+                        parentNode: node.parentNode,
+                        address: node.address,
+                        healthUrl,
+                        statusCode: response.status
+                    });
+                }
                 return;
             }
 
@@ -80,8 +170,22 @@ class UpstreamHealthService {
                 return;
             }
 
+            // Evict node and place in recovering state
+            const originalWeight = await registryService.getParentNodeWeight(node.serviceName, node.parentNode);
             await registryService.evictParentNode(node.serviceName, node.parentNode);
+            
+            this.recoveringNodes.set(key, {
+                state: 'EVICTED',
+                originalWeight: originalWeight || 1,
+                address: node.address,
+                serviceName: node.serviceName,
+                parentNode: node.parentNode,
+                healthCheckPath: node.healthCheckPath || "",
+                timeOut: node.timeOut,
+                consecutivePasses: 0
+            });
             this.resetFailure(node.serviceName, node.parentNode);
+
             observabilityService.recordHealthCheck({ failed: true, evicted: true });
             auditService.record('upstream.evicted', {
                 outcome: 'REMOVED',
@@ -104,15 +208,48 @@ class UpstreamHealthService {
                 }
             });
         } catch (err) {
-            const failureCount = this.incrementFailure(node.serviceName, node.parentNode);
             observabilityService.recordHealthCheck({ failed: true });
 
+            if (this.recoveringNodes.has(key)) {
+                const rec = this.recoveringNodes.get(key);
+                if (rec.state === 'HALF-OPEN') {
+                    // Fail in HALF-OPEN -> Go back to EVICTED
+                    await registryService.evictParentNode(node.serviceName, node.parentNode);
+                    rec.state = 'EVICTED';
+                    rec.consecutivePasses = 0;
+                    auditService.record('upstream.evicted', {
+                        outcome: 'REMOVED',
+                        serviceName: node.serviceName,
+                        parentNode: node.parentNode,
+                        address: node.address,
+                        healthUrl,
+                        message: err.message
+                    });
+                }
+                return;
+            }
+
+            const failureCount = this.incrementFailure(node.serviceName, node.parentNode);
             if (failureCount < constants.ACTIVE_HEALTH_CHECK_FAILURE_THRESHOLD) {
                 return;
             }
 
+            // Evict node and place in recovering state
+            const originalWeight = await registryService.getParentNodeWeight(node.serviceName, node.parentNode);
             await registryService.evictParentNode(node.serviceName, node.parentNode);
+            
+            this.recoveringNodes.set(key, {
+                state: 'EVICTED',
+                originalWeight: originalWeight || 1,
+                address: node.address,
+                serviceName: node.serviceName,
+                parentNode: node.parentNode,
+                healthCheckPath: node.healthCheckPath || "",
+                timeOut: node.timeOut,
+                consecutivePasses: 0
+            });
             this.resetFailure(node.serviceName, node.parentNode);
+
             observabilityService.recordHealthCheck({ failed: true, evicted: true });
             auditService.record('upstream.evicted', {
                 outcome: 'REMOVED',
@@ -176,6 +313,7 @@ class UpstreamHealthService {
         }
         this.started = false;
         this.failureCounts.clear();
+        this.recoveringNodes.clear();
     }
 
     getStatus = () => ({

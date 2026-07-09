@@ -41,6 +41,21 @@ class ObservabilityService {
         }
 
         this.recentTraces.push(trace);
+
+        const { getTracer } = require('../config/otel-config');
+        const tracer = getTracer();
+        if (tracer) {
+            const span = tracer.startSpan(`HTTP ${req.method} ${req.originalUrl}`, {
+                attributes: {
+                    'http.method': req.method,
+                    'http.url': req.originalUrl,
+                    'http.status_code': res.statusCode,
+                    'http.duration': durationMs
+                }
+            });
+            span.end();
+        }
+
         return trace;
     }
 
@@ -50,9 +65,17 @@ class ObservabilityService {
 
     recordAuthSuccess = () => this.incrementCounter('auth_success_total')
 
-    recordRegistration = () => this.incrementCounter('registrations_total')
+    recordRegistration = () => {
+        this.incrementCounter('registrations_total');
+        const { recordOtelRegistration } = require('../config/otel-config');
+        recordOtelRegistration();
+    }
 
-    recordDiscovery = () => this.incrementCounter('discoveries_total')
+    recordDiscovery = () => {
+        this.incrementCounter('discoveries_total');
+        const { recordOtelDiscovery } = require('../config/otel-config');
+        recordOtelDiscovery();
+    }
 
     recordProxyRequest = () => this.incrementCounter('proxied_requests_total')
 

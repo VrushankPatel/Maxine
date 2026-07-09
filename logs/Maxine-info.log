@@ -510,3 +510,1366 @@
 【INFO】-【GENERIC】 | "Connected to Redis-backed registry state store." | [ Wed, 08 Jul 2026 17:15:23 GMT ] 
 【INFO】-【GENERIC】 | "Connected to Redis-backed registry state store." | [ Wed, 08 Jul 2026 17:15:23 GMT ] 
 【INFO】-【GENERIC】 | "Connected to Redis-backed registry state store." | [ Wed, 08 Jul 2026 17:15:23 GMT ] 
+{"LogLevel":"INFO","LogType":"WEBREQUEST","Timestamp":"09/07/2026 23:00:10","Status":200,"Method":"GET","Endpoint":"/api/actuator/health","HTTPVersion":"1.1","TraceId":"ef1dcac5d4b2cd1d6e34b898556c8376"}
+{"LogLevel":"INFO","LogType":"WEBREQUEST","Timestamp":"09/07/2026 23:00:10","Status":200,"Method":"GET","Endpoint":"/api/actuator/info","HTTPVersion":"1.1","TraceId":"6641e0b5819cd2510a7d415de075a9e0"}
+{"LogLevel":"INFO","LogType":"WEBREQUEST","Timestamp":"09/07/2026 23:00:10","Status":200,"Method":"GET","Endpoint":"/api/actuator/metrics","HTTPVersion":"1.1","TraceId":"558883e7f4049f2d6b4248304b647b10"}
+{"LogLevel":"ERROR","LogType":"WEBREQUEST","Timestamp":"09/07/2026 23:00:10","Status":404,"Method":"GET","Endpoint":"/api/actuator/performance","HTTPVersion":"1.1","TraceId":"ef9ed08e26dba0d92270c1af19c90b63"}
+{"LogLevel":"INFO","LogType":"WEBREQUEST","Timestamp":"09/07/2026 23:00:10","Status":200,"Method":"GET","Endpoint":"/api/actuator/cluster","HTTPVersion":"1.1","TraceId":"d4a4f52d1a86e26489511c6e67d65b88"}
+{"LogLevel":"INFO","LogType":"WEBREQUEST","Timestamp":"09/07/2026 23:00:10","Status":200,"Method":"GET","Endpoint":"/api/actuator/prometheus","HTTPVersion":"1.1","TraceId":"387d9be119ed62d750a31b8bf1155cfd"}
+{"LogLevel":"INFO","LogType":"WEBREQUEST","Timestamp":"09/07/2026 23:00:10","Status":200,"Method":"GET","Endpoint":"/api/actuator/traces","HTTPVersion":"1.1","TraceId":"3a3c878e8cfc8173678feb2fefc02b4a"}
+{"LogLevel":"INFO","LogType":"WEBREQUEST","Timestamp":"09/07/2026 23:00:10","Status":200,"Method":"GET","Endpoint":"/api/actuator/audit","HTTPVersion":"1.1","TraceId":"5251439e180535af4428b1d20bb2c27c"}
+{"LogLevel":"INFO","LogType":"WEBREQUEST","Timestamp":"09/07/2026 23:00:10","Status":200,"Method":"POST","ClientIp":"::ffff:127.0.0.1","Endpoint":"/api/maxine/signin","HTTPVersion":"1.1","TraceId":"f8be99e33096a1756b214635e546050e"}
+{"LogLevel":"INFO","LogType":"WEBREQUEST","Timestamp":"09/07/2026 23:00:10","Status":200,"Method":"GET","ClientIp":"::ffff:127.0.0.1","Endpoint":"/api/maxine/control/config","HTTPVersion":"1.1","TraceId":"36081fc06d0aa631a685ef608ee7ebb2"}
+{"LogLevel":"INFO","LogType":"GENERIC","Timestamp":"09/07/2026 23:00:10","Message":{"hostName":"xx.xxx.xx.xx","nodeName":"node-x-10","serviceName":"dbservice","timeOut":5,"weight":10,"address":"https://xx.xxx.xx.xx:8082","healthCheckPath":"","registeredAt":"7/9/2026, 11:00:10 PM"}}
+{"LogLevel":"INFO","LogType":"WEBREQUEST","Timestamp":"09/07/2026 23:00:10","Status":200,"Method":"POST","ClientIp":"::ffff:127.0.0.1","Endpoint":"/api/maxine/serviceops/register","HTTPVersion":"1.1","TraceId":"7e0bcdc6fbd66de57c306dd31b432cc8"}
+{"LogLevel":"INFO","LogType":"GENERIC","Timestamp":"09/07/2026 23:00:10","Message":"Redirecting to https://xx.xxx.xx.xx:8082/health"}
+{"LogLevel":"INFO","LogType":"WEBREQUEST","Timestamp":"09/07/2026 23:00:10","Status":302,"Method":"GET","ClientIp":"::ffff:127.0.0.1","Endpoint":"/api/maxine/serviceops/discover?serviceName=dbservice&endPoint=%2Fhealth","HTTPVersion":"1.1","TraceId":"eb0e15c166602e42abba01413f1e2dbc"}
+{"LogLevel":"INFO","LogType":"GENERIC","Timestamp":"09/07/2026 23:00:10","Message":"Connected to Redis-backed registry state store."}
+{"LogLevel":"INFO","LogType":"GENERIC","Timestamp":"09/07/2026 23:00:10","Message":"Connected to Redis-backed registry state store."}
+{"LogLevel":"INFO","LogType":"GENERIC","Timestamp":"09/07/2026 23:00:10","Message":"Connected to Redis-backed registry state store."}
+{"LogLevel":"INFO","LogType":"GENERIC","Timestamp":"09/07/2026 23:00:10","Message":"Connected to Redis-backed registry state store."}
+{"LogLevel":"ERROR","LogType":"WEBREQUEST","Timestamp":"09/07/2026 23:00:10","Status":404,"Method":"GET","Endpoint":"/8989","HTTPVersion":"1.1","TraceId":"54e977c01fde7b8cb7cec50e2c087eb5"}
+{"LogLevel":"INFO","LogType":"WEBREQUEST","Timestamp":"09/07/2026 23:00:10","Status":200,"Method":"GET","Endpoint":"/api/maxine/control/config","HTTPVersion":"1.1","TraceId":"9f64efb5f7d3f2a7fdf8e9151d6489b1"}
+{"LogLevel":"INFO","LogType":"GENERIC","Timestamp":"09/07/2026 23:00:10","Message":"config alter : {\"logAsync\":\"Success\"}"}
+{"LogLevel":"INFO","LogType":"WEBREQUEST","Timestamp":"09/07/2026 23:00:10","Status":200,"Method":"PUT","Endpoint":"/api/maxine/control/config","HTTPVersion":"1.1","TraceId":"78ce68a6ef29ef0ffae7261435891f6b"}
+{"LogLevel":"INFO","LogType":"GENERIC","Timestamp":"09/07/2026 23:00:10","Message":"config alter : {\"heartBeatTimeout\":\"Success\"}"}
+{"LogLevel":"INFO","LogType":"WEBREQUEST","Timestamp":"09/07/2026 23:00:10","Status":200,"Method":"PUT","Endpoint":"/api/maxine/control/config","HTTPVersion":"1.1","TraceId":"e028155d59e08ac23c38fa6a4b8891a1"}
+{
+  "LogLevel": "INFO",
+  "LogType": "GENERIC",
+  "Timestamp": "09/07/2026 23:00:10",
+  "Message": "config alter : {\"logJsonPrettify\":\"Success\"}"
+}
+{
+  "LogLevel": "INFO",
+  "LogType": "WEBREQUEST",
+  "Timestamp": "09/07/2026 23:00:10",
+  "Status": 200,
+  "Method": "PUT",
+  "Endpoint": "/api/maxine/control/config",
+  "HTTPVersion": "1.1",
+  "TraceId": "bbba0ba42f86eab432d621a8e57adb7f"
+}
+{
+  "LogLevel": "INFO",
+  "LogType": "GENERIC",
+  "Timestamp": "09/07/2026 23:00:10",
+  "Message": "config alter : {\"serverSelectionStrategy\":\"Success\"}"
+}
+{
+  "LogLevel": "INFO",
+  "LogType": "WEBREQUEST",
+  "Timestamp": "09/07/2026 23:00:10",
+  "Status": 200,
+  "Method": "PUT",
+  "Endpoint": "/api/maxine/control/config",
+  "HTTPVersion": "1.1",
+  "TraceId": "6e04e04a082406fc59b27a706308d41b"
+}
+{
+  "LogLevel": "INFO",
+  "LogType": "GENERIC",
+  "Timestamp": "09/07/2026 23:00:10",
+  "Message": "config alter : {\"serverSelectionStrategy\":\"Success\"}"
+}
+{
+  "LogLevel": "INFO",
+  "LogType": "WEBREQUEST",
+  "Timestamp": "09/07/2026 23:00:10",
+  "Status": 200,
+  "Method": "PUT",
+  "Endpoint": "/api/maxine/control/config",
+  "HTTPVersion": "1.1",
+  "TraceId": "2036df53322a902f46b14240955cde94"
+}
+{
+  "LogLevel": "INFO",
+  "LogType": "GENERIC",
+  "Timestamp": "09/07/2026 23:00:10",
+  "Message": "config alter : {\"serverSelectionStrategy\":\"Success\"}"
+}
+{
+  "LogLevel": "INFO",
+  "LogType": "WEBREQUEST",
+  "Timestamp": "09/07/2026 23:00:10",
+  "Status": 200,
+  "Method": "PUT",
+  "Endpoint": "/api/maxine/control/config",
+  "HTTPVersion": "1.1",
+  "TraceId": "66a9fb65daf037a25e231d228fe014f1"
+}
+{
+  "LogLevel": "INFO",
+  "LogType": "GENERIC",
+  "Timestamp": "09/07/2026 23:00:10",
+  "Message": "config alter : {\"logFormat\":\"Success\"}"
+}
+{
+  "LogLevel": "INFO",
+  "LogType": "WEBREQUEST",
+  "Timestamp": "09/07/2026 23:00:10",
+  "Status": 200,
+  "Method": "PUT",
+  "Endpoint": "/api/maxine/control/config",
+  "HTTPVersion": "1.1",
+  "TraceId": "116eb353a79db67add6a76bf276fdcdd"
+}
+【INFO】-【GENERIC】 | "config alter : {\"logFormat\":\"Success\"}" | [ Thu, 09 Jul 2026 17:30:10 GMT ] 
+【INFO】-【WEBREQUEST】| 200 | PUT | undefined | [ /api/maxine/control/config ] | HTTP/1.1 | 050d9fce8f8c37cd37170c62260e323a | [ Thu, 09 Jul 2026 17:30:10 GMT ] 
+【INFO】-【GENERIC】 | "config alter : {\"discoveryMode\":\"Success\"}" | [ Thu, 09 Jul 2026 17:30:11 GMT ] 
+【INFO】-【WEBREQUEST】| 200 | PUT | undefined | [ /api/maxine/control/config ] | HTTP/1.1 | 523c135837fbe2c07f750b68cd0b129e | [ Thu, 09 Jul 2026 17:30:11 GMT ] 
+【INFO】-【WEBREQUEST】| 200 | POST | ::ffff:127.0.0.1 | [ /api/maxine/signin ] | HTTP/1.1 | 032c67330f797552494618f7622f1035 | [ Thu, 09 Jul 2026 17:30:11 GMT ] 
+【ERROR】-【GENERIC】 | "Please provide both of these -> userName and password." | [ Thu, 09 Jul 2026 17:30:11 GMT ] 
+【INFO】-【WEBREQUEST】| 400 | POST | ::ffff:127.0.0.1 | [ /api/maxine/signin ] | HTTP/1.1 | 1396c735457f83892ff5d6aafadfb785 | [ Thu, 09 Jul 2026 17:30:11 GMT ] 
+【INFO】-【WEBREQUEST】| 200 | POST | ::ffff:127.0.0.1 | [ /api/maxine/signin ] | HTTP/1.1 | afad930c8db4f9df4c9b357d1328e348 | [ Thu, 09 Jul 2026 17:30:11 GMT ] 
+【INFO】-【WEBREQUEST】| 200 | POST | ::ffff:127.0.0.1 | [ /api/maxine/signin ] | HTTP/1.1 | 313281b6e9cc4295300c8b774a9ff97f | [ Thu, 09 Jul 2026 17:30:11 GMT ] 
+【INFO】-【WEBREQUEST】| 200 | PUT | undefined | [ /api/maxine/change-password ] | HTTP/1.1 | e6253d3f24c563a434eeaf87196823f4 | [ Thu, 09 Jul 2026 17:30:11 GMT ] 
+【INFO】-【WEBREQUEST】| 401 | GET | undefined | [ /api/maxine/control/config ] | HTTP/1.1 | 4b349bf52406e636f8703d1789733890 | [ Thu, 09 Jul 2026 17:30:11 GMT ] 
+【INFO】-【WEBREQUEST】| 401 | POST | ::ffff:127.0.0.1 | [ /api/maxine/signin ] | HTTP/1.1 | ca7f122a31822360a52118263154d6a4 | [ Thu, 09 Jul 2026 17:30:11 GMT ] 
+【INFO】-【WEBREQUEST】| 200 | POST | ::ffff:127.0.0.1 | [ /api/maxine/signin ] | HTTP/1.1 | 7c3da84db0c5a6888269953e66fe5638 | [ Thu, 09 Jul 2026 17:30:11 GMT ] 
+【INFO】-【WEBREQUEST】| 200 | PUT | undefined | [ /api/maxine/change-password ] | HTTP/1.1 | 926f14ababb7f6dd2a1e980607d4e04f | [ Thu, 09 Jul 2026 17:30:11 GMT ] 
+【INFO】-【GENERIC】 | "Proxying to http://127.0.0.1:54593/hello?via=proxy" | [ Thu, 09 Jul 2026 17:30:11 GMT ] 
+【INFO】-【WEBREQUEST】| 200 | GET | ::ffff:127.0.0.1 | [ /api/maxine/serviceops/proxy/proxy-health-orders/hello?via=proxy ] | HTTP/1.1 | 564a5a9f0739395dc13c9a801e5c5f10 | [ Thu, 09 Jul 2026 17:30:11 GMT ] 
+【ERROR】-【GENERIC】 | "Invalid or missing -> hostName, nodeName, serviceName or weight (Maximum allowed size of weight is 10 (One server can maximum be 10x more powerful than others)" | [ Thu, 09 Jul 2026 17:30:11 GMT ] 
+【INFO】-【WEBREQUEST】| 400 | POST | undefined | [ /api/maxine/serviceops/register ] | HTTP/1.1 | bc9afb56f0613c31f33643c77f89f674 | [ Thu, 09 Jul 2026 17:30:11 GMT ] 
+【INFO】-【GENERIC】 | {"hostName":"xx.xxx.xx.xx","nodeName":"node-x-10","serviceName":"dbservice-rs","timeOut":5,"weight":10,"address":"https://xx.xxx.xx.xx:8082","healthCheckPath":"","registeredAt":"7/9/2026, 11:00:11 PM"} | [ Thu, 09 Jul 2026 17:30:11 GMT ] 
+【INFO】-【WEBREQUEST】| 200 | POST | undefined | [ /api/maxine/serviceops/register ] | HTTP/1.1 | ced43e44beb5ba73d6bb4df20fbb0d0b | [ Thu, 09 Jul 2026 17:30:11 GMT ] 
+【INFO】-【GENERIC】 | "Recovered 3 registry node(s) from persisted state." | [ Thu, 09 Jul 2026 17:30:11 GMT ] 
+【INFO】-【GENERIC】 | "Connected to Redis-backed registry state store." | [ Thu, 09 Jul 2026 17:30:11 GMT ] 
+【INFO】-【GENERIC】 | "Connected to Redis-backed registry state store." | [ Thu, 09 Jul 2026 17:30:11 GMT ] 
+【INFO】-【GENERIC】 | "Connected to Redis-backed registry state store." | [ Thu, 09 Jul 2026 17:30:11 GMT ] 
+【INFO】-【GENERIC】 | "Connected to Redis-backed registry state store." | [ Thu, 09 Jul 2026 17:30:11 GMT ] 
+{"LogLevel":"INFO","LogType":"WEBREQUEST","Timestamp":"09/07/2026 23:00:22","Status":200,"Method":"GET","Endpoint":"/api/actuator/health","HTTPVersion":"1.1","TraceId":"5deaf5e093f0466ba7d180d80cf2869a"}
+{"LogLevel":"INFO","LogType":"WEBREQUEST","Timestamp":"09/07/2026 23:00:22","Status":200,"Method":"GET","Endpoint":"/api/actuator/info","HTTPVersion":"1.1","TraceId":"e9874287ff158f397b383c4bb25875b9"}
+{"LogLevel":"INFO","LogType":"WEBREQUEST","Timestamp":"09/07/2026 23:00:22","Status":200,"Method":"GET","Endpoint":"/api/actuator/metrics","HTTPVersion":"1.1","TraceId":"d97c1506b56ea00332eb1b6d078a3e7a"}
+{"LogLevel":"ERROR","LogType":"WEBREQUEST","Timestamp":"09/07/2026 23:00:22","Status":404,"Method":"GET","Endpoint":"/api/actuator/performance","HTTPVersion":"1.1","TraceId":"65c3bce416c9bbceefd627f29d9f848a"}
+{"LogLevel":"INFO","LogType":"WEBREQUEST","Timestamp":"09/07/2026 23:00:22","Status":200,"Method":"GET","Endpoint":"/api/actuator/cluster","HTTPVersion":"1.1","TraceId":"e6185dbb79befd40f46a104e549c4bee"}
+{"LogLevel":"INFO","LogType":"WEBREQUEST","Timestamp":"09/07/2026 23:00:22","Status":200,"Method":"GET","Endpoint":"/api/actuator/prometheus","HTTPVersion":"1.1","TraceId":"a7bfa274258d2a36d7d67f93c3042953"}
+{"LogLevel":"INFO","LogType":"WEBREQUEST","Timestamp":"09/07/2026 23:00:22","Status":200,"Method":"GET","Endpoint":"/api/actuator/traces","HTTPVersion":"1.1","TraceId":"35dbc80846a5fcf973dfc1afa6f33713"}
+{"LogLevel":"INFO","LogType":"WEBREQUEST","Timestamp":"09/07/2026 23:00:22","Status":200,"Method":"GET","Endpoint":"/api/actuator/audit","HTTPVersion":"1.1","TraceId":"a4717ac299c95284d01e11db44054700"}
+{"LogLevel":"INFO","LogType":"WEBREQUEST","Timestamp":"09/07/2026 23:00:23","Status":200,"Method":"POST","ClientIp":"::ffff:127.0.0.1","Endpoint":"/api/maxine/signin","HTTPVersion":"1.1","TraceId":"6d3599577c6bb960f279d60a464cf738"}
+{"LogLevel":"INFO","LogType":"WEBREQUEST","Timestamp":"09/07/2026 23:00:23","Status":200,"Method":"GET","ClientIp":"::ffff:127.0.0.1","Endpoint":"/api/maxine/control/config","HTTPVersion":"1.1","TraceId":"f15671e0a4451970af98a3418d2ff09e"}
+{"LogLevel":"INFO","LogType":"GENERIC","Timestamp":"09/07/2026 23:00:23","Message":{"hostName":"xx.xxx.xx.xx","nodeName":"node-x-10","serviceName":"dbservice","timeOut":5,"weight":10,"address":"https://xx.xxx.xx.xx:8082","healthCheckPath":"","registeredAt":"7/9/2026, 11:00:23 PM"}}
+{"LogLevel":"INFO","LogType":"WEBREQUEST","Timestamp":"09/07/2026 23:00:23","Status":200,"Method":"POST","ClientIp":"::ffff:127.0.0.1","Endpoint":"/api/maxine/serviceops/register","HTTPVersion":"1.1","TraceId":"5409556cde3a5954bc12269f192774e1"}
+{"LogLevel":"INFO","LogType":"GENERIC","Timestamp":"09/07/2026 23:00:23","Message":"Redirecting to https://xx.xxx.xx.xx:8082/health"}
+{"LogLevel":"INFO","LogType":"WEBREQUEST","Timestamp":"09/07/2026 23:00:23","Status":302,"Method":"GET","ClientIp":"::ffff:127.0.0.1","Endpoint":"/api/maxine/serviceops/discover?serviceName=dbservice&endPoint=%2Fhealth","HTTPVersion":"1.1","TraceId":"d232890c2af25bc1f266c0e55b331d29"}
+{"LogLevel":"INFO","LogType":"GENERIC","Timestamp":"09/07/2026 23:00:23","Message":"Connected to Redis-backed registry state store."}
+{"LogLevel":"INFO","LogType":"GENERIC","Timestamp":"09/07/2026 23:00:23","Message":"Connected to Redis-backed registry state store."}
+{"LogLevel":"INFO","LogType":"GENERIC","Timestamp":"09/07/2026 23:00:23","Message":"Connected to Redis-backed registry state store."}
+{"LogLevel":"INFO","LogType":"GENERIC","Timestamp":"09/07/2026 23:00:23","Message":"Connected to Redis-backed registry state store."}
+{"LogLevel":"ERROR","LogType":"WEBREQUEST","Timestamp":"09/07/2026 23:00:23","Status":404,"Method":"GET","Endpoint":"/8989","HTTPVersion":"1.1","TraceId":"a5a2ef708b566204eb1fafd6a9ee1a89"}
+{"LogLevel":"INFO","LogType":"WEBREQUEST","Timestamp":"09/07/2026 23:00:23","Status":200,"Method":"GET","Endpoint":"/api/maxine/control/config","HTTPVersion":"1.1","TraceId":"d1eb9ba847010cc2349083c7d84a132b"}
+{"LogLevel":"INFO","LogType":"GENERIC","Timestamp":"09/07/2026 23:00:23","Message":"config alter : {\"logAsync\":\"Success\"}"}
+{"LogLevel":"INFO","LogType":"WEBREQUEST","Timestamp":"09/07/2026 23:00:23","Status":200,"Method":"PUT","Endpoint":"/api/maxine/control/config","HTTPVersion":"1.1","TraceId":"1a7f92803eedeb2d5a69973d494523f7"}
+{
+  "LogLevel": "INFO",
+  "LogType": "GENERIC",
+  "Timestamp": "09/07/2026 23:00:23",
+  "Message": "config alter : {\"heartBeatTimeout\":\"Success\"}"
+}
+{
+  "LogLevel": "INFO",
+  "LogType": "WEBREQUEST",
+  "Timestamp": "09/07/2026 23:00:23",
+  "Status": 200,
+  "Method": "PUT",
+  "Endpoint": "/api/maxine/control/config",
+  "HTTPVersion": "1.1",
+  "TraceId": "fffbe02ffc91a40a856d62b593a5a498"
+}
+{
+  "LogLevel": "INFO",
+  "LogType": "GENERIC",
+  "Timestamp": "09/07/2026 23:00:23",
+  "Message": "config alter : {\"logJsonPrettify\":\"Success\"}"
+}
+{
+  "LogLevel": "INFO",
+  "LogType": "WEBREQUEST",
+  "Timestamp": "09/07/2026 23:00:23",
+  "Status": 200,
+  "Method": "PUT",
+  "Endpoint": "/api/maxine/control/config",
+  "HTTPVersion": "1.1",
+  "TraceId": "1598d6e0400e653b19228d8996f94554"
+}
+{
+  "LogLevel": "INFO",
+  "LogType": "GENERIC",
+  "Timestamp": "09/07/2026 23:00:23",
+  "Message": "config alter : {\"serverSelectionStrategy\":\"Success\"}"
+}
+{
+  "LogLevel": "INFO",
+  "LogType": "WEBREQUEST",
+  "Timestamp": "09/07/2026 23:00:23",
+  "Status": 200,
+  "Method": "PUT",
+  "Endpoint": "/api/maxine/control/config",
+  "HTTPVersion": "1.1",
+  "TraceId": "ad374bcf7e605389c5e681fc1434a2eb"
+}
+{
+  "LogLevel": "INFO",
+  "LogType": "GENERIC",
+  "Timestamp": "09/07/2026 23:00:23",
+  "Message": "config alter : {\"serverSelectionStrategy\":\"Success\"}"
+}
+{
+  "LogLevel": "INFO",
+  "LogType": "WEBREQUEST",
+  "Timestamp": "09/07/2026 23:00:23",
+  "Status": 200,
+  "Method": "PUT",
+  "Endpoint": "/api/maxine/control/config",
+  "HTTPVersion": "1.1",
+  "TraceId": "b9755ca22dd8c82449a60fb840b7895c"
+}
+{
+  "LogLevel": "INFO",
+  "LogType": "GENERIC",
+  "Timestamp": "09/07/2026 23:00:23",
+  "Message": "config alter : {\"serverSelectionStrategy\":\"Success\"}"
+}
+{
+  "LogLevel": "INFO",
+  "LogType": "WEBREQUEST",
+  "Timestamp": "09/07/2026 23:00:23",
+  "Status": 200,
+  "Method": "PUT",
+  "Endpoint": "/api/maxine/control/config",
+  "HTTPVersion": "1.1",
+  "TraceId": "862a5cb392faf0c12993338a62e73367"
+}
+【INFO】-【GENERIC】 | "config alter : {\"logFormat\":\"Success\"}" | [ Thu, 09 Jul 2026 17:30:23 GMT ] 
+【INFO】-【WEBREQUEST】| 200 | PUT | undefined | [ /api/maxine/control/config ] | HTTP/1.1 | 58b6482c00a94f7399e9714addd872ae | [ Thu, 09 Jul 2026 17:30:23 GMT ] 
+【INFO】-【GENERIC】 | "config alter : {\"logFormat\":\"Success\"}" | [ Thu, 09 Jul 2026 17:30:23 GMT ] 
+【INFO】-【WEBREQUEST】| 200 | PUT | undefined | [ /api/maxine/control/config ] | HTTP/1.1 | c9ad21e904f35fdf74860dd467a49560 | [ Thu, 09 Jul 2026 17:30:23 GMT ] 
+【INFO】-【GENERIC】 | "config alter : {\"discoveryMode\":\"Success\"}" | [ Thu, 09 Jul 2026 17:30:23 GMT ] 
+【INFO】-【WEBREQUEST】| 200 | PUT | undefined | [ /api/maxine/control/config ] | HTTP/1.1 | 18661abc3f4c19d5df8c689467ea587f | [ Thu, 09 Jul 2026 17:30:23 GMT ] 
+【INFO】-【WEBREQUEST】| 200 | POST | ::ffff:127.0.0.1 | [ /api/maxine/signin ] | HTTP/1.1 | 30b5c79d7935ae4fe078ece9237a3c3d | [ Thu, 09 Jul 2026 17:30:23 GMT ] 
+【ERROR】-【GENERIC】 | "Please provide both of these -> userName and password." | [ Thu, 09 Jul 2026 17:30:23 GMT ] 
+【INFO】-【WEBREQUEST】| 400 | POST | ::ffff:127.0.0.1 | [ /api/maxine/signin ] | HTTP/1.1 | 88f9823ac603807ed27518656344bd6f | [ Thu, 09 Jul 2026 17:30:23 GMT ] 
+【INFO】-【WEBREQUEST】| 200 | POST | ::ffff:127.0.0.1 | [ /api/maxine/signin ] | HTTP/1.1 | 26ea6bb5a07d86a69daa663bafa2bce2 | [ Thu, 09 Jul 2026 17:30:23 GMT ] 
+【INFO】-【WEBREQUEST】| 200 | POST | ::ffff:127.0.0.1 | [ /api/maxine/signin ] | HTTP/1.1 | c847abe8e5250a9b7d923998324aa382 | [ Thu, 09 Jul 2026 17:30:23 GMT ] 
+【INFO】-【WEBREQUEST】| 200 | PUT | undefined | [ /api/maxine/change-password ] | HTTP/1.1 | b9807db0a09235ae47136b7baa8ffb5a | [ Thu, 09 Jul 2026 17:30:23 GMT ] 
+【INFO】-【WEBREQUEST】| 401 | GET | undefined | [ /api/maxine/control/config ] | HTTP/1.1 | f089f3074ae63ca811303bf678a3c2e3 | [ Thu, 09 Jul 2026 17:30:23 GMT ] 
+【INFO】-【WEBREQUEST】| 401 | POST | ::ffff:127.0.0.1 | [ /api/maxine/signin ] | HTTP/1.1 | 438af5c0535a43d501140ed0153b7822 | [ Thu, 09 Jul 2026 17:30:23 GMT ] 
+【INFO】-【WEBREQUEST】| 200 | POST | ::ffff:127.0.0.1 | [ /api/maxine/signin ] | HTTP/1.1 | 6c8efe811360ffab2f6b9e9be7d87455 | [ Thu, 09 Jul 2026 17:30:23 GMT ] 
+【INFO】-【WEBREQUEST】| 200 | PUT | undefined | [ /api/maxine/change-password ] | HTTP/1.1 | ecd58148018ceb1a3350db5da0d33475 | [ Thu, 09 Jul 2026 17:30:23 GMT ] 
+【INFO】-【GENERIC】 | "Proxying to http://127.0.0.1:54722/hello?via=proxy" | [ Thu, 09 Jul 2026 17:30:23 GMT ] 
+【INFO】-【WEBREQUEST】| 200 | GET | ::ffff:127.0.0.1 | [ /api/maxine/serviceops/proxy/proxy-health-orders/hello?via=proxy ] | HTTP/1.1 | d3897f732fe6d57d7eb9c13a2d5354bd | [ Thu, 09 Jul 2026 17:30:23 GMT ] 
+【ERROR】-【GENERIC】 | "Invalid or missing -> hostName, nodeName, serviceName or weight (Maximum allowed size of weight is 10 (One server can maximum be 10x more powerful than others)" | [ Thu, 09 Jul 2026 17:30:23 GMT ] 
+【INFO】-【WEBREQUEST】| 400 | POST | undefined | [ /api/maxine/serviceops/register ] | HTTP/1.1 | a562b1470ab57e2ee29c014e15ba889f | [ Thu, 09 Jul 2026 17:30:23 GMT ] 
+【INFO】-【GENERIC】 | {"hostName":"xx.xxx.xx.xx","nodeName":"node-x-10","serviceName":"dbservice-rs","timeOut":5,"weight":10,"address":"https://xx.xxx.xx.xx:8082","healthCheckPath":"","registeredAt":"7/9/2026, 11:00:23 PM"} | [ Thu, 09 Jul 2026 17:30:23 GMT ] 
+【INFO】-【WEBREQUEST】| 200 | POST | undefined | [ /api/maxine/serviceops/register ] | HTTP/1.1 | 84307cc0f55aa4ccceb2c31282419747 | [ Thu, 09 Jul 2026 17:30:23 GMT ] 
+【INFO】-【GENERIC】 | "Recovered 3 registry node(s) from persisted state." | [ Thu, 09 Jul 2026 17:30:23 GMT ] 
+【INFO】-【GENERIC】 | "Connected to Redis-backed registry state store." | [ Thu, 09 Jul 2026 17:30:23 GMT ] 
+【INFO】-【GENERIC】 | "Connected to Redis-backed registry state store." | [ Thu, 09 Jul 2026 17:30:23 GMT ] 
+【INFO】-【GENERIC】 | "Connected to Redis-backed registry state store." | [ Thu, 09 Jul 2026 17:30:23 GMT ] 
+【INFO】-【GENERIC】 | "Connected to Redis-backed registry state store." | [ Thu, 09 Jul 2026 17:30:23 GMT ] 
+{"LogLevel":"INFO","LogType":"WEBREQUEST","Timestamp":"09/07/2026 23:01:19","Status":200,"Method":"GET","Endpoint":"/api/actuator/health","HTTPVersion":"1.1","TraceId":"d558de1725ea9dcd93048bb9cafce421"}
+{"LogLevel":"INFO","LogType":"WEBREQUEST","Timestamp":"09/07/2026 23:01:19","Status":200,"Method":"GET","Endpoint":"/api/actuator/info","HTTPVersion":"1.1","TraceId":"b3ea58dbcd5c768068c14022a7a65be2"}
+{"LogLevel":"INFO","LogType":"WEBREQUEST","Timestamp":"09/07/2026 23:01:19","Status":200,"Method":"GET","Endpoint":"/api/actuator/metrics","HTTPVersion":"1.1","TraceId":"d4a4a1b32e6f5f93c381aa7b07e7728c"}
+{"LogLevel":"ERROR","LogType":"WEBREQUEST","Timestamp":"09/07/2026 23:01:19","Status":404,"Method":"GET","Endpoint":"/api/actuator/performance","HTTPVersion":"1.1","TraceId":"8858774fe74e9b6c96d0f1c7cbdbcc20"}
+{"LogLevel":"INFO","LogType":"WEBREQUEST","Timestamp":"09/07/2026 23:01:19","Status":200,"Method":"GET","Endpoint":"/api/actuator/cluster","HTTPVersion":"1.1","TraceId":"a4372d54cd755124913036d4531bc697"}
+{"LogLevel":"ERROR","LogType":"GENERIC","Timestamp":"09/07/2026 23:01:19","Message":"Cannot read properties of undefined (reading 'size')TypeError: Cannot read properties of undefined (reading 'size')    at UpstreamHealthService.getStatus (/Users/vrushankpatel/Desktop/WORKSPACE/Maxine/src/main/service/upstream-health-service.js:217:44)    at controller (/Users/vrushankpatel/Desktop/WORKSPACE/Maxine/src/main/config/actuator/actuator-config.js:76:59)"}
+{"LogLevel":"ERROR","LogType":"GENERIC","Timestamp":"09/07/2026 23:01:19","Message":"Cannot read properties of undefined (reading 'size')TypeError: Cannot read properties of undefined (reading 'size')    at UpstreamHealthService.getStatus (/Users/vrushankpatel/Desktop/WORKSPACE/Maxine/src/main/service/upstream-health-service.js:217:44)    at controller (/Users/vrushankpatel/Desktop/WORKSPACE/Maxine/src/main/config/actuator/actuator-config.js:76:59)"}
+{"LogLevel":"INFO","LogType":"WEBREQUEST","Timestamp":"09/07/2026 23:01:29","Status":200,"Method":"POST","ClientIp":"::ffff:127.0.0.1","Endpoint":"/api/maxine/signin","HTTPVersion":"1.1","TraceId":"30fbd9ee6cdd3909c46054276f7f9402"}
+{"LogLevel":"INFO","LogType":"WEBREQUEST","Timestamp":"09/07/2026 23:01:29","Status":200,"Method":"GET","ClientIp":"::ffff:127.0.0.1","Endpoint":"/api/maxine/control/config","HTTPVersion":"1.1","TraceId":"a51b564495ee7857a8158508eb77b262"}
+{"LogLevel":"INFO","LogType":"GENERIC","Timestamp":"09/07/2026 23:01:29","Message":{"hostName":"xx.xxx.xx.xx","nodeName":"node-x-10","serviceName":"dbservice","timeOut":5,"weight":10,"address":"https://xx.xxx.xx.xx:8082","healthCheckPath":"","registeredAt":"7/9/2026, 11:01:29 PM"}}
+{"LogLevel":"INFO","LogType":"WEBREQUEST","Timestamp":"09/07/2026 23:01:29","Status":200,"Method":"POST","ClientIp":"::ffff:127.0.0.1","Endpoint":"/api/maxine/serviceops/register","HTTPVersion":"1.1","TraceId":"e9961dd0a0f746c8228f1429f3e0e4d1"}
+{"LogLevel":"INFO","LogType":"GENERIC","Timestamp":"09/07/2026 23:01:29","Message":"Redirecting to https://xx.xxx.xx.xx:8082/health"}
+{"LogLevel":"INFO","LogType":"WEBREQUEST","Timestamp":"09/07/2026 23:01:29","Status":302,"Method":"GET","ClientIp":"::ffff:127.0.0.1","Endpoint":"/api/maxine/serviceops/discover?serviceName=dbservice&endPoint=%2Fhealth","HTTPVersion":"1.1","TraceId":"6bf2316ff4c62b3e8b28ba6f58be5923"}
+{"LogLevel":"INFO","LogType":"GENERIC","Timestamp":"09/07/2026 23:01:29","Message":"Connected to Redis-backed registry state store."}
+{"LogLevel":"INFO","LogType":"GENERIC","Timestamp":"09/07/2026 23:01:29","Message":"Connected to Redis-backed registry state store."}
+{"LogLevel":"INFO","LogType":"GENERIC","Timestamp":"09/07/2026 23:01:29","Message":"Connected to Redis-backed registry state store."}
+{"LogLevel":"INFO","LogType":"GENERIC","Timestamp":"09/07/2026 23:01:29","Message":"Connected to Redis-backed registry state store."}
+{"LogLevel":"ERROR","LogType":"WEBREQUEST","Timestamp":"09/07/2026 23:01:29","Status":404,"Method":"GET","Endpoint":"/8989","HTTPVersion":"1.1","TraceId":"84a91c4085ce1aca5a0ec83da1142f70"}
+{"LogLevel":"INFO","LogType":"WEBREQUEST","Timestamp":"09/07/2026 23:01:29","Status":200,"Method":"GET","Endpoint":"/api/maxine/control/config","HTTPVersion":"1.1","TraceId":"1b0133f3a974c1dc5008fd134cf4d400"}
+{"LogLevel":"INFO","LogType":"GENERIC","Timestamp":"09/07/2026 23:01:29","Message":"config alter : {\"logAsync\":\"Success\"}"}
+{"LogLevel":"INFO","LogType":"WEBREQUEST","Timestamp":"09/07/2026 23:01:29","Status":200,"Method":"PUT","Endpoint":"/api/maxine/control/config","HTTPVersion":"1.1","TraceId":"67c21e58c1c901a7c51fd054223a8711"}
+{"LogLevel":"INFO","LogType":"GENERIC","Timestamp":"09/07/2026 23:01:29","Message":"config alter : {\"heartBeatTimeout\":\"Success\"}"}
+{"LogLevel":"INFO","LogType":"WEBREQUEST","Timestamp":"09/07/2026 23:01:29","Status":200,"Method":"PUT","Endpoint":"/api/maxine/control/config","HTTPVersion":"1.1","TraceId":"0ac5b45d117de78ae10757e180046347"}
+{
+  "LogLevel": "INFO",
+  "LogType": "GENERIC",
+  "Timestamp": "09/07/2026 23:01:29",
+  "Message": "config alter : {\"logJsonPrettify\":\"Success\"}"
+}
+{
+  "LogLevel": "INFO",
+  "LogType": "WEBREQUEST",
+  "Timestamp": "09/07/2026 23:01:29",
+  "Status": 200,
+  "Method": "PUT",
+  "Endpoint": "/api/maxine/control/config",
+  "HTTPVersion": "1.1",
+  "TraceId": "8a245fb31c962bee2c3dfde1948ab5a3"
+}
+{
+  "LogLevel": "INFO",
+  "LogType": "GENERIC",
+  "Timestamp": "09/07/2026 23:01:29",
+  "Message": "config alter : {\"serverSelectionStrategy\":\"Success\"}"
+}
+{
+  "LogLevel": "INFO",
+  "LogType": "WEBREQUEST",
+  "Timestamp": "09/07/2026 23:01:29",
+  "Status": 200,
+  "Method": "PUT",
+  "Endpoint": "/api/maxine/control/config",
+  "HTTPVersion": "1.1",
+  "TraceId": "c4f2b183c6ed68d7cf66d5253b4623b2"
+}
+{
+  "LogLevel": "INFO",
+  "LogType": "GENERIC",
+  "Timestamp": "09/07/2026 23:01:29",
+  "Message": "config alter : {\"serverSelectionStrategy\":\"Success\"}"
+}
+{
+  "LogLevel": "INFO",
+  "LogType": "WEBREQUEST",
+  "Timestamp": "09/07/2026 23:01:29",
+  "Status": 200,
+  "Method": "PUT",
+  "Endpoint": "/api/maxine/control/config",
+  "HTTPVersion": "1.1",
+  "TraceId": "03ff53e27f83da1e85d925f5d257dd7e"
+}
+{
+  "LogLevel": "INFO",
+  "LogType": "GENERIC",
+  "Timestamp": "09/07/2026 23:01:29",
+  "Message": "config alter : {\"serverSelectionStrategy\":\"Success\"}"
+}
+{
+  "LogLevel": "INFO",
+  "LogType": "WEBREQUEST",
+  "Timestamp": "09/07/2026 23:01:29",
+  "Status": 200,
+  "Method": "PUT",
+  "Endpoint": "/api/maxine/control/config",
+  "HTTPVersion": "1.1",
+  "TraceId": "f2d2b6978638692c18f8542b7ad09044"
+}
+{
+  "LogLevel": "INFO",
+  "LogType": "GENERIC",
+  "Timestamp": "09/07/2026 23:01:29",
+  "Message": "config alter : {\"logFormat\":\"Success\"}"
+}
+{
+  "LogLevel": "INFO",
+  "LogType": "WEBREQUEST",
+  "Timestamp": "09/07/2026 23:01:29",
+  "Status": 200,
+  "Method": "PUT",
+  "Endpoint": "/api/maxine/control/config",
+  "HTTPVersion": "1.1",
+  "TraceId": "d4c3cdbc44ce15a9ff1dfa9a0256082c"
+}
+【INFO】-【GENERIC】 | "config alter : {\"logFormat\":\"Success\"}" | [ Thu, 09 Jul 2026 17:31:29 GMT ] 
+【INFO】-【WEBREQUEST】| 200 | PUT | undefined | [ /api/maxine/control/config ] | HTTP/1.1 | 916f63c952e7144fe7b76fddf525950c | [ Thu, 09 Jul 2026 17:31:29 GMT ] 
+【INFO】-【GENERIC】 | "config alter : {\"discoveryMode\":\"Success\"}" | [ Thu, 09 Jul 2026 17:31:29 GMT ] 
+【INFO】-【WEBREQUEST】| 200 | PUT | undefined | [ /api/maxine/control/config ] | HTTP/1.1 | ad2b0db34bdf0da133d95d6ed2acf602 | [ Thu, 09 Jul 2026 17:31:29 GMT ] 
+【INFO】-【WEBREQUEST】| 200 | POST | ::ffff:127.0.0.1 | [ /api/maxine/signin ] | HTTP/1.1 | ecb9d18da1c498b9dfbcb4af309b9a53 | [ Thu, 09 Jul 2026 17:31:29 GMT ] 
+【ERROR】-【GENERIC】 | "Please provide both of these -> userName and password." | [ Thu, 09 Jul 2026 17:31:29 GMT ] 
+【INFO】-【WEBREQUEST】| 400 | POST | ::ffff:127.0.0.1 | [ /api/maxine/signin ] | HTTP/1.1 | 347a48f65f773b245b81a610cc6ce09e | [ Thu, 09 Jul 2026 17:31:29 GMT ] 
+【INFO】-【WEBREQUEST】| 200 | POST | ::ffff:127.0.0.1 | [ /api/maxine/signin ] | HTTP/1.1 | 45115cfac307c2d1df3099ac80544219 | [ Thu, 09 Jul 2026 17:31:29 GMT ] 
+【INFO】-【WEBREQUEST】| 200 | POST | ::ffff:127.0.0.1 | [ /api/maxine/signin ] | HTTP/1.1 | 011ec046d38a42c183cfae69112ddcf9 | [ Thu, 09 Jul 2026 17:31:29 GMT ] 
+【INFO】-【WEBREQUEST】| 200 | PUT | undefined | [ /api/maxine/change-password ] | HTTP/1.1 | 9cf8e30f068bf7b1e0c22dfe56f2376a | [ Thu, 09 Jul 2026 17:31:29 GMT ] 
+【INFO】-【WEBREQUEST】| 401 | GET | undefined | [ /api/maxine/control/config ] | HTTP/1.1 | ae13ad4e659eacfcfaf179d227178df8 | [ Thu, 09 Jul 2026 17:31:29 GMT ] 
+【INFO】-【WEBREQUEST】| 401 | POST | ::ffff:127.0.0.1 | [ /api/maxine/signin ] | HTTP/1.1 | a772e20bd8cb805ba08f48b56020752e | [ Thu, 09 Jul 2026 17:31:29 GMT ] 
+【INFO】-【WEBREQUEST】| 200 | POST | ::ffff:127.0.0.1 | [ /api/maxine/signin ] | HTTP/1.1 | 9b9a6e5ae72872605b91f995014c8895 | [ Thu, 09 Jul 2026 17:31:29 GMT ] 
+【INFO】-【WEBREQUEST】| 200 | PUT | undefined | [ /api/maxine/change-password ] | HTTP/1.1 | 6fe0f1bf65d09cf1fa607418c521d29a | [ Thu, 09 Jul 2026 17:31:29 GMT ] 
+【ERROR】-【GENERIC】 | "Invalid or missing -> hostName, nodeName, serviceName or weight (Maximum allowed size of weight is 10 (One server can maximum be 10x more powerful than others)" | [ Thu, 09 Jul 2026 17:31:30 GMT ] 
+【INFO】-【WEBREQUEST】| 400 | POST | undefined | [ /api/maxine/serviceops/register ] | HTTP/1.1 | 77d8154ed444a004c902d6922dcb60a9 | [ Thu, 09 Jul 2026 17:31:30 GMT ] 
+【INFO】-【GENERIC】 | {"hostName":"xx.xxx.xx.xx","nodeName":"node-x-10","serviceName":"dbservice-rs","timeOut":5,"weight":10,"address":"https://xx.xxx.xx.xx:8082","healthCheckPath":"","registeredAt":"7/9/2026, 11:01:30 PM"} | [ Thu, 09 Jul 2026 17:31:30 GMT ] 
+【INFO】-【WEBREQUEST】| 200 | POST | undefined | [ /api/maxine/serviceops/register ] | HTTP/1.1 | 337fed15cf6ba2fa6d5495392c8d21d0 | [ Thu, 09 Jul 2026 17:31:30 GMT ] 
+【INFO】-【GENERIC】 | "Recovered 3 registry node(s) from persisted state." | [ Thu, 09 Jul 2026 17:31:30 GMT ] 
+【INFO】-【GENERIC】 | "Connected to Redis-backed registry state store." | [ Thu, 09 Jul 2026 17:31:30 GMT ] 
+【INFO】-【GENERIC】 | "Connected to Redis-backed registry state store." | [ Thu, 09 Jul 2026 17:31:30 GMT ] 
+【INFO】-【GENERIC】 | "Connected to Redis-backed registry state store." | [ Thu, 09 Jul 2026 17:31:30 GMT ] 
+{"LogLevel":"INFO","LogType":"WEBREQUEST","Timestamp":"09/07/2026 23:01:37","Status":200,"Method":"GET","Endpoint":"/api/actuator/health","HTTPVersion":"1.1","TraceId":"c6bd7611aef2c77c93c6bb71744b7f6b"}
+{"LogLevel":"INFO","LogType":"WEBREQUEST","Timestamp":"09/07/2026 23:01:37","Status":200,"Method":"GET","Endpoint":"/api/actuator/info","HTTPVersion":"1.1","TraceId":"eef4435bbf5e4dff52481da3282e1830"}
+{"LogLevel":"INFO","LogType":"WEBREQUEST","Timestamp":"09/07/2026 23:01:37","Status":200,"Method":"GET","Endpoint":"/api/actuator/metrics","HTTPVersion":"1.1","TraceId":"1011c4fe47931c2f5d49565aa9edee1b"}
+{"LogLevel":"ERROR","LogType":"WEBREQUEST","Timestamp":"09/07/2026 23:01:37","Status":404,"Method":"GET","Endpoint":"/api/actuator/performance","HTTPVersion":"1.1","TraceId":"164523d7af7d22719f7446cbac63bc7a"}
+{"LogLevel":"INFO","LogType":"WEBREQUEST","Timestamp":"09/07/2026 23:01:37","Status":200,"Method":"GET","Endpoint":"/api/actuator/cluster","HTTPVersion":"1.1","TraceId":"3a27821d145cd2b9afb109b4204a00d4"}
+{"LogLevel":"INFO","LogType":"WEBREQUEST","Timestamp":"09/07/2026 23:01:37","Status":200,"Method":"GET","Endpoint":"/api/actuator/prometheus","HTTPVersion":"1.1","TraceId":"68477f658eaa129a3c6f8aff57fb4d40"}
+{"LogLevel":"INFO","LogType":"WEBREQUEST","Timestamp":"09/07/2026 23:01:37","Status":200,"Method":"GET","Endpoint":"/api/actuator/traces","HTTPVersion":"1.1","TraceId":"5eb8dd9a01f4ec089e9d92529fcc42a9"}
+{"LogLevel":"INFO","LogType":"WEBREQUEST","Timestamp":"09/07/2026 23:01:37","Status":200,"Method":"GET","Endpoint":"/api/actuator/audit","HTTPVersion":"1.1","TraceId":"e846fe90fb217a01e8f9c27c9e6f2e14"}
+{"LogLevel":"INFO","LogType":"WEBREQUEST","Timestamp":"09/07/2026 23:01:38","Status":200,"Method":"POST","ClientIp":"::ffff:127.0.0.1","Endpoint":"/api/maxine/signin","HTTPVersion":"1.1","TraceId":"4543dc42d3375894def16e9245ce8447"}
+{"LogLevel":"INFO","LogType":"WEBREQUEST","Timestamp":"09/07/2026 23:01:38","Status":200,"Method":"GET","ClientIp":"::ffff:127.0.0.1","Endpoint":"/api/maxine/control/config","HTTPVersion":"1.1","TraceId":"c30c1ae26acb5730648b9c788fa48d6d"}
+{"LogLevel":"INFO","LogType":"GENERIC","Timestamp":"09/07/2026 23:01:38","Message":{"hostName":"xx.xxx.xx.xx","nodeName":"node-x-10","serviceName":"dbservice","timeOut":5,"weight":10,"address":"https://xx.xxx.xx.xx:8082","healthCheckPath":"","registeredAt":"7/9/2026, 11:01:38 PM"}}
+{"LogLevel":"INFO","LogType":"WEBREQUEST","Timestamp":"09/07/2026 23:01:38","Status":200,"Method":"POST","ClientIp":"::ffff:127.0.0.1","Endpoint":"/api/maxine/serviceops/register","HTTPVersion":"1.1","TraceId":"c3464276ad5ef7ecc1bdedfcf54d96ed"}
+{"LogLevel":"INFO","LogType":"GENERIC","Timestamp":"09/07/2026 23:01:38","Message":"Redirecting to https://xx.xxx.xx.xx:8082/health"}
+{"LogLevel":"INFO","LogType":"WEBREQUEST","Timestamp":"09/07/2026 23:01:38","Status":302,"Method":"GET","ClientIp":"::ffff:127.0.0.1","Endpoint":"/api/maxine/serviceops/discover?serviceName=dbservice&endPoint=%2Fhealth","HTTPVersion":"1.1","TraceId":"553b36ce364bec88bbe5d55d9e959a2b"}
+{"LogLevel":"INFO","LogType":"GENERIC","Timestamp":"09/07/2026 23:01:38","Message":"Connected to Redis-backed registry state store."}
+{"LogLevel":"INFO","LogType":"GENERIC","Timestamp":"09/07/2026 23:01:38","Message":"Connected to Redis-backed registry state store."}
+{"LogLevel":"INFO","LogType":"GENERIC","Timestamp":"09/07/2026 23:01:38","Message":"Connected to Redis-backed registry state store."}
+{"LogLevel":"INFO","LogType":"GENERIC","Timestamp":"09/07/2026 23:01:38","Message":"Connected to Redis-backed registry state store."}
+{"LogLevel":"ERROR","LogType":"WEBREQUEST","Timestamp":"09/07/2026 23:01:38","Status":404,"Method":"GET","Endpoint":"/8989","HTTPVersion":"1.1","TraceId":"f79cb97d4301ff6219a79c48a815647f"}
+{"LogLevel":"INFO","LogType":"WEBREQUEST","Timestamp":"09/07/2026 23:01:38","Status":200,"Method":"GET","Endpoint":"/api/maxine/control/config","HTTPVersion":"1.1","TraceId":"318cf397648588e5c0aa00a042226fcf"}
+{"LogLevel":"INFO","LogType":"GENERIC","Timestamp":"09/07/2026 23:01:38","Message":"config alter : {\"logAsync\":\"Success\"}"}
+{"LogLevel":"INFO","LogType":"WEBREQUEST","Timestamp":"09/07/2026 23:01:38","Status":200,"Method":"PUT","Endpoint":"/api/maxine/control/config","HTTPVersion":"1.1","TraceId":"a35f1a8d67916f22a1813483938c7575"}
+{
+  "LogLevel": "INFO",
+  "LogType": "GENERIC",
+  "Timestamp": "09/07/2026 23:01:38",
+  "Message": "config alter : {\"heartBeatTimeout\":\"Success\"}"
+}
+{
+  "LogLevel": "INFO",
+  "LogType": "WEBREQUEST",
+  "Timestamp": "09/07/2026 23:01:38",
+  "Status": 200,
+  "Method": "PUT",
+  "Endpoint": "/api/maxine/control/config",
+  "HTTPVersion": "1.1",
+  "TraceId": "13b6900f31c3ede9bbf9004285970700"
+}
+{
+  "LogLevel": "INFO",
+  "LogType": "GENERIC",
+  "Timestamp": "09/07/2026 23:01:38",
+  "Message": "config alter : {\"logJsonPrettify\":\"Success\"}"
+}
+{
+  "LogLevel": "INFO",
+  "LogType": "WEBREQUEST",
+  "Timestamp": "09/07/2026 23:01:38",
+  "Status": 200,
+  "Method": "PUT",
+  "Endpoint": "/api/maxine/control/config",
+  "HTTPVersion": "1.1",
+  "TraceId": "990d80ab5ccbf1427e48269ceaba4d2d"
+}
+{
+  "LogLevel": "INFO",
+  "LogType": "GENERIC",
+  "Timestamp": "09/07/2026 23:01:38",
+  "Message": "config alter : {\"serverSelectionStrategy\":\"Success\"}"
+}
+{
+  "LogLevel": "INFO",
+  "LogType": "WEBREQUEST",
+  "Timestamp": "09/07/2026 23:01:38",
+  "Status": 200,
+  "Method": "PUT",
+  "Endpoint": "/api/maxine/control/config",
+  "HTTPVersion": "1.1",
+  "TraceId": "575065148eda08a6df3a1b1a773508c2"
+}
+{
+  "LogLevel": "INFO",
+  "LogType": "GENERIC",
+  "Timestamp": "09/07/2026 23:01:38",
+  "Message": "config alter : {\"serverSelectionStrategy\":\"Success\"}"
+}
+{
+  "LogLevel": "INFO",
+  "LogType": "WEBREQUEST",
+  "Timestamp": "09/07/2026 23:01:38",
+  "Status": 200,
+  "Method": "PUT",
+  "Endpoint": "/api/maxine/control/config",
+  "HTTPVersion": "1.1",
+  "TraceId": "b45a9a0ec94ae057dd9b6429bb25f041"
+}
+{
+  "LogLevel": "INFO",
+  "LogType": "GENERIC",
+  "Timestamp": "09/07/2026 23:01:38",
+  "Message": "config alter : {\"serverSelectionStrategy\":\"Success\"}"
+}
+{
+  "LogLevel": "INFO",
+  "LogType": "WEBREQUEST",
+  "Timestamp": "09/07/2026 23:01:38",
+  "Status": 200,
+  "Method": "PUT",
+  "Endpoint": "/api/maxine/control/config",
+  "HTTPVersion": "1.1",
+  "TraceId": "8639aeff838cda91d6bd2290adc11505"
+}
+【INFO】-【GENERIC】 | "config alter : {\"logFormat\":\"Success\"}" | [ Thu, 09 Jul 2026 17:31:38 GMT ] 
+【INFO】-【WEBREQUEST】| 200 | PUT | undefined | [ /api/maxine/control/config ] | HTTP/1.1 | 68063227f9b1ddada63c8c5c9d81ab5c | [ Thu, 09 Jul 2026 17:31:38 GMT ] 
+【INFO】-【GENERIC】 | "config alter : {\"logFormat\":\"Success\"}" | [ Thu, 09 Jul 2026 17:31:38 GMT ] 
+【INFO】-【WEBREQUEST】| 200 | PUT | undefined | [ /api/maxine/control/config ] | HTTP/1.1 | 54cbd9f15112410077aee26bed8ca443 | [ Thu, 09 Jul 2026 17:31:38 GMT ] 
+【INFO】-【GENERIC】 | "config alter : {\"discoveryMode\":\"Success\"}" | [ Thu, 09 Jul 2026 17:31:38 GMT ] 
+【INFO】-【WEBREQUEST】| 200 | PUT | undefined | [ /api/maxine/control/config ] | HTTP/1.1 | 592c07c4fb89af56294b35c9032cc0d5 | [ Thu, 09 Jul 2026 17:31:38 GMT ] 
+【INFO】-【WEBREQUEST】| 200 | POST | ::ffff:127.0.0.1 | [ /api/maxine/signin ] | HTTP/1.1 | 5721a06f2f217815ae9a7e1d9f485546 | [ Thu, 09 Jul 2026 17:31:38 GMT ] 
+【ERROR】-【GENERIC】 | "Please provide both of these -> userName and password." | [ Thu, 09 Jul 2026 17:31:38 GMT ] 
+【INFO】-【WEBREQUEST】| 400 | POST | ::ffff:127.0.0.1 | [ /api/maxine/signin ] | HTTP/1.1 | 1b1261a17e459292990325e7a689c000 | [ Thu, 09 Jul 2026 17:31:38 GMT ] 
+【INFO】-【WEBREQUEST】| 200 | POST | ::ffff:127.0.0.1 | [ /api/maxine/signin ] | HTTP/1.1 | 8bdd345835ff839e57b0819cde1626d9 | [ Thu, 09 Jul 2026 17:31:38 GMT ] 
+【INFO】-【WEBREQUEST】| 200 | POST | ::ffff:127.0.0.1 | [ /api/maxine/signin ] | HTTP/1.1 | 53392ec18123249169aa9a126b14b181 | [ Thu, 09 Jul 2026 17:31:38 GMT ] 
+【INFO】-【WEBREQUEST】| 200 | PUT | undefined | [ /api/maxine/change-password ] | HTTP/1.1 | a3b468bdcfff7a3bdeba89bcba322e6c | [ Thu, 09 Jul 2026 17:31:38 GMT ] 
+【INFO】-【WEBREQUEST】| 401 | GET | undefined | [ /api/maxine/control/config ] | HTTP/1.1 | 932ccd09cee081185030376479c5949f | [ Thu, 09 Jul 2026 17:31:38 GMT ] 
+【INFO】-【WEBREQUEST】| 401 | POST | ::ffff:127.0.0.1 | [ /api/maxine/signin ] | HTTP/1.1 | 0e22de74ca41918843c19f22cde97194 | [ Thu, 09 Jul 2026 17:31:38 GMT ] 
+【INFO】-【WEBREQUEST】| 200 | POST | ::ffff:127.0.0.1 | [ /api/maxine/signin ] | HTTP/1.1 | 3e6b7894f7bd0528b014f8795a54fbff | [ Thu, 09 Jul 2026 17:31:38 GMT ] 
+【INFO】-【WEBREQUEST】| 200 | PUT | undefined | [ /api/maxine/change-password ] | HTTP/1.1 | 175774f31fff62416a1eeaee0ef6b4d3 | [ Thu, 09 Jul 2026 17:31:38 GMT ] 
+【INFO】-【GENERIC】 | "Proxying to http://127.0.0.1:54898/hello?via=proxy" | [ Thu, 09 Jul 2026 17:31:38 GMT ] 
+【INFO】-【WEBREQUEST】| 200 | GET | ::ffff:127.0.0.1 | [ /api/maxine/serviceops/proxy/proxy-health-orders/hello?via=proxy ] | HTTP/1.1 | 1923fae7fc30381576d539ecc250aa38 | [ Thu, 09 Jul 2026 17:31:38 GMT ] 
+【ERROR】-【GENERIC】 | "Invalid or missing -> hostName, nodeName, serviceName or weight (Maximum allowed size of weight is 10 (One server can maximum be 10x more powerful than others)" | [ Thu, 09 Jul 2026 17:31:38 GMT ] 
+【INFO】-【WEBREQUEST】| 400 | POST | undefined | [ /api/maxine/serviceops/register ] | HTTP/1.1 | 1023f87840c344c978770a973e860ab3 | [ Thu, 09 Jul 2026 17:31:38 GMT ] 
+【INFO】-【GENERIC】 | {"hostName":"xx.xxx.xx.xx","nodeName":"node-x-10","serviceName":"dbservice-rs","timeOut":5,"weight":10,"address":"https://xx.xxx.xx.xx:8082","healthCheckPath":"","registeredAt":"7/9/2026, 11:01:38 PM"} | [ Thu, 09 Jul 2026 17:31:38 GMT ] 
+【INFO】-【WEBREQUEST】| 200 | POST | undefined | [ /api/maxine/serviceops/register ] | HTTP/1.1 | 97d9b63ae106c201d1d50876fafb9e7b | [ Thu, 09 Jul 2026 17:31:38 GMT ] 
+【INFO】-【GENERIC】 | "Recovered 3 registry node(s) from persisted state." | [ Thu, 09 Jul 2026 17:31:38 GMT ] 
+【INFO】-【GENERIC】 | "Connected to Redis-backed registry state store." | [ Thu, 09 Jul 2026 17:31:38 GMT ] 
+【INFO】-【GENERIC】 | "Connected to Redis-backed registry state store." | [ Thu, 09 Jul 2026 17:31:38 GMT ] 
+【INFO】-【GENERIC】 | "Connected to Redis-backed registry state store." | [ Thu, 09 Jul 2026 17:31:38 GMT ] 
+【INFO】-【GENERIC】 | "Connected to Redis-backed registry state store." | [ Thu, 09 Jul 2026 17:31:38 GMT ] 
+{"LogLevel":"INFO","LogType":"WEBREQUEST","Timestamp":"09/07/2026 23:01:54","Status":200,"Method":"GET","Endpoint":"/api/actuator/health","HTTPVersion":"1.1","TraceId":"c2670a939c3df2cb12989da73592bc85"}
+{"LogLevel":"INFO","LogType":"WEBREQUEST","Timestamp":"09/07/2026 23:01:54","Status":200,"Method":"GET","Endpoint":"/api/actuator/info","HTTPVersion":"1.1","TraceId":"ca0df781fcb27b9068c822ca72c30b0e"}
+{"LogLevel":"INFO","LogType":"WEBREQUEST","Timestamp":"09/07/2026 23:01:54","Status":200,"Method":"GET","Endpoint":"/api/actuator/metrics","HTTPVersion":"1.1","TraceId":"aa56dd0bd2b88dbce70b2929e3c855c6"}
+{"LogLevel":"ERROR","LogType":"WEBREQUEST","Timestamp":"09/07/2026 23:01:54","Status":404,"Method":"GET","Endpoint":"/api/actuator/performance","HTTPVersion":"1.1","TraceId":"b364c2b730f06a6cc2585e42da8be27b"}
+{"LogLevel":"INFO","LogType":"WEBREQUEST","Timestamp":"09/07/2026 23:01:54","Status":200,"Method":"GET","Endpoint":"/api/actuator/cluster","HTTPVersion":"1.1","TraceId":"635df8203bb8ea326b4961cd0f211d43"}
+{"LogLevel":"INFO","LogType":"WEBREQUEST","Timestamp":"09/07/2026 23:01:54","Status":200,"Method":"GET","Endpoint":"/api/actuator/prometheus","HTTPVersion":"1.1","TraceId":"96e6f3db16dbdc488884437c8228415b"}
+{"LogLevel":"INFO","LogType":"WEBREQUEST","Timestamp":"09/07/2026 23:01:54","Status":200,"Method":"GET","Endpoint":"/api/actuator/traces","HTTPVersion":"1.1","TraceId":"b0e5d23c71916af80a9bed2cd2d12202"}
+{"LogLevel":"INFO","LogType":"WEBREQUEST","Timestamp":"09/07/2026 23:01:54","Status":200,"Method":"GET","Endpoint":"/api/actuator/audit","HTTPVersion":"1.1","TraceId":"6958ffd1221122b23ba1bf2f5a0657b0"}
+{"LogLevel":"INFO","LogType":"WEBREQUEST","Timestamp":"09/07/2026 23:01:55","Status":200,"Method":"POST","ClientIp":"::ffff:127.0.0.1","Endpoint":"/api/maxine/signin","HTTPVersion":"1.1","TraceId":"02ee05dbf00df3e80c53e4c42f6536f5"}
+{"LogLevel":"INFO","LogType":"WEBREQUEST","Timestamp":"09/07/2026 23:01:55","Status":200,"Method":"GET","ClientIp":"::ffff:127.0.0.1","Endpoint":"/api/maxine/control/config","HTTPVersion":"1.1","TraceId":"ccee5dae4b71b2c1e62460e079b8aa48"}
+{"LogLevel":"INFO","LogType":"GENERIC","Timestamp":"09/07/2026 23:01:55","Message":{"hostName":"xx.xxx.xx.xx","nodeName":"node-x-10","serviceName":"dbservice","timeOut":5,"weight":10,"address":"https://xx.xxx.xx.xx:8082","healthCheckPath":"","registeredAt":"7/9/2026, 11:01:55 PM"}}
+{"LogLevel":"INFO","LogType":"WEBREQUEST","Timestamp":"09/07/2026 23:01:55","Status":200,"Method":"POST","ClientIp":"::ffff:127.0.0.1","Endpoint":"/api/maxine/serviceops/register","HTTPVersion":"1.1","TraceId":"64ca7485dac926635e85c1e06b1da93b"}
+{"LogLevel":"INFO","LogType":"GENERIC","Timestamp":"09/07/2026 23:01:55","Message":"Redirecting to https://xx.xxx.xx.xx:8082/health"}
+{"LogLevel":"INFO","LogType":"WEBREQUEST","Timestamp":"09/07/2026 23:01:55","Status":302,"Method":"GET","ClientIp":"::ffff:127.0.0.1","Endpoint":"/api/maxine/serviceops/discover?serviceName=dbservice&endPoint=%2Fhealth","HTTPVersion":"1.1","TraceId":"a94255dfccbd39e0dc788d89976606be"}
+{"LogLevel":"INFO","LogType":"GENERIC","Timestamp":"09/07/2026 23:01:55","Message":"Connected to Redis-backed registry state store."}
+{"LogLevel":"INFO","LogType":"GENERIC","Timestamp":"09/07/2026 23:01:55","Message":"Connected to Redis-backed registry state store."}
+{"LogLevel":"INFO","LogType":"GENERIC","Timestamp":"09/07/2026 23:01:55","Message":"Connected to Redis-backed registry state store."}
+{"LogLevel":"INFO","LogType":"GENERIC","Timestamp":"09/07/2026 23:01:55","Message":"Connected to Redis-backed registry state store."}
+{"LogLevel":"ERROR","LogType":"WEBREQUEST","Timestamp":"09/07/2026 23:01:55","Status":404,"Method":"GET","Endpoint":"/8989","HTTPVersion":"1.1","TraceId":"64213f42304c07bc7f9b0ef7f266a018"}
+{"LogLevel":"INFO","LogType":"WEBREQUEST","Timestamp":"09/07/2026 23:01:55","Status":200,"Method":"GET","Endpoint":"/api/maxine/control/config","HTTPVersion":"1.1","TraceId":"7fdfcbe37920da46c5243cec784b28f5"}
+{"LogLevel":"INFO","LogType":"GENERIC","Timestamp":"09/07/2026 23:01:55","Message":"config alter : {\"logAsync\":\"Success\"}"}
+{"LogLevel":"INFO","LogType":"WEBREQUEST","Timestamp":"09/07/2026 23:01:55","Status":200,"Method":"PUT","Endpoint":"/api/maxine/control/config","HTTPVersion":"1.1","TraceId":"ec75917375273f8d90b82806680ff3f0"}
+{
+  "LogLevel": "INFO",
+  "LogType": "GENERIC",
+  "Timestamp": "09/07/2026 23:01:55",
+  "Message": "config alter : {\"heartBeatTimeout\":\"Success\"}"
+}
+{
+  "LogLevel": "INFO",
+  "LogType": "WEBREQUEST",
+  "Timestamp": "09/07/2026 23:01:55",
+  "Status": 200,
+  "Method": "PUT",
+  "Endpoint": "/api/maxine/control/config",
+  "HTTPVersion": "1.1",
+  "TraceId": "68ef6898b06502d14cd10e237371f923"
+}
+{
+  "LogLevel": "INFO",
+  "LogType": "GENERIC",
+  "Timestamp": "09/07/2026 23:01:55",
+  "Message": "config alter : {\"logJsonPrettify\":\"Success\"}"
+}
+{
+  "LogLevel": "INFO",
+  "LogType": "WEBREQUEST",
+  "Timestamp": "09/07/2026 23:01:55",
+  "Status": 200,
+  "Method": "PUT",
+  "Endpoint": "/api/maxine/control/config",
+  "HTTPVersion": "1.1",
+  "TraceId": "f97aa622b0802fdcd122e2fa58689888"
+}
+{
+  "LogLevel": "INFO",
+  "LogType": "GENERIC",
+  "Timestamp": "09/07/2026 23:01:55",
+  "Message": "config alter : {\"serverSelectionStrategy\":\"Success\"}"
+}
+{
+  "LogLevel": "INFO",
+  "LogType": "WEBREQUEST",
+  "Timestamp": "09/07/2026 23:01:55",
+  "Status": 200,
+  "Method": "PUT",
+  "Endpoint": "/api/maxine/control/config",
+  "HTTPVersion": "1.1",
+  "TraceId": "2aef6c8f381f886ea454f6a8bcd3e4f9"
+}
+{
+  "LogLevel": "INFO",
+  "LogType": "GENERIC",
+  "Timestamp": "09/07/2026 23:01:55",
+  "Message": "config alter : {\"serverSelectionStrategy\":\"Success\"}"
+}
+{
+  "LogLevel": "INFO",
+  "LogType": "WEBREQUEST",
+  "Timestamp": "09/07/2026 23:01:55",
+  "Status": 200,
+  "Method": "PUT",
+  "Endpoint": "/api/maxine/control/config",
+  "HTTPVersion": "1.1",
+  "TraceId": "9c61aecd60816f9478cf0b6ca3765e26"
+}
+{
+  "LogLevel": "INFO",
+  "LogType": "GENERIC",
+  "Timestamp": "09/07/2026 23:01:55",
+  "Message": "config alter : {\"serverSelectionStrategy\":\"Success\"}"
+}
+{
+  "LogLevel": "INFO",
+  "LogType": "WEBREQUEST",
+  "Timestamp": "09/07/2026 23:01:55",
+  "Status": 200,
+  "Method": "PUT",
+  "Endpoint": "/api/maxine/control/config",
+  "HTTPVersion": "1.1",
+  "TraceId": "93623752be9883889f35cb5883f9318a"
+}
+{
+  "LogLevel": "INFO",
+  "LogType": "GENERIC",
+  "Timestamp": "09/07/2026 23:01:55",
+  "Message": "config alter : {\"logFormat\":\"Success\"}"
+}
+{
+  "LogLevel": "INFO",
+  "LogType": "WEBREQUEST",
+  "Timestamp": "09/07/2026 23:01:55",
+  "Status": 200,
+  "Method": "PUT",
+  "Endpoint": "/api/maxine/control/config",
+  "HTTPVersion": "1.1",
+  "TraceId": "67160aefdd5e42f248f735cb38018863"
+}
+【INFO】-【GENERIC】 | "config alter : {\"logFormat\":\"Success\"}" | [ Thu, 09 Jul 2026 17:31:55 GMT ] 
+【INFO】-【WEBREQUEST】| 200 | PUT | undefined | [ /api/maxine/control/config ] | HTTP/1.1 | 577bcf66153c2701fd720d42b6dbc185 | [ Thu, 09 Jul 2026 17:31:55 GMT ] 
+【INFO】-【GENERIC】 | "config alter : {\"discoveryMode\":\"Success\"}" | [ Thu, 09 Jul 2026 17:31:55 GMT ] 
+【INFO】-【WEBREQUEST】| 200 | PUT | undefined | [ /api/maxine/control/config ] | HTTP/1.1 | 996039130f7ca3cb8d49be3ad8657a00 | [ Thu, 09 Jul 2026 17:31:55 GMT ] 
+【INFO】-【WEBREQUEST】| 200 | POST | ::ffff:127.0.0.1 | [ /api/maxine/signin ] | HTTP/1.1 | dda0e1f65bf1e2ccc1c06afac6212dcb | [ Thu, 09 Jul 2026 17:31:55 GMT ] 
+【ERROR】-【GENERIC】 | "Please provide both of these -> userName and password." | [ Thu, 09 Jul 2026 17:31:55 GMT ] 
+【INFO】-【WEBREQUEST】| 400 | POST | ::ffff:127.0.0.1 | [ /api/maxine/signin ] | HTTP/1.1 | 17144d4f432dd13c2b8a0212237ba381 | [ Thu, 09 Jul 2026 17:31:55 GMT ] 
+【INFO】-【WEBREQUEST】| 200 | POST | ::ffff:127.0.0.1 | [ /api/maxine/signin ] | HTTP/1.1 | 679777e4d095eed287dbf3a1f41781d0 | [ Thu, 09 Jul 2026 17:31:55 GMT ] 
+【INFO】-【WEBREQUEST】| 200 | POST | ::ffff:127.0.0.1 | [ /api/maxine/signin ] | HTTP/1.1 | 3fc58dcb5cb839763eeadef9c7210f93 | [ Thu, 09 Jul 2026 17:31:55 GMT ] 
+【INFO】-【WEBREQUEST】| 200 | PUT | undefined | [ /api/maxine/change-password ] | HTTP/1.1 | f5f17149a806705325665a43284200d5 | [ Thu, 09 Jul 2026 17:31:55 GMT ] 
+【INFO】-【WEBREQUEST】| 401 | GET | undefined | [ /api/maxine/control/config ] | HTTP/1.1 | da02ef47ad9fd05e318bc8ba2e7991ea | [ Thu, 09 Jul 2026 17:31:55 GMT ] 
+【INFO】-【WEBREQUEST】| 401 | POST | ::ffff:127.0.0.1 | [ /api/maxine/signin ] | HTTP/1.1 | 01bae6f6c790cda73feafb8969cc82ee | [ Thu, 09 Jul 2026 17:31:55 GMT ] 
+【INFO】-【WEBREQUEST】| 200 | POST | ::ffff:127.0.0.1 | [ /api/maxine/signin ] | HTTP/1.1 | d01959cc21680242f1f02f377e61c9af | [ Thu, 09 Jul 2026 17:31:55 GMT ] 
+【INFO】-【WEBREQUEST】| 200 | PUT | undefined | [ /api/maxine/change-password ] | HTTP/1.1 | a30b68636d83c451fc125360458a8b42 | [ Thu, 09 Jul 2026 17:31:55 GMT ] 
+【INFO】-【GENERIC】 | "Proxying to http://127.0.0.1:54971/hello?via=proxy" | [ Thu, 09 Jul 2026 17:31:55 GMT ] 
+【INFO】-【WEBREQUEST】| 200 | GET | ::ffff:127.0.0.1 | [ /api/maxine/serviceops/proxy/proxy-health-orders/hello?via=proxy ] | HTTP/1.1 | d2a74ce67ddddbc6a0e24ed27c253997 | [ Thu, 09 Jul 2026 17:31:55 GMT ] 
+【ERROR】-【GENERIC】 | "Invalid or missing -> hostName, nodeName, serviceName or weight (Maximum allowed size of weight is 10 (One server can maximum be 10x more powerful than others)" | [ Thu, 09 Jul 2026 17:31:55 GMT ] 
+【INFO】-【WEBREQUEST】| 400 | POST | undefined | [ /api/maxine/serviceops/register ] | HTTP/1.1 | c5753419c16ab79e746208f358c39de7 | [ Thu, 09 Jul 2026 17:31:55 GMT ] 
+【INFO】-【GENERIC】 | {"hostName":"xx.xxx.xx.xx","nodeName":"node-x-10","serviceName":"dbservice-rs","timeOut":5,"weight":10,"address":"https://xx.xxx.xx.xx:8082","healthCheckPath":"","registeredAt":"7/9/2026, 11:01:55 PM"} | [ Thu, 09 Jul 2026 17:31:55 GMT ] 
+【INFO】-【WEBREQUEST】| 200 | POST | undefined | [ /api/maxine/serviceops/register ] | HTTP/1.1 | 27e9bbf090a7000f0b42c01026d5ef80 | [ Thu, 09 Jul 2026 17:31:55 GMT ] 
+【INFO】-【GENERIC】 | "Recovered 3 registry node(s) from persisted state." | [ Thu, 09 Jul 2026 17:31:55 GMT ] 
+【INFO】-【GENERIC】 | "Connected to Redis-backed registry state store." | [ Thu, 09 Jul 2026 17:31:55 GMT ] 
+【INFO】-【GENERIC】 | "Connected to Redis-backed registry state store." | [ Thu, 09 Jul 2026 17:31:55 GMT ] 
+【INFO】-【GENERIC】 | "Connected to Redis-backed registry state store." | [ Thu, 09 Jul 2026 17:31:55 GMT ] 
+【INFO】-【GENERIC】 | "Connected to Redis-backed registry state store." | [ Thu, 09 Jul 2026 17:31:55 GMT ] 
+{"LogLevel":"INFO","LogType":"WEBREQUEST","Timestamp":"09/07/2026 23:02:04","Status":200,"Method":"GET","Endpoint":"/api/actuator/health","HTTPVersion":"1.1","TraceId":"cc7639f6120a01f0189ebee21230aa42"}
+{"LogLevel":"INFO","LogType":"WEBREQUEST","Timestamp":"09/07/2026 23:02:04","Status":200,"Method":"GET","Endpoint":"/api/actuator/info","HTTPVersion":"1.1","TraceId":"d91a9eafa6da292210185635c368f0a4"}
+{"LogLevel":"INFO","LogType":"WEBREQUEST","Timestamp":"09/07/2026 23:02:04","Status":200,"Method":"GET","Endpoint":"/api/actuator/metrics","HTTPVersion":"1.1","TraceId":"c2f435c502fbb493398307ff466b5aa3"}
+{"LogLevel":"ERROR","LogType":"WEBREQUEST","Timestamp":"09/07/2026 23:02:04","Status":404,"Method":"GET","Endpoint":"/api/actuator/performance","HTTPVersion":"1.1","TraceId":"17bcc4e235411564fb26d744358234c2"}
+{"LogLevel":"INFO","LogType":"WEBREQUEST","Timestamp":"09/07/2026 23:02:04","Status":200,"Method":"GET","Endpoint":"/api/actuator/cluster","HTTPVersion":"1.1","TraceId":"155ebc10055056f8215d48157a9a4491"}
+{"LogLevel":"INFO","LogType":"WEBREQUEST","Timestamp":"09/07/2026 23:02:04","Status":200,"Method":"GET","Endpoint":"/api/actuator/prometheus","HTTPVersion":"1.1","TraceId":"d8426d19754eca3460c3596130d5a6ee"}
+{"LogLevel":"INFO","LogType":"WEBREQUEST","Timestamp":"09/07/2026 23:02:04","Status":200,"Method":"GET","Endpoint":"/api/actuator/traces","HTTPVersion":"1.1","TraceId":"612fa236472c353d831f79d6acc74e3c"}
+{"LogLevel":"INFO","LogType":"WEBREQUEST","Timestamp":"09/07/2026 23:02:04","Status":200,"Method":"GET","Endpoint":"/api/actuator/audit","HTTPVersion":"1.1","TraceId":"c001e2109cb3ee06bb8762244b4eff76"}
+{"LogLevel":"INFO","LogType":"WEBREQUEST","Timestamp":"09/07/2026 23:02:04","Status":200,"Method":"POST","ClientIp":"::ffff:127.0.0.1","Endpoint":"/api/maxine/signin","HTTPVersion":"1.1","TraceId":"ebd8a039b3a4e8b8d73000c0fc902f4d"}
+{"LogLevel":"INFO","LogType":"WEBREQUEST","Timestamp":"09/07/2026 23:02:04","Status":200,"Method":"GET","ClientIp":"::ffff:127.0.0.1","Endpoint":"/api/maxine/control/config","HTTPVersion":"1.1","TraceId":"5130c25a014bd52c5c32aff5f51959b6"}
+{"LogLevel":"INFO","LogType":"GENERIC","Timestamp":"09/07/2026 23:02:04","Message":{"hostName":"xx.xxx.xx.xx","nodeName":"node-x-10","serviceName":"dbservice","timeOut":5,"weight":10,"address":"https://xx.xxx.xx.xx:8082","healthCheckPath":"","registeredAt":"7/9/2026, 11:02:04 PM"}}
+{"LogLevel":"INFO","LogType":"WEBREQUEST","Timestamp":"09/07/2026 23:02:04","Status":200,"Method":"POST","ClientIp":"::ffff:127.0.0.1","Endpoint":"/api/maxine/serviceops/register","HTTPVersion":"1.1","TraceId":"17a85f6350a45d51d3576d3ac1d484fe"}
+{"LogLevel":"INFO","LogType":"GENERIC","Timestamp":"09/07/2026 23:02:04","Message":"Redirecting to https://xx.xxx.xx.xx:8082/health"}
+{"LogLevel":"INFO","LogType":"WEBREQUEST","Timestamp":"09/07/2026 23:02:04","Status":302,"Method":"GET","ClientIp":"::ffff:127.0.0.1","Endpoint":"/api/maxine/serviceops/discover?serviceName=dbservice&endPoint=%2Fhealth","HTTPVersion":"1.1","TraceId":"eaef4a67de5ed63e2dcc5689c040abe2"}
+{"LogLevel":"INFO","LogType":"GENERIC","Timestamp":"09/07/2026 23:02:04","Message":"Connected to Redis-backed registry state store."}
+{"LogLevel":"INFO","LogType":"GENERIC","Timestamp":"09/07/2026 23:02:04","Message":"Connected to Redis-backed registry state store."}
+{"LogLevel":"INFO","LogType":"GENERIC","Timestamp":"09/07/2026 23:02:04","Message":"Connected to Redis-backed registry state store."}
+{"LogLevel":"INFO","LogType":"GENERIC","Timestamp":"09/07/2026 23:02:04","Message":"Connected to Redis-backed registry state store."}
+{"LogLevel":"ERROR","LogType":"WEBREQUEST","Timestamp":"09/07/2026 23:02:04","Status":404,"Method":"GET","Endpoint":"/8989","HTTPVersion":"1.1","TraceId":"6a5ed57160cc4dca90bf412765a3e4e7"}
+{"LogLevel":"INFO","LogType":"WEBREQUEST","Timestamp":"09/07/2026 23:02:04","Status":200,"Method":"GET","Endpoint":"/api/maxine/control/config","HTTPVersion":"1.1","TraceId":"05a5c12ba5224f2077c422f4b83b45a5"}
+{"LogLevel":"INFO","LogType":"GENERIC","Timestamp":"09/07/2026 23:02:04","Message":"config alter : {\"logAsync\":\"Success\"}"}
+{"LogLevel":"INFO","LogType":"WEBREQUEST","Timestamp":"09/07/2026 23:02:04","Status":200,"Method":"PUT","Endpoint":"/api/maxine/control/config","HTTPVersion":"1.1","TraceId":"ff183283246ad7dc043cf04efc8f8b72"}
+{"LogLevel":"INFO","LogType":"GENERIC","Timestamp":"09/07/2026 23:02:04","Message":"config alter : {\"heartBeatTimeout\":\"Success\"}"}
+{"LogLevel":"INFO","LogType":"WEBREQUEST","Timestamp":"09/07/2026 23:02:04","Status":200,"Method":"PUT","Endpoint":"/api/maxine/control/config","HTTPVersion":"1.1","TraceId":"71014b5a7abf2cb7771f7117ffb8a579"}
+{
+  "LogLevel": "INFO",
+  "LogType": "GENERIC",
+  "Timestamp": "09/07/2026 23:02:04",
+  "Message": "config alter : {\"logJsonPrettify\":\"Success\"}"
+}
+{
+  "LogLevel": "INFO",
+  "LogType": "WEBREQUEST",
+  "Timestamp": "09/07/2026 23:02:04",
+  "Status": 200,
+  "Method": "PUT",
+  "Endpoint": "/api/maxine/control/config",
+  "HTTPVersion": "1.1",
+  "TraceId": "a90b3dfccbbd90357bc826824ef15b45"
+}
+{
+  "LogLevel": "INFO",
+  "LogType": "GENERIC",
+  "Timestamp": "09/07/2026 23:02:04",
+  "Message": "config alter : {\"serverSelectionStrategy\":\"Success\"}"
+}
+{
+  "LogLevel": "INFO",
+  "LogType": "WEBREQUEST",
+  "Timestamp": "09/07/2026 23:02:04",
+  "Status": 200,
+  "Method": "PUT",
+  "Endpoint": "/api/maxine/control/config",
+  "HTTPVersion": "1.1",
+  "TraceId": "71af48e48bdeaa2ad3a1e6281b04ca37"
+}
+{
+  "LogLevel": "INFO",
+  "LogType": "GENERIC",
+  "Timestamp": "09/07/2026 23:02:04",
+  "Message": "config alter : {\"serverSelectionStrategy\":\"Success\"}"
+}
+{
+  "LogLevel": "INFO",
+  "LogType": "WEBREQUEST",
+  "Timestamp": "09/07/2026 23:02:04",
+  "Status": 200,
+  "Method": "PUT",
+  "Endpoint": "/api/maxine/control/config",
+  "HTTPVersion": "1.1",
+  "TraceId": "85155b5783cdffbec95950bb4867bb64"
+}
+{
+  "LogLevel": "INFO",
+  "LogType": "GENERIC",
+  "Timestamp": "09/07/2026 23:02:04",
+  "Message": "config alter : {\"serverSelectionStrategy\":\"Success\"}"
+}
+{
+  "LogLevel": "INFO",
+  "LogType": "WEBREQUEST",
+  "Timestamp": "09/07/2026 23:02:04",
+  "Status": 200,
+  "Method": "PUT",
+  "Endpoint": "/api/maxine/control/config",
+  "HTTPVersion": "1.1",
+  "TraceId": "468921374490a695a25dc3196fe602ba"
+}
+{
+  "LogLevel": "INFO",
+  "LogType": "GENERIC",
+  "Timestamp": "09/07/2026 23:02:04",
+  "Message": "config alter : {\"logFormat\":\"Success\"}"
+}
+{
+  "LogLevel": "INFO",
+  "LogType": "WEBREQUEST",
+  "Timestamp": "09/07/2026 23:02:04",
+  "Status": 200,
+  "Method": "PUT",
+  "Endpoint": "/api/maxine/control/config",
+  "HTTPVersion": "1.1",
+  "TraceId": "56f6da3aa1a09aec86b7ab918126087c"
+}
+【INFO】-【GENERIC】 | "config alter : {\"logFormat\":\"Success\"}" | [ Thu, 09 Jul 2026 17:32:04 GMT ] 
+【INFO】-【WEBREQUEST】| 200 | PUT | undefined | [ /api/maxine/control/config ] | HTTP/1.1 | 4ae53b229600bcc1d555f25aa4a85568 | [ Thu, 09 Jul 2026 17:32:04 GMT ] 
+【INFO】-【GENERIC】 | "config alter : {\"discoveryMode\":\"Success\"}" | [ Thu, 09 Jul 2026 17:32:05 GMT ] 
+【INFO】-【WEBREQUEST】| 200 | PUT | undefined | [ /api/maxine/control/config ] | HTTP/1.1 | d6f8fca68e1c9646a5e41e0889060d45 | [ Thu, 09 Jul 2026 17:32:05 GMT ] 
+【INFO】-【WEBREQUEST】| 200 | POST | ::ffff:127.0.0.1 | [ /api/maxine/signin ] | HTTP/1.1 | 09ea7ca5c25a38773ea6efda26d252ae | [ Thu, 09 Jul 2026 17:32:05 GMT ] 
+【ERROR】-【GENERIC】 | "Please provide both of these -> userName and password." | [ Thu, 09 Jul 2026 17:32:05 GMT ] 
+【INFO】-【WEBREQUEST】| 400 | POST | ::ffff:127.0.0.1 | [ /api/maxine/signin ] | HTTP/1.1 | 373c3d0ebf9360de8c59d31003cb02cc | [ Thu, 09 Jul 2026 17:32:05 GMT ] 
+【INFO】-【WEBREQUEST】| 200 | POST | ::ffff:127.0.0.1 | [ /api/maxine/signin ] | HTTP/1.1 | 8b1753c4548acd9c6db12f5207ef210d | [ Thu, 09 Jul 2026 17:32:05 GMT ] 
+【INFO】-【WEBREQUEST】| 200 | POST | ::ffff:127.0.0.1 | [ /api/maxine/signin ] | HTTP/1.1 | 425d5265eb7d6035b8faa197b82b496c | [ Thu, 09 Jul 2026 17:32:05 GMT ] 
+【INFO】-【WEBREQUEST】| 200 | PUT | undefined | [ /api/maxine/change-password ] | HTTP/1.1 | b4320e792c309a17173bf6199f488a81 | [ Thu, 09 Jul 2026 17:32:05 GMT ] 
+【INFO】-【WEBREQUEST】| 401 | GET | undefined | [ /api/maxine/control/config ] | HTTP/1.1 | ae5534f81cf291cc445cf010be051ca9 | [ Thu, 09 Jul 2026 17:32:05 GMT ] 
+【INFO】-【WEBREQUEST】| 401 | POST | ::ffff:127.0.0.1 | [ /api/maxine/signin ] | HTTP/1.1 | 03d62517df019643eb49ce8e6c10998c | [ Thu, 09 Jul 2026 17:32:05 GMT ] 
+【INFO】-【WEBREQUEST】| 200 | POST | ::ffff:127.0.0.1 | [ /api/maxine/signin ] | HTTP/1.1 | 98ae2795e3b947a06afbcd98d287f5cd | [ Thu, 09 Jul 2026 17:32:05 GMT ] 
+【INFO】-【WEBREQUEST】| 200 | PUT | undefined | [ /api/maxine/change-password ] | HTTP/1.1 | 4c235c6b592e3edc1ca4572ad97adcc5 | [ Thu, 09 Jul 2026 17:32:05 GMT ] 
+【INFO】-【GENERIC】 | "Proxying to http://127.0.0.1:55041/retry-endpoint" | [ Thu, 09 Jul 2026 17:32:05 GMT ] 
+【INFO】-【WEBREQUEST】| 200 | GET | ::ffff:127.0.0.1 | [ /api/maxine/serviceops/proxy/retry-service/retry-endpoint ] | HTTP/1.1 | 8d8dfc8697d31b881e34829a0359906d | [ Thu, 09 Jul 2026 17:32:05 GMT ] 
+【INFO】-【GENERIC】 | "Proxying to http://127.0.0.1:55041/retry-endpoint" | [ Thu, 09 Jul 2026 17:32:05 GMT ] 
+【ERROR】-【WEBREQUEST】| 500 | GET | ::ffff:127.0.0.1 | [ /api/maxine/serviceops/proxy/cb-service/retry-endpoint ] | HTTP/1.1 | 2305ce587cc61138fe4e483b20eadf56 | [ Thu, 09 Jul 2026 17:32:05 GMT ] 
+【INFO】-【GENERIC】 | "Proxying to http://127.0.0.1:55041/retry-endpoint" | [ Thu, 09 Jul 2026 17:32:05 GMT ] 
+【ERROR】-【WEBREQUEST】| 500 | GET | ::ffff:127.0.0.1 | [ /api/maxine/serviceops/proxy/cb-service/retry-endpoint ] | HTTP/1.1 | 0a490a1b1d06b5486340b896f1633d07 | [ Thu, 09 Jul 2026 17:32:05 GMT ] 
+【ERROR】-【WEBREQUEST-Exception】| 500 | GET | ::ffff:127.0.0.1 | [ /api/maxine/serviceops/proxy/cb-service/retry-endpoint ] | HTTP/1.1 | 07662f6480addbab7ae5c4126c1fb67e | | "Error: Circuit breaker is OPEN for node: http://127.0.0.1:55041" | [ Thu, 09 Jul 2026 17:32:05 GMT ] 
+【ERROR】-【WEBREQUEST】| 500 | GET | ::ffff:127.0.0.1 | [ /api/maxine/serviceops/proxy/cb-service/retry-endpoint ] | HTTP/1.1 | 07662f6480addbab7ae5c4126c1fb67e | [ Thu, 09 Jul 2026 17:32:05 GMT ] 
+【INFO】-【GENERIC】 | "Proxying to http://127.0.0.1:55053/hello?via=proxy" | [ Thu, 09 Jul 2026 17:32:05 GMT ] 
+【INFO】-【WEBREQUEST】| 200 | GET | ::ffff:127.0.0.1 | [ /api/maxine/serviceops/proxy/proxy-health-orders/hello?via=proxy ] | HTTP/1.1 | bcb9d5bfe591027caee95db6b2931453 | [ Thu, 09 Jul 2026 17:32:05 GMT ] 
+【ERROR】-【GENERIC】 | "Invalid or missing -> hostName, nodeName, serviceName or weight (Maximum allowed size of weight is 10 (One server can maximum be 10x more powerful than others)" | [ Thu, 09 Jul 2026 17:32:05 GMT ] 
+【INFO】-【WEBREQUEST】| 400 | POST | undefined | [ /api/maxine/serviceops/register ] | HTTP/1.1 | 34269bfa60ea65c11cf3483b3cbff09f | [ Thu, 09 Jul 2026 17:32:05 GMT ] 
+【INFO】-【GENERIC】 | {"hostName":"xx.xxx.xx.xx","nodeName":"node-x-10","serviceName":"dbservice-rs","timeOut":5,"weight":10,"address":"https://xx.xxx.xx.xx:8082","healthCheckPath":"","registeredAt":"7/9/2026, 11:02:05 PM"} | [ Thu, 09 Jul 2026 17:32:05 GMT ] 
+【INFO】-【WEBREQUEST】| 200 | POST | undefined | [ /api/maxine/serviceops/register ] | HTTP/1.1 | c40fa0a2c501cc1b7048f2afe1a0e95d | [ Thu, 09 Jul 2026 17:32:05 GMT ] 
+【INFO】-【GENERIC】 | "Recovered 3 registry node(s) from persisted state." | [ Thu, 09 Jul 2026 17:32:05 GMT ] 
+【INFO】-【GENERIC】 | "Connected to Redis-backed registry state store." | [ Thu, 09 Jul 2026 17:32:05 GMT ] 
+【INFO】-【GENERIC】 | "Connected to Redis-backed registry state store." | [ Thu, 09 Jul 2026 17:32:05 GMT ] 
+【INFO】-【GENERIC】 | "Connected to Redis-backed registry state store." | [ Thu, 09 Jul 2026 17:32:05 GMT ] 
+【INFO】-【GENERIC】 | "Connected to Redis-backed registry state store." | [ Thu, 09 Jul 2026 17:32:05 GMT ] 
+{"LogLevel":"INFO","LogType":"WEBREQUEST","Timestamp":"09/07/2026 23:02:17","Status":200,"Method":"GET","Endpoint":"/api/actuator/health","HTTPVersion":"1.1","TraceId":"2b87bd5c415a3b5fb096494d1e0a425d"}
+{"LogLevel":"INFO","LogType":"WEBREQUEST","Timestamp":"09/07/2026 23:02:17","Status":200,"Method":"GET","Endpoint":"/api/actuator/info","HTTPVersion":"1.1","TraceId":"d25f05feed5db72c65972d1a1dcc00dd"}
+{"LogLevel":"INFO","LogType":"WEBREQUEST","Timestamp":"09/07/2026 23:02:17","Status":200,"Method":"GET","Endpoint":"/api/actuator/metrics","HTTPVersion":"1.1","TraceId":"0d24b16bf542aa17c04c687f5822f88f"}
+{"LogLevel":"ERROR","LogType":"WEBREQUEST","Timestamp":"09/07/2026 23:02:17","Status":404,"Method":"GET","Endpoint":"/api/actuator/performance","HTTPVersion":"1.1","TraceId":"194782e16a8907fa2982f7bb772dec91"}
+{"LogLevel":"INFO","LogType":"WEBREQUEST","Timestamp":"09/07/2026 23:02:17","Status":200,"Method":"GET","Endpoint":"/api/actuator/cluster","HTTPVersion":"1.1","TraceId":"aaef71ab4ebd9780e99145317b61d9f3"}
+{"LogLevel":"INFO","LogType":"WEBREQUEST","Timestamp":"09/07/2026 23:02:17","Status":200,"Method":"GET","Endpoint":"/api/actuator/prometheus","HTTPVersion":"1.1","TraceId":"f46704f80d29d7ca6abd074951e4041b"}
+{"LogLevel":"INFO","LogType":"WEBREQUEST","Timestamp":"09/07/2026 23:02:17","Status":200,"Method":"GET","Endpoint":"/api/actuator/traces","HTTPVersion":"1.1","TraceId":"2509ae47c80eaf22a7d59926148dc9a9"}
+{"LogLevel":"INFO","LogType":"WEBREQUEST","Timestamp":"09/07/2026 23:02:17","Status":200,"Method":"GET","Endpoint":"/api/actuator/audit","HTTPVersion":"1.1","TraceId":"dc6336c9c6d56d9e4328fb40becdd426"}
+{"LogLevel":"INFO","LogType":"WEBREQUEST","Timestamp":"09/07/2026 23:02:18","Status":200,"Method":"POST","ClientIp":"::ffff:127.0.0.1","Endpoint":"/api/maxine/signin","HTTPVersion":"1.1","TraceId":"808254d5a1c72325141749182252e2b8"}
+{"LogLevel":"INFO","LogType":"WEBREQUEST","Timestamp":"09/07/2026 23:02:18","Status":200,"Method":"GET","ClientIp":"::ffff:127.0.0.1","Endpoint":"/api/maxine/control/config","HTTPVersion":"1.1","TraceId":"39b07aa379c51d34a1e1e06ff321d74c"}
+{"LogLevel":"INFO","LogType":"GENERIC","Timestamp":"09/07/2026 23:02:18","Message":{"hostName":"xx.xxx.xx.xx","nodeName":"node-x-10","serviceName":"dbservice","timeOut":5,"weight":10,"address":"https://xx.xxx.xx.xx:8082","healthCheckPath":"","registeredAt":"7/9/2026, 11:02:18 PM"}}
+{"LogLevel":"INFO","LogType":"WEBREQUEST","Timestamp":"09/07/2026 23:02:18","Status":200,"Method":"POST","ClientIp":"::ffff:127.0.0.1","Endpoint":"/api/maxine/serviceops/register","HTTPVersion":"1.1","TraceId":"5a6252caa656593e4bd6a9cde45fcbbd"}
+{"LogLevel":"INFO","LogType":"GENERIC","Timestamp":"09/07/2026 23:02:18","Message":"Redirecting to https://xx.xxx.xx.xx:8082/health"}
+{"LogLevel":"INFO","LogType":"WEBREQUEST","Timestamp":"09/07/2026 23:02:18","Status":302,"Method":"GET","ClientIp":"::ffff:127.0.0.1","Endpoint":"/api/maxine/serviceops/discover?serviceName=dbservice&endPoint=%2Fhealth","HTTPVersion":"1.1","TraceId":"e49b0475afc05c7ea71c8e4af84136db"}
+{"LogLevel":"INFO","LogType":"GENERIC","Timestamp":"09/07/2026 23:02:18","Message":"Connected to Redis-backed registry state store."}
+{"LogLevel":"INFO","LogType":"GENERIC","Timestamp":"09/07/2026 23:02:18","Message":"Connected to Redis-backed registry state store."}
+{"LogLevel":"INFO","LogType":"GENERIC","Timestamp":"09/07/2026 23:02:18","Message":"Connected to Redis-backed registry state store."}
+{"LogLevel":"INFO","LogType":"GENERIC","Timestamp":"09/07/2026 23:02:18","Message":"Connected to Redis-backed registry state store."}
+{"LogLevel":"ERROR","LogType":"WEBREQUEST","Timestamp":"09/07/2026 23:02:18","Status":404,"Method":"GET","Endpoint":"/8989","HTTPVersion":"1.1","TraceId":"ea553f9db3ebca1e0bf1bea8af8bceb7"}
+{"LogLevel":"INFO","LogType":"WEBREQUEST","Timestamp":"09/07/2026 23:02:18","Status":200,"Method":"GET","Endpoint":"/api/maxine/control/config","HTTPVersion":"1.1","TraceId":"307404d60300834b5be585bdd90ace49"}
+{"LogLevel":"INFO","LogType":"GENERIC","Timestamp":"09/07/2026 23:02:18","Message":"config alter : {\"logAsync\":\"Success\"}"}
+{"LogLevel":"INFO","LogType":"WEBREQUEST","Timestamp":"09/07/2026 23:02:18","Status":200,"Method":"PUT","Endpoint":"/api/maxine/control/config","HTTPVersion":"1.1","TraceId":"e39992b8b402725598348d3a8134cb61"}
+{"LogLevel":"INFO","LogType":"GENERIC","Timestamp":"09/07/2026 23:02:18","Message":"config alter : {\"heartBeatTimeout\":\"Success\"}"}
+{"LogLevel":"INFO","LogType":"WEBREQUEST","Timestamp":"09/07/2026 23:02:18","Status":200,"Method":"PUT","Endpoint":"/api/maxine/control/config","HTTPVersion":"1.1","TraceId":"ceb9ffac90339dde921cbe52accede92"}
+{
+  "LogLevel": "INFO",
+  "LogType": "GENERIC",
+  "Timestamp": "09/07/2026 23:02:18",
+  "Message": "config alter : {\"logJsonPrettify\":\"Success\"}"
+}
+{
+  "LogLevel": "INFO",
+  "LogType": "WEBREQUEST",
+  "Timestamp": "09/07/2026 23:02:18",
+  "Status": 200,
+  "Method": "PUT",
+  "Endpoint": "/api/maxine/control/config",
+  "HTTPVersion": "1.1",
+  "TraceId": "e4fcf2712186ec1e3a285bfcec760c1a"
+}
+{
+  "LogLevel": "INFO",
+  "LogType": "GENERIC",
+  "Timestamp": "09/07/2026 23:02:18",
+  "Message": "config alter : {\"serverSelectionStrategy\":\"Success\"}"
+}
+{
+  "LogLevel": "INFO",
+  "LogType": "WEBREQUEST",
+  "Timestamp": "09/07/2026 23:02:18",
+  "Status": 200,
+  "Method": "PUT",
+  "Endpoint": "/api/maxine/control/config",
+  "HTTPVersion": "1.1",
+  "TraceId": "64bccca48db8f0bade9b28cd53c00661"
+}
+{
+  "LogLevel": "INFO",
+  "LogType": "GENERIC",
+  "Timestamp": "09/07/2026 23:02:18",
+  "Message": "config alter : {\"serverSelectionStrategy\":\"Success\"}"
+}
+{
+  "LogLevel": "INFO",
+  "LogType": "WEBREQUEST",
+  "Timestamp": "09/07/2026 23:02:18",
+  "Status": 200,
+  "Method": "PUT",
+  "Endpoint": "/api/maxine/control/config",
+  "HTTPVersion": "1.1",
+  "TraceId": "2ef9a131dd103836bd1fdedeb1054374"
+}
+{
+  "LogLevel": "INFO",
+  "LogType": "GENERIC",
+  "Timestamp": "09/07/2026 23:02:18",
+  "Message": "config alter : {\"serverSelectionStrategy\":\"Success\"}"
+}
+{
+  "LogLevel": "INFO",
+  "LogType": "WEBREQUEST",
+  "Timestamp": "09/07/2026 23:02:18",
+  "Status": 200,
+  "Method": "PUT",
+  "Endpoint": "/api/maxine/control/config",
+  "HTTPVersion": "1.1",
+  "TraceId": "1397f2a9d2a0a7872f5b300dfb11c758"
+}
+{
+  "LogLevel": "INFO",
+  "LogType": "GENERIC",
+  "Timestamp": "09/07/2026 23:02:18",
+  "Message": "config alter : {\"logFormat\":\"Success\"}"
+}
+{
+  "LogLevel": "INFO",
+  "LogType": "WEBREQUEST",
+  "Timestamp": "09/07/2026 23:02:18",
+  "Status": 200,
+  "Method": "PUT",
+  "Endpoint": "/api/maxine/control/config",
+  "HTTPVersion": "1.1",
+  "TraceId": "96c4468ebee89ec9adf95207199b7bdd"
+}
+【INFO】-【GENERIC】 | "config alter : {\"logFormat\":\"Success\"}" | [ Thu, 09 Jul 2026 17:32:18 GMT ] 
+【INFO】-【WEBREQUEST】| 200 | PUT | undefined | [ /api/maxine/control/config ] | HTTP/1.1 | 82c0840957f48ecf20bdbdae7754e764 | [ Thu, 09 Jul 2026 17:32:18 GMT ] 
+【INFO】-【GENERIC】 | "config alter : {\"discoveryMode\":\"Success\"}" | [ Thu, 09 Jul 2026 17:32:18 GMT ] 
+【INFO】-【WEBREQUEST】| 200 | PUT | undefined | [ /api/maxine/control/config ] | HTTP/1.1 | bdef0212b4197733969d5e62cea68641 | [ Thu, 09 Jul 2026 17:32:18 GMT ] 
+【INFO】-【WEBREQUEST】| 200 | POST | ::ffff:127.0.0.1 | [ /api/maxine/signin ] | HTTP/1.1 | fb9e17ef411bd8fbc26289c00ffa477e | [ Thu, 09 Jul 2026 17:32:18 GMT ] 
+【ERROR】-【GENERIC】 | "Please provide both of these -> userName and password." | [ Thu, 09 Jul 2026 17:32:18 GMT ] 
+【INFO】-【WEBREQUEST】| 400 | POST | ::ffff:127.0.0.1 | [ /api/maxine/signin ] | HTTP/1.1 | a0282d768e377450349afa99b670c41c | [ Thu, 09 Jul 2026 17:32:18 GMT ] 
+【INFO】-【WEBREQUEST】| 200 | POST | ::ffff:127.0.0.1 | [ /api/maxine/signin ] | HTTP/1.1 | 3beb177a7862e97bf130bced00f2d2e0 | [ Thu, 09 Jul 2026 17:32:18 GMT ] 
+【INFO】-【WEBREQUEST】| 200 | POST | ::ffff:127.0.0.1 | [ /api/maxine/signin ] | HTTP/1.1 | 538cc4a64216468f4ac315d1b6fcb61e | [ Thu, 09 Jul 2026 17:32:18 GMT ] 
+【INFO】-【WEBREQUEST】| 200 | PUT | undefined | [ /api/maxine/change-password ] | HTTP/1.1 | bed7f2f43f90fb050ff9f85f7f1a9bbb | [ Thu, 09 Jul 2026 17:32:18 GMT ] 
+【INFO】-【WEBREQUEST】| 401 | GET | undefined | [ /api/maxine/control/config ] | HTTP/1.1 | 99c65bb9ba835b563860d2ba9dadc172 | [ Thu, 09 Jul 2026 17:32:18 GMT ] 
+【INFO】-【WEBREQUEST】| 401 | POST | ::ffff:127.0.0.1 | [ /api/maxine/signin ] | HTTP/1.1 | d07f47349e80a5199e8a3b2b2e2513e7 | [ Thu, 09 Jul 2026 17:32:18 GMT ] 
+【INFO】-【WEBREQUEST】| 200 | POST | ::ffff:127.0.0.1 | [ /api/maxine/signin ] | HTTP/1.1 | be2088429f677533f5ff05c82f328028 | [ Thu, 09 Jul 2026 17:32:18 GMT ] 
+【INFO】-【WEBREQUEST】| 200 | PUT | undefined | [ /api/maxine/change-password ] | HTTP/1.1 | d1837396308fec1a7512574aea6bb100 | [ Thu, 09 Jul 2026 17:32:18 GMT ] 
+【INFO】-【GENERIC】 | "Proxying to http://127.0.0.1:55153/retry-endpoint" | [ Thu, 09 Jul 2026 17:32:18 GMT ] 
+【INFO】-【WEBREQUEST】| 200 | GET | ::ffff:127.0.0.1 | [ /api/maxine/serviceops/proxy/retry-service/retry-endpoint ] | HTTP/1.1 | cfe9db569cfeaf12bb0a89f5cd1a0412 | [ Thu, 09 Jul 2026 17:32:18 GMT ] 
+【INFO】-【GENERIC】 | "Proxying to http://127.0.0.1:55153/retry-endpoint" | [ Thu, 09 Jul 2026 17:32:18 GMT ] 
+【ERROR】-【WEBREQUEST】| 500 | GET | ::ffff:127.0.0.1 | [ /api/maxine/serviceops/proxy/cb-service/retry-endpoint ] | HTTP/1.1 | ae58cce0b23cff10cf9e549f89f87eb2 | [ Thu, 09 Jul 2026 17:32:18 GMT ] 
+【INFO】-【GENERIC】 | "Proxying to http://127.0.0.1:55153/retry-endpoint" | [ Thu, 09 Jul 2026 17:32:18 GMT ] 
+【ERROR】-【WEBREQUEST】| 500 | GET | ::ffff:127.0.0.1 | [ /api/maxine/serviceops/proxy/cb-service/retry-endpoint ] | HTTP/1.1 | 088364ebacf2a05046050d5bfc2dda2c | [ Thu, 09 Jul 2026 17:32:18 GMT ] 
+【INFO】-【GENERIC】 | "Proxying to http://127.0.0.1:55153/retry-endpoint" | [ Thu, 09 Jul 2026 17:32:18 GMT ] 
+【ERROR】-【WEBREQUEST】| 503 | GET | ::ffff:127.0.0.1 | [ /api/maxine/serviceops/proxy/cb-service/retry-endpoint ] | HTTP/1.1 | 816fd62f0b9896a485480e73fe3d80c4 | [ Thu, 09 Jul 2026 17:32:18 GMT ] 
+【INFO】-【GENERIC】 | "Proxying to http://127.0.0.1:55165/hello?via=proxy" | [ Thu, 09 Jul 2026 17:32:18 GMT ] 
+【INFO】-【WEBREQUEST】| 200 | GET | ::ffff:127.0.0.1 | [ /api/maxine/serviceops/proxy/proxy-health-orders/hello?via=proxy ] | HTTP/1.1 | 87b0585ea013531471b1385078a97fe5 | [ Thu, 09 Jul 2026 17:32:18 GMT ] 
+【ERROR】-【GENERIC】 | "Invalid or missing -> hostName, nodeName, serviceName or weight (Maximum allowed size of weight is 10 (One server can maximum be 10x more powerful than others)" | [ Thu, 09 Jul 2026 17:32:18 GMT ] 
+【INFO】-【WEBREQUEST】| 400 | POST | undefined | [ /api/maxine/serviceops/register ] | HTTP/1.1 | a5d876c7ba6e1ef6a090a1e30dcd5e8a | [ Thu, 09 Jul 2026 17:32:18 GMT ] 
+【INFO】-【GENERIC】 | {"hostName":"xx.xxx.xx.xx","nodeName":"node-x-10","serviceName":"dbservice-rs","timeOut":5,"weight":10,"address":"https://xx.xxx.xx.xx:8082","healthCheckPath":"","registeredAt":"7/9/2026, 11:02:18 PM"} | [ Thu, 09 Jul 2026 17:32:18 GMT ] 
+【INFO】-【WEBREQUEST】| 200 | POST | undefined | [ /api/maxine/serviceops/register ] | HTTP/1.1 | f36de2ad17893195e343915962558195 | [ Thu, 09 Jul 2026 17:32:18 GMT ] 
+【INFO】-【GENERIC】 | "Recovered 3 registry node(s) from persisted state." | [ Thu, 09 Jul 2026 17:32:18 GMT ] 
+【INFO】-【GENERIC】 | "Connected to Redis-backed registry state store." | [ Thu, 09 Jul 2026 17:32:18 GMT ] 
+【INFO】-【GENERIC】 | "Connected to Redis-backed registry state store." | [ Thu, 09 Jul 2026 17:32:18 GMT ] 
+【INFO】-【GENERIC】 | "Connected to Redis-backed registry state store." | [ Thu, 09 Jul 2026 17:32:18 GMT ] 
+【INFO】-【GENERIC】 | "Connected to Redis-backed registry state store." | [ Thu, 09 Jul 2026 17:32:18 GMT ] 
+{"LogLevel":"INFO","LogType":"WEBREQUEST","Timestamp":"09/07/2026 23:03:40","Status":200,"Method":"GET","Endpoint":"/api/actuator/health","HTTPVersion":"1.1","TraceId":"2202b54d630f19183f4453e8f11ae197"}
+{"LogLevel":"INFO","LogType":"WEBREQUEST","Timestamp":"09/07/2026 23:03:40","Status":200,"Method":"GET","Endpoint":"/api/actuator/info","HTTPVersion":"1.1","TraceId":"621ee5f940eb8f7d39238fdb35d50435"}
+{"LogLevel":"INFO","LogType":"WEBREQUEST","Timestamp":"09/07/2026 23:03:40","Status":200,"Method":"GET","Endpoint":"/api/actuator/metrics","HTTPVersion":"1.1","TraceId":"47d8d01eae7b345f9f71eff9345da48b"}
+{"LogLevel":"ERROR","LogType":"WEBREQUEST","Timestamp":"09/07/2026 23:03:40","Status":404,"Method":"GET","Endpoint":"/api/actuator/performance","HTTPVersion":"1.1","TraceId":"8912d3692366db4ba5f333ec334c419a"}
+{"LogLevel":"INFO","LogType":"WEBREQUEST","Timestamp":"09/07/2026 23:03:40","Status":200,"Method":"GET","Endpoint":"/api/actuator/cluster","HTTPVersion":"1.1","TraceId":"84b86b6f62fec7198fab9f2af4699a96"}
+{"LogLevel":"INFO","LogType":"WEBREQUEST","Timestamp":"09/07/2026 23:03:40","Status":200,"Method":"GET","Endpoint":"/api/actuator/prometheus","HTTPVersion":"1.1","TraceId":"1297afffdfd4d97f084d7c6ed6ab5491"}
+{"LogLevel":"INFO","LogType":"WEBREQUEST","Timestamp":"09/07/2026 23:03:40","Status":200,"Method":"GET","Endpoint":"/api/actuator/traces","HTTPVersion":"1.1","TraceId":"b5951f805d16229d95e9d3bb7734ada1"}
+{"LogLevel":"INFO","LogType":"WEBREQUEST","Timestamp":"09/07/2026 23:03:40","Status":200,"Method":"GET","Endpoint":"/api/actuator/audit","HTTPVersion":"1.1","TraceId":"1ea45d6b037eb4b7826db76e29cd48b5"}
+{"LogLevel":"INFO","LogType":"WEBREQUEST","Timestamp":"09/07/2026 23:03:40","Status":200,"Method":"POST","ClientIp":"::ffff:127.0.0.1","Endpoint":"/api/maxine/signin","HTTPVersion":"1.1","TraceId":"1837cc23073a29458caa59fded3081ba"}
+{"LogLevel":"INFO","LogType":"WEBREQUEST","Timestamp":"09/07/2026 23:03:40","Status":200,"Method":"GET","ClientIp":"::ffff:127.0.0.1","Endpoint":"/api/maxine/control/config","HTTPVersion":"1.1","TraceId":"96d120d612fdc839a9dd0781d9a03175"}
+{"LogLevel":"INFO","LogType":"GENERIC","Timestamp":"09/07/2026 23:03:40","Message":{"hostName":"xx.xxx.xx.xx","nodeName":"node-x-10","serviceName":"dbservice","timeOut":5,"weight":10,"address":"https://xx.xxx.xx.xx:8082","healthCheckPath":"","registeredAt":"7/9/2026, 11:03:40 PM"}}
+{"LogLevel":"INFO","LogType":"WEBREQUEST","Timestamp":"09/07/2026 23:03:40","Status":200,"Method":"POST","ClientIp":"::ffff:127.0.0.1","Endpoint":"/api/maxine/serviceops/register","HTTPVersion":"1.1","TraceId":"e7eade01ebbb41fc1cd9c7f0feb97327"}
+{"LogLevel":"INFO","LogType":"GENERIC","Timestamp":"09/07/2026 23:03:40","Message":"Redirecting to https://xx.xxx.xx.xx:8082/health"}
+{"LogLevel":"INFO","LogType":"WEBREQUEST","Timestamp":"09/07/2026 23:03:40","Status":302,"Method":"GET","ClientIp":"::ffff:127.0.0.1","Endpoint":"/api/maxine/serviceops/discover?serviceName=dbservice&endPoint=%2Fhealth","HTTPVersion":"1.1","TraceId":"77ba75f3ce17019b12878130e6134490"}
+{"LogLevel":"INFO","LogType":"GENERIC","Timestamp":"09/07/2026 23:03:40","Message":"Connected to Redis-backed registry state store."}
+{"LogLevel":"INFO","LogType":"GENERIC","Timestamp":"09/07/2026 23:03:40","Message":"Connected to Redis-backed registry state store."}
+{"LogLevel":"INFO","LogType":"GENERIC","Timestamp":"09/07/2026 23:03:40","Message":"Connected to Redis-backed registry state store."}
+{"LogLevel":"INFO","LogType":"GENERIC","Timestamp":"09/07/2026 23:03:40","Message":"Connected to Redis-backed registry state store."}
+{"LogLevel":"ERROR","LogType":"WEBREQUEST","Timestamp":"09/07/2026 23:03:40","Status":404,"Method":"GET","Endpoint":"/8989","HTTPVersion":"1.1","TraceId":"a723b3ac44b791c4d18eeb8400057a1b"}
+{"LogLevel":"INFO","LogType":"WEBREQUEST","Timestamp":"09/07/2026 23:03:40","Status":200,"Method":"GET","Endpoint":"/api/maxine/control/config","HTTPVersion":"1.1","TraceId":"0d73b92c60d69d4e1011859065778fd3"}
+{"LogLevel":"INFO","LogType":"GENERIC","Timestamp":"09/07/2026 23:03:40","Message":"config alter : {\"logAsync\":\"Success\"}"}
+{"LogLevel":"INFO","LogType":"WEBREQUEST","Timestamp":"09/07/2026 23:03:40","Status":200,"Method":"PUT","Endpoint":"/api/maxine/control/config","HTTPVersion":"1.1","TraceId":"41f17937756ce144b12d13aecc3bd4c6"}
+{
+  "LogLevel": "INFO",
+  "LogType": "GENERIC",
+  "Timestamp": "09/07/2026 23:03:40",
+  "Message": "config alter : {\"heartBeatTimeout\":\"Success\"}"
+}
+{
+  "LogLevel": "INFO",
+  "LogType": "WEBREQUEST",
+  "Timestamp": "09/07/2026 23:03:40",
+  "Status": 200,
+  "Method": "PUT",
+  "Endpoint": "/api/maxine/control/config",
+  "HTTPVersion": "1.1",
+  "TraceId": "3b14e6751a8d5c665c92e46fd2c7203a"
+}
+{
+  "LogLevel": "INFO",
+  "LogType": "GENERIC",
+  "Timestamp": "09/07/2026 23:03:40",
+  "Message": "config alter : {\"logJsonPrettify\":\"Success\"}"
+}
+{
+  "LogLevel": "INFO",
+  "LogType": "WEBREQUEST",
+  "Timestamp": "09/07/2026 23:03:40",
+  "Status": 200,
+  "Method": "PUT",
+  "Endpoint": "/api/maxine/control/config",
+  "HTTPVersion": "1.1",
+  "TraceId": "132568d252330a9b8827e965467682be"
+}
+{
+  "LogLevel": "INFO",
+  "LogType": "GENERIC",
+  "Timestamp": "09/07/2026 23:03:40",
+  "Message": "config alter : {\"serverSelectionStrategy\":\"Success\"}"
+}
+{
+  "LogLevel": "INFO",
+  "LogType": "WEBREQUEST",
+  "Timestamp": "09/07/2026 23:03:40",
+  "Status": 200,
+  "Method": "PUT",
+  "Endpoint": "/api/maxine/control/config",
+  "HTTPVersion": "1.1",
+  "TraceId": "75e3ef42bb570b43b3bc977060751be9"
+}
+{
+  "LogLevel": "INFO",
+  "LogType": "GENERIC",
+  "Timestamp": "09/07/2026 23:03:40",
+  "Message": "config alter : {\"serverSelectionStrategy\":\"Success\"}"
+}
+{
+  "LogLevel": "INFO",
+  "LogType": "WEBREQUEST",
+  "Timestamp": "09/07/2026 23:03:40",
+  "Status": 200,
+  "Method": "PUT",
+  "Endpoint": "/api/maxine/control/config",
+  "HTTPVersion": "1.1",
+  "TraceId": "32653f3d3498ac7a9605876e2d5da602"
+}
+{
+  "LogLevel": "INFO",
+  "LogType": "GENERIC",
+  "Timestamp": "09/07/2026 23:03:40",
+  "Message": "config alter : {\"serverSelectionStrategy\":\"Success\"}"
+}
+{
+  "LogLevel": "INFO",
+  "LogType": "WEBREQUEST",
+  "Timestamp": "09/07/2026 23:03:40",
+  "Status": 200,
+  "Method": "PUT",
+  "Endpoint": "/api/maxine/control/config",
+  "HTTPVersion": "1.1",
+  "TraceId": "bdf59604599f4dd8146a329dec909d1a"
+}
+{
+  "LogLevel": "INFO",
+  "LogType": "GENERIC",
+  "Timestamp": "09/07/2026 23:03:40",
+  "Message": "config alter : {\"logFormat\":\"Success\"}"
+}
+{
+  "LogLevel": "INFO",
+  "LogType": "WEBREQUEST",
+  "Timestamp": "09/07/2026 23:03:40",
+  "Status": 200,
+  "Method": "PUT",
+  "Endpoint": "/api/maxine/control/config",
+  "HTTPVersion": "1.1",
+  "TraceId": "8c0a1e426eb81e674fed9446fa457d61"
+}
+【INFO】-【GENERIC】 | "config alter : {\"logFormat\":\"Success\"}" | [ Thu, 09 Jul 2026 17:33:40 GMT ] 
+【INFO】-【WEBREQUEST】| 200 | PUT | undefined | [ /api/maxine/control/config ] | HTTP/1.1 | a4ba2561a49b15f6632ba86882c69ee0 | [ Thu, 09 Jul 2026 17:33:40 GMT ] 
+【INFO】-【GENERIC】 | "config alter : {\"discoveryMode\":\"Success\"}" | [ Thu, 09 Jul 2026 17:33:40 GMT ] 
+【INFO】-【WEBREQUEST】| 200 | PUT | undefined | [ /api/maxine/control/config ] | HTTP/1.1 | 3e86078ec9da899fa0f599ec4e8f0f57 | [ Thu, 09 Jul 2026 17:33:40 GMT ] 
+【INFO】-【WEBREQUEST】| 200 | POST | ::ffff:127.0.0.1 | [ /api/maxine/signin ] | HTTP/1.1 | 117617c46e0e0400490806e93710c126 | [ Thu, 09 Jul 2026 17:33:40 GMT ] 
+【ERROR】-【GENERIC】 | "Please provide both of these -> userName and password." | [ Thu, 09 Jul 2026 17:33:40 GMT ] 
+【INFO】-【WEBREQUEST】| 400 | POST | ::ffff:127.0.0.1 | [ /api/maxine/signin ] | HTTP/1.1 | 216f4fc1050c343745eb40be78a933e8 | [ Thu, 09 Jul 2026 17:33:40 GMT ] 
+【INFO】-【WEBREQUEST】| 200 | POST | ::ffff:127.0.0.1 | [ /api/maxine/signin ] | HTTP/1.1 | 43ee98f294a69d5a897f91ac6e593d26 | [ Thu, 09 Jul 2026 17:33:40 GMT ] 
+【INFO】-【WEBREQUEST】| 200 | POST | ::ffff:127.0.0.1 | [ /api/maxine/signin ] | HTTP/1.1 | e47ad185f9f82d6eb07cd5dce249d806 | [ Thu, 09 Jul 2026 17:33:40 GMT ] 
+【INFO】-【WEBREQUEST】| 200 | PUT | undefined | [ /api/maxine/change-password ] | HTTP/1.1 | 4fea4cc7fd498e6a66210e5407ec723e | [ Thu, 09 Jul 2026 17:33:41 GMT ] 
+【INFO】-【WEBREQUEST】| 401 | GET | undefined | [ /api/maxine/control/config ] | HTTP/1.1 | c9580462c9561f5765b3bb9d1e2580e5 | [ Thu, 09 Jul 2026 17:33:41 GMT ] 
+【INFO】-【WEBREQUEST】| 401 | POST | ::ffff:127.0.0.1 | [ /api/maxine/signin ] | HTTP/1.1 | 2244f980509adf2565e00dbd7939f381 | [ Thu, 09 Jul 2026 17:33:41 GMT ] 
+【INFO】-【WEBREQUEST】| 200 | POST | ::ffff:127.0.0.1 | [ /api/maxine/signin ] | HTTP/1.1 | 7501dbfccfe50e175820663470e3deaf | [ Thu, 09 Jul 2026 17:33:41 GMT ] 
+【INFO】-【WEBREQUEST】| 200 | PUT | undefined | [ /api/maxine/change-password ] | HTTP/1.1 | d869f0c7d037dd94b6482fa7ad85c4d1 | [ Thu, 09 Jul 2026 17:33:41 GMT ] 
+【INFO】-【GENERIC】 | "Proxying to http://127.0.0.1:55349/retry-endpoint" | [ Thu, 09 Jul 2026 17:33:41 GMT ] 
+【INFO】-【WEBREQUEST】| 200 | GET | ::ffff:127.0.0.1 | [ /api/maxine/serviceops/proxy/retry-service/retry-endpoint ] | HTTP/1.1 | 3deee07279a0814a91bff455e54cf37e | [ Thu, 09 Jul 2026 17:33:41 GMT ] 
+【INFO】-【GENERIC】 | "Proxying to http://127.0.0.1:55349/retry-endpoint" | [ Thu, 09 Jul 2026 17:33:41 GMT ] 
+【ERROR】-【WEBREQUEST】| 500 | GET | ::ffff:127.0.0.1 | [ /api/maxine/serviceops/proxy/cb-service/retry-endpoint ] | HTTP/1.1 | 0531331830db1ec0446ab475212c2495 | [ Thu, 09 Jul 2026 17:33:41 GMT ] 
+【INFO】-【GENERIC】 | "Proxying to http://127.0.0.1:55349/retry-endpoint" | [ Thu, 09 Jul 2026 17:33:41 GMT ] 
+【ERROR】-【WEBREQUEST】| 500 | GET | ::ffff:127.0.0.1 | [ /api/maxine/serviceops/proxy/cb-service/retry-endpoint ] | HTTP/1.1 | 85b77d8722279a9192afbf76ed4f4778 | [ Thu, 09 Jul 2026 17:33:41 GMT ] 
+【INFO】-【GENERIC】 | "Proxying to http://127.0.0.1:55349/retry-endpoint" | [ Thu, 09 Jul 2026 17:33:41 GMT ] 
+【ERROR】-【WEBREQUEST】| 503 | GET | ::ffff:127.0.0.1 | [ /api/maxine/serviceops/proxy/cb-service/retry-endpoint ] | HTTP/1.1 | 6fcf8b6364f79cc8ddb04c981b4791ac | [ Thu, 09 Jul 2026 17:33:41 GMT ] 
+【INFO】-【GENERIC】 | "Proxying to http://127.0.0.1:55361/hello?via=proxy" | [ Thu, 09 Jul 2026 17:33:41 GMT ] 
+【INFO】-【WEBREQUEST】| 200 | GET | ::ffff:127.0.0.1 | [ /api/maxine/serviceops/proxy/proxy-health-orders/hello?via=proxy ] | HTTP/1.1 | 8188ad03d13227aa46bdf2bfa99d8b89 | [ Thu, 09 Jul 2026 17:33:41 GMT ] 
+【ERROR】-【GENERIC】 | "Invalid or missing -> hostName, nodeName, serviceName or weight (Maximum allowed size of weight is 10 (One server can maximum be 10x more powerful than others)" | [ Thu, 09 Jul 2026 17:33:41 GMT ] 
+【INFO】-【WEBREQUEST】| 400 | POST | undefined | [ /api/maxine/serviceops/register ] | HTTP/1.1 | 380ddf2b3ac7e42c0b6e7a70cfc5f540 | [ Thu, 09 Jul 2026 17:33:41 GMT ] 
+【INFO】-【GENERIC】 | {"hostName":"xx.xxx.xx.xx","nodeName":"node-x-10","serviceName":"dbservice-rs","timeOut":5,"weight":10,"address":"https://xx.xxx.xx.xx:8082","healthCheckPath":"","registeredAt":"7/9/2026, 11:03:41 PM"} | [ Thu, 09 Jul 2026 17:33:41 GMT ] 
+【INFO】-【WEBREQUEST】| 200 | POST | undefined | [ /api/maxine/serviceops/register ] | HTTP/1.1 | 22b4ae5a318ff83fdbcf8e9925808d95 | [ Thu, 09 Jul 2026 17:33:41 GMT ] 
+【INFO】-【GENERIC】 | "Recovered 3 registry node(s) from persisted state." | [ Thu, 09 Jul 2026 17:33:41 GMT ] 
+【INFO】-【GENERIC】 | "Connected to Redis-backed registry state store." | [ Thu, 09 Jul 2026 17:33:41 GMT ] 
+【INFO】-【GENERIC】 | "Connected to Redis-backed registry state store." | [ Thu, 09 Jul 2026 17:33:41 GMT ] 
+【INFO】-【GENERIC】 | "Connected to Redis-backed registry state store." | [ Thu, 09 Jul 2026 17:33:41 GMT ] 
+【INFO】-【GENERIC】 | "Connected to Redis-backed registry state store." | [ Thu, 09 Jul 2026 17:33:41 GMT ] 
+{"LogLevel":"INFO","LogType":"WEBREQUEST","Timestamp":"09/07/2026 23:04:24","Status":200,"Method":"GET","Endpoint":"/api/actuator/health","HTTPVersion":"1.1","TraceId":"63b53320b1ee6834ada0387235eb1a72"}
+{"LogLevel":"INFO","LogType":"WEBREQUEST","Timestamp":"09/07/2026 23:04:24","Status":200,"Method":"GET","Endpoint":"/api/actuator/info","HTTPVersion":"1.1","TraceId":"d0772515970eb3d2f19c8985a4811468"}
+{"LogLevel":"INFO","LogType":"WEBREQUEST","Timestamp":"09/07/2026 23:04:24","Status":200,"Method":"GET","Endpoint":"/api/actuator/metrics","HTTPVersion":"1.1","TraceId":"ec05796548d21e4b056a71f7aea32a29"}
+{"LogLevel":"ERROR","LogType":"WEBREQUEST","Timestamp":"09/07/2026 23:04:24","Status":404,"Method":"GET","Endpoint":"/api/actuator/performance","HTTPVersion":"1.1","TraceId":"897544fb1bdb7d9510a3c570dacf478d"}
+{"LogLevel":"INFO","LogType":"WEBREQUEST","Timestamp":"09/07/2026 23:04:24","Status":200,"Method":"GET","Endpoint":"/api/actuator/cluster","HTTPVersion":"1.1","TraceId":"d10c7975188be5af45f8558da8a12ac9"}
+{"LogLevel":"INFO","LogType":"WEBREQUEST","Timestamp":"09/07/2026 23:04:24","Status":200,"Method":"GET","Endpoint":"/api/actuator/prometheus","HTTPVersion":"1.1","TraceId":"d3ec8e169cc717b65e226f31dc1281d1"}
+{"LogLevel":"INFO","LogType":"WEBREQUEST","Timestamp":"09/07/2026 23:04:24","Status":200,"Method":"GET","Endpoint":"/api/actuator/traces","HTTPVersion":"1.1","TraceId":"d418c9c5a9aa567070aa584bc384af73"}
+{"LogLevel":"INFO","LogType":"WEBREQUEST","Timestamp":"09/07/2026 23:04:24","Status":200,"Method":"GET","Endpoint":"/api/actuator/audit","HTTPVersion":"1.1","TraceId":"978c65d8ba127ec4d2de911abd93c85b"}
+{"LogLevel":"INFO","LogType":"WEBREQUEST","Timestamp":"09/07/2026 23:04:24","Status":200,"Method":"POST","ClientIp":"::ffff:127.0.0.1","Endpoint":"/api/maxine/signin","HTTPVersion":"1.1","TraceId":"0b5f9d92f08c270cfeb3cc9d17f70cb2"}
+{"LogLevel":"INFO","LogType":"WEBREQUEST","Timestamp":"09/07/2026 23:04:24","Status":200,"Method":"GET","ClientIp":"::ffff:127.0.0.1","Endpoint":"/api/maxine/control/config","HTTPVersion":"1.1","TraceId":"514aae279d138ce1e6a897598d8f321e"}
+{"LogLevel":"INFO","LogType":"GENERIC","Timestamp":"09/07/2026 23:04:24","Message":{"hostName":"xx.xxx.xx.xx","nodeName":"node-x-10","serviceName":"dbservice","timeOut":5,"weight":10,"address":"https://xx.xxx.xx.xx:8082","healthCheckPath":"","registeredAt":"7/9/2026, 11:04:24 PM"}}
+{"LogLevel":"INFO","LogType":"WEBREQUEST","Timestamp":"09/07/2026 23:04:24","Status":200,"Method":"POST","ClientIp":"::ffff:127.0.0.1","Endpoint":"/api/maxine/serviceops/register","HTTPVersion":"1.1","TraceId":"fd08f7898c0f33c5bc846f2341089f03"}
+{"LogLevel":"INFO","LogType":"GENERIC","Timestamp":"09/07/2026 23:04:24","Message":"Redirecting to https://xx.xxx.xx.xx:8082/health"}
+{"LogLevel":"INFO","LogType":"WEBREQUEST","Timestamp":"09/07/2026 23:04:24","Status":302,"Method":"GET","ClientIp":"::ffff:127.0.0.1","Endpoint":"/api/maxine/serviceops/discover?serviceName=dbservice&endPoint=%2Fhealth","HTTPVersion":"1.1","TraceId":"bbe2596b18e6a36b0ba3bb4acba8d84c"}
+{"LogLevel":"INFO","LogType":"GENERIC","Timestamp":"09/07/2026 23:04:24","Message":"Connected to Redis-backed registry state store."}
+{"LogLevel":"INFO","LogType":"GENERIC","Timestamp":"09/07/2026 23:04:24","Message":"Connected to Redis-backed registry state store."}
+{"LogLevel":"INFO","LogType":"GENERIC","Timestamp":"09/07/2026 23:04:25","Message":"Connected to Redis-backed registry state store."}
+{"LogLevel":"INFO","LogType":"GENERIC","Timestamp":"09/07/2026 23:04:25","Message":"Connected to Redis-backed registry state store."}
+{"LogLevel":"ERROR","LogType":"WEBREQUEST","Timestamp":"09/07/2026 23:04:25","Status":404,"Method":"GET","Endpoint":"/8989","HTTPVersion":"1.1","TraceId":"11601c6ea95fedae9ea089413877ff39"}
+{"LogLevel":"INFO","LogType":"WEBREQUEST","Timestamp":"09/07/2026 23:04:25","Status":200,"Method":"GET","Endpoint":"/api/maxine/control/config","HTTPVersion":"1.1","TraceId":"1b741997dd5dbdc702c86da21d086d43"}
+{"LogLevel":"INFO","LogType":"GENERIC","Timestamp":"09/07/2026 23:04:25","Message":"config alter : {\"logAsync\":\"Success\"}"}
+{"LogLevel":"INFO","LogType":"WEBREQUEST","Timestamp":"09/07/2026 23:04:25","Status":200,"Method":"PUT","Endpoint":"/api/maxine/control/config","HTTPVersion":"1.1","TraceId":"1126bdf7d92bc9e1448901adcb7f3241"}
+{"LogLevel":"INFO","LogType":"GENERIC","Timestamp":"09/07/2026 23:04:25","Message":"config alter : {\"heartBeatTimeout\":\"Success\"}"}
+{"LogLevel":"INFO","LogType":"WEBREQUEST","Timestamp":"09/07/2026 23:04:25","Status":200,"Method":"PUT","Endpoint":"/api/maxine/control/config","HTTPVersion":"1.1","TraceId":"7296113c449ff1b8f94501081461bfe2"}
+{
+  "LogLevel": "INFO",
+  "LogType": "GENERIC",
+  "Timestamp": "09/07/2026 23:04:25",
+  "Message": "config alter : {\"logJsonPrettify\":\"Success\"}"
+}
+{
+  "LogLevel": "INFO",
+  "LogType": "WEBREQUEST",
+  "Timestamp": "09/07/2026 23:04:25",
+  "Status": 200,
+  "Method": "PUT",
+  "Endpoint": "/api/maxine/control/config",
+  "HTTPVersion": "1.1",
+  "TraceId": "e887501f3b530c8b448f394a51d53f6a"
+}
+{
+  "LogLevel": "INFO",
+  "LogType": "GENERIC",
+  "Timestamp": "09/07/2026 23:04:25",
+  "Message": "config alter : {\"serverSelectionStrategy\":\"Success\"}"
+}
+{
+  "LogLevel": "INFO",
+  "LogType": "WEBREQUEST",
+  "Timestamp": "09/07/2026 23:04:25",
+  "Status": 200,
+  "Method": "PUT",
+  "Endpoint": "/api/maxine/control/config",
+  "HTTPVersion": "1.1",
+  "TraceId": "eab3d90f9c5e77d5c9b9d7c1d9a3e1c2"
+}
+{
+  "LogLevel": "INFO",
+  "LogType": "GENERIC",
+  "Timestamp": "09/07/2026 23:04:25",
+  "Message": "config alter : {\"serverSelectionStrategy\":\"Success\"}"
+}
+{
+  "LogLevel": "INFO",
+  "LogType": "WEBREQUEST",
+  "Timestamp": "09/07/2026 23:04:25",
+  "Status": 200,
+  "Method": "PUT",
+  "Endpoint": "/api/maxine/control/config",
+  "HTTPVersion": "1.1",
+  "TraceId": "201a9253121dd02669d8ab9fb80844af"
+}
+{
+  "LogLevel": "INFO",
+  "LogType": "GENERIC",
+  "Timestamp": "09/07/2026 23:04:25",
+  "Message": "config alter : {\"serverSelectionStrategy\":\"Success\"}"
+}
+{
+  "LogLevel": "INFO",
+  "LogType": "WEBREQUEST",
+  "Timestamp": "09/07/2026 23:04:25",
+  "Status": 200,
+  "Method": "PUT",
+  "Endpoint": "/api/maxine/control/config",
+  "HTTPVersion": "1.1",
+  "TraceId": "5985d87a4ce9de7112f911eb281b802f"
+}
+{
+  "LogLevel": "INFO",
+  "LogType": "GENERIC",
+  "Timestamp": "09/07/2026 23:04:25",
+  "Message": "config alter : {\"logFormat\":\"Success\"}"
+}
+{
+  "LogLevel": "INFO",
+  "LogType": "WEBREQUEST",
+  "Timestamp": "09/07/2026 23:04:25",
+  "Status": 200,
+  "Method": "PUT",
+  "Endpoint": "/api/maxine/control/config",
+  "HTTPVersion": "1.1",
+  "TraceId": "ef171dfa9b808f2d19147092d898dab7"
+}
+【INFO】-【GENERIC】 | "config alter : {\"logFormat\":\"Success\"}" | [ Thu, 09 Jul 2026 17:34:25 GMT ] 
+【INFO】-【WEBREQUEST】| 200 | PUT | undefined | [ /api/maxine/control/config ] | HTTP/1.1 | 7ca324adfc86ae062d64c3f7497229bd | [ Thu, 09 Jul 2026 17:34:25 GMT ] 
+【INFO】-【GENERIC】 | "config alter : {\"discoveryMode\":\"Success\"}" | [ Thu, 09 Jul 2026 17:34:25 GMT ] 
+【INFO】-【WEBREQUEST】| 200 | PUT | undefined | [ /api/maxine/control/config ] | HTTP/1.1 | 589978a720829ef5150b7eb0afc50dbc | [ Thu, 09 Jul 2026 17:34:25 GMT ] 
+【INFO】-【WEBREQUEST】| 200 | POST | ::ffff:127.0.0.1 | [ /api/maxine/signin ] | HTTP/1.1 | c9b8dc8bbb1d54734614f4f8a907c6ef | [ Thu, 09 Jul 2026 17:34:25 GMT ] 
+【ERROR】-【GENERIC】 | "Please provide both of these -> userName and password." | [ Thu, 09 Jul 2026 17:34:25 GMT ] 
+【INFO】-【WEBREQUEST】| 400 | POST | ::ffff:127.0.0.1 | [ /api/maxine/signin ] | HTTP/1.1 | e4c0cf9461593a6ad7ec8462d52321c7 | [ Thu, 09 Jul 2026 17:34:25 GMT ] 
+【INFO】-【WEBREQUEST】| 200 | POST | ::ffff:127.0.0.1 | [ /api/maxine/signin ] | HTTP/1.1 | f48dd0cf45fea20e9b45858a764316e5 | [ Thu, 09 Jul 2026 17:34:25 GMT ] 
+【INFO】-【WEBREQUEST】| 200 | POST | ::ffff:127.0.0.1 | [ /api/maxine/signin ] | HTTP/1.1 | 61cd904f4eeb78d1338b24243d43e6b6 | [ Thu, 09 Jul 2026 17:34:25 GMT ] 
+【INFO】-【WEBREQUEST】| 200 | PUT | undefined | [ /api/maxine/change-password ] | HTTP/1.1 | 8b58c05aceb99f6bff55425b6b48e3ff | [ Thu, 09 Jul 2026 17:34:25 GMT ] 
+【INFO】-【WEBREQUEST】| 401 | GET | undefined | [ /api/maxine/control/config ] | HTTP/1.1 | e643f0847e99cd98ed3c2a72e70334bc | [ Thu, 09 Jul 2026 17:34:25 GMT ] 
+【INFO】-【WEBREQUEST】| 401 | POST | ::ffff:127.0.0.1 | [ /api/maxine/signin ] | HTTP/1.1 | e2fd394419a11a911a52e31b4a6622a2 | [ Thu, 09 Jul 2026 17:34:25 GMT ] 
+【INFO】-【WEBREQUEST】| 200 | POST | ::ffff:127.0.0.1 | [ /api/maxine/signin ] | HTTP/1.1 | e6aa1d6032fe88a146d60786f9857835 | [ Thu, 09 Jul 2026 17:34:25 GMT ] 
+【INFO】-【WEBREQUEST】| 200 | PUT | undefined | [ /api/maxine/change-password ] | HTTP/1.1 | 55d7a61cb445b770613a56e7e702b1e4 | [ Thu, 09 Jul 2026 17:34:25 GMT ] 
+【INFO】-【GENERIC】 | "Proxying to http://127.0.0.1:55445/retry-endpoint" | [ Thu, 09 Jul 2026 17:34:25 GMT ] 
+【INFO】-【WEBREQUEST】| 200 | GET | ::ffff:127.0.0.1 | [ /api/maxine/serviceops/proxy/retry-service/retry-endpoint ] | HTTP/1.1 | 33ca4a9139195b5e106c8a7b62518156 | [ Thu, 09 Jul 2026 17:34:25 GMT ] 
+【INFO】-【GENERIC】 | "Proxying to http://127.0.0.1:55445/retry-endpoint" | [ Thu, 09 Jul 2026 17:34:25 GMT ] 
+【ERROR】-【WEBREQUEST】| 500 | GET | ::ffff:127.0.0.1 | [ /api/maxine/serviceops/proxy/cb-service/retry-endpoint ] | HTTP/1.1 | cfce961eda30e3c07263bdc2ab8c21e7 | [ Thu, 09 Jul 2026 17:34:25 GMT ] 
+【INFO】-【GENERIC】 | "Proxying to http://127.0.0.1:55445/retry-endpoint" | [ Thu, 09 Jul 2026 17:34:25 GMT ] 
+【ERROR】-【WEBREQUEST】| 500 | GET | ::ffff:127.0.0.1 | [ /api/maxine/serviceops/proxy/cb-service/retry-endpoint ] | HTTP/1.1 | 52a830631f0a1ff02f122ff1708acbd2 | [ Thu, 09 Jul 2026 17:34:25 GMT ] 
+【INFO】-【GENERIC】 | "Proxying to http://127.0.0.1:55445/retry-endpoint" | [ Thu, 09 Jul 2026 17:34:25 GMT ] 
+【ERROR】-【WEBREQUEST】| 503 | GET | ::ffff:127.0.0.1 | [ /api/maxine/serviceops/proxy/cb-service/retry-endpoint ] | HTTP/1.1 | d5e48504e7703ca835011aa7f6c8ef4f | [ Thu, 09 Jul 2026 17:34:25 GMT ] 
+【INFO】-【GENERIC】 | "Proxying to http://127.0.0.1:55457/hello?via=proxy" | [ Thu, 09 Jul 2026 17:34:25 GMT ] 
+【INFO】-【WEBREQUEST】| 200 | GET | ::ffff:127.0.0.1 | [ /api/maxine/serviceops/proxy/proxy-health-orders/hello?via=proxy ] | HTTP/1.1 | ff5f2e16876f5cb733a61212be6ccc56 | [ Thu, 09 Jul 2026 17:34:25 GMT ] 
+【ERROR】-【GENERIC】 | "Invalid or missing -> hostName, nodeName, serviceName or weight (Maximum allowed size of weight is 10 (One server can maximum be 10x more powerful than others)" | [ Thu, 09 Jul 2026 17:34:25 GMT ] 
+【INFO】-【WEBREQUEST】| 400 | POST | undefined | [ /api/maxine/serviceops/register ] | HTTP/1.1 | dee16eccb28c30a9d1843c57e2463946 | [ Thu, 09 Jul 2026 17:34:25 GMT ] 
+【INFO】-【GENERIC】 | {"hostName":"xx.xxx.xx.xx","nodeName":"node-x-10","serviceName":"dbservice-rs","timeOut":5,"weight":10,"address":"https://xx.xxx.xx.xx:8082","healthCheckPath":"","registeredAt":"7/9/2026, 11:04:25 PM"} | [ Thu, 09 Jul 2026 17:34:25 GMT ] 
+【INFO】-【WEBREQUEST】| 200 | POST | undefined | [ /api/maxine/serviceops/register ] | HTTP/1.1 | de04b3367c42aed284f09b832ea3ca80 | [ Thu, 09 Jul 2026 17:34:25 GMT ] 
+【INFO】-【GENERIC】 | "Recovered 3 registry node(s) from persisted state." | [ Thu, 09 Jul 2026 17:34:25 GMT ] 
+【INFO】-【GENERIC】 | "Connected to Redis-backed registry state store." | [ Thu, 09 Jul 2026 17:34:25 GMT ] 
+【INFO】-【GENERIC】 | "Connected to Redis-backed registry state store." | [ Thu, 09 Jul 2026 17:34:25 GMT ] 
+【INFO】-【GENERIC】 | "Connected to Redis-backed registry state store." | [ Thu, 09 Jul 2026 17:34:25 GMT ] 
+【INFO】-【GENERIC】 | "Connected to Redis-backed registry state store." | [ Thu, 09 Jul 2026 17:34:25 GMT ] 
+{"LogLevel":"INFO","LogType":"WEBREQUEST","Timestamp":"09/07/2026 23:05:19","Status":200,"Method":"GET","Endpoint":"/api/actuator/health","HTTPVersion":"1.1","TraceId":"8e6310cef852ab1d0f7f7d05e5846cdd"}
+{"LogLevel":"INFO","LogType":"WEBREQUEST","Timestamp":"09/07/2026 23:05:19","Status":200,"Method":"GET","Endpoint":"/api/actuator/info","HTTPVersion":"1.1","TraceId":"eca8697abaf75bcd7e305a0a0ea8a617"}
+{"LogLevel":"INFO","LogType":"WEBREQUEST","Timestamp":"09/07/2026 23:05:19","Status":200,"Method":"GET","Endpoint":"/api/actuator/metrics","HTTPVersion":"1.1","TraceId":"2594c139a54c19dab09ad36613cba457"}
+{"LogLevel":"ERROR","LogType":"WEBREQUEST","Timestamp":"09/07/2026 23:05:19","Status":404,"Method":"GET","Endpoint":"/api/actuator/performance","HTTPVersion":"1.1","TraceId":"e2aefca28bc298f07317f73acb701da3"}
+{"LogLevel":"INFO","LogType":"WEBREQUEST","Timestamp":"09/07/2026 23:05:19","Status":200,"Method":"GET","Endpoint":"/api/actuator/cluster","HTTPVersion":"1.1","TraceId":"b68f4dabb60a4d633b86f47752c7dd32"}
+{"LogLevel":"INFO","LogType":"WEBREQUEST","Timestamp":"09/07/2026 23:05:19","Status":200,"Method":"GET","Endpoint":"/api/actuator/prometheus","HTTPVersion":"1.1","TraceId":"1a1a530597e82c949052bfea0b09b09a"}
+{"LogLevel":"INFO","LogType":"WEBREQUEST","Timestamp":"09/07/2026 23:05:19","Status":200,"Method":"GET","Endpoint":"/api/actuator/traces","HTTPVersion":"1.1","TraceId":"f4ca959fb2fffccd04cc572ff5815a8d"}
+{"LogLevel":"INFO","LogType":"WEBREQUEST","Timestamp":"09/07/2026 23:05:19","Status":200,"Method":"GET","Endpoint":"/api/actuator/audit","HTTPVersion":"1.1","TraceId":"397397291e337a2d359ada3d238ec4f6"}
+{"LogLevel":"INFO","LogType":"WEBREQUEST","Timestamp":"09/07/2026 23:05:19","Status":200,"Method":"POST","ClientIp":"::ffff:127.0.0.1","Endpoint":"/api/maxine/signin","HTTPVersion":"1.1","TraceId":"1823fef65118f8590374f36f733ddbe1"}
+{"LogLevel":"INFO","LogType":"WEBREQUEST","Timestamp":"09/07/2026 23:05:19","Status":200,"Method":"GET","ClientIp":"::ffff:127.0.0.1","Endpoint":"/api/maxine/control/config","HTTPVersion":"1.1","TraceId":"5e3554edca8bedf5b605383e5fe012db"}
+{"LogLevel":"INFO","LogType":"GENERIC","Timestamp":"09/07/2026 23:05:19","Message":{"hostName":"xx.xxx.xx.xx","nodeName":"node-x-10","serviceName":"dbservice","timeOut":5,"weight":10,"address":"https://xx.xxx.xx.xx:8082","healthCheckPath":"","registeredAt":"7/9/2026, 11:05:19 PM"}}
+{"LogLevel":"INFO","LogType":"WEBREQUEST","Timestamp":"09/07/2026 23:05:19","Status":200,"Method":"POST","ClientIp":"::ffff:127.0.0.1","Endpoint":"/api/maxine/serviceops/register","HTTPVersion":"1.1","TraceId":"7cdb739cba351cc0875424a4fca93dc7"}
+{"LogLevel":"INFO","LogType":"GENERIC","Timestamp":"09/07/2026 23:05:19","Message":"Redirecting to https://xx.xxx.xx.xx:8082/health"}
+{"LogLevel":"INFO","LogType":"WEBREQUEST","Timestamp":"09/07/2026 23:05:19","Status":302,"Method":"GET","ClientIp":"::ffff:127.0.0.1","Endpoint":"/api/maxine/serviceops/discover?serviceName=dbservice&endPoint=%2Fhealth","HTTPVersion":"1.1","TraceId":"d72f64da30cc4288c415994a8c8c83b3"}
+{"LogLevel":"INFO","LogType":"GENERIC","Timestamp":"09/07/2026 23:05:19","Message":"Connected to Redis-backed registry state store."}
+{"LogLevel":"INFO","LogType":"GENERIC","Timestamp":"09/07/2026 23:05:19","Message":"Connected to Redis-backed registry state store."}
+{"LogLevel":"INFO","LogType":"GENERIC","Timestamp":"09/07/2026 23:05:19","Message":"Connected to Redis-backed registry state store."}
+{"LogLevel":"INFO","LogType":"GENERIC","Timestamp":"09/07/2026 23:05:19","Message":"Connected to Redis-backed registry state store."}
+{"LogLevel":"ERROR","LogType":"WEBREQUEST","Timestamp":"09/07/2026 23:05:19","Status":404,"Method":"GET","Endpoint":"/8989","HTTPVersion":"1.1","TraceId":"22cbb20ed7aab0841254d90706ca74e2"}
+{"LogLevel":"INFO","LogType":"WEBREQUEST","Timestamp":"09/07/2026 23:05:19","Status":200,"Method":"GET","Endpoint":"/api/maxine/control/config","HTTPVersion":"1.1","TraceId":"a2fbdb5b498e293236fef73325bb05d9"}
+{"LogLevel":"INFO","LogType":"GENERIC","Timestamp":"09/07/2026 23:05:19","Message":"config alter : {\"logAsync\":\"Success\"}"}
+{"LogLevel":"INFO","LogType":"WEBREQUEST","Timestamp":"09/07/2026 23:05:19","Status":200,"Method":"PUT","Endpoint":"/api/maxine/control/config","HTTPVersion":"1.1","TraceId":"b69b1a4ed565e32cd470213e62a46229"}
+{"LogLevel":"INFO","LogType":"GENERIC","Timestamp":"09/07/2026 23:05:19","Message":"config alter : {\"heartBeatTimeout\":\"Success\"}"}
+{
+  "LogLevel": "INFO",
+  "LogType": "WEBREQUEST",
+  "Timestamp": "09/07/2026 23:05:19",
+  "Status": 200,
+  "Method": "PUT",
+  "Endpoint": "/api/maxine/control/config",
+  "HTTPVersion": "1.1",
+  "TraceId": "2405fe89e0eaf6a0fc4f4a80790fd605"
+}
+{
+  "LogLevel": "INFO",
+  "LogType": "GENERIC",
+  "Timestamp": "09/07/2026 23:05:19",
+  "Message": "config alter : {\"logJsonPrettify\":\"Success\"}"
+}
+{
+  "LogLevel": "INFO",
+  "LogType": "WEBREQUEST",
+  "Timestamp": "09/07/2026 23:05:19",
+  "Status": 200,
+  "Method": "PUT",
+  "Endpoint": "/api/maxine/control/config",
+  "HTTPVersion": "1.1",
+  "TraceId": "0422431696f15acc09bdaabe50540dcb"
+}
+{
+  "LogLevel": "INFO",
+  "LogType": "GENERIC",
+  "Timestamp": "09/07/2026 23:05:19",
+  "Message": "config alter : {\"serverSelectionStrategy\":\"Success\"}"
+}
+{
+  "LogLevel": "INFO",
+  "LogType": "WEBREQUEST",
+  "Timestamp": "09/07/2026 23:05:19",
+  "Status": 200,
+  "Method": "PUT",
+  "Endpoint": "/api/maxine/control/config",
+  "HTTPVersion": "1.1",
+  "TraceId": "0146feab260ae07f95d375c5e2e2231f"
+}
+{
+  "LogLevel": "INFO",
+  "LogType": "GENERIC",
+  "Timestamp": "09/07/2026 23:05:19",
+  "Message": "config alter : {\"serverSelectionStrategy\":\"Success\"}"
+}
+{
+  "LogLevel": "INFO",
+  "LogType": "WEBREQUEST",
+  "Timestamp": "09/07/2026 23:05:19",
+  "Status": 200,
+  "Method": "PUT",
+  "Endpoint": "/api/maxine/control/config",
+  "HTTPVersion": "1.1",
+  "TraceId": "7a61a07081ba1587c914bd10c5a40c99"
+}
+{
+  "LogLevel": "INFO",
+  "LogType": "GENERIC",
+  "Timestamp": "09/07/2026 23:05:19",
+  "Message": "config alter : {\"serverSelectionStrategy\":\"Success\"}"
+}
+{
+  "LogLevel": "INFO",
+  "LogType": "WEBREQUEST",
+  "Timestamp": "09/07/2026 23:05:19",
+  "Status": 200,
+  "Method": "PUT",
+  "Endpoint": "/api/maxine/control/config",
+  "HTTPVersion": "1.1",
+  "TraceId": "731f6355e8342cd10b6692711628e7bc"
+}
+{
+  "LogLevel": "INFO",
+  "LogType": "GENERIC",
+  "Timestamp": "09/07/2026 23:05:19",
+  "Message": "config alter : {\"logFormat\":\"Success\"}"
+}
+{
+  "LogLevel": "INFO",
+  "LogType": "WEBREQUEST",
+  "Timestamp": "09/07/2026 23:05:19",
+  "Status": 200,
+  "Method": "PUT",
+  "Endpoint": "/api/maxine/control/config",
+  "HTTPVersion": "1.1",
+  "TraceId": "38f6ce634a2da3b93d552df76770dad7"
+}
+【INFO】-【GENERIC】 | "config alter : {\"logFormat\":\"Success\"}" | [ Thu, 09 Jul 2026 17:35:19 GMT ] 
+【INFO】-【WEBREQUEST】| 200 | PUT | undefined | [ /api/maxine/control/config ] | HTTP/1.1 | 68a2be62734db7f8b1f633d2fa3c4c87 | [ Thu, 09 Jul 2026 17:35:19 GMT ] 
+【INFO】-【GENERIC】 | "config alter : {\"discoveryMode\":\"Success\"}" | [ Thu, 09 Jul 2026 17:35:19 GMT ] 
+【INFO】-【WEBREQUEST】| 200 | PUT | undefined | [ /api/maxine/control/config ] | HTTP/1.1 | 7b727ed71e3ac6e99aca3e49a530bec4 | [ Thu, 09 Jul 2026 17:35:19 GMT ] 
+【INFO】-【WEBREQUEST】| 200 | POST | ::ffff:127.0.0.1 | [ /api/maxine/signin ] | HTTP/1.1 | c7f762e7fe23c53abe3fdb46163362f3 | [ Thu, 09 Jul 2026 17:35:19 GMT ] 
+【ERROR】-【GENERIC】 | "Please provide both of these -> userName and password." | [ Thu, 09 Jul 2026 17:35:19 GMT ] 
+【INFO】-【WEBREQUEST】| 400 | POST | ::ffff:127.0.0.1 | [ /api/maxine/signin ] | HTTP/1.1 | 95772e7684a22f0cb358ec5063160446 | [ Thu, 09 Jul 2026 17:35:19 GMT ] 
+【INFO】-【WEBREQUEST】| 200 | POST | ::ffff:127.0.0.1 | [ /api/maxine/signin ] | HTTP/1.1 | 16143636b5d6d0ca80bcf4a9f202211c | [ Thu, 09 Jul 2026 17:35:19 GMT ] 
+【INFO】-【WEBREQUEST】| 200 | POST | ::ffff:127.0.0.1 | [ /api/maxine/signin ] | HTTP/1.1 | 2016ffba1c42ef94643cd818c3763d58 | [ Thu, 09 Jul 2026 17:35:19 GMT ] 
+【INFO】-【WEBREQUEST】| 200 | PUT | undefined | [ /api/maxine/change-password ] | HTTP/1.1 | 6d486d65207731a043baaed7fd79843e | [ Thu, 09 Jul 2026 17:35:19 GMT ] 
+【INFO】-【WEBREQUEST】| 401 | GET | undefined | [ /api/maxine/control/config ] | HTTP/1.1 | d540fbacf0dd60ae891bd0deba5da7c1 | [ Thu, 09 Jul 2026 17:35:19 GMT ] 
+【INFO】-【WEBREQUEST】| 401 | POST | ::ffff:127.0.0.1 | [ /api/maxine/signin ] | HTTP/1.1 | fb34c0b2cf969dde4813bec706bd56d4 | [ Thu, 09 Jul 2026 17:35:19 GMT ] 
+【INFO】-【WEBREQUEST】| 200 | POST | ::ffff:127.0.0.1 | [ /api/maxine/signin ] | HTTP/1.1 | 41e5e40efe92cae89ff5b8525cbb4283 | [ Thu, 09 Jul 2026 17:35:19 GMT ] 
+【INFO】-【WEBREQUEST】| 200 | PUT | undefined | [ /api/maxine/change-password ] | HTTP/1.1 | d769dcfb04bf1471e2300ed6508d8689 | [ Thu, 09 Jul 2026 17:35:19 GMT ] 
+【INFO】-【GENERIC】 | "Proxying to http://127.0.0.1:55534/retry-endpoint" | [ Thu, 09 Jul 2026 17:35:20 GMT ] 
+【INFO】-【WEBREQUEST】| 200 | GET | ::ffff:127.0.0.1 | [ /api/maxine/serviceops/proxy/retry-service/retry-endpoint ] | HTTP/1.1 | 6f47a5ff1c7c75f56cddabfbea6462d7 | [ Thu, 09 Jul 2026 17:35:20 GMT ] 
+【INFO】-【GENERIC】 | "Proxying to http://127.0.0.1:55534/retry-endpoint" | [ Thu, 09 Jul 2026 17:35:20 GMT ] 
+【ERROR】-【WEBREQUEST】| 500 | GET | ::ffff:127.0.0.1 | [ /api/maxine/serviceops/proxy/cb-service/retry-endpoint ] | HTTP/1.1 | 6fccf7705fbc07698e0b407e82e13ee6 | [ Thu, 09 Jul 2026 17:35:20 GMT ] 
+【INFO】-【GENERIC】 | "Proxying to http://127.0.0.1:55534/retry-endpoint" | [ Thu, 09 Jul 2026 17:35:20 GMT ] 
+【ERROR】-【WEBREQUEST】| 500 | GET | ::ffff:127.0.0.1 | [ /api/maxine/serviceops/proxy/cb-service/retry-endpoint ] | HTTP/1.1 | 26418a0459e0a4cee7f8ceb2a4010a4d | [ Thu, 09 Jul 2026 17:35:20 GMT ] 
+【INFO】-【GENERIC】 | "Proxying to http://127.0.0.1:55534/retry-endpoint" | [ Thu, 09 Jul 2026 17:35:20 GMT ] 
+【ERROR】-【WEBREQUEST】| 503 | GET | ::ffff:127.0.0.1 | [ /api/maxine/serviceops/proxy/cb-service/retry-endpoint ] | HTTP/1.1 | 7374c8a880bb4c2fe0c2213bf3ce655f | [ Thu, 09 Jul 2026 17:35:20 GMT ] 
+【INFO】-【GENERIC】 | "Proxying to http://127.0.0.1:55546/hello?via=proxy" | [ Thu, 09 Jul 2026 17:35:20 GMT ] 
+【INFO】-【WEBREQUEST】| 200 | GET | ::ffff:127.0.0.1 | [ /api/maxine/serviceops/proxy/proxy-health-orders/hello?via=proxy ] | HTTP/1.1 | 7ee1905c2be34927d6672c99b227d2b4 | [ Thu, 09 Jul 2026 17:35:20 GMT ] 
+【ERROR】-【GENERIC】 | "Invalid or missing -> hostName, nodeName, serviceName or weight (Maximum allowed size of weight is 10 (One server can maximum be 10x more powerful than others)" | [ Thu, 09 Jul 2026 17:35:20 GMT ] 
+【INFO】-【WEBREQUEST】| 400 | POST | undefined | [ /api/maxine/serviceops/register ] | HTTP/1.1 | 87cdfcbaccd42039df270cd06aaef633 | [ Thu, 09 Jul 2026 17:35:20 GMT ] 
+【INFO】-【GENERIC】 | {"hostName":"xx.xxx.xx.xx","nodeName":"node-x-10","serviceName":"dbservice-rs","timeOut":5,"weight":10,"address":"https://xx.xxx.xx.xx:8082","healthCheckPath":"","registeredAt":"7/9/2026, 11:05:20 PM"} | [ Thu, 09 Jul 2026 17:35:20 GMT ] 
+【INFO】-【WEBREQUEST】| 200 | POST | undefined | [ /api/maxine/serviceops/register ] | HTTP/1.1 | a1d5882e226ab5d913004363f51a7602 | [ Thu, 09 Jul 2026 17:35:20 GMT ] 
+【INFO】-【GENERIC】 | "Recovered 3 registry node(s) from persisted state." | [ Thu, 09 Jul 2026 17:35:20 GMT ] 
+【INFO】-【GENERIC】 | "Connected to Redis-backed registry state store." | [ Thu, 09 Jul 2026 17:35:20 GMT ] 
+【INFO】-【GENERIC】 | "Connected to Redis-backed registry state store." | [ Thu, 09 Jul 2026 17:35:20 GMT ] 
+【INFO】-【GENERIC】 | "Connected to Redis-backed registry state store." | [ Thu, 09 Jul 2026 17:35:20 GMT ] 
+【INFO】-【GENERIC】 | "Connected to Redis-backed registry state store." | [ Thu, 09 Jul 2026 17:35:20 GMT ] 

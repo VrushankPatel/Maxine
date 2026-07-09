@@ -39,10 +39,13 @@ jobs:
           echo "Maxine did not become healthy in time." >&2
           exit 1
 
+      - name: Setup k6
+        uses: grafana/setup-k6-action@v1
+
       - name: Run k6 load test
         env:
           MAXINE_HOST: http://127.0.0.1:8080
-        run: npm run load-test
+        run: k6 run src/test/load-test/performance-test.js
 
       - name: Upload load-test artifacts
         uses: actions/upload-artifact@v7

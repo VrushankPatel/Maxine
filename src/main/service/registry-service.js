@@ -301,6 +301,66 @@ class RegistryService{
         }
     }
 
+    getParentNodeWeight = async (serviceName, parentNode) => {
+        await this.initialize();
+        const sRegistry = await this.getRegisteredServers();
+        const service = sRegistry[serviceName];
+        if (!service || !service.nodes) return 0;
+        
+        let count = 0;
+        Object.values(service.nodes).forEach((node) => {
+            if (node.parentNode === parentNode || node.nodeName === parentNode) {
+                count++;
+            }
+        });
+        return count;
+    }
+
+    demoteToWeightOne = async (serviceName, parentNode) => {
+        await this.initialize();
+        const sRegistry = await this.getRegisteredServers();
+        const service = sRegistry[serviceName];
+        if (!service || !service.nodes) return;
+
+        const virtualNodes = Object.keys(service.nodes).filter(
+            (nodeName) => service.nodes[nodeName].parentNode === parentNode
+        );
+
+        for (const nodeName of virtualNodes) {
+            if (!nodeName.endsWith('-0')) {
+                await this.deleteNode(serviceName, nodeName, false);
+            }
+        }
+        await this.persistRegistry();
+    }
+
+    restoreNodeWeight = async (serviceName, parentNode, originalWeight) => {
+        await this.initialize();
+        const sRegistry = await this.getRegisteredServers();
+        const service = sRegistry[serviceName];
+        if (!service || !service.nodes) return;
+
+        const baseNodeKey = Object.keys(service.nodes).find(
+            (nodeName) => service.nodes[nodeName].parentNode === parentNode && nodeName.endsWith('-0')
+        );
+
+        if (!baseNodeKey) return;
+        const baseNode = service.nodes[baseNodeKey];
+
+        for (let i = 1; i < originalWeight; i++) {
+            const subNodeName = `${parentNode}-${i}`;
+            await this.upsertNode(serviceName, subNodeName, {
+                "nodeName" : subNodeName,
+                "parentNode" : parentNode,
+                "address" : baseNode.address,
+                "timeOut" : baseNode.timeOut,
+                "registeredAt" : Date.now(),
+                "healthCheckPath" : baseNode.healthCheckPath || ""
+            }, (baseNode.timeOut * 1000) + 500, false);
+        }
+        await this.persistRegistry();
+    }
+
     registryService = async (serviceObj) => {
         await this.initialize();
 

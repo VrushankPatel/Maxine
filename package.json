@@ -1,6 +1,6 @@
 {
   "name": "maxine-discovery",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Maxine is a service discovery and a registry server for all the running nodes with gargantua client dependency.",
   "main": "index.js",
   "scripts": {
@@ -12,7 +12,8 @@
     "unit-test": "npx mocha --timeout 10000 --exit",
     "genreports": "nyc --reporter=html --reporter=lcov npm run unit-test",
     "coverage": "npm run genreports && npx codecov -t $CODECOV_TOKEN",
-    "load-test": "chmod +x bin/k6 && bin/k6 run src/test/load-test/performance-test.js"
+    "load-test": "k6 run src/test/load-test/performance-test.js",
+    "bump": "node scripts/bump-version.js"
   },
   "keywords": [
     "maxine",
@@ -25,6 +26,11 @@
   "license": "MIT",
   "bin": "index.js",
   "dependencies": {
+    "@opentelemetry/api": "^1.9.1",
+    "@opentelemetry/exporter-metrics-otlp-http": "^0.220.0",
+    "@opentelemetry/exporter-trace-otlp-http": "^0.220.0",
+    "@opentelemetry/sdk-metrics": "^2.9.0",
+    "@opentelemetry/sdk-node": "^0.220.0",
     "axios": "^1.7.9",
     "bcrypt": "^5.1.1",
     "body-parser": "^1.20.3",
@@ -56,6 +62,7 @@
     "chai-json": "^1.0.0",
     "codecov": "^3.8.3",
     "istanbul": "^0.4.5",
+    "jsdom": "^29.1.1",
     "mocha": "^11.7.6",
     "nodemon": "^2.0.15",
     "nyc": "^15.1.0",
