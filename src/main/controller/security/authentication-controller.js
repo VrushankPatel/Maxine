@@ -1,4 +1,3 @@
-const _ = require('lodash');
 const { findUserByUserName, hasRequiredRole } = require('../../entity/user');
 const { statusAndMsgs, constants } = require('../../util/constants/constants');
 const { verifyAccessToken } = require('../../security/jwt');
@@ -23,7 +22,7 @@ function authenticationController(req, res, next) {
     const authHeader = req.headers['authorization'];
     const token = authHeader && authHeader.split(' ')[1];
 
-    if (_.isNull(token) || _.isUndefined(token) || _.isEmpty(token)){
+    if (!token || token.trim() === ""){
         observabilityService.recordAuthFailure();
         res.status(statusAndMsgs.STATUS_UNAUTHORIZED).json({"message" : statusAndMsgs.MSG_UNAUTHORIZED});
         return;

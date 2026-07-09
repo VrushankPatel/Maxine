@@ -11,6 +11,8 @@ const log = (logFunction) => config.logAsync === true ? setTimeout(logFunction, 
 
 const info = (msg) => log(() => logger.info(logBuilder("INFO", "GENERIC", null, null, msg)));
 
+const warn = (msg) => log(() => logger.warn(logBuilder("WARN", "GENERIC", null, null, msg)));
+
 const error = (msg) => log(() => logger.error(logBuilder("ERROR", "GENERIC", null, null, msg)));
 
 const errorAndClose = (msg) => {
@@ -22,6 +24,7 @@ const logExceptions = (req, msg) => log(() => logger.error(logBuilder("ERROR", "
 
 const loggingUtil = {
     info,
+    warn,
     logger,
     log,
     error,

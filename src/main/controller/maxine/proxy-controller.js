@@ -1,4 +1,4 @@
-const _ = require('lodash');
+const { isEmpty } = require('../../util/util');
 const { statusAndMsgs } = require('../../util/constants/constants');
 const { discoveryService } = require('../../service/discovery-service');
 const { proxyService } = require('../../service/proxy-service');
@@ -23,7 +23,7 @@ const serviceProxyController = async (req, res, next) => {
         }
 
         const serviceNode = await discoveryService.getNode(serviceName, ip);
-        if (_.isEmpty(serviceNode)) {
+        if (isEmpty(serviceNode)) {
             res.status(statusAndMsgs.SERVICE_UNAVAILABLE).json({
                 message: statusAndMsgs.MSG_SERVICE_UNAVAILABLE
             });

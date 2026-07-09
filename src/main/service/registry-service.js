@@ -4,7 +4,6 @@ const { registryStateService } = require("./registry-state-service");
 const config = require("../config/config");
 const { constants } = require("../util/constants/constants");
 const { error } = require("../util/logging/logging-util");
-const _ = require('lodash');
 
 class RegistryService{
     initialized = false;
@@ -311,7 +310,7 @@ class RegistryService{
                 this.loadSnapshotIntoMemory(activeSnapshot, false);
 
                 const service = Service.buildByObj(serviceObj);
-                if (!service || _.isNull(service)) {
+                if (!service || service === null) {
                     return {
                         result: undefined,
                         registry: sRegistry.getRegServers()
@@ -329,7 +328,7 @@ class RegistryService{
         }
 
         const service = Service.buildByObj(serviceObj);
-        if (!service || _.isNull(service)) {
+        if (!service || service === null) {
             return;
         }
 

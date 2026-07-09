@@ -1,5 +1,6 @@
 const RouteBuilder = require('../builders/route-builder');
 const bodyParser = require('body-parser');
+const rateLimit = require('express-rate-limit');
 const { serverListController, registryController } = require('../controller/maxine/registry-controller');
 const discoveryController = require('../controller/maxine/discovery-controller');
 const { serviceProxyController } = require('../controller/maxine/proxy-controller');
@@ -8,6 +9,15 @@ const { logsLinkGenController, recentLogsController, recentLogsClearController }
 const { configuratorController, configurationController } = require('../controller/config-control/configurator-controller');
 const { changePwdController } = require('../controller/security/changepwd-controller');
 
+const isTestEnv = process.env.NODE_ENV === 'test' || (typeof global.describe === 'function' && typeof global.it === 'function');
+
+const signinLimiter = rateLimit({
+    windowMs: 15 * 60 * 1000, // 15 minutes
+    max: isTestEnv ? 100 : 5, // Limit each IP to 5 requests per windowMs
+    message: { message: "Too many sign-in attempts. Please try again after 15 minutes." },
+    standardHeaders: true,
+    legacyHeaders: false,
+});
 
 let maxineApiRoutes = RouteBuilder.createNewRoute()
                         .from("logs")
@@ -25,7 +35,7 @@ let maxineApiRoutes = RouteBuilder.createNewRoute()
                                 .get("discover", discoveryController)
                                 .all("proxy/:serviceName/*", bodyParser.raw({ type: '*/*', limit: '10mb' }), serviceProxyController)
                             .stepBack()
-                            .post("signin", bodyParser.json(), signInController)
+                            .post("signin", signinLimiter, bodyParser.json(), signInController)
                             .put("change-password", bodyParser.json(), changePwdController)
                             .from("control")
                                 .put("config", bodyParser.json(), configuratorController)

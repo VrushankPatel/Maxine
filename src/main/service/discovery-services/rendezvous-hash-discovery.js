@@ -1,5 +1,4 @@
 const { serviceRegistry } = require("../../entity/service-registry");
-const _ = require('lodash');
 const crypto = require('crypto');
 const { constants } = require("../../util/constants/constants");
 const separator = Buffer.from('\0');
@@ -23,7 +22,7 @@ class RendezvousHashDiscovery{
      * @returns {object} select the node based on IP Hashing
      */
     selectNode(nodes, ip) {
-        if(_.isUndefined(nodes)) return {};
+        if(nodes === undefined) return {};
         let targetNodeId, targetNodeRank = 0;
         for (let nodeId in nodes) if ({}.hasOwnProperty.call(nodes, nodeId)) {
             let nodeRank = this.rank(nodeId, ip);

@@ -4,7 +4,6 @@ const { constants } = require('./src/main/util/constants/constants');
 const actuator = require('express-actuator');
 const ExpressAppBuilder = require('./src/main/builders/app-builder');
 const maxineApiRoutes = require('./src/main/routes/api-routes');
-const expressStatusMonitor = require('express-status-monitor');
 const logWebExceptions = require('./src/main/util/logging/log-web-exceptions');
 const logRequest = require('./src/main/util/logging/log-request');
 const traceContext = require('./src/main/util/logging/trace-context');
@@ -12,7 +11,7 @@ const { authenticationController } = require('./src/main/controller/security/aut
 const { registryService } = require('./src/main/service/registry-service');
 const { runtimeOrchestratorService } = require('./src/main/service/runtime-orchestrator-service');
 const swaggerUi = require('swagger-ui-express');
-const { statusMonitorConfig, actuatorConfig } = require('./src/main/config/actuator/actuator-config');
+const { actuatorConfig } = require('./src/main/config/actuator/actuator-config');
 const { loadSwaggerYAML } = require('./src/main/util/util');
 const swaggerDocument = loadSwaggerYAML();
 const path = require("path");
@@ -20,8 +19,6 @@ const currDir = require('./conf');
 
 const buildApp = () => ExpressAppBuilder.createNewApp()
     .addCors()
-    .ifPropertyOnce("statusMonitorEnabled")
-        .use(expressStatusMonitor(statusMonitorConfig))
     .use(traceContext)
     .use(logRequest)
     .use(authenticationController)
@@ -45,6 +42,10 @@ const app = buildApp();
 const startServer = async () => {
     await registryService.initialize();
     await runtimeOrchestratorService.start();
+
+    if (process.env.NODE_ENV === 'production' && !process.env.MAXINE_ADMIN_PASSWORD) {
+        loggingUtil.warn("SECURITY WARNING: MAXINE_ADMIN_PASSWORD is unset in production! Maxine is defaulting to the insecure default password. Please configure MAXINE_ADMIN_PASSWORD.");
+    }
 
     return new Promise((resolve) => {
         const server = app.listen(constants.PORT, () => {

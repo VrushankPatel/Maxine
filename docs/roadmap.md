@@ -23,6 +23,15 @@ Maxine already includes:
 - add deeper leadership-aware mutation coverage
 - document operational behavior for replica failure and recovery
 
+#### Split-Brain Window in Redis Lease Coordination
+Maxine coordinates its control plane using Redis leases. The lease duration is configured via `MAXINE_LEADER_ELECTION_LEASE_MS` (default 15,000ms), and leaders attempt renewal every `MAXINE_LEADER_ELECTION_RENEW_MS` (default 5,000ms).
+
+A split-brain window exists under the following conditions:
+1. **Clock Drift:** If clocks between nodes drift, a follower might assume a lease has expired while the current leader still considers it valid.
+2. **Network Partitions:** If the leader cannot communicate with Redis to renew its lease, the lease expires, permitting another node to become leader. The original leader might continue leader-only actions (such as eviction) until its next local check.
+3. **GC Pauses:** Node.js event-loop blockage or Garbage Collection pauses can delay lease renewal, causing the lease to expire in Redis. Upon resumption, the node may briefly act as leader before discovering it lost leadership.
+
+
 ### 2. Proxy and Health Model
 
 - deepen proxy timeouts, retries, and policy controls

@@ -1,5 +1,14 @@
+const bcrypt = require('bcrypt');
 const { constants } = require("../util/constants/constants");
 const { loadAdminState, persistAdminState } = require("../service/admin-state-service");
+
+const hashPassword = (pwd) => {
+    if (!pwd) return pwd;
+    if (pwd.startsWith('$2a$') || pwd.startsWith('$2b$') || pwd.startsWith('$2y$')) {
+        return pwd;
+    }
+    return bcrypt.hashSync(pwd, 10);
+};
 
 class User {
     userName;
@@ -14,7 +23,7 @@ class User {
 
     constructor(userName, password, role, credentialVersion = 0, managedByEnv = false){
         this.userName = userName;
-        this.password = password;
+        this.password = hashPassword(password);
         this.role = role || constants.USER_ROLES.ADMIN.message;
         this.credentialVersion = Number.isInteger(credentialVersion) ? credentialVersion : 0;
         this.managedByEnv = managedByEnv;
@@ -79,7 +88,7 @@ const hasRequiredRole = (userRole, requiredRole) => getRoleOrder(userRole) >= ge
 
 const isValidAdminCredentials = (userName, password) => {
     const user = findUserByUserName(userName);
-    if (!user || user.password !== password) {
+    if (!user || !bcrypt.compareSync(password, user.password)) {
         return null;
     }
 
@@ -95,7 +104,7 @@ const updateAdminPassword = (userName, currentPassword, nextPassword) => {
         return { success: false, reason: 'ENV_MANAGED' };
     }
 
-    admin.password = nextPassword;
+    admin.password = hashPassword(nextPassword);
     admin.credentialVersion += 1;
     persistAdminState(admin);
     return { success: true, user: admin };

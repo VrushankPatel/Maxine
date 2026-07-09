@@ -23,7 +23,7 @@ function verifyAccessToken(token) {
 
     for (const secret of verificationSecrets) {
         try {
-            return jwt.verify(token, secret);
+            return jwt.verify(token, secret, { algorithms: ['HS256'] });
         } catch (err) {
             lastError = err;
         }

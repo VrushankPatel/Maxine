@@ -21,6 +21,18 @@ const RELEASE_LEADERSHIP_SCRIPT = [
     'return redis.call("del", KEYS[1])'
 ].join('\n');
 
+/**
+ * ClusterLeaderService coordinates leadership leases when MAXINE_REGISTRY_STATE_MODE=redis.
+ * 
+ * DESIGN WARNING: Split-Brain Window
+ * Because lease coordination relies on expiration times stored in Redis:
+ * 1. Network partitions can prevent a leader from renewing, allowing another node to claim
+ *    leadership. The original leader may continue performing leader-only mutations until its
+ *    next local tick.
+ * 2. Clock drift can cause nodes to miscalculate lease expiry.
+ * 3. Event loop lag or GC pauses on a leader can cause renewal scripts to execute late, leading
+ *    to lease loss while the thread is paused.
+ */
 class ClusterLeaderService {
     started = false;
     intervalRef;

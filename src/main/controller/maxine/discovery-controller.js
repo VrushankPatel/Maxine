@@ -1,11 +1,11 @@
 const { statusAndMsgs, constants } = require("../../util/constants/constants");
 const { discoveryService } = require("../../service/discovery-service");
 const config = require("../../config/config");
-const _ = require('lodash');
 const { info } = require("../../util/logging/logging-util");
 const { proxyService } = require("../../service/proxy-service");
 const { observabilityService } = require("../../service/observability-service");
 const { auditService } = require("../../service/audit-service");
+const { isEmpty } = require("../../util/util");
 
 const discoveryController = async (req, res, next) => {
     try {
@@ -23,7 +23,7 @@ const discoveryController = async (req, res, next) => {
 
         const serviceNode = await discoveryService.getNode(serviceName, ip);
 
-        if(_.isEmpty(serviceNode)){
+        if(isEmpty(serviceNode)){
             res.status(statusAndMsgs.SERVICE_UNAVAILABLE).json({
                 "message" : statusAndMsgs.MSG_SERVICE_UNAVAILABLE
             });

@@ -7,22 +7,6 @@ const { clusterLeaderService } = require("../../service/cluster-leader-service")
 const { upstreamHealthService } = require("../../service/upstream-health-service");
 const { registryService } = require("../../service/registry-service");
 
-const statusMonitorConfig = {
-    title: constants.STATUSMONITORTITLE,
-    path: constants.ACTUATORPATH + '/status',
-    socketPath: '/socket.io',
-    spans: [{interval: 1, retention: 60}, {interval: 5,retention: 60}, {interval: 15,retention: 60}, {interval: 30,retention: 60}],
-    chartVisibility: {
-        cpu: true,mem: true, load: true, rps: true, statusCodes: true, eventLoop: true, heap: true, responseTime: true
-    },
-    healthChecks: [{
-        protocol: 'http',
-        host: 'localhost',
-        path: constants.ACTUATORPATH + '/health',
-        port: constants.PORT
-    }]
-}
-
 const actuatorConfig = {
     basePath: constants.ACTUATORPATH,
     customEndpoints: [
@@ -99,6 +83,5 @@ const actuatorConfig = {
 }
 
 module.exports = {
-    statusMonitorConfig,
     actuatorConfig
 }
