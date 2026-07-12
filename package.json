@@ -36,7 +36,7 @@
     "body-parser": "^1.20.3",
     "consistent-hashing": "^0.3.0",
     "cors": "^2.8.5",
-    "date-and-time": "^2.1.0",
+    "date-and-time": "^4.5.1",
     "enums": "^1.0.3",
     "express": "^4.21.2",
     "express-actuator": "^1.8.0",
